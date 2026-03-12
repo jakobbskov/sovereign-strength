@@ -1,0 +1,40 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Logs
+*.log
+
+# Local env / secrets
+.env
+.env.*
+*.secret
+secrets/
+private/
+
+# Build / temp
+tmp/
+temp/
+.cache/
+
+# Runtime / local data exports
+*.sqlite
+*.db
+
+# Git hygiene
+*.orig
