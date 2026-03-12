@@ -53,6 +53,7 @@ def init_db():
         energy_score INTEGER,
         soreness_score INTEGER,
         time_budget_min INTEGER,
+        readiness_score INTEGER,
         notes TEXT,
         created_at TEXT
     )

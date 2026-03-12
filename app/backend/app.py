@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import json
 import uuid
 import os
+from storage import get_storage_backend
 import urllib.request
 import urllib.error
 import json
@@ -120,67 +121,27 @@ def _sort_user_items_desc(items, *keys):
         return ""
     return sorted(items or [], key=_key, reverse=True)
 
+def get_storage():
+    return get_storage_backend(
+        data_dir=DATA_DIR,
+        db_path=Path(__file__).resolve().parent / "sovereign_strength.db",
+        mode=os.getenv("SOVEREIGN_STRENGTH_STORAGE", "json"),
+    )
+
 def list_user_items(file_key, user_id, sort_keys=("created_at", "date")):
-    items = read_json_file(FILES[file_key])
-    items = filter_items_for_user(items, user_id)
-    return _sort_user_items_desc(items, *sort_keys)
+    return get_storage().list_user_items(file_key, user_id, sort_keys=sort_keys)
 
 def append_user_item(file_key, item):
-    items = read_json_file(FILES[file_key])
-    items.append(item)
-    write_json_file(FILES[file_key], items)
-    return item, len(items)
+    return get_storage().append_item(file_key, item)
 
 def get_latest_user_item(file_key, user_id, sort_keys=("created_at", "date")):
-    items = list_user_items(file_key, user_id, sort_keys=sort_keys)
-    return items[0] if items else None
+    return get_storage().get_latest_user_item(file_key, user_id, sort_keys=sort_keys)
 
 def get_user_settings_for(user_id):
-    raw = read_json_object_file(FILES["user_settings"])
-    if not isinstance(raw, dict):
-        return {}
-
-    top_user_id = raw.get("user_id")
-    if top_user_id == user_id:
-        return raw
-
-    users_map = raw.get("users")
-    if isinstance(users_map, dict):
-        candidate = users_map.get(str(user_id)) or users_map.get(user_id)
-        if isinstance(candidate, dict):
-            merged = dict(candidate)
-            merged.setdefault("user_id", user_id)
-            return merged
-
-    if isinstance(users_map, list):
-        for item in users_map:
-            if isinstance(item, dict) and item.get("user_id") == user_id:
-                return item
-
-    if "equipment_increments" in raw:
-        merged = dict(raw)
-        merged.setdefault("user_id", user_id)
-        return merged
-
-    return {}
+    return get_storage().get_user_settings_for(user_id)
 
 def save_user_settings_for(user_id, settings):
-    raw = read_json_object_file(FILES["user_settings"])
-    if not isinstance(raw, dict):
-        raw = {}
-
-    if "users" not in raw or not isinstance(raw.get("users"), dict):
-        legacy = {}
-        if raw and "equipment_increments" in raw:
-            legacy_user_id = raw.get("user_id", 1)
-            legacy[str(legacy_user_id)] = dict(raw)
-        raw = {"users": legacy}
-
-    clean = dict(settings or {})
-    clean["user_id"] = user_id
-    raw["users"][str(user_id)] = clean
-    write_json_file(FILES["user_settings"], raw)
-    return clean
+    return get_storage().save_user_settings_for(user_id, settings)
 
 def list_workouts_for_user(user_id):
     return list_user_items("workouts", user_id)
