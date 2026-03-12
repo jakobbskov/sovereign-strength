@@ -107,6 +107,256 @@ def read_json_object_file(path: Path):
         return {}
 
 
+
+
+def _sort_user_items_desc(items, *keys):
+    def _key(x):
+        if not isinstance(x, dict):
+            return ""
+        for k in keys:
+            v = x.get(k)
+            if v not in (None, ""):
+                return str(v)
+        return ""
+    return sorted(items or [], key=_key, reverse=True)
+
+def list_user_items(file_key, user_id, sort_keys=("created_at", "date")):
+    items = read_json_file(FILES[file_key])
+    items = filter_items_for_user(items, user_id)
+    return _sort_user_items_desc(items, *sort_keys)
+
+def append_user_item(file_key, item):
+    items = read_json_file(FILES[file_key])
+    items.append(item)
+    write_json_file(FILES[file_key], items)
+    return item, len(items)
+
+def get_latest_user_item(file_key, user_id, sort_keys=("created_at", "date")):
+    items = list_user_items(file_key, user_id, sort_keys=sort_keys)
+    return items[0] if items else None
+
+def get_user_settings_for(user_id):
+    raw = read_json_object_file(FILES["user_settings"])
+    if not isinstance(raw, dict):
+        return {}
+
+    top_user_id = raw.get("user_id")
+    if top_user_id == user_id:
+        return raw
+
+    users_map = raw.get("users")
+    if isinstance(users_map, dict):
+        candidate = users_map.get(str(user_id)) or users_map.get(user_id)
+        if isinstance(candidate, dict):
+            merged = dict(candidate)
+            merged.setdefault("user_id", user_id)
+            return merged
+
+    if isinstance(users_map, list):
+        for item in users_map:
+            if isinstance(item, dict) and item.get("user_id") == user_id:
+                return item
+
+    if "equipment_increments" in raw:
+        merged = dict(raw)
+        merged.setdefault("user_id", user_id)
+        return merged
+
+    return {}
+
+def save_user_settings_for(user_id, settings):
+    raw = read_json_object_file(FILES["user_settings"])
+    if not isinstance(raw, dict):
+        raw = {}
+
+    if "users" not in raw or not isinstance(raw.get("users"), dict):
+        legacy = {}
+        if raw and "equipment_increments" in raw:
+            legacy_user_id = raw.get("user_id", 1)
+            legacy[str(legacy_user_id)] = dict(raw)
+        raw = {"users": legacy}
+
+    clean = dict(settings or {})
+    clean["user_id"] = user_id
+    raw["users"][str(user_id)] = clean
+    write_json_file(FILES["user_settings"], raw)
+    return clean
+
+def list_workouts_for_user(user_id):
+    return list_user_items("workouts", user_id)
+
+def create_workout(user_id, payload):
+    date = str(payload.get("date", "")).strip()
+    session_type = str(payload.get("type", "")).strip()
+    duration_min = payload.get("duration_min", 0)
+    notes = str(payload.get("notes", "")).strip()
+    program_id = str(payload.get("program_id", "")).strip()
+    program_day_label = str(payload.get("program_day_label", "")).strip()
+    entries = payload.get("entries", [])
+
+    if not date:
+        return None, {"ok": False, "error": "date mangler"}, 400
+
+    if session_type not in ("styrke", "løb", "mobilitet", "andet"):
+        return None, {"ok": False, "error": "ugyldig type"}, 400
+
+    try:
+        duration_min = int(duration_min)
+    except Exception:
+        return None, {"ok": False, "error": "duration_min skal være et tal"}, 400
+
+    if duration_min < 0:
+        return None, {"ok": False, "error": "duration_min må ikke være negativ"}, 400
+
+    if not isinstance(entries, list):
+        return None, {"ok": False, "error": "entries skal være en liste"}, 400
+
+    clean_entries = []
+    for e in entries:
+        if not isinstance(e, dict):
+            continue
+        clean_entries.append({
+            "exercise_id": str(e.get("exercise_id", "")).strip(),
+            "sets": str(e.get("sets", "")).strip(),
+            "reps": str(e.get("reps", "")).strip(),
+            "achieved_reps": str(e.get("achieved_reps", "")).strip(),
+            "load": str(e.get("load", "")).strip(),
+            "notes": str(e.get("notes", "")).strip(),
+        })
+
+    item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": date,
+        "session_type": session_type,
+        "duration_min": duration_min,
+        "notes": notes,
+        "program_id": program_id,
+        "program_day_label": program_day_label,
+        "entries": clean_entries,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    item, count = append_user_item("workouts", item)
+    return item, None, count
+
+def list_checkins_for_user(user_id):
+    return list_user_items("checkins", user_id)
+
+def get_latest_checkin_for_user(user_id):
+    return get_latest_user_item("checkins", user_id)
+
+def create_checkin(user_id, payload):
+    date = str(payload.get("date", "")).strip()
+    notes = str(payload.get("notes", "")).strip()
+    time_budget_min = payload.get("time_budget_min", 0)
+
+    def parse_score(name):
+        value = payload.get(name, "")
+        try:
+            value = int(value)
+        except Exception:
+            raise ValueError(f"{name} skal være et tal")
+        if value < 1 or value > 5:
+            raise ValueError(f"{name} skal være mellem 1 og 5")
+        return value
+
+    if not date:
+        return None, {"ok": False, "error": "date mangler"}, 400
+
+    try:
+        sleep_score = parse_score("sleep_score")
+        energy_score = parse_score("energy_score")
+        soreness_score = parse_score("soreness_score")
+        time_budget_min = int(time_budget_min)
+    except ValueError as e:
+        return None, {"ok": False, "error": str(e)}, 400
+    except Exception:
+        return None, {"ok": False, "error": "ugyldige inputværdier"}, 400
+
+    readiness_score = round((sleep_score + energy_score + (6 - soreness_score)) / 3)
+    readiness_score = max(1, min(5, readiness_score))
+
+    item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": date,
+        "sleep_score": sleep_score,
+        "energy_score": energy_score,
+        "soreness_score": soreness_score,
+        "time_budget_min": time_budget_min,
+        "readiness_score": readiness_score,
+        "notes": notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    item, count = append_user_item("checkins", item)
+    return item, None, count
+
+def list_session_results_for_user(user_id):
+    return list_user_items("session_results", user_id)
+
+def create_session_result(user_id, payload):
+    date = str(payload.get("date", "")).strip()
+    session_type = str(payload.get("session_type", "")).strip()
+    timing_state = str(payload.get("timing_state", "")).strip()
+    notes = str(payload.get("notes", "")).strip()
+    completed = bool(payload.get("completed", False))
+    readiness_score = payload.get("readiness_score", None)
+    results = payload.get("results", [])
+
+    if not date:
+        return None, {"ok": False, "error": "date mangler"}, 400
+    if session_type not in ("styrke", "cardio", "restitution"):
+        return None, {"ok": False, "error": "ugyldig session_type"}, 400
+    if timing_state not in ("early", "on_time", "late", ""):
+        return None, {"ok": False, "error": "ugyldig timing_state"}, 400
+    if not isinstance(results, list):
+        return None, {"ok": False, "error": "results skal være en liste"}, 400
+
+    clean_results = []
+    for r in results:
+        if not isinstance(r, dict):
+            continue
+
+        raw_sets = r.get("sets", [])
+        clean_sets = []
+        if isinstance(raw_sets, list):
+            for x in raw_sets:
+                if not isinstance(x, dict):
+                    continue
+                clean_sets.append({
+                    "reps": str(x.get("reps", "")).strip(),
+                    "load": str(x.get("load", "")).strip()
+                })
+
+        clean_results.append({
+            "exercise_id": str(r.get("exercise_id", "")).strip(),
+            "completed": bool(r.get("completed", False)),
+            "target_reps": str(r.get("target_reps", "")).strip(),
+            "achieved_reps": str(r.get("achieved_reps", "")).strip(),
+            "load": str(r.get("load", "")).strip(),
+            "sets": clean_sets,
+            "hit_failure": bool(r.get("hit_failure", False)),
+            "notes": str(r.get("notes", "")).strip()
+        })
+
+    item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": date,
+        "session_type": session_type,
+        "timing_state": timing_state,
+        "readiness_score": readiness_score,
+        "completed": completed,
+        "notes": notes,
+        "results": clean_results,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    item, count = append_user_item("session_results", item)
+    return item, None, count
+
 def get_exercise_config(exercises, exercise_id):
     for ex in (exercises or []):
         if str(ex.get("id", "")).strip() == str(exercise_id).strip():
@@ -671,7 +921,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
 def build_progression_context(exercise_id):
     workouts = read_json_file(FILES["workouts"])
     exercises = read_json_file(FILES["exercises"])
-    user_settings = read_json_object_file(FILES["user_settings"])
+    user_settings = get_user_settings_for(auth_user.get("user_id"))
 
     session_results = read_json_file(FILES["session_results"])
 
@@ -1059,7 +1309,7 @@ def debug_exercise_config(exercise_id):
         return auth_err
 
     exercises = read_json_file(FILES["exercises"])
-    user_settings = read_json_object_file(FILES["user_settings"])
+    user_settings = get_user_settings_for(auth_user.get("user_id"))
     exercise = get_exercise_config(exercises, exercise_id)
 
     return jsonify({
@@ -1263,7 +1513,7 @@ def get_today_plan():
                 }
             ]
     else:
-        user_settings = read_json_object_file(FILES["user_settings"])
+        user_settings = get_user_settings_for(auth_user.get("user_id"))
         strength_ctx = build_strength_plan(
             programs=programs,
             exercises=exercises,
@@ -1316,27 +1566,8 @@ def get_user_settings():
     if auth_err:
         return auth_err
 
-    current = read_json_object_file(FILES["user_settings"]) or {}
-    if not isinstance(current, dict):
-        current = {}
-
-    if current.get("user_id") not in (None, auth_user.get("user_id")):
-        current = {}
-
-    current.setdefault("user_id", auth_user.get("user_id"))
-    current.setdefault("available_equipment", {
-        "barbell": True,
-        "dumbbell": True,
-        "bodyweight": True
-    })
-    current.setdefault("equipment_increments", {
-        "barbell": 10,
-        "dumbbell": 5,
-        "bodyweight": 0
-    })
-
+    current = get_user_settings_for(auth_user.get("user_id"))
     return jsonify({"ok": True, "item": current})
-
 
 @app.post("/api/user-settings")
 def post_user_settings():
@@ -1345,138 +1576,26 @@ def post_user_settings():
         return auth_err
 
     payload = request.get_json(silent=True) or {}
+    current = get_user_settings_for(auth_user.get("user_id"))
 
-    available = payload.get("available_equipment", {}) or {}
-    increments = payload.get("equipment_increments", {}) or {}
-
-    if not isinstance(available, dict):
-        return jsonify({"ok": False, "error": "available_equipment skal være et objekt"}), 400
-    if not isinstance(increments, dict):
-        return jsonify({"ok": False, "error": "equipment_increments skal være et objekt"}), 400
-
-    def parse_bool(value, default=False):
-        return bool(value) if isinstance(value, bool) else default
-
-    def parse_num(value, default=0):
-        try:
-            x = float(value)
-            if x < 0:
-                return default
-            return x
-        except Exception:
-            return default
+    equipment_increments = payload.get("equipment_increments", current.get("equipment_increments", {}))
+    available_equipment = payload.get("available_equipment", current.get("available_equipment", {}))
 
     item = {
         "user_id": auth_user.get("user_id"),
-        "available_equipment": {
-            "barbell": parse_bool(available.get("barbell", True), True),
-            "dumbbell": parse_bool(available.get("dumbbell", True), True),
-            "bodyweight": parse_bool(available.get("bodyweight", True), True),
-        },
-        "equipment_increments": {
-            "barbell": parse_num(increments.get("barbell", 10), 10),
-            "dumbbell": parse_num(increments.get("dumbbell", 5), 5),
-            "bodyweight": parse_num(increments.get("bodyweight", 0), 0),
-        }
+        "equipment_increments": equipment_increments if isinstance(equipment_increments, dict) else {},
+        "available_equipment": available_equipment if isinstance(available_equipment, dict) else {},
     }
 
-    write_json_file(FILES["user_settings"], item)
+    item = save_user_settings_for(auth_user.get("user_id"), item)
     return jsonify({"ok": True, "item": item})
-
-
-
-def _safe_int(value):
-    try:
-        return int(float(str(value).strip().replace(",", ".")))
-    except Exception:
-        return 0
-
-def _safe_float(value):
-    try:
-        return float(str(value).strip().replace(",", "."))
-    except Exception:
-        return 0.0
-
-def build_session_summary(session_item):
-    results = session_item.get("results", []) if isinstance(session_item, dict) else []
-    if not isinstance(results, list):
-        results = []
-
-    total_exercises = len(results)
-    completed_exercises = sum(1 for r in results if bool(r.get("completed", False)))
-    hit_failure_count = sum(1 for r in results if bool(r.get("hit_failure", False)))
-
-    total_sets = 0
-    total_reps = 0
-    estimated_volume = 0.0
-    progress_flags = []
-
-    for r in results:
-        if not isinstance(r, dict):
-            continue
-
-        sets = r.get("sets", [])
-        achieved_reps = _safe_int(r.get("achieved_reps", "0"))
-        base_load = _safe_float(r.get("load", "0"))
-
-        if isinstance(sets, list) and sets:
-            non_empty_sets = 0
-            for s in sets:
-                if not isinstance(s, dict):
-                    continue
-                reps = _safe_int(s.get("reps", "0"))
-                load = _safe_float(s.get("load", "0"))
-                if reps or load:
-                    non_empty_sets += 1
-                total_reps += reps
-                estimated_volume += reps * load
-            total_sets += non_empty_sets if non_empty_sets else len(sets)
-        else:
-            if achieved_reps or base_load:
-                total_sets += 1
-                total_reps += achieved_reps
-                estimated_volume += achieved_reps * base_load
-
-        if bool(r.get("completed", False)):
-            progress_flags.append(f'{str(r.get("exercise_id", "")).strip()}_done')
-        if bool(r.get("hit_failure", False)):
-            progress_flags.append(f'{str(r.get("exercise_id", "")).strip()}_failure')
-
-    if hit_failure_count >= 2:
-        fatigue = "high"
-    elif hit_failure_count == 1 or total_sets >= 16:
-        fatigue = "moderate"
-    else:
-        fatigue = "light"
-
-    if fatigue == "high":
-        next_step_hint = "Reduce load or volume next session."
-    elif fatigue == "moderate":
-        next_step_hint = "Hold progression steady next session."
-    else:
-        next_step_hint = "You may progress if technique was solid."
-
-    return {
-        "session_type": session_item.get("session_type", ""),
-        "completed_exercises": completed_exercises,
-        "total_exercises": total_exercises,
-        "total_sets": total_sets,
-        "total_reps": total_reps,
-        "estimated_volume": round(estimated_volume, 1),
-        "hit_failure_count": hit_failure_count,
-        "fatigue": fatigue,
-        "progress_flags": progress_flags,
-        "next_step_hint": next_step_hint,
-    }
-
 
 @app.get("/api/session-results")
 def get_session_results():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    items = read_json_file(FILES["session_results"])
-    items = filter_items_for_user(items, auth_user.get("user_id"))
+    items = list_session_results_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
 
 @app.post("/api/session-result")
@@ -1484,88 +1603,31 @@ def post_session_result():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    payload = request.get_json(silent=True) or {}
 
-    date = str(payload.get("date", "")).strip()
-    session_type = str(payload.get("session_type", "")).strip()
-    timing_state = str(payload.get("timing_state", "")).strip()
-    notes = str(payload.get("notes", "")).strip()
-    completed = bool(payload.get("completed", False))
-    readiness_score = payload.get("readiness_score", None)
-    results = payload.get("results", [])
+    item, err_payload, third = create_session_result(
+        auth_user.get("user_id"),
+        request.get_json(silent=True) or {}
+    )
 
-    if not date:
-        return jsonify({"ok": False, "error": "date mangler"}), 400
-    if session_type not in ("styrke", "cardio", "restitution"):
-        return jsonify({"ok": False, "error": "ugyldig session_type"}), 400
-    if timing_state not in ("early", "on_time", "late", ""):
-        return jsonify({"ok": False, "error": "ugyldig timing_state"}), 400
-    if not isinstance(results, list):
-        return jsonify({"ok": False, "error": "results skal være en liste"}), 400
-
-    clean_results = []
-    for r in results:
-        if not isinstance(r, dict):
-            continue
-
-        raw_sets = r.get("sets", [])
-        clean_sets = []
-        if isinstance(raw_sets, list):
-            for x in raw_sets:
-                if not isinstance(x, dict):
-                    continue
-                clean_sets.append({
-                    "reps": str(x.get("reps", "")).strip(),
-                    "load": str(x.get("load", "")).strip()
-                })
-
-        clean_results.append({
-            "exercise_id": str(r.get("exercise_id", "")).strip(),
-            "completed": bool(r.get("completed", False)),
-            "target_reps": str(r.get("target_reps", "")).strip(),
-            "achieved_reps": str(r.get("achieved_reps", "")).strip(),
-            "load": str(r.get("load", "")).strip(),
-            "sets": clean_sets,
-            "hit_failure": bool(r.get("hit_failure", False)),
-            "notes": str(r.get("notes", "")).strip()
-        })
-
-    item = {
-        "id": str(uuid.uuid4()),
-        "user_id": auth_user.get("user_id"),
-        "date": date,
-        "session_type": session_type,
-        "timing_state": timing_state,
-        "readiness_score": readiness_score,
-        "completed": completed,
-        "notes": notes,
-        "results": clean_results,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-
-    items = read_json_file(FILES["session_results"])
-    items.append(item)
-    write_json_file(FILES["session_results"], items)
+    if err_payload is not None:
+        return jsonify(err_payload), third
 
     summary = build_session_summary(item)
-    return jsonify({"ok": True, "item": item, "summary": summary, "count": len(items)}), 201
 
-
-
+    return jsonify({
+        "ok": True,
+        "item": item,
+        "summary": summary,
+        "count": third
+    }), 201
 
 @app.get("/api/workouts")
 def get_workouts():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-
-    items = read_json_file(FILES["workouts"])
-    items = filter_items_for_user(items, auth_user.get("user_id"))
-    items = sorted(items, key=lambda x: str(x.get("created_at", x.get("date", ""))), reverse=True)
-
+    items = list_workouts_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
-
-
 
 @app.post("/api/workouts")
 def post_workouts():
@@ -1573,74 +1635,18 @@ def post_workouts():
     if auth_err:
         return auth_err
 
-    payload = request.get_json(silent=True) or {}
+    item, err_payload, third = create_workout(auth_user.get("user_id"), request.get_json(silent=True) or {})
+    if err_payload is not None:
+        return jsonify(err_payload), third
 
-    date = str(payload.get("date", "")).strip()
-    session_type = str(payload.get("type", "")).strip()
-    duration_min = payload.get("duration_min", 0)
-    notes = str(payload.get("notes", "")).strip()
-    program_id = str(payload.get("program_id", "")).strip()
-    program_day_label = str(payload.get("program_day_label", "")).strip()
-    entries = payload.get("entries", [])
-
-    if not date:
-        return jsonify({"ok": False, "error": "date mangler"}), 400
-
-    if session_type not in ("styrke", "løb", "mobilitet", "andet"):
-        return jsonify({"ok": False, "error": "ugyldig type"}), 400
-
-    try:
-        duration_min = int(duration_min)
-    except Exception:
-        return jsonify({"ok": False, "error": "duration_min skal være et tal"}), 400
-
-    if duration_min < 0:
-        return jsonify({"ok": False, "error": "duration_min må ikke være negativ"}), 400
-
-    if not isinstance(entries, list):
-        return jsonify({"ok": False, "error": "entries skal være en liste"}), 400
-
-    clean_entries = []
-    for e in entries:
-        if not isinstance(e, dict):
-            continue
-        clean_entries.append({
-            "exercise_id": str(e.get("exercise_id", "")).strip(),
-            "sets": str(e.get("sets", "")).strip(),
-            "reps": str(e.get("reps", "")).strip(),
-            "achieved_reps": str(e.get("achieved_reps", "")).strip(),
-            "load": str(e.get("load", "")).strip(),
-            "notes": str(e.get("notes", "")).strip(),
-        })
-
-    item = {
-        "id": str(uuid.uuid4()),
-        "user_id": auth_user.get("user_id"),
-        "date": date,
-        "session_type": session_type,
-        "duration_min": duration_min,
-        "notes": notes,
-        "program_id": program_id,
-        "program_day_label": program_day_label,
-        "entries": clean_entries,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-
-    items = read_json_file(FILES["workouts"])
-    items.append(item)
-    write_json_file(FILES["workouts"], items)
-
-    return jsonify({"ok": True, "item": item, "count": len(items)}), 201
-
-
+    return jsonify({"ok": True, "item": item, "count": third}), 201
 
 @app.get("/api/checkins")
 def get_checkins():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    items = read_json_file(FILES["checkins"])
-    items = filter_items_for_user(items, auth_user.get("user_id"))
+    items = list_checkins_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
 
 @app.get("/api/checkin/latest")
@@ -1648,73 +1654,20 @@ def get_latest_checkin():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    items = read_json_file(FILES["checkins"])
-    items = filter_items_for_user(items, auth_user.get("user_id"))
-    if not items:
-        return jsonify({"ok": True, "item": None})
-    latest = sorted(items, key=lambda x: str(x.get("created_at", x.get("date", ""))), reverse=True)[0]
-    return jsonify({"ok": True, "item": latest})
+    item = get_latest_checkin_for_user(auth_user.get("user_id"))
+    return jsonify({"ok": True, "item": item})
 
 @app.post("/api/checkin")
 def post_checkin():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    payload = request.get_json(silent=True) or {}
 
-    date = str(payload.get("date", "")).strip()
-    notes = str(payload.get("notes", "")).strip()
-    time_budget_min = payload.get("time_budget_min", 0)
+    item, err_payload, third = create_checkin(auth_user.get("user_id"), request.get_json(silent=True) or {})
+    if err_payload is not None:
+        return jsonify(err_payload), third
 
-    def parse_score(name):
-        value = payload.get(name, "")
-        try:
-            value = int(value)
-        except Exception:
-            raise ValueError(f"{name} skal være et tal")
-        if value < 1 or value > 5:
-            raise ValueError(f"{name} skal være mellem 1 og 5")
-        return value
-
-    if not date:
-        return jsonify({"ok": False, "error": "date mangler"}), 400
-
-    try:
-        sleep_score = parse_score("sleep_score")
-        energy_score = parse_score("energy_score")
-        soreness_score = parse_score("soreness_score")
-    except ValueError as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
-
-    try:
-        time_budget_min = int(time_budget_min)
-    except Exception:
-        return jsonify({"ok": False, "error": "time_budget_min skal være et tal"}), 400
-
-    if time_budget_min < 0:
-        return jsonify({"ok": False, "error": "time_budget_min må ikke være negativ"}), 400
-
-    readiness_score = sleep_score + energy_score - soreness_score
-
-    item = {
-        "id": str(uuid.uuid4()),
-        "user_id": auth_user.get("user_id"),
-        "date": date,
-        "sleep_score": sleep_score,
-        "energy_score": energy_score,
-        "soreness_score": soreness_score,
-        "time_budget_min": time_budget_min,
-        "readiness_score": readiness_score,
-        "notes": notes,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-
-    items = read_json_file(FILES["checkins"])
-    items.append(item)
-    write_json_file(FILES["checkins"], items)
-
-    return jsonify({"ok": True, "item": item, "count": len(items)}), 201
-
+    return jsonify({"ok": True, "item": item, "count": third}), 201
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8091, debug=True)
