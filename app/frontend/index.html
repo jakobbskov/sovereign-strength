@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SovereignStrength</title>
+  <meta name="theme-color" content="#111111">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    :root{
+      --bg:#111;
+      --card:#1b1b1b;
+      --text:#f3f3f3;
+      --muted:#b9b9b9;
+      --line:#2c2c2c;
+      --accent:#d6d3c9;
+      --ok:#9fd3a8;
+      --warn:#e7c27d;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+    .wrap{
+      max-width:1000px;
+      margin:0 auto;
+      padding:24px 16px 48px;
+    }
+    h1,h2,h3{margin:0 0 12px}
+    p{margin:0 0 10px;color:var(--muted)}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:14px;
+      margin-top:18px;
+    }
+    .two-col{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:18px;
+      margin-top:18px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+    }
+    .metric{
+      font-size:2rem;
+      font-weight:700;
+      color:var(--accent);
+    }
+    .small{
+      font-size:.95rem;
+      color:var(--muted);
+    }
+    .ok{color:var(--ok)}
+    .warn{color:var(--warn)}
+    pre{
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:#0d0d0d;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      color:#ddd;
+      overflow:auto;
+    }
+    form{
+      display:grid;
+      gap:12px;
+    }
+    label{
+      display:grid;
+      gap:6px;
+      font-size:.95rem;
+      color:var(--muted);
+    }
+    input, select, textarea, button{
+      width:100%;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#151515;
+      color:var(--text);
+      padding:10px 12px;
+      font:inherit;
+    }
+    textarea{min-height:90px; resize:vertical}
+    button{
+      cursor:pointer;
+      background:#242424;
+      font-weight:600;
+    }
+    ul{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:grid;
+      gap:10px;
+    }
+    li{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      background:#141414;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-block;
+      padding:4px 8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      font-size:.85rem;
+      color:var(--muted);
+      margin-top:8px;
+      margin-right:6px;
+    }
+    .program-day{
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px solid var(--line);
+    }
+    .program-day:first-of-type{
+      margin-top:0;
+      padding-top:0;
+      border-top:none;
+    }
+    .entry-box{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      background:#141414;
+    }
+    .btn-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .btn-row button{
+      width:auto;
+    }
+    .wizard-nav{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:18px 0 8px;
+    }
+    .wizard-nav button{
+      width:auto;
+      padding:8px 12px;
+      border-radius:999px;
+    }
+    .wizard-nav button.is-active{
+      outline:2px solid var(--accent);
+    }
+    .wizard-step-hidden{
+      display:none !important;
+    }
+    .primary-cta{
+      background:var(--accent);
+      color:#111;
+      border-color:var(--accent);
+      font-weight:700;
+    }
+    .overview-status{
+      display:grid;
+      gap:10px;
+    }
+    .overview-status .stat-line{
+      color:var(--muted);
+      font-size:.95rem;
+    }
+    .overview-status .stat-line strong{
+      color:var(--text);
+    }
+    .overview-metric-hidden{
+      display:none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>SovereignStrength</h1>
+    <p>Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
+    <div id="wizardNav" class="wizard-nav"></div>
+
+    <div class="grid" id="overviewSection">
+      <section class="card" id="forecastHero" style="grid-column:1/-1">
+        <div class="row">
+          <h2>Forventet i dag</h2>
+          <div class="small" id="forecastDate"></div>
+        </div>
+        <div class="metric" id="forecastType">-</div>
+        <div class="small" id="forecastSummary" style="margin-top:8px">Ingen plan endnu.</div>
+        <div class="small" id="forecastReason" style="margin-top:8px"></div>
+        <div class="btn-row" style="margin-top:12px">
+          <button type="button" id="forecastPrimaryBtn" class="primary-cta">Gå til check-in</button>
+        </div>
+      </section>
+      <section class="card" id="overviewStatusCard" style="grid-column:1/-1">
+        <h2>Status lige nu</h2>
+        <div class="overview-status">
+          <div class="stat-line"><strong id="overviewReadinessValue">-</strong> · readiness</div>
+          <div class="stat-line" id="overviewLatestCheckinLine">Ingen check-in endnu.</div>
+          <div class="stat-line" id="overviewTimeLine">Ingen tidsvurdering endnu.</div>
+          <div class="stat-line" id="overviewWorkoutLine">Ingen workout-data endnu.</div>
+        </div>
+      </section>
+
+      <section class="card" id="profileEquipmentCard">
+        <div class="row">
+          <h2>Profil og udstyr</h2>
+          <div class="small" id="profileDisplayName">-</div>
+        </div>
+        <div class="overview-status">
+          <div class="stat-line" id="profileEquipmentLine">Udstyr indlæses...</div>
+          <div class="stat-line" id="profileIncrementLine">Vægtspring indlæses...</div>
+          <div class="stat-line" id="profileAccountLine">Konto indlæses...</div>
+          <div class="stat-line" id="profileAccountHelpLine">Profil og adgangskode håndteres centralt via auth.</div>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button type="button" id="openEquipmentSettingsBtn">Redigér udstyr</button>
+          <button type="button" id="openAccountSettingsBtn">Konto og adgangskode</button>
+        </div>
+
+        <div id="equipmentEditorWrap" class="wizard-step-hidden" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line)">
+          <h3 style="margin:0 0 10px">Udstyrsindstillinger</h3>
+          <p class="small">Vælg hvilket udstyr du har adgang til, og hvilke vægtspring appen skal regne med.</p>
+
+          <form id="equipmentSettingsForm">
+            <label>
+              <span>Stang / vægtstang til rådighed</span>
+              <select id="eq_barbell_enabled" name="eq_barbell_enabled">
+                <option value="true">Ja</option>
+                <option value="false">Nej</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Håndvægte til rådighed</span>
+              <select id="eq_dumbbell_enabled" name="eq_dumbbell_enabled">
+                <option value="true">Ja</option>
+                <option value="false">Nej</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Kropsvægtøvelser til rådighed</span>
+              <select id="eq_bodyweight_enabled" name="eq_bodyweight_enabled">
+                <option value="true">Ja</option>
+                <option value="false">Nej</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Vægtspring for stang (kg)</span>
+              <input id="eq_barbell_increment" name="eq_barbell_increment" type="number" min="0" step="0.5" value="10">
+            </label>
+
+            <label>
+              <span>Vægtspring for håndvægte (kg)</span>
+              <input id="eq_dumbbell_increment" name="eq_dumbbell_increment" type="number" min="0" step="0.5" value="5">
+            </label>
+
+            <label>
+              <span>Vægtspring for kropsvægt (kg)</span>
+              <input id="eq_bodyweight_increment" name="eq_bodyweight_increment" type="number" min="0" step="0.5" value="0">
+            </label>
+
+            <div class="btn-row">
+              <button type="submit" id="saveEquipmentSettingsBtn" class="primary-cta">Gem udstyr</button>
+              <button type="button" id="cancelEquipmentSettingsBtn">Luk</button>
+            </div>
+          </form>
+
+          <p id="equipmentSettingsStatus" class="small" style="margin-top:12px">Ikke ændret endnu.</p>
+        </div>
+      </section>
+      <section class="card">
+        <h2>Workouts</h2>
+        <div class="metric" id="workoutsCount">-</div>
+        <div class="small">Antal registrerede styrkepas</div>
+      </section>
+
+      <section class="card">
+        <h2>Øvelser</h2>
+        <div class="metric" id="exercisesCount">-</div>
+        <div class="small">Antal øvelser i biblioteket</div>
+      </section>
+
+      <section class="card">
+        <h2>Programmer</h2>
+        <div class="metric" id="programsCount">-</div>
+        <div class="small">Antal aktive programmer</div>
+      </section>
+
+      <section class="card">
+        <h2>Recovery</h2>
+        <div class="metric" id="recoveryCount">-</div>
+        <div class="small">Antal recovery-logs</div>
+      </section>
+
+      <section class="card">
+        <h2>Readiness</h2>
+        <div class="metric" id="readinessScore">-</div>
+        <div class="small" id="readinessLabel">Ingen data endnu</div>
+        <div class="small" id="readinessSuggestion" style="margin-top:8px"></div>
+        <div class="small" id="readinessAction" style="margin-top:8px"></div>
+      </section>
+    </div>
+
+    <section class="card" id="manualWorkoutSection" style="margin-top:18px">
+      <h2>Nyt workout</h2>
+      <form id="workoutForm">
+        <label>
+          Dato
+          <input id="date" name="date" type="date" required>
+        </label>
+
+        <label>
+          Type
+          <select id="type" name="type" required>
+            <option value="styrke">Styrke</option>
+            <option value="løb">Løb</option>
+            <option value="mobilitet">Mobilitet</option>
+            <option value="andet">Andet</option>
+          </select>
+        </label>
+
+        <label>
+          Program (valgfrit)
+          <select id="program_id" name="program_id">
+            <option value="">(Intet program)</option>
+          </select>
+        </label>
+
+        <label>
+          Dag fra program
+          <select id="program_day_idx" name="program_day_idx">
+            <option value="">(Ingen dag valgt)</option>
+          </select>
+        </label>
+
+        <div class="btn-row">
+          <button type="button" id="loadProgramDayBtn">Indlæs dag</button>
+        </div>
+
+        <p id="programLoadStatus" class="small">Intet program indlæst endnu.</p>
+
+        <label>
+          Varighed (min)
+          <input id="duration_min" name="duration_min" type="number" min="0" step="1" value="45" required>
+        </label>
+
+        <div class="entry-box">
+          <h3>Tilføj øvelse til passet</h3>
+
+          <label>
+            Øvelse
+            <select id="entry_exercise_id" name="entry_exercise_id">
+              <option value="">(Ingen valgt)</option>
+            </select>
+          </label>
+
+          <label>
+            Sæt
+            <select id="entry_sets" name="entry_sets">
+              <option value="">(Vælg sæt)</option>
+            </select>
+          </label>
+
+          <label>
+            Mål
+            <select id="entry_reps" name="entry_reps">
+              <option value="">(Vælg mål)</option>
+            </select>
+          </label>
+
+          <label>
+            Reps / tid (opnået)
+            <input id="entry_achieved_reps" name="entry_achieved_reps" type="text" placeholder="fx 8">
+          </label>
+
+          <label>
+            Belastning
+            <select id="entry_load" name="entry_load">
+              <option value="">(Vælg belastning)</option>
+            </select>
+          </label>
+
+          <p id="progressionHint" class="small">Intet load-forslag endnu.</p>
+
+          <label>
+            Øvelsesnoter
+            <input id="entry_notes" name="entry_notes" type="text" placeholder="fx rolig teknik">
+          </label>
+
+          <div class="btn-row">
+            <button type="button" id="addEntryBtn">Tilføj øvelse</button>
+            <button type="button" id="clearEntriesBtn">Ryd øvelser</button>
+          </div>
+
+          <p id="entryStatus" class="small">Ingen øvelser tilføjet endnu.</p>
+          <ul id="pendingEntriesList"></ul>
+        </div>
+
+        <label>
+          Noter
+          <textarea id="notes" name="notes" placeholder="Fx helkrop, roligt pas, tung dag, interval osv."></textarea>
+        </label>
+
+        <button type="submit">Gem workout</button>
+      </form>
+
+      <p id="formStatus" class="small" style="margin-top:12px">Klar.</p>
+    </section>
+
+    <section class="card" id="todayPlanSection" style="margin-top:18px">
+      <div class="row">
+        <h2 id="todayPlanHeading">Dagens plan</h2>
+        <div class="small" id="todayPlanMeta"></div>
+      </div>
+      <p id="todayPlanTiming" class="small">Ingen timing endnu.</p>
+      <p id="todayPlanSummary" class="small">Ingen plan endnu.</p>
+      <ul id="todayPlanList"></ul>
+
+      <div class="card" style="margin-top:14px">
+        <h3 id="sessionReviewHeading">Review af træning</h3>
+        <div id="reviewPlanSummary" class="small" style="margin-bottom:12px"></div>
+          <form id="sessionResultForm">
+          <label>
+            Gennemført?
+            <select id="session_completed" name="session_completed">
+              <option value="true" selected>Ja</option>
+              <option value="false">Nej</option>
+            </select>
+          </label>
+
+          <label>
+            Kort note
+            <textarea id="session_notes" name="session_notes" placeholder="Fx tung men god, sprang sidste øvelse over, fin energi"></textarea>
+          </label>
+
+          <div>
+            <h4 style="margin:0 0 10px">Øvelsesreview</h4>
+            <ul id="sessionReviewList"></ul>
+          </div>
+
+          <button type="submit">Gem session-resultat</button>
+        </form>
+        <p id="sessionResultStatus" class="small" style="margin-top:12px">Ingen session gemt endnu.</p>
+      </div>
+    </section>
+
+    <section class="card" id="checkinSection" style="margin-top:18px">
+      <h2>Check-in</h2>
+      <p id="checkinIntro" class="small">Start her. Vurder søvn, energi, ømhed og tid, så beregner SovereignStrength dagens træning ud fra dit aktuelle niveau.</p>
+      <form id="recoveryForm">
+        <label>
+          Dato
+          <input id="recovery_date" name="recovery_date" type="date" required>
+        </label>
+
+        <label>
+          Søvn (1-5)
+          <select id="sleep_score" name="sleep_score" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label>
+          Energi (1-5)
+          <select id="energy_score" name="energy_score" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label>
+          Ømhed (1-5)
+          <select id="soreness_score" name="soreness_score" required>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label>
+          Tid i dag
+          <select id="time_budget_min" name="time_budget_min" required>
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+            <option value="45" selected>45 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </label>
+
+        <label>
+          Noter
+          <textarea id="recovery_notes" name="recovery_notes" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
+        </label>
+
+        <button type="submit">Beregn dagens plan</button>
+      </form>
+
+      <p id="recoveryFormStatus" class="small" style="margin-top:12px">Klar.</p>
+    </section>
+
+    <div class="two-col" id="historyTopSection">
+      <section class="card">
+        <div class="row">
+          <h2>Seneste workouts</h2>
+          <div class="small" id="listMeta"></div>
+        </div>
+        <ul id="workoutsList"></ul>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2>Øvelsesbibliotek</h2>
+          <div class="small" id="exerciseMeta"></div>
+        </div>
+        <ul id="exercisesList"></ul>
+      </section>
+    </div>
+
+    <div class="two-col" id="historyBottomSection">
+      <section class="card">
+        <div class="row">
+          <h2>Seneste recovery</h2>
+          <div class="small" id="recoveryMeta"></div>
+        </div>
+        <ul id="recoveryList"></ul>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2>Programmer</h2>
+          <div class="small" id="programMeta"></div>
+        </div>
+        <div id="programsRoot"></div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:18px">
+      <h2>Status</h2>
+      <p id="status" class="small">Indlæser data...</p>
+      <pre id="debug"></pre>
+    </section>
+  </div>
+
+  <script src="/app.js?v=0.1.7"></script>
+</body>
+</html>
