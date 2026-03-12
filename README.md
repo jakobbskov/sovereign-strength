@@ -1,83 +1,108 @@
-# Sovereign Strength
+# SovereignStrength
 
-Sovereign Strength is a local-first, self-hosted web application for strength training, physical development, and structured exercise planning.
+SovereignStrength is a local-first, deterministic training system for strength work.
 
-The application is designed to support practical, explainable, and sustainable training decisions. The goal is not motivational theater or fitness-platform noise, but a calm and reliable system for managing training with readable logic and user-controlled data.
+It is designed to help a single user plan training, log sessions, and receive explainable feedback without relying on external platforms, cloud AI, or opaque recommendation systems.
 
-## Purpose
+## Why it exists
 
-Sovereign Strength helps the user:
+Most training apps are built to increase engagement, collect data, and push generic motivation loops.
 
-- track training sessions and exercise performance
-- structure progression over time
-- support training decisions with understandable logic
-- adapt training load and planning to real conditions
-- use a self-hosted solution with controlled data and development direction
+SovereignStrength is built for the opposite:
 
-## Design principles
+- local data ownership
+- deterministic logic
+- explainable decisions
+- low technical complexity
+- repairable architecture
 
-- local-first
-- self-hosted
-- no tracking
-- readable and explainable logic
-- practical rather than bloated
-- structured progression support
-- long-term maintainability
+## Current documented state
 
-## Operational overview
+The currently documented system includes:
 
-**Current host:** `Beelink`  
-**Application family:** `Sovereign` self-hosted tools
+- daily plan generation
+- readiness and fatigue-aware decision logic
+- progression logic per exercise
+- equipment-aware load recommendations
+- forecast output
+- authenticated access
+- workout logging
 
-## Architecture
+The documented user flow is:
 
-Sovereign Strength is intended as a lightweight self-hosted training application with understandable state, rule-based logic, and user-controlled data.
+`Forecast -> Check-in -> Plan -> Workout -> Review`
+
+## Core principles
+
+### 1. Local-first
+Data is stored locally in JSON files.
+
+### 2. Explainable logic
+The system should always be able to explain why it recommends a load, a hold, or a lighter session.
+
+### 3. Deterministic behavior
+The same inputs should produce the same outputs.
+
+### 4. Low complexity
+The project aims to stay readable and maintainable:
+- HTML
+- CSS
+- Vanilla JavaScript
+- Python
+- JSON
+
+No unnecessary framework pile-up. Humanity has suffered enough.
+
+## High-level architecture
 
 ### Frontend
+Static PWA-style frontend served from:
 
-The frontend contains the user-facing interface and exercise interaction logic.
+`/var/www/sovereign-strength/`
+
+Primary files:
+- `index.html`
+- `app.js`
+- `styles.css`
 
 ### Backend
+Python Flask API served via Gunicorn and systemd from:
 
-The backend and runtime structure should be documented further as the repository is expanded.
+`/opt/sovereign-strength-api/app.py`
 
 ### Data
+JSON-based local storage in:
 
-The application uses structured training data, progression state, and exercise-related logic. The exact live data model should be documented in more detail in `docs/data-model.md`.
-
-## Expected functional scope
-
-The application is intended to support, among other things:
-
-- exercise tracking
-- rep and load registration
-- progression monitoring
-- session planning
-- training adjustment logic
-- self-hosted data control
-
-## Repository scope
-
-This repository is intended to document:
-
-- application code
-- architecture
-- deployment
-- data model
-- version history
-
-Production data, private health-related records, secrets, and environment-specific runtime files must not be stored in the repository.
+`/var/www/sovereign-strength/data/`
 
 ## Documentation
 
-Additional documentation is stored in `docs/`:
+- [Architecture](docs/architecture.md)
+- [Data model](docs/data-model.md)
+- [Deployment](docs/deployment.md)
+- [Changelog](CHANGELOG.md)
 
-- `docs/architecture.md`
-- `docs/deployment.md`
-- `docs/data-model.md`
+## Planned 1.0 target
 
-## Status
+Version 1.0 should be considered complete when the system can:
 
-Sovereign Strength is under active development as part of the Sovereign family of self-hosted tools.
+- display the training program
+- log sets
+- save a workout
+- generate a session summary
 
-The repository currently serves as the initial documentation and structure baseline for the application.
+Not before.
+
+## Repository status
+
+This repository currently documents the system architecture and intended direction.
+It should gradually become the authoritative source for:
+
+- current implementation
+- deployment setup
+- data contracts
+- release history
+
+## License
+
+See [LICENSE](LICENSE).
