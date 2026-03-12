@@ -286,21 +286,36 @@ def create_session_result(user_id, payload):
             for x in raw_sets:
                 if not isinstance(x, dict):
                     continue
+                reps_val = str(x.get("reps", "")).strip()
+                load_val = str(x.get("load", "")).strip()
+                if not reps_val and not load_val:
+                    continue
                 clean_sets.append({
-                    "reps": str(x.get("reps", "")).strip(),
-                    "load": str(x.get("load", "")).strip()
+                    "reps": reps_val,
+                    "load": load_val
                 })
+
+        achieved_reps = str(r.get("achieved_reps", "")).strip()
+        base_load = str(r.get("load", "")).strip()
+        notes_val = str(r.get("notes", "")).strip()
+        has_meaningful_data = bool(clean_sets or achieved_reps or base_load)
+
+        if not has_meaningful_data:
+            continue
 
         clean_results.append({
             "exercise_id": str(r.get("exercise_id", "")).strip(),
             "completed": bool(r.get("completed", False)),
             "target_reps": str(r.get("target_reps", "")).strip(),
-            "achieved_reps": str(r.get("achieved_reps", "")).strip(),
-            "load": str(r.get("load", "")).strip(),
+            "achieved_reps": achieved_reps,
+            "load": base_load,
             "sets": clean_sets,
             "hit_failure": bool(r.get("hit_failure", False)),
-            "notes": str(r.get("notes", "")).strip()
+            "notes": notes_val
         })
+
+    if not clean_results:
+        return None, {"ok": False, "error": "ingen træningsdata at gemme"}, 400
 
     item = {
         "id": str(uuid.uuid4()),
