@@ -12,6 +12,7 @@ let STATE = {
   programs: [],
   userSettings: {},
   pendingEntries: [],
+  sessionResults: [],
   lastAutoLoad: ""
 };
 
@@ -328,6 +329,83 @@ function renderWorkouts(items){
 
   setText("listMeta", `${sorted.length} elementer`);
 }
+
+
+function ensureSessionHistoryMount(){
+  let root = document.getElementById("sessionResultsList");
+  if (root) return root;
+
+  const workoutsList = document.getElementById("workoutsList");
+  if (!workoutsList) return null;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.marginTop = "16px";
+  card.innerHTML = `
+    <div class="row">
+      <h2>Session summaries</h2>
+      <div class="small" id="sessionResultsMeta"></div>
+    </div>
+    <ul id="sessionResultsList"></ul>
+  `;
+
+  const parentCard = workoutsList.closest(".card");
+  if (parentCard && parentCard.parentNode){
+    parentCard.parentNode.insertBefore(card, parentCard.nextSibling);
+  } else {
+    workoutsList.parentNode.appendChild(card);
+  }
+
+  return document.getElementById("sessionResultsList");
+}
+
+function renderSessionHistory(items){
+  const root = ensureSessionHistoryMount();
+  if (!root) return;
+
+  if (!Array.isArray(items) || items.length === 0){
+    root.innerHTML = `<li><div class="small">Ingen session summaries endnu.</div></li>`;
+    setText("sessionResultsMeta", "0 elementer");
+    return;
+  }
+
+  const sorted = [...items].sort((a,b) => String(b.created_at || b.date).localeCompare(String(a.created_at || a.date)));
+
+  root.innerHTML = sorted.map(item => {
+    const summary = item && item.summary && typeof item.summary === "object" ? item.summary : null;
+    const fatigue = String(summary?.fatigue || "").trim() || "ukendt";
+    const totalSets = Number(summary?.total_sets || 0);
+    const totalReps = Number(summary?.total_reps || 0);
+    const estimatedVolume = Number(summary?.estimated_volume || 0);
+    const nextStepHint = String(summary?.next_step_hint || "").trim();
+    const progressFlags = Array.isArray(summary?.progress_flags) ? summary.progress_flags : [];
+    const notes = String(item?.notes || "").trim();
+    const typeLabel = formatSessionType(item?.session_type || "");
+    const dateLabel = String(item?.date || "");
+
+    return `
+      <li>
+        <div class="row">
+          <strong>${esc(dateLabel)} · ${esc(typeLabel || "ukendt")}</strong>
+          <span class="small">fatigue ${esc(fatigue)}</span>
+        </div>
+        <div class="small" style="margin-top:6px">
+          Sæt: ${esc(String(totalSets))} · Reps: ${esc(String(totalReps))} · Volumen: ${esc(String(estimatedVolume))}
+        </div>
+        <div class="small" style="margin-top:6px">
+          Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
+        </div>
+        <div class="small" style="margin-top:6px">
+          ${progressFlags.length ? esc(progressFlags.join(", ")) : "Ingen progress flags"}
+        </div>
+        ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
+      </li>
+    `;
+  }).join("");
+
+  setText("sessionResultsMeta", `${sorted.length} elementer`);
+}
+
 
 function renderExercises(items){
   const root = document.getElementById("exercisesList");
@@ -1132,7 +1210,7 @@ function renderPrograms(programs, exercises){
 
 async function refreshAll(){
   const debug = {};
-  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettings, workoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi] = await Promise.all([
+  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettings, workoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
     getJson(FILES.workouts),
     getJson(FILES.runs),
     getJson(FILES.recovery),
@@ -1142,12 +1220,14 @@ async function refreshAll(){
     apiGet("/api/workouts"),
     apiGet("/api/checkins"),
     apiGet("/api/checkin/latest"),
-    apiGet("/api/today-plan")
+    apiGet("/api/today-plan"),
+    apiGet("/api/session-results")
   ]);
 
   STATE.exercises = Array.isArray(exercises) ? exercises : [];
   STATE.programs = Array.isArray(programs) ? programs : [];
   STATE.userSettings = userSettings && typeof userSettings === "object" ? userSettings : {};
+  STATE.sessionResults = Array.isArray(sessionResultsApi?.items) ? sessionResultsApi.items : [];
 
   fillSelect("program_id", STATE.programs, x => x.id, x => x.name, "(Intet program)");
   fillSelect("entry_exercise_id", STATE.exercises, x => x.id, x => x.name, "(Ingen valgt)");
@@ -1160,6 +1240,7 @@ async function refreshAll(){
   setText("recoveryCount", Array.isArray(recoveryFile) ? recoveryFile.length : 0);
 
   renderWorkouts(workoutsApi.items || []);
+  renderSessionHistory(STATE.sessionResults);
   renderExercises(STATE.exercises);
   renderRecovery(recoveryApi.items || []);
   renderReadiness(latestRecoveryApi.item || null);
@@ -1177,6 +1258,7 @@ async function refreshAll(){
   debug.recovery_api = recoveryApi;
   debug.latest_recovery_api = latestRecoveryApi;
   debug.today_plan_api = todayPlanApi;
+  debug.session_results_api = sessionResultsApi;
   debug.runs = runs;
   debug.programs = programs;
   debug.exercises = exercises;

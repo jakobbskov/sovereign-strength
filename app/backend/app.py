@@ -315,6 +315,8 @@ def create_session_result(user_id, payload):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
+    item["summary"] = build_session_summary(item)
+
     item, count = append_user_item("session_results", item)
     return item, None, count
 
