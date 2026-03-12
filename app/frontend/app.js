@@ -16,6 +16,16 @@ let STATE = {
   lastAutoLoad: ""
 };
 
+
+function getLocalISODate(){
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+
 function setText(id, text){
   const el = document.getElementById(id);
   if (el) el.textContent = String(text);
@@ -1469,7 +1479,7 @@ async function handleWorkoutSubmit(ev){
     statusEl?.classList.add("ok");
     STATE.pendingEntries = [];
     form.reset();
-    form.date.value = new Date().toISOString().slice(0,10);
+    form.date.value = getLocalISODate();
     form.duration_min.value = 45;
     form.type.value = "styrke";
     refreshProgramDaySelect();
@@ -1506,7 +1516,7 @@ async function handleRecoverySubmit(ev){
     setText("recoveryFormStatus", "Check-in gemt. Dagens plan opdateret.");
     statusEl?.classList.add("ok");
     form.reset();
-    form.recovery_date.value = new Date().toISOString().slice(0,10);
+    form.recovery_date.value = getLocalISODate();
     form.sleep_score.value = "3";
     form.energy_score.value = "3";
     form.soreness_score.value = "2";
@@ -1535,7 +1545,7 @@ async function handleSessionResultSubmit(ev){
   }
 
   const payload = {
-    date: plan.date || new Date().toISOString().slice(0,10),
+    date: plan.date || getLocalISODate(),
     session_type: plan.session_type || "",
     timing_state: plan.timing_state || "",
     readiness_score: plan.readiness_score ?? null,
@@ -1826,12 +1836,12 @@ async function boot(){
   try{
     const dateEl = document.getElementById("date");
     if (dateEl && !dateEl.value){
-      dateEl.value = new Date().toISOString().slice(0,10);
+      dateEl.value = getLocalISODate();
     }
 
     const recoveryDateEl = document.getElementById("recovery_date");
     if (recoveryDateEl && !recoveryDateEl.value){
-      recoveryDateEl.value = new Date().toISOString().slice(0,10);
+      recoveryDateEl.value = getLocalISODate();
     }
 
     const workoutForm = document.getElementById("workoutForm");

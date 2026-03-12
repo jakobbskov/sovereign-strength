@@ -695,6 +695,72 @@ def compute_fatigue_score_from_latest_strength(session_results, workouts):
 
 
 
+
+def build_restitution_plan(time_budget_min):
+    try:
+        time_budget_min = int(time_budget_min or 0)
+    except Exception:
+        time_budget_min = 20
+
+    if time_budget_min <= 0:
+        time_budget_min = 20
+
+    if time_budget_min <= 20:
+        duration = "20 sek"
+        rounds = 2
+    elif time_budget_min <= 30:
+        duration = "30 sek"
+        rounds = 2
+    else:
+        duration = "40 sek"
+        rounds = 3
+
+    return [
+        {
+            "exercise_id": "bird_dog",
+            "sets": rounds,
+            "target_reps": duration,
+            "target_load": None,
+            "progression_decision": "no_progression",
+            "progression_reason": "restitution prioriteres",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+        },
+        {
+            "exercise_id": "dead_bug",
+            "sets": rounds,
+            "target_reps": "8/side",
+            "target_load": None,
+            "progression_decision": "no_progression",
+            "progression_reason": "restitution prioriteres",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+        },
+        {
+            "exercise_id": "plank",
+            "sets": rounds,
+            "target_reps": duration,
+            "target_load": None,
+            "progression_decision": "no_progression",
+            "progression_reason": "restitution prioriteres",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+        },
+    ]
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None):
     program = None
     for p in programs:
