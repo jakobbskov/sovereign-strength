@@ -498,6 +498,93 @@ function renderSessionHistory(items){
 }
 
 
+
+function ensureLoadMetricsMount(){
+  let root = document.getElementById("loadMetricsCard");
+  if (root) return root;
+
+  const historyTop = document.getElementById("historyTopSection");
+  const historyBottom = document.getElementById("historyBottomSection");
+  const parent = historyTop?.parentNode || historyBottom?.parentNode;
+  if (!parent) return null;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.id = "loadMetricsCard";
+  card.style.marginTop = "16px";
+  card.innerHTML = `
+    <div class="row">
+      <h2>Belastning</h2>
+      <div class="small" id="loadMetricsMeta"></div>
+    </div>
+    <div id="loadMetricsBody" class="small"></div>
+  `;
+
+  if (historyTop && historyTop.parentNode){
+    historyTop.parentNode.insertBefore(card, historyTop);
+  } else {
+    parent.appendChild(card);
+  }
+
+  return card;
+}
+
+function renderLoadMetrics(loadMetrics){
+  const card = ensureLoadMetricsMount();
+  if (!card) return;
+
+  const body = document.getElementById("loadMetricsBody");
+  if (!body) return;
+
+  if (!loadMetrics || typeof loadMetrics !== "object"){
+    setText("loadMetricsMeta", "");
+    body.innerHTML = `<div class="small">Ingen belastningsdata endnu.</div>`;
+    return;
+  }
+
+  const todayLoad = Number(loadMetrics.today_load || 0);
+  const acute7d = Number(loadMetrics.acute_7d_load || 0);
+  const chronic28d = Number(loadMetrics.chronic_28d_load || 0);
+  const ratio = Number(loadMetrics.load_ratio || 0);
+  const status = String(loadMetrics.load_status || "").trim() || "ukendt";
+  const dailyMap = loadMetrics.daily_load_map && typeof loadMetrics.daily_load_map === "object"
+    ? loadMetrics.daily_load_map
+    : {};
+
+  const recentDays = Object.entries(dailyMap)
+    .sort((a,b) => String(b[0]).localeCompare(String(a[0])))
+    .slice(0, 7);
+
+  const statusLabelMap = {
+    underloaded: "Underloaded",
+    balanced: "Balanced",
+    elevated: "Elevated",
+    spiking: "Spiking"
+  };
+  const statusLabel = statusLabelMap[status] || status;
+
+  setText("loadMetricsMeta", `Status: ${statusLabel}`);
+
+  body.innerHTML = `
+    <div style="margin-bottom:10px">
+      <strong>I dag:</strong> ${esc(String(todayLoad))}<br>
+      <strong>7 dage:</strong> ${esc(String(acute7d))}<br>
+      <strong>28 dage:</strong> ${esc(String(chronic28d))}<br>
+      <strong>Ratio:</strong> ${esc(String(ratio))}<br>
+      <strong>Status:</strong> ${esc(String(statusLabel))}
+    </div>
+    <div>
+      <strong>Seneste dage</strong>
+      <div style="margin-top:6px">
+        ${recentDays.length
+          ? recentDays.map(([day, load]) => `<div>${esc(day)} · ${esc(String(load))}</div>`).join("")
+          : '<div class="small">Ingen daglige load-data endnu.</div>'}
+      </div>
+    </div>
+  `;
+}
+
+
 function renderExercises(items){
   const root = document.getElementById("exercisesList");
   if (!root) return;
@@ -1331,6 +1418,7 @@ async function refreshAll(){
   setText("recoveryCount", Array.isArray(recoveryFile) ? recoveryFile.length : 0);
 
   renderWorkouts(workoutsApi.items || []);
+  renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null);
   renderSessionHistory(STATE.sessionResults);
   renderExercises(STATE.exercises);
   renderRecovery(recoveryApi.items || []);
@@ -1350,6 +1438,7 @@ async function refreshAll(){
   debug.latest_recovery_api = latestRecoveryApi;
   debug.today_plan_api = todayPlanApi;
   debug.session_results_api = sessionResultsApi;
+  debug.load_metrics = sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null;
   debug.runs = runs;
   debug.programs = programs;
   debug.exercises = exercises;
