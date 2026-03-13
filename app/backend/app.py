@@ -682,11 +682,6 @@ def compute_fatigue_score_from_latest_strength(session_results, workouts, user_i
     latest_strength_failed = session_has_failure(latest_strength_session)
     latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
     latest_strength_completed = None if latest_strength_session is None else bool(latest_strength_session.get("completed", False))
-    recovery_state = build_recovery_state(
-        user_id=user_id,
-        latest_checkin=latest_checkin,
-        days_since_last_strength=days_since_last_strength
-    )
 
     latest_strength_workout = find_latest_strength_workout(workouts)
     days_since_last_strength = None
@@ -698,6 +693,12 @@ def compute_fatigue_score_from_latest_strength(session_results, workouts, user_i
                 days_since_last_strength = days_between_iso_dates(session_date, workout_date)
         except Exception:
             days_since_last_strength = None
+
+    recovery_state = build_recovery_state(
+        user_id=user_id,
+        latest_checkin=latest_checkin,
+        days_since_last_strength=days_since_last_strength
+    )
 
     fatigue_score = (
         (3 if latest_strength_failed else 0)
