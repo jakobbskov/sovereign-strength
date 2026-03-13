@@ -682,6 +682,11 @@ def compute_fatigue_score_from_latest_strength(session_results, workouts):
     latest_strength_failed = session_has_failure(latest_strength_session)
     latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
     latest_strength_completed = None if latest_strength_session is None else bool(latest_strength_session.get("completed", False))
+    recovery_state = build_recovery_state(
+        user_id=auth_user.get("user_id"),
+        latest_checkin=latest_checkin,
+        days_since_last_strength=days_since_last_strength
+    )
 
     latest_strength_workout = find_latest_strength_workout(workouts)
     days_since_last_strength = None
@@ -799,6 +804,113 @@ def _decision_label(decision):
         "follow_plan": "Følg planen",
     }
     return labels.get(decision, decision or "Følg planen")
+
+
+
+def build_recovery_state(user_id, latest_checkin, days_since_last_strength=None):
+    """
+    Recovery model v0.1
+    Uses:
+    - sleep_score
+    - energy_score
+    - soreness_score
+    - load_status
+    - days_since_last_strength
+    """
+    state = get_live_adaptation_state_for(user_id)
+    load_metrics = state.get("load_metrics", {}) if isinstance(state, dict) else {}
+    load_status = str(load_metrics.get("load_status", "underloaded")).strip()
+
+    sleep_score = 0
+    energy_score = 0
+    soreness_score = 0
+
+    if isinstance(latest_checkin, dict):
+        try:
+            sleep_score = int(latest_checkin.get("sleep_score", 0) or 0)
+        except Exception:
+            sleep_score = 0
+        try:
+            energy_score = int(latest_checkin.get("energy_score", 0) or 0)
+        except Exception:
+            energy_score = 0
+        try:
+            soreness_score = int(latest_checkin.get("soreness_score", 0) or 0)
+        except Exception:
+            soreness_score = 0
+
+    score = 50
+    explanation = []
+
+    # Sleep
+    score += (sleep_score - 3) * 8
+    if sleep_score >= 4:
+        explanation.append("god søvn")
+    elif sleep_score <= 2:
+        explanation.append("lav søvnkvalitet")
+
+    # Energy
+    score += (energy_score - 3) * 8
+    if energy_score >= 4:
+        explanation.append("god energi")
+    elif energy_score <= 2:
+        explanation.append("lav energi")
+
+    # Soreness
+    score -= max(0, soreness_score - 2) * 10
+    if soreness_score >= 4:
+        explanation.append("høj ømhed")
+    elif soreness_score <= 2:
+        explanation.append("lav ømhed")
+
+    # Global load
+    if load_status == "spiking":
+        score -= 18
+        explanation.append("belastning er i spike")
+    elif load_status == "elevated":
+        score -= 10
+        explanation.append("belastning er forhøjet")
+    elif load_status == "underloaded":
+        score += 4
+        explanation.append("belastning er lav")
+
+    # Days since last strength
+    try:
+        d = int(days_since_last_strength) if days_since_last_strength is not None else None
+    except Exception:
+        d = None
+
+    if d is not None:
+        if d >= 2:
+            score += 6
+            explanation.append("du har haft lidt afstand til sidste styrkepas")
+        elif d == 0:
+            score -= 6
+            explanation.append("du trænede styrke meget for nylig")
+
+    score = max(0, min(100, int(round(score))))
+
+    if score >= 70:
+        recovery_state = "ready"
+    elif score >= 45:
+        recovery_state = "caution"
+    else:
+        recovery_state = "recover"
+
+    strain_flag = bool(load_status in ("spiking", "elevated") and score < 60)
+
+    return {
+        "recovery_score": score,
+        "recovery_state": recovery_state,
+        "strain_flag": strain_flag,
+        "explanation": explanation,
+        "sleep_score": sleep_score,
+        "energy_score": energy_score,
+        "soreness_score": soreness_score,
+        "load_status": load_status,
+        "days_since_last_strength": days_since_last_strength,
+    }
+
 
 def build_training_decision(user_id, plan_item, readiness, time_available):
     state = get_live_adaptation_state_for(user_id)
@@ -1544,8 +1656,13 @@ def get_today_plan():
 
     
 
+    # recovery-based session override
+    if recovery_state.get("recovery_state") == "recover":
+        fatigue_session_override = "restitution"
+    else:
+        fatigue_session_override = None
+
     # fatigue-based session override
-    fatigue_session_override = None
 
     if fatigue_score >= 6:
         fatigue_session_override = "restitution"
@@ -1709,6 +1826,7 @@ def get_today_plan():
         "latest_strength_load_drop_count": latest_strength_load_drop_count,
         "latest_strength_completed": latest_strength_completed,
         "fatigue_score": fatigue_score,
+        "recovery_state": recovery_state,
         "template_id": template_id,
         "reason": reason,
         "days_since_last_strength": days_since_last_strength,
