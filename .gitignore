@@ -49,3 +49,5 @@ app/data-samples/*.bak*
 *.pyo
 app/frontend/data/
 app/data-samples/
+
+app/backend/app.py.bak.*

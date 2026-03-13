@@ -778,6 +778,115 @@ def build_restitution_plan(time_budget_min):
     ]
 
 
+
+
+def get_live_adaptation_state_for(user_id):
+    try:
+        state = get_adaptation_state_for(user_id)
+        if isinstance(state, dict):
+            return state
+    except Exception:
+        pass
+    return {}
+
+def _decision_label(decision):
+    decision = str(decision or "").strip()
+    labels = {
+        "progress": "Progressér",
+        "hold": "Hold niveau",
+        "simplify": "Forenkle",
+        "recover": "Restitution",
+        "follow_plan": "Følg planen",
+    }
+    return labels.get(decision, decision or "Følg planen")
+
+def build_training_decision(user_id, plan_item, readiness, time_available):
+    state = get_live_adaptation_state_for(user_id)
+    load_metrics = state.get("load_metrics", {}) if isinstance(state, dict) else {}
+    exercise_profiles = state.get("exercise_profiles", {}) if isinstance(state, dict) else {}
+
+    load_status = str(load_metrics.get("load_status", "underloaded")).strip()
+    exercise_id = str((plan_item or {}).get("exercise_id", "")).strip()
+    profile = exercise_profiles.get(exercise_id, {}) if isinstance(exercise_profiles, dict) else {}
+
+    trend = str(profile.get("trend", "stable")).strip()
+    recommended = str(profile.get("recommended_action", "hold")).strip()
+    confidence = profile.get("confidence", None)
+
+    explanation = []
+
+    if load_status == "spiking":
+        explanation.append("samlet belastning er høj")
+    elif load_status == "elevated":
+        explanation.append("samlet belastning er forhøjet")
+    elif load_status == "underloaded":
+        explanation.append("samlet belastning er lav")
+
+    try:
+        readiness_val = int(readiness or 0)
+    except Exception:
+        readiness_val = 0
+
+    if readiness_val <= 2:
+        explanation.append("lav readiness rapporteret")
+    elif readiness_val >= 4:
+        explanation.append("høj readiness rapporteret")
+
+    try:
+        time_val = int(time_available or 0)
+    except Exception:
+        time_val = 0
+
+    if time_val and time_val <= 20:
+        explanation.append("kort træningstid i dag")
+
+    if trend == "progressing":
+        explanation.append(f"{exercise_id} viser fremgang")
+    elif trend == "regressing":
+        explanation.append(f"{exercise_id} viser tegn på tilbagegang")
+    elif trend == "stable":
+        explanation.append(f"{exercise_id} er stabil")
+
+    if recommended == "increase_load":
+        explanation.append("øvelsen tåler sandsynligvis mere belastning")
+    elif recommended == "increase_reps":
+        explanation.append("øvelsen tåler sandsynligvis flere reps")
+    elif recommended == "hold":
+        explanation.append("øvelsen bør holdes stabil")
+    elif recommended == "simplify":
+        explanation.append("øvelsen bør forenkles")
+
+    if bool((plan_item or {}).get("equipment_constraint", False)):
+        explanation.append("næste vægtspring er større end anbefalet progression")
+
+    if load_status == "spiking":
+        decision = "hold"
+    elif recommended == "simplify":
+        decision = "simplify"
+    elif trend == "regressing":
+        decision = "simplify"
+    elif recommended in ("increase_load", "increase_reps") and readiness_val >= 4:
+        decision = "progress"
+    elif recommended == "hold":
+        decision = "hold"
+    else:
+        decision = "follow_plan"
+
+    label = _decision_label(decision)
+
+    coach_text = "Følg planen i dag."
+    if explanation:
+        coach_text = label + ". " + " · ".join(explanation) + "."
+
+    return {
+        "decision": decision,
+        "decision_label": label,
+        "explanation": explanation,
+        "coach_text": coach_text,
+        "confidence": confidence
+    }
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None):
     program = None
     for p in programs:
@@ -938,7 +1047,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
 
         progression_reason = progression.get("progression_reason", "") or ""
 
-        plan_entries.append({
+        result_entry = {
             "exercise_id": exercise_id,
             "sets": sets,
             "target_reps": reps,
@@ -951,7 +1060,16 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             "next_target_reps": progression.get("next_target_reps"),
             "secondary_constraints": progression.get("secondary_constraints", []),
             "substituted_from": ex.get("_substituted_from"),
-        })
+        }
+
+        result_entry["decision"] = build_training_decision(
+            user_id=latest_strength.get("user_id") if isinstance(latest_strength, dict) else None,
+            plan_item=result_entry,
+            readiness=latest_strength.get("readiness_score", 0) if isinstance(latest_strength, dict) else 5,
+            time_available=time_budget_min
+        )
+
+        plan_entries.append(result_entry)
 
     return {
         "ok": True,
