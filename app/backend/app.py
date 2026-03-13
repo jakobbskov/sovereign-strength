@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 import json
+import re
 import uuid
 import os
 from storage import get_storage_backend
@@ -1749,6 +1750,24 @@ def compute_load_metrics(session_results, user_id=None):
 
 
 
+
+
+def _parse_numeric_token(value):
+    s = str(value or "").strip()
+    if not s:
+        return 0.0
+    matches = re.findall(r'\d+(?:[.,]\d+)?', s)
+    if not matches:
+        return 0.0
+    nums = []
+    for m in matches:
+        try:
+            nums.append(float(m.replace(",", ".")))
+        except Exception:
+            pass
+    if not nums:
+        return 0.0
+    return max(nums)
 
 def _safe_div(num, den):
     try:
