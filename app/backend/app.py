@@ -1657,6 +1657,12 @@ def get_today_plan():
     
 
     # recovery-based session override
+    recovery_state = build_recovery_state(
+        user_id=auth_user.get("user_id"),
+        latest_checkin=latest_checkin,
+        days_since_last_strength=days_since_last_strength
+    )
+
     if recovery_state.get("recovery_state") == "recover":
         fatigue_session_override = "restitution"
     else:
