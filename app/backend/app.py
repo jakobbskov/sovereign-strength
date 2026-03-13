@@ -788,12 +788,17 @@ def build_restitution_plan(time_budget_min):
 
 def get_live_adaptation_state_for(user_id):
     try:
-        state = get_adaptation_state_for(user_id)
-        if isinstance(state, dict):
-            return state
+        user_id = str(user_id or "").strip()
+        raw = get_adaptation_state()
+        if not isinstance(raw, dict):
+            return {}
+        users = raw.get("users", {})
+        if not isinstance(users, dict):
+            return {}
+        state = users.get(user_id, {})
+        return state if isinstance(state, dict) else {}
     except Exception:
-        pass
-    return {}
+        return {}
 
 def _decision_label(decision):
     decision = str(decision or "").strip()
@@ -1011,8 +1016,7 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         str(node.get("fatigue_group", "")).strip()
         or str(node.get("movement_pattern", "")).strip()
         or str(node.get("category", "")).strip()
-        or exercise_id
-    )
+    ) or None
     family_info = family_fatigue_map.get(family_key, {}) if isinstance(family_fatigue_map, dict) else {}
     family_state = str(family_info.get("family_state", "unknown")).strip()
     family_signals = family_info.get("signals", []) if isinstance(family_info, dict) else []
@@ -2463,7 +2467,7 @@ def build_exercise_profiles(user_id, max_sessions_per_exercise=8):
 
     profiles = {}
 
-    for exercise_id, items in grouped.items():
+    for f, items in grouped.items():
         relevant = items[-max_sessions_per_exercise:]
         sessions = len(relevant)
 
@@ -2557,8 +2561,7 @@ def compute_family_fatigue(exercise_id, identity_graph, exercise_profiles):
         str(node.get("fatigue_group", "")).strip()
         or str(node.get("movement_pattern", "")).strip()
         or str(node.get("category", "")).strip()
-        or exercise_id
-    )
+    ) or None
 
     family_members = []
     for ex_id, ex_node in identity_graph.items():
@@ -2655,13 +2658,11 @@ def build_family_fatigue_map(identity_graph, exercise_profiles):
     for exercise_id, node in identity_graph.items():
         if not isinstance(node, dict):
             continue
-
         family_key = (
             str(node.get("fatigue_group", "")).strip()
             or str(node.get("movement_pattern", "")).strip()
             or str(node.get("category", "")).strip()
-            or str(exercise_id).strip()
-        )
+        ) or None
 
         if not family_key or family_key in processed:
             continue
