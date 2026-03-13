@@ -927,7 +927,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         reps = ex.get("reps", "")
 
         meta = exercise_map.get(exercise_id, {})
-        progression = compute_progression_for_exercise(exercise_id)
+        progression = compute_progression_for_exercise(exercise_id, user_id=latest_strength.get("user_id") if isinstance(latest_strength, dict) else None)
         next_load = progression.get("next_load")
 
         target_load = (
@@ -964,10 +964,10 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
     }
 
 
-def build_progression_context(exercise_id):
+def build_progression_context(exercise_id, user_id=None):
     workouts = read_json_file(FILES["workouts"])
     exercises = read_json_file(FILES["exercises"])
-    user_settings = get_user_settings_for(auth_user.get("user_id"))
+    user_settings = get_user_settings_for(user_id) if user_id not in (None, "") else {}
 
     session_results = read_json_file(FILES["session_results"])
 
@@ -1313,8 +1313,8 @@ def decide_progression_from_context(exercise_id, ctx):
     }
 
 
-def compute_progression_for_exercise(exercise_id):
-    ctx = build_progression_context(exercise_id)
+def compute_progression_for_exercise(exercise_id, user_id=None):
+    ctx = build_progression_context(exercise_id, user_id=user_id)
     return decide_progression_from_context(exercise_id, ctx)
 
 
@@ -1372,7 +1372,7 @@ def progression(exercise_id):
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    return jsonify(compute_progression_for_exercise(exercise_id))
+    return jsonify(compute_progression_for_exercise(exercise_id, user_id=auth_user.get("user_id")))
 
 
 
