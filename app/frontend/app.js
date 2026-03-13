@@ -16,16 +16,6 @@ let STATE = {
   lastAutoLoad: ""
 };
 
-
-function getLocalISODate(){
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-
 function setText(id, text){
   const el = document.getElementById(id);
   if (el) el.textContent = String(text);
@@ -341,6 +331,93 @@ function renderWorkouts(items){
 }
 
 
+function parseNumericToken(value){
+  const str = String(value || "").trim();
+  if (!str) return 0;
+  const matches = str.match(/\d+(?:[.,]\d+)?/g);
+  if (!matches || !matches.length) return 0;
+  const nums = matches
+    .map(x => Number(String(x).replace(",", ".")))
+    .filter(x => Number.isFinite(x));
+  if (!nums.length) return 0;
+  return Math.max(...nums);
+}
+
+function buildSessionSummaryFromResults(item){
+  const results = Array.isArray(item && item.results) ? item.results : [];
+  let totalSets = 0;
+  let totalReps = 0;
+  let estimatedVolume = 0;
+  let hitFailureCount = 0;
+  const progressFlags = [];
+
+  results.forEach(result => {
+    if (!result || typeof result !== "object") return;
+
+    const sets = Array.isArray(result.sets) ? result.sets : [];
+    let setCount = 0;
+
+    sets.forEach(setItem => {
+      if (!setItem || typeof setItem !== "object") return;
+      const repsRaw = String(setItem.reps || "").trim();
+      const loadRaw = String(setItem.load || "").trim();
+      if (!repsRaw && !loadRaw) return;
+
+      const repsVal = parseNumericToken(repsRaw);
+      const loadVal = parseNumericToken(loadRaw);
+
+      setCount += 1;
+      totalReps += repsVal;
+      estimatedVolume += repsVal * loadVal;
+    });
+
+    if (!setCount){
+      const achievedRaw = String(result.achieved_reps || "").trim();
+      const loadRaw = String(result.load || "").trim();
+      if (achievedRaw || loadRaw){
+        const repsVal = parseNumericToken(achievedRaw);
+        const loadVal = parseNumericToken(loadRaw);
+        setCount += 1;
+        totalReps += repsVal;
+        estimatedVolume += repsVal * loadVal;
+      }
+    }
+
+    totalSets += setCount;
+
+    if (result.completed){
+      progressFlags.push(`${result.exercise_id || "exercise"}_done`);
+    }
+    if (result.hit_failure){
+      hitFailureCount += 1;
+      progressFlags.push(`${result.exercise_id || "exercise"}_failure`);
+    }
+  });
+
+  let fatigue = "light";
+  if (hitFailureCount >= 2){
+    fatigue = "high";
+  } else if (hitFailureCount === 1 || totalSets >= 16){
+    fatigue = "moderate";
+  }
+
+  let nextStepHint = "Du kan sandsynligvis progressere næste gang.";
+  if (fatigue === "high"){
+    nextStepHint = "Reducer belastning eller volumen næste gang.";
+  } else if (fatigue === "moderate"){
+    nextStepHint = "Hold progressionen rolig næste gang.";
+  }
+
+  return {
+    total_sets: totalSets,
+    total_reps: totalReps,
+    estimated_volume: Math.round(estimatedVolume * 10) / 10,
+    fatigue,
+    next_step_hint: nextStepHint,
+    progress_flags: progressFlags
+  };
+}
+
 function ensureSessionHistoryMount(){
   let root = document.getElementById("sessionResultsList");
   if (root) return root;
@@ -353,7 +430,7 @@ function ensureSessionHistoryMount(){
   card.style.marginTop = "16px";
   card.innerHTML = `
     <div class="row">
-      <h2>Session summaries</h2>
+      <h2>Sessionhistorik</h2>
       <div class="small" id="sessionResultsMeta"></div>
     </div>
     <ul id="sessionResultsList"></ul>
@@ -362,7 +439,7 @@ function ensureSessionHistoryMount(){
   const parentCard = workoutsList.closest(".card");
   if (parentCard && parentCard.parentNode){
     parentCard.parentNode.insertBefore(card, parentCard.nextSibling);
-  } else {
+  } else if (workoutsList.parentNode) {
     workoutsList.parentNode.appendChild(card);
   }
 
@@ -374,7 +451,7 @@ function renderSessionHistory(items){
   if (!root) return;
 
   if (!Array.isArray(items) || items.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen session summaries endnu.</div></li>`;
+    root.innerHTML = `<li><div class="small">Ingen sessions endnu.</div></li>`;
     setText("sessionResultsMeta", "0 elementer");
     return;
   }
@@ -382,16 +459,19 @@ function renderSessionHistory(items){
   const sorted = [...items].sort((a,b) => String(b.created_at || b.date).localeCompare(String(a.created_at || a.date)));
 
   root.innerHTML = sorted.map(item => {
-    const summary = item && item.summary && typeof item.summary === "object" ? item.summary : null;
-    const fatigue = String(summary?.fatigue || "").trim() || "ukendt";
-    const totalSets = Number(summary?.total_sets || 0);
-    const totalReps = Number(summary?.total_reps || 0);
-    const estimatedVolume = Number(summary?.estimated_volume || 0);
-    const nextStepHint = String(summary?.next_step_hint || "").trim();
-    const progressFlags = Array.isArray(summary?.progress_flags) ? summary.progress_flags : [];
-    const notes = String(item?.notes || "").trim();
-    const typeLabel = formatSessionType(item?.session_type || "");
-    const dateLabel = String(item?.date || "");
+    const summary = item && item.summary && typeof item.summary === "object"
+      ? item.summary
+      : buildSessionSummaryFromResults(item);
+
+    const fatigue = String(summary.fatigue || "").trim() || "ukendt";
+    const totalSets = Number(summary.total_sets || 0);
+    const totalReps = Number(summary.total_reps || 0);
+    const estimatedVolume = Number(summary.estimated_volume || 0);
+    const nextStepHint = String(summary.next_step_hint || "").trim();
+    const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
+    const notes = String(item && item.notes || "").trim();
+    const typeLabel = formatSessionType(item && item.session_type || "");
+    const dateLabel = String(item && item.date || "");
 
     return `
       <li>
@@ -1237,7 +1317,7 @@ async function refreshAll(){
   STATE.exercises = Array.isArray(exercises) ? exercises : [];
   STATE.programs = Array.isArray(programs) ? programs : [];
   STATE.userSettings = userSettings && typeof userSettings === "object" ? userSettings : {};
-  STATE.sessionResults = Array.isArray(sessionResultsApi?.items) ? sessionResultsApi.items : [];
+  STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
 
   fillSelect("program_id", STATE.programs, x => x.id, x => x.name, "(Intet program)");
   fillSelect("entry_exercise_id", STATE.exercises, x => x.id, x => x.name, "(Ingen valgt)");
@@ -1479,7 +1559,7 @@ async function handleWorkoutSubmit(ev){
     statusEl?.classList.add("ok");
     STATE.pendingEntries = [];
     form.reset();
-    form.date.value = getLocalISODate();
+    form.date.value = new Date().toISOString().slice(0,10);
     form.duration_min.value = 45;
     form.type.value = "styrke";
     refreshProgramDaySelect();
@@ -1516,7 +1596,7 @@ async function handleRecoverySubmit(ev){
     setText("recoveryFormStatus", "Check-in gemt. Dagens plan opdateret.");
     statusEl?.classList.add("ok");
     form.reset();
-    form.recovery_date.value = getLocalISODate();
+    form.recovery_date.value = new Date().toISOString().slice(0,10);
     form.sleep_score.value = "3";
     form.energy_score.value = "3";
     form.soreness_score.value = "2";
@@ -1545,7 +1625,7 @@ async function handleSessionResultSubmit(ev){
   }
 
   const payload = {
-    date: plan.date || getLocalISODate(),
+    date: plan.date || new Date().toISOString().slice(0,10),
     session_type: plan.session_type || "",
     timing_state: plan.timing_state || "",
     readiness_score: plan.readiness_score ?? null,
@@ -1836,12 +1916,12 @@ async function boot(){
   try{
     const dateEl = document.getElementById("date");
     if (dateEl && !dateEl.value){
-      dateEl.value = getLocalISODate();
+      dateEl.value = new Date().toISOString().slice(0,10);
     }
 
     const recoveryDateEl = document.getElementById("recovery_date");
     if (recoveryDateEl && !recoveryDateEl.value){
-      recoveryDateEl.value = getLocalISODate();
+      recoveryDateEl.value = new Date().toISOString().slice(0,10);
     }
 
     const workoutForm = document.getElementById("workoutForm");
