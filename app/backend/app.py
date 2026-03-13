@@ -808,6 +808,84 @@ def _decision_label(decision):
 
 
 
+
+
+# -------------------------------------------------------
+# EXERCISE IDENTITY GRAPH
+# -------------------------------------------------------
+
+def _identity_text(v):
+    return str(v or "").strip()
+
+def _safe_list(v):
+    if isinstance(v, list):
+        return [str(x).strip() for x in v if str(x).strip()]
+    if not v:
+        return []
+    return [str(v).strip()]
+
+def build_exercise_identity_graph(exercises):
+    graph = {}
+
+    for ex in exercises or []:
+        if not isinstance(ex, dict):
+            continue
+
+        ex_id = _identity_text(ex.get("id"))
+        if not ex_id:
+            continue
+
+        movement = _identity_text(ex.get("movement_pattern"))
+        category = _identity_text(ex.get("category") or ex.get("exercise_category"))
+        fatigue_group = _identity_text(ex.get("fatigue_group") or movement or category)
+        load_type = _identity_text(
+            ex.get("equipment_type") or
+            ("bodyweight" if ex.get("supports_bodyweight") else "external")
+        )
+
+        graph[ex_id] = {
+            "exercise_id": ex_id,
+            "movement_pattern": movement,
+            "category": category,
+            "fatigue_group": fatigue_group,
+            "load_type": load_type,
+            "related_exercises": []
+        }
+
+    ids = list(graph.keys())
+
+    for ex_id in ids:
+        base = graph[ex_id]
+        related = []
+
+        for other_id in ids:
+            if other_id == ex_id:
+                continue
+
+            other = graph[other_id]
+            score = 0
+
+            if base["movement_pattern"] and base["movement_pattern"] == other["movement_pattern"]:
+                score += 3
+
+            if base["fatigue_group"] and base["fatigue_group"] == other["fatigue_group"]:
+                score += 2
+
+            if base["category"] and base["category"] == other["category"]:
+                score += 1
+
+            if score > 0:
+                related.append({
+                    "exercise_id": other_id,
+                    "score": score
+                })
+
+        related.sort(key=lambda x: -x["score"])
+        base["related_exercises"] = related[:8]
+
+    return graph
+
+
 def build_recovery_state(user_id, latest_checkin, days_since_last_strength=None):
     """
     Recovery model v0.1
