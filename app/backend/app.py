@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import json
 import uuid
 import os
@@ -83,6 +83,7 @@ FILES = {
     "programs": DATA_DIR / "programs.json",
     "exercises": DATA_DIR / "exercises.json",
     "user_settings": DATA_DIR / "user_settings.json",
+    "adaptation_state": DATA_DIR / "adaptation_state.json",
 }
 
 def read_json_file(path: Path):
@@ -1634,6 +1635,178 @@ def post_user_settings():
     item = save_user_settings_for(auth_user.get("user_id"), item)
     return jsonify({"ok": True, "item": item})
 
+
+
+
+
+def _safe_iso_date(value):
+    s = str(value or "").strip()
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s[:10]).date()
+    except Exception:
+        return None
+
+def compute_session_load(summary):
+    if not isinstance(summary, dict):
+        summary = {}
+
+    try:
+        volume = float(summary.get("estimated_volume", 0) or 0)
+    except Exception:
+        volume = 0.0
+
+    try:
+        tut = float(summary.get("total_time_under_tension_sec", 0) or 0)
+    except Exception:
+        tut = 0.0
+
+    try:
+        failures = int(summary.get("hit_failure_count", 0) or 0)
+    except Exception:
+        failures = 0
+
+    try:
+        sets = float(summary.get("total_sets", 0) or 0)
+    except Exception:
+        sets = 0.0
+
+    load = (
+        (volume / 100.0)
+        + (tut / 60.0)
+        + (failures * 5.0)
+        + (sets * 0.5)
+    )
+
+    return round(load, 2)
+
+def build_daily_load_map(session_results, user_id=None):
+    daily = {}
+
+    for item in session_results or []:
+        if not isinstance(item, dict):
+            continue
+
+        if user_id is not None and str(item.get("user_id")) != str(user_id):
+            continue
+
+        d = _safe_iso_date(item.get("date"))
+        if not d:
+            continue
+
+        summary = item.get("summary")
+        if not isinstance(summary, dict):
+            summary = build_session_summary(item)
+
+        load = compute_session_load(summary)
+        key = d.isoformat()
+        daily[key] = round(daily.get(key, 0.0) + load, 2)
+
+    return daily
+
+def compute_load_metrics(session_results, user_id=None):
+    daily = build_daily_load_map(session_results, user_id=user_id)
+
+    today = datetime.now(timezone.utc).date()
+    acute_start = today - timedelta(days=6)
+    chronic_start = today - timedelta(days=27)
+
+    acute = 0.0
+    chronic = 0.0
+
+    for key, value in daily.items():
+        d = _safe_iso_date(key)
+        if not d:
+            continue
+
+        if acute_start <= d <= today:
+            acute += float(value or 0)
+
+        if chronic_start <= d <= today:
+            chronic += float(value or 0)
+
+    today_load = float(daily.get(today.isoformat(), 0.0) or 0.0)
+    ratio = acute / max(chronic / 4.0, 1.0)
+
+    if ratio < 0.8:
+        status = "underloaded"
+    elif ratio <= 1.3:
+        status = "balanced"
+    elif ratio <= 1.5:
+        status = "elevated"
+    else:
+        status = "spiking"
+
+    return {
+        "today_load": round(today_load, 2),
+        "acute_7d_load": round(acute, 2),
+        "chronic_28d_load": round(chronic, 2),
+        "load_ratio": round(ratio, 2),
+        "load_status": status,
+        "daily_load_map": daily
+    }
+
+
+def get_adaptation_state():
+    raw = read_json_file(FILES["adaptation_state"])
+    if isinstance(raw, dict) and isinstance(raw.get("users"), dict):
+        return raw
+    return {"users": {}}
+
+def save_adaptation_state(state):
+    if not isinstance(state, dict):
+        state = {"users": {}}
+    if not isinstance(state.get("users"), dict):
+        state["users"] = {}
+    write_json_file(FILES["adaptation_state"], state)
+    return state
+
+def get_adaptation_state_for(user_id):
+    state = get_adaptation_state()
+    users = state.get("users", {})
+    item = users.get(str(user_id), {})
+    return item if isinstance(item, dict) else {}
+
+def update_adaptation_state(user_id):
+    user_id = str(user_id)
+
+    live_data_path = Path("/var/www/sovereign-strength/data/session_results.json")
+    if live_data_path.exists():
+        try:
+            raw_items = json.loads(live_data_path.read_text(encoding="utf-8"))
+            if not isinstance(raw_items, list):
+                raw_items = []
+        except Exception:
+            raw_items = []
+        items = [x for x in raw_items if isinstance(x, dict) and str(x.get("user_id")) == user_id]
+    else:
+        items = list_session_results_for_user(user_id)
+
+    load_metrics = compute_load_metrics(items, user_id=user_id)
+
+    state = get_adaptation_state()
+    users = state.setdefault("users", {})
+    current = users.get(user_id, {})
+    if not isinstance(current, dict):
+        current = {}
+
+    current["user_id"] = user_id
+    current["updated_at"] = datetime.now(timezone.utc).isoformat()
+    current["load_metrics"] = {
+        "today_load": load_metrics.get("today_load", 0),
+        "acute_7d_load": load_metrics.get("acute_7d_load", 0),
+        "chronic_28d_load": load_metrics.get("chronic_28d_load", 0),
+        "load_ratio": load_metrics.get("load_ratio", 0),
+        "load_status": load_metrics.get("load_status", "underloaded"),
+        "daily_load_map": load_metrics.get("daily_load_map", {}),
+    }
+
+    users[user_id] = current
+    save_adaptation_state(state)
+    return current
+
+
 @app.get("/api/session-results")
 def get_session_results():
     auth_user, auth_err = require_auth_user()
@@ -1657,11 +1830,13 @@ def post_session_result():
         return jsonify(err_payload), third
 
     summary = build_session_summary(item)
+    adaptation_state = update_adaptation_state(auth_user.get("user_id"))
 
     return jsonify({
         "ok": True,
         "item": item,
         "summary": summary,
+        "adaptation_state": adaptation_state,
         "count": third
     }), 201
 
