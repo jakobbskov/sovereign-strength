@@ -281,26 +281,36 @@ function renderWorkouts(items){
   }
 
   const exerciseMap = new Map((STATE.exercises || []).map(x => [x.id, x.name]));
-  const exerciseMetaMap = new Map((STATE.exercises || []).map(x => [x.id, x]));
-  const programMap = new Map((STATE.programs || []).map(x => [x.id, x.name]));
-  const sorted = [...items].sort((a,b) => String(b.created_at || b.date).localeCompare(String(a.created_at || a.date)));
+  const sorted = [...items]
+    .sort((a,b) => String(b.created_at || b.date).localeCompare(String(a.created_at || a.date)))
+    .slice(0, 5);
 
   root.innerHTML = sorted.map(item => {
-    const entriesHtml = Array.isArray(item.entries) && item.entries.length
+    const summary = item.summary && typeof item.summary === "object"
+      ? item.summary
+      : buildSessionSummaryFromResults(item);
+
+    const results = Array.isArray(item.results) ? item.results : [];
+    const entriesHtml = results.length
       ? `
         <div style="margin-top:8px">
-          ${item.entries.map(entry => {
-            const meta = exerciseMetaMap.get(entry.exercise_id) || {};
-            const showBodyweight = !entry.load && (
-              meta.default_unit !== "kg" || Number(meta.start_weight || 0) === 0
-            );
-            const loadText = entry.load ? ` · ${esc(entry.load)}` : (showBodyweight ? ` · kropsvægt` : "");
+          ${results.map(result => {
+            const sets = Array.isArray(result.sets) ? result.sets : [];
+            const setCount = sets.filter(x => x && typeof x === "object" && (String(x.reps || "").trim() || String(x.load || "").trim())).length;
+            const loadText = String(result.load || "").trim() ? ` · ${esc(String(result.load || "").trim())}` : "";
+            const achievedText = String(result.achieved_reps || "").trim()
+              ? ` · opnået ${esc(String(result.achieved_reps || "").trim())}`
+              : "";
+            const targetText = String(result.target_reps || "").trim()
+              ? ` · mål ${esc(String(result.target_reps || "").trim())}`
+              : "";
+
             return `
             <div class="small">
-              • ${esc(exerciseMap.get(entry.exercise_id) || entry.exercise_id || "ukendt")}
-              ${entry.sets ? ` · ${esc(entry.sets)} sæt` : ""}
-              ${entry.reps ? ` · mål ${esc(entry.reps)}` : ""}
-              ${entry.achieved_reps ? ` · opnået ${esc(entry.achieved_reps)}` : ""}
+              • ${esc(formatExerciseName(result.exercise_id))}
+              ${setCount ? ` · ${esc(String(setCount))} sæt` : ""}
+              ${targetText}
+              ${achievedText}
               ${loadText}
             </div>
             `;
@@ -309,18 +319,17 @@ function renderWorkouts(items){
       `
       : "";
 
-    const programName = item.program_id ? (programMap.get(item.program_id) || item.program_id) : "";
-    const dayLabel = item.program_day_label ? `<div class="pill">${esc(item.program_day_label)}</div>` : "";
-
     return `
       <li>
         <div class="row">
-          <strong>${esc(item.type || "ukendt")}</strong>
+          <strong>${esc(formatSessionType(item.session_type || "ukendt"))}</strong>
           <span class="small">${esc(item.date || "")}</span>
         </div>
-        <div class="small">${esc(item.duration_min ?? 0)} min</div>
-        ${programName ? `<div class="pill">${esc(programName)}</div>` : ""}
-        ${dayLabel}
+        <div class="small">
+          ${summary.total_sets != null ? `${esc(String(summary.total_sets))} sæt` : ""}
+          ${summary.total_reps != null ? ` · ${esc(String(summary.total_reps))} reps` : ""}
+          ${summary.estimated_volume != null ? ` · volumen ${esc(String(summary.estimated_volume))}` : ""}
+        </div>
         ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
         ${entriesHtml}
       </li>
@@ -726,8 +735,8 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
   const overviewTimeLine = document.getElementById("overviewTimeLine");
   const overviewWorkoutLine = document.getElementById("overviewWorkoutLine");
 
-  const workoutCount = Array.isArray(workouts) ? workouts.length : 0;
-  const isFirstTime = !planItem && !latestCheckin && workoutCount === 0;
+  const sessionCount = Array.isArray(STATE.sessionResults) ? STATE.sessionResults.length : 0;
+  const isFirstTime = !planItem && !latestCheckin && sessionCount === 0;
 
   if (readinessValue){
     readinessValue.textContent = isFirstTime
@@ -764,10 +773,10 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
   if (overviewWorkoutLine){
     if (isFirstTime){
       overviewWorkoutLine.textContent = "Ingen historik endnu. Du bygger første datapunkt nu.";
-    } else if (workoutCount > 0){
-      overviewWorkoutLine.textContent = `Registrerede workouts: ${workoutCount}`;
+    } else if (sessionCount > 0){
+      overviewWorkoutLine.textContent = `Registrerede sessioner: ${sessionCount}`;
     } else {
-      overviewWorkoutLine.textContent = "Ingen workout-data endnu.";
+      overviewWorkoutLine.textContent = "Ingen historik endnu.";
     }
   }
 }
@@ -1463,7 +1472,7 @@ async function refreshAll(){
   setText("programsCount", STATE.programs.length);
   setText("recoveryCount", Array.isArray(recoveryFile) ? recoveryFile.length : 0);
 
-  renderWorkouts(workoutsApi.items || []);
+  renderWorkouts(STATE.sessionResults);
   renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null);
   renderSessionHistory(STATE.sessionResults);
   renderExercises(STATE.exercises);
