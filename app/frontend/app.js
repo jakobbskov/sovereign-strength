@@ -1301,6 +1301,19 @@ function formatRecoveryState(value){
   return map[v] || (v || "Ukendt");
 }
 
+
+
+function formatFamilyState(value){
+  const v = String(value || "").trim();
+  const map = {
+    fatigued: "Træt",
+    stable: "Stabil",
+    ready: "Klar",
+    unknown: "Ukendt"
+  };
+  return map[v] || (v || "Ukendt");
+}
+
 function formatDecisionLabel(decisionObj){
   if (!decisionObj || typeof decisionObj !== "object") return "";
   return String(decisionObj.decision_label || "").trim();
@@ -1381,6 +1394,21 @@ function renderTodayPlan(item){
         ${
           entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.explanation) && entry.decision.explanation.length
             ? `<div class="small" style="margin-top:6px"><strong>Hvorfor:</strong> ${esc(entry.decision.explanation.join(" · "))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.family_key
+            ? `<div class="small" style="margin-top:6px"><strong>Familie:</strong> ${esc(String(entry.decision.family_key))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.family_state
+            ? `<div class="small" style="margin-top:6px"><strong>Familietilstand:</strong> ${esc(formatFamilyState(entry.decision.family_state))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.family_signals) && entry.decision.family_signals.length
+            ? `<div class="small" style="margin-top:6px"><strong>Systemobservation:</strong> ${esc(entry.decision.family_signals.join(" · "))}</div>`
             : ""
         }
         ${
