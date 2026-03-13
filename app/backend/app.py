@@ -2501,6 +2501,148 @@ def get_adaptation_state_for(user_id):
     item = users.get(str(user_id), {})
     return item if isinstance(item, dict) else {}
 
+
+
+def compute_family_fatigue(exercise_id, identity_graph, exercise_profiles):
+    """
+    Compute fatigue state for one movement/fatigue family.
+    """
+    exercise_id = str(exercise_id or "").strip()
+    identity_graph = identity_graph if isinstance(identity_graph, dict) else {}
+    exercise_profiles = exercise_profiles if isinstance(exercise_profiles, dict) else {}
+
+    node = identity_graph.get(exercise_id, {})
+    if not isinstance(node, dict):
+        return {
+            "family_key": "",
+            "family_state": "unknown",
+            "avg_failure_rate": 0.0,
+            "avg_completion_rate": 0.0,
+            "regressing_count": 0,
+            "simplify_count": 0,
+            "related_exercises": [],
+            "signals": []
+        }
+
+    family_key = (
+        str(node.get("fatigue_group", "")).strip()
+        or str(node.get("movement_pattern", "")).strip()
+        or str(node.get("category", "")).strip()
+        or exercise_id
+    )
+
+    family_members = []
+    for ex_id, ex_node in identity_graph.items():
+        if not isinstance(ex_node, dict):
+            continue
+        ex_family = (
+            str(ex_node.get("fatigue_group", "")).strip()
+            or str(ex_node.get("movement_pattern", "")).strip()
+            or str(ex_node.get("category", "")).strip()
+            or str(ex_id).strip()
+        )
+        if ex_family == family_key:
+            family_members.append(str(ex_id).strip())
+
+    seen = set()
+    ordered_members = []
+    for ex_id in [exercise_id] + family_members:
+        if ex_id and ex_id not in seen:
+            seen.add(ex_id)
+            ordered_members.append(ex_id)
+
+    failure_rates = []
+    completion_rates = []
+    regressing_count = 0
+    simplify_count = 0
+    signals = []
+
+    for ex_id in ordered_members:
+        profile = exercise_profiles.get(ex_id, {})
+        if not isinstance(profile, dict):
+            continue
+
+        try:
+            failure_rate = float(profile.get("failure_rate", 0) or 0)
+        except Exception:
+            failure_rate = 0.0
+
+        try:
+            completion_rate = float(profile.get("completion_rate", 0) or 0)
+        except Exception:
+            completion_rate = 0.0
+
+        trend = str(profile.get("trend", "")).strip()
+        action = str(profile.get("recommended_action", "")).strip()
+
+        failure_rates.append(failure_rate)
+        completion_rates.append(completion_rate)
+
+        if trend == "regressing":
+            regressing_count += 1
+            signals.append(f"{ex_id} regressing")
+
+        if action == "simplify":
+            simplify_count += 1
+            signals.append(f"{ex_id} simplify")
+
+        if failure_rate >= 0.3:
+            signals.append(f"{ex_id} høj failure rate")
+
+        if completion_rate and completion_rate < 0.7:
+            signals.append(f"{ex_id} lav completion")
+
+    avg_failure_rate = round(sum(failure_rates) / len(failure_rates), 2) if failure_rates else 0.0
+    avg_completion_rate = round(sum(completion_rates) / len(completion_rates), 2) if completion_rates else 0.0
+
+    if simplify_count >= 1 or regressing_count >= 1 or avg_failure_rate >= 0.3:
+        family_state = "fatigued"
+    elif avg_completion_rate >= 0.85 and avg_failure_rate <= 0.1:
+        family_state = "ready"
+    else:
+        family_state = "stable"
+
+    return {
+        "family_key": family_key,
+        "family_state": family_state,
+        "avg_failure_rate": avg_failure_rate,
+        "avg_completion_rate": avg_completion_rate,
+        "regressing_count": regressing_count,
+        "simplify_count": simplify_count,
+        "related_exercises": ordered_members,
+        "signals": signals[:10]
+    }
+
+def build_family_fatigue_map(identity_graph, exercise_profiles):
+    """
+    Compute one fatigue object per family key.
+    """
+    identity_graph = identity_graph if isinstance(identity_graph, dict) else {}
+    exercise_profiles = exercise_profiles if isinstance(exercise_profiles, dict) else {}
+
+    out = {}
+    processed = set()
+
+    for exercise_id, node in identity_graph.items():
+        if not isinstance(node, dict):
+            continue
+
+        family_key = (
+            str(node.get("fatigue_group", "")).strip()
+            or str(node.get("movement_pattern", "")).strip()
+            or str(node.get("category", "")).strip()
+            or str(exercise_id).strip()
+        )
+
+        if not family_key or family_key in processed:
+            continue
+
+        processed.add(family_key)
+        out[family_key] = compute_family_fatigue(exercise_id, identity_graph, exercise_profiles)
+
+    return out
+
+
 def update_adaptation_state(user_id):
     user_id = str(user_id)
 
