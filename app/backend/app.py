@@ -2516,6 +2516,8 @@ def update_adaptation_state(user_id):
     else:
         items = list_session_results_for_user(user_id)
 
+    exercises = read_json_file(FILES["exercises"])
+    identity_graph = build_exercise_identity_graph(exercises)
     load_metrics = compute_load_metrics(items, user_id=user_id)
     exercise_profiles = build_exercise_profiles(user_id)
 
@@ -2527,21 +2529,13 @@ def update_adaptation_state(user_id):
 
     current["user_id"] = user_id
     current["updated_at"] = datetime.now(timezone.utc).isoformat()
-    current["load_metrics"] = {
-        "today_load": load_metrics.get("today_load", 0),
-        "acute_7d_load": load_metrics.get("acute_7d_load", 0),
-        "chronic_28d_load": load_metrics.get("chronic_28d_load", 0),
-        "load_ratio": load_metrics.get("load_ratio", 0),
-        "load_status": load_metrics.get("load_status", "underloaded"),
-        "daily_load_map": load_metrics.get("daily_load_map", {}),
-    }
+    current["load_metrics"] = load_metrics
+    current["exercise_identity_graph"] = identity_graph
     current["exercise_profiles"] = exercise_profiles
 
     users[user_id] = current
     save_adaptation_state(state)
     return current
-
-
 @app.get("/api/session-results")
 def get_session_results():
     auth_user, auth_err = require_auth_user()
