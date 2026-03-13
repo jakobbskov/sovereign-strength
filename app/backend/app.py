@@ -799,6 +799,13 @@ def get_live_adaptation_state_for(user_id):
         return state if isinstance(state, dict) else {}
     except Exception:
         return {}
+        users = raw.get("users", {})
+        if not isinstance(users, dict):
+            return {}
+        state = users.get(user_id, {})
+        return state if isinstance(state, dict) else {}
+    except Exception:
+        return {}
 
 def _decision_label(decision):
     decision = str(decision or "").strip()
@@ -1017,7 +1024,8 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         or str(node.get("movement_pattern", "")).strip()
         or str(node.get("category", "")).strip()
     ) or None
-    family_info = family_fatigue_map.get(family_key, {}) if isinstance(family_fatigue_map, dict) else {}
+
+    family_info = family_fatigue_map.get(family_key, {}) if (family_key and isinstance(family_fatigue_map, dict)) else {}
     family_state = str(family_info.get("family_state", "unknown")).strip()
     family_signals = family_info.get("signals", []) if isinstance(family_info, dict) else []
     if not isinstance(family_signals, list):
@@ -1057,11 +1065,11 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     elif trend == "stable":
         explanation.append(f"{exercise_id} er stabil")
 
-    if family_state == "fatigued":
+    if family_state == "fatigued" and family_key:
         explanation.append(f"{family_key}-familien viser træthed")
-    elif family_state == "ready":
+    elif family_state == "ready" and family_key:
         explanation.append(f"{family_key}-familien er klar")
-    elif family_state == "stable":
+    elif family_state == "stable" and family_key:
         explanation.append(f"{family_key}-familien er stabil")
 
     if recommended == "increase_load":
@@ -1109,8 +1117,6 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         "family_state": family_state,
         "family_signals": family_signals[:5]
     }
-
-
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
     program = None
     for p in programs:
