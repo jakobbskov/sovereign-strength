@@ -1111,7 +1111,7 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     }
 
 
-def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None):
+def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
     program = None
     for p in programs:
         if p.get("id") == "base_strength_a":
@@ -1287,7 +1287,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         }
 
         result_entry["decision"] = build_training_decision(
-            user_id=latest_strength.get("user_id") if isinstance(latest_strength, dict) else None,
+            user_id=user_id,
             plan_item=result_entry,
             readiness=latest_strength.get("readiness_score", 0) if isinstance(latest_strength, dict) else 5,
             time_available=time_budget_min
@@ -1920,6 +1920,7 @@ def get_today_plan():
             time_budget_min=time_budget_min,
             fatigue_score=fatigue_score,
             user_settings=user_settings,
+            user_id=auth_user.get("user_id"),
         )
 
         session_type = "styrke"
