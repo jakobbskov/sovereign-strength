@@ -1748,6 +1748,194 @@ def compute_load_metrics(session_results, user_id=None):
     }
 
 
+
+
+def _safe_div(num, den):
+    try:
+        num = float(num)
+        den = float(den)
+        if den == 0:
+            return 0.0
+        return num / den
+    except Exception:
+        return 0.0
+
+def _normalize_rep_text(value):
+    return str(value or "").strip().lower()
+
+def _extract_target_top_value(value):
+    return _parse_numeric_token(value)
+
+def _did_hit_top_range(result_item):
+    if not isinstance(result_item, dict):
+        return False
+
+    target = _extract_target_top_value(result_item.get("target_reps", ""))
+    achieved = _extract_target_top_value(result_item.get("achieved_reps", ""))
+
+    if target <= 0 or achieved <= 0:
+        return False
+
+    return achieved >= target
+
+def _result_effective_value(result_item):
+    if not isinstance(result_item, dict):
+        return 0.0
+
+    load_val = _safe_float(result_item.get("load", "0"))
+    if load_val > 0:
+        return load_val
+
+    return _extract_target_top_value(result_item.get("achieved_reps", ""))
+
+def _infer_exercise_trend(result_items):
+    cleaned = [x for x in result_items if isinstance(x, dict)]
+    if len(cleaned) < 2:
+        return "insufficient_data"
+
+    recent = cleaned[-3:]
+    values = [_result_effective_value(x) for x in recent]
+    values = [v for v in values if v > 0]
+
+    if len(values) < 2:
+        return "insufficient_data"
+
+    if values[-1] > values[0]:
+        return "progressing"
+
+    if values[-1] < values[0]:
+        return "regressing"
+
+    return "stable"
+
+def _infer_recommended_action(completion_rate, failure_rate, top_range_hits, trend, stagnation_flag):
+    if failure_rate >= 0.5:
+        return "simplify"
+
+    if stagnation_flag and failure_rate > 0.0:
+        return "hold"
+
+    if completion_rate < 0.7:
+        return "simplify"
+
+    if trend == "regressing":
+        return "hold"
+
+    if top_range_hits >= 3 and failure_rate <= 0.2:
+        return "increase_load"
+
+    if top_range_hits >= 2 and failure_rate == 0:
+        return "increase_reps"
+
+    if trend == "progressing" and completion_rate >= 0.8:
+        return "increase_reps"
+
+    return "hold"
+
+def _infer_confidence(sessions, completion_rate, failure_rate):
+    session_factor = min(float(sessions) / 6.0, 1.0)
+    stability_factor = max(0.0, min(completion_rate, 1.0))
+    failure_penalty = max(0.0, min(failure_rate, 1.0))
+
+    confidence = (0.5 * session_factor) + (0.4 * stability_factor) + (0.1 * (1.0 - failure_penalty))
+    return round(max(0.0, min(confidence, 1.0)), 2)
+
+def build_exercise_profiles(user_id, max_sessions_per_exercise=8):
+    user_id = str(user_id)
+
+    live_data_path = Path("/var/www/sovereign-strength/data/session_results.json")
+    if live_data_path.exists():
+        try:
+            raw_items = json.loads(live_data_path.read_text(encoding="utf-8"))
+            if not isinstance(raw_items, list):
+                raw_items = []
+        except Exception:
+            raw_items = []
+        session_items = [x for x in raw_items if isinstance(x, dict) and str(x.get("user_id")) == user_id]
+    else:
+        session_items = list_session_results_for_user(user_id)
+
+    session_items = sorted(
+        session_items,
+        key=lambda x: str(x.get("created_at", x.get("date", "")))
+    )
+
+    grouped = {}
+
+    for session in session_items:
+        results = session.get("results", [])
+        if not isinstance(results, list):
+            continue
+
+        for result in results:
+            if not isinstance(result, dict):
+                continue
+
+            exercise_id = str(result.get("exercise_id", "")).strip()
+            if not exercise_id:
+                continue
+
+            grouped.setdefault(exercise_id, []).append({
+                "session_date": session.get("date", ""),
+                "created_at": session.get("created_at", ""),
+                "completed": bool(result.get("completed", False)),
+                "hit_failure": bool(result.get("hit_failure", False)),
+                "target_reps": result.get("target_reps", ""),
+                "achieved_reps": result.get("achieved_reps", ""),
+                "load": result.get("load", ""),
+                "sets": result.get("sets", []),
+                "raw": result,
+            })
+
+    profiles = {}
+
+    for exercise_id, items in grouped.items():
+        relevant = items[-max_sessions_per_exercise:]
+        sessions = len(relevant)
+
+        completed_count = sum(1 for x in relevant if x.get("completed"))
+        failure_count = sum(1 for x in relevant if x.get("hit_failure"))
+        top_range_hits = sum(1 for x in relevant if _did_hit_top_range(x))
+
+        completion_rate = round(_safe_div(completed_count, sessions), 2)
+        failure_rate = round(_safe_div(failure_count, sessions), 2)
+
+        trend = _infer_exercise_trend(relevant)
+
+        stagnation_flag = bool(
+            sessions >= 4
+            and top_range_hits <= 1
+            and trend not in ("progressing",)
+        )
+
+        recommended_action = _infer_recommended_action(
+            completion_rate=completion_rate,
+            failure_rate=failure_rate,
+            top_range_hits=top_range_hits,
+            trend=trend,
+            stagnation_flag=stagnation_flag,
+        )
+
+        confidence = _infer_confidence(
+            sessions=sessions,
+            completion_rate=completion_rate,
+            failure_rate=failure_rate,
+        )
+
+        profiles[exercise_id] = {
+            "sessions": sessions,
+            "completion_rate": completion_rate,
+            "failure_rate": failure_rate,
+            "top_range_hits": top_range_hits,
+            "stagnation_flag": stagnation_flag,
+            "trend": trend,
+            "recommended_action": recommended_action,
+            "confidence": confidence,
+        }
+
+    return profiles
+
+
 def get_adaptation_state():
     raw = read_json_file(FILES["adaptation_state"])
     if isinstance(raw, dict) and isinstance(raw.get("users"), dict):
@@ -1784,6 +1972,7 @@ def update_adaptation_state(user_id):
         items = list_session_results_for_user(user_id)
 
     load_metrics = compute_load_metrics(items, user_id=user_id)
+    exercise_profiles = build_exercise_profiles(user_id)
 
     state = get_adaptation_state()
     users = state.setdefault("users", {})
@@ -1801,6 +1990,7 @@ def update_adaptation_state(user_id):
         "load_status": load_metrics.get("load_status", "underloaded"),
         "daily_load_map": load_metrics.get("daily_load_map", {}),
     }
+    current["exercise_profiles"] = exercise_profiles
 
     users[user_id] = current
     save_adaptation_state(state)
