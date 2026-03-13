@@ -1797,6 +1797,20 @@ def _did_hit_top_range(result_item):
 
     return achieved >= target
 
+
+def _safe_int(value):
+    try:
+        return int(_parse_numeric_token(value))
+    except Exception:
+        return 0
+
+
+def _safe_float(value):
+    try:
+        return float(_parse_numeric_token(value))
+    except Exception:
+        return 0.0
+
 def _result_effective_value(result_item):
     if not isinstance(result_item, dict):
         return 0.0
