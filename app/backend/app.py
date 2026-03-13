@@ -677,7 +677,7 @@ def find_latest_session_by_type(session_results, session_type):
     return None
 
 
-def compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=None):
+def compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=None, latest_checkin=None):
     latest_strength_session = find_latest_session_by_type(session_results, "styrke")
     latest_strength_failed = session_has_failure(latest_strength_session)
     latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
@@ -1215,7 +1215,7 @@ def build_progression_context(exercise_id, user_id=None):
 
     latest_result, latest_session = find_latest_session_result_for_exercise(session_results, exercise_id)
     analysis = analyze_session_result_for_progression(latest_result)
-    fatigue_ctx = compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=user_id)
+    fatigue_ctx = compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=user_id, latest_checkin=None)
     fatigue_score = fatigue_ctx.get("fatigue_score", 0)
 
     last_load = None
