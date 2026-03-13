@@ -995,6 +995,8 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     state = get_live_adaptation_state_for(user_id)
     load_metrics = state.get("load_metrics", {}) if isinstance(state, dict) else {}
     exercise_profiles = state.get("exercise_profiles", {}) if isinstance(state, dict) else {}
+    identity_graph = state.get("exercise_identity_graph", {}) if isinstance(state, dict) else {}
+    family_fatigue_map = state.get("family_fatigue", {}) if isinstance(state, dict) else {}
 
     load_status = str(load_metrics.get("load_status", "underloaded")).strip()
     exercise_id = str((plan_item or {}).get("exercise_id", "")).strip()
@@ -1003,6 +1005,19 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     trend = str(profile.get("trend", "stable")).strip()
     recommended = str(profile.get("recommended_action", "hold")).strip()
     confidence = profile.get("confidence", None)
+
+    node = identity_graph.get(exercise_id, {}) if isinstance(identity_graph, dict) else {}
+    family_key = (
+        str(node.get("fatigue_group", "")).strip()
+        or str(node.get("movement_pattern", "")).strip()
+        or str(node.get("category", "")).strip()
+        or exercise_id
+    )
+    family_info = family_fatigue_map.get(family_key, {}) if isinstance(family_fatigue_map, dict) else {}
+    family_state = str(family_info.get("family_state", "unknown")).strip()
+    family_signals = family_info.get("signals", []) if isinstance(family_info, dict) else []
+    if not isinstance(family_signals, list):
+        family_signals = []
 
     explanation = []
 
@@ -1038,6 +1053,13 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     elif trend == "stable":
         explanation.append(f"{exercise_id} er stabil")
 
+    if family_state == "fatigued":
+        explanation.append(f"{family_key}-familien viser træthed")
+    elif family_state == "ready":
+        explanation.append(f"{family_key}-familien er klar")
+    elif family_state == "stable":
+        explanation.append(f"{family_key}-familien er stabil")
+
     if recommended == "increase_load":
         explanation.append("øvelsen tåler sandsynligvis mere belastning")
     elif recommended == "increase_reps":
@@ -1052,10 +1074,14 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
 
     if load_status == "spiking":
         decision = "hold"
+    elif family_state == "fatigued":
+        decision = "simplify"
     elif recommended == "simplify":
         decision = "simplify"
     elif trend == "regressing":
         decision = "simplify"
+    elif family_state == "ready" and recommended in ("increase_load", "increase_reps") and readiness_val >= 4:
+        decision = "progress"
     elif recommended in ("increase_load", "increase_reps") and readiness_val >= 4:
         decision = "progress"
     elif recommended == "hold":
@@ -1074,7 +1100,10 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         "decision_label": label,
         "explanation": explanation,
         "coach_text": coach_text,
-        "confidence": confidence
+        "confidence": confidence,
+        "family_key": family_key,
+        "family_state": family_state,
+        "family_signals": family_signals[:5]
     }
 
 
