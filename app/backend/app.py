@@ -2522,11 +2522,16 @@ def build_exercise_profiles(user_id, max_sessions_per_exercise=8):
 
 
 def get_adaptation_state():
-    raw = read_json_file(FILES["adaptation_state"])
-    if isinstance(raw, dict) and isinstance(raw.get("users"), dict):
-        return raw
+    path = FILES["adaptation_state"]
+    try:
+        if not path.exists():
+            return {"users": {}}
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(raw, dict) and isinstance(raw.get("users"), dict):
+            return raw
+    except Exception:
+        pass
     return {"users": {}}
-
 def save_adaptation_state(state):
     if not isinstance(state, dict):
         state = {"users": {}}
