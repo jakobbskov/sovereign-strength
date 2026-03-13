@@ -705,6 +705,7 @@ function renderForecastHero(planItem, latestCheckin){
   if (planItem.time_budget_min) bits.push(`Tid: ${planItem.time_budget_min} min`);
   if (planItem.timing_state) bits.push(`Timing: ${formatTimingState(planItem.timing_state)}`);
   if (planItem.plan_variant) bits.push(`Plan: ${formatPlanVariant(planItem.plan_variant)}`);
+  if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(`Recovery: ${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}`);
 
   setText("forecastSummary", leadText);
   setText("forecastReason", [bits.join(" · "), planItem.reason || ""].filter(Boolean).join(" · "));
@@ -1280,6 +1281,22 @@ function formatPlanProgressionExtra(entry){
 }
 
 
+
+function formatRecoveryState(value){
+  const v = String(value || "").trim();
+  const map = {
+    ready: "Klar",
+    caution: "Forsigtig",
+    recover: "Restitution"
+  };
+  return map[v] || (v || "Ukendt");
+}
+
+function formatDecisionLabel(decisionObj){
+  if (!decisionObj || typeof decisionObj !== "object") return "";
+  return String(decisionObj.decision_label || "").trim();
+}
+
 function renderTodayPlan(item){
   STATE.currentTodayPlan = item || null;
   const root = document.getElementById("todayPlanList");
@@ -1307,9 +1324,13 @@ function renderTodayPlan(item){
     timingLabel ? `Timing: ${timingLabel}${timingExplanation ? ` · ${timingExplanation}` : ""}` : "Ingen timing endnu."
   );
 
+  const recovery = item && item.recovery_state && typeof item.recovery_state === "object" ? item.recovery_state : null;
+  const recoveryLabel = recovery ? formatRecoveryState(recovery.recovery_state || "") : "";
+  const recoveryText = recoveryLabel ? ` · Recovery: ${recoveryLabel}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` : "";
+
   setText(
     "todayPlanSummary",
-    `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText} · ${item.reason || ""}`
+    `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`
   );
 
   if (!Array.isArray(item.entries) || item.entries.length === 0){
@@ -1319,7 +1340,17 @@ function renderTodayPlan(item){
       return;
   }
 
-  root.innerHTML = item.entries.map(entry => {
+  const recoveryCard = recovery ? `
+    <li>
+      <div style="font-weight:700">Recovery</div>
+      <div style="margin-top:6px; font-size:1.35rem; font-weight:700">${esc(String(recovery.recovery_score ?? "-"))}</div>
+      <div class="small" style="margin-top:6px">Status: ${esc(formatRecoveryState(recovery.recovery_state || ""))}</div>
+      <div class="small" style="margin-top:6px">${recovery.strain_flag ? "Belastningsflag aktivt" : "Intet belastningsflag"}</div>
+      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px">Hvorfor: ${esc(recovery.explanation.join(" · "))}</div>` : ""}
+    </li>
+  ` : "";
+
+  root.innerHTML = recoveryCard + item.entries.map(entry => {
       const extras = formatPlanProgressionExtra(entry);
       return `
       <li>
@@ -1333,6 +1364,21 @@ function renderTodayPlan(item){
           ${entry.target_reps ? ` · mål ${esc(entry.target_reps)}` : ""}
         </div>
         ${entry.progression_reason ? `<div class="small" style="margin-top:6px">Årsag: ${esc(entry.progression_reason)}</div>` : ""}
+        ${
+          entry.decision && typeof entry.decision === "object" && formatDecisionLabel(entry.decision)
+            ? `<div class="small" style="margin-top:6px"><strong>Beslutning:</strong> ${esc(formatDecisionLabel(entry.decision))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.explanation) && entry.decision.explanation.length
+            ? `<div class="small" style="margin-top:6px"><strong>Hvorfor:</strong> ${esc(entry.decision.explanation.join(" · "))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.confidence != null
+            ? `<div class="small" style="margin-top:6px"><strong>Sikkerhed:</strong> ${esc(String(entry.decision.confidence))}</div>`
+            : ""
+        }
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
         ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">Udstyr: næste mulige spring er højere end anbefalet.</div>` : ""}
       </li>
