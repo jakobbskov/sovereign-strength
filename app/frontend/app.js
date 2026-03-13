@@ -466,6 +466,7 @@ function renderSessionHistory(items){
     const fatigue = String(summary.fatigue || "").trim() || "ukendt";
     const totalSets = Number(summary.total_sets || 0);
     const totalReps = Number(summary.total_reps || 0);
+    const totalTUT = Number(summary.total_time_under_tension_sec || 0);
     const estimatedVolume = Number(summary.estimated_volume || 0);
     const nextStepHint = String(summary.next_step_hint || "").trim();
     const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
@@ -480,7 +481,7 @@ function renderSessionHistory(items){
           <span class="small">fatigue ${esc(fatigue)}</span>
         </div>
         <div class="small" style="margin-top:6px">
-          Sæt: ${esc(String(totalSets))} · Reps: ${esc(String(totalReps))} · Volumen: ${esc(String(estimatedVolume))}
+          Sæt: ${esc(String(totalSets))} · Reps: ${esc(String(totalReps))}${totalTUT ? ` · TUT: ${esc(String(totalTUT))} sek` : ""} · Volumen: ${esc(String(estimatedVolume))}
         </div>
         <div class="small" style="margin-top:6px">
           Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
