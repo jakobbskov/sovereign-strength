@@ -2520,6 +2520,7 @@ def update_adaptation_state(user_id):
     identity_graph = build_exercise_identity_graph(exercises)
     load_metrics = compute_load_metrics(items, user_id=user_id)
     exercise_profiles = build_exercise_profiles(user_id)
+    family_fatigue = build_family_fatigue_map(identity_graph, exercise_profiles)
 
     state = get_adaptation_state()
     users = state.setdefault("users", {})
@@ -2532,6 +2533,7 @@ def update_adaptation_state(user_id):
     current["load_metrics"] = load_metrics
     current["exercise_identity_graph"] = identity_graph
     current["exercise_profiles"] = exercise_profiles
+    current["family_fatigue"] = family_fatigue
 
     users[user_id] = current
     save_adaptation_state(state)
