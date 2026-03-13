@@ -1649,6 +1649,197 @@ def _safe_iso_date(value):
     except Exception:
         return None
 
+
+
+def _parse_time_under_tension_seconds(value):
+    s = str(value or "").strip().lower()
+    if not s:
+        return 0.0
+    num = _parse_numeric_token(s)
+    if num <= 0:
+        return 0.0
+    if "min" in s:
+        return float(num) * 60.0
+    if "sek" in s or "sec" in s or s.endswith("s"):
+        return float(num)
+    return 0.0
+
+def _get_bodyweight_kg_for_session(session_item):
+    if isinstance(session_item, dict):
+        try:
+            direct = float(session_item.get("bodyweight_kg", 0) or 0)
+            if direct > 0:
+                return direct
+        except Exception:
+            pass
+        user_id = session_item.get("user_id")
+        if user_id not in (None, ""):
+            settings = get_user_settings_for(user_id)
+            try:
+                val = float(settings.get("bodyweight_kg", 0) or 0)
+                if val > 0:
+                    return val
+            except Exception:
+                pass
+    return 0.0
+
+def _get_exercise_meta_for_summary(exercise_id):
+    try:
+        exercises = read_json_file(FILES["exercises"])
+    except Exception:
+        exercises = []
+    return get_exercise_config(exercises, exercise_id) or {}
+
+def _is_time_based_result(result_item, exercise_meta):
+    input_kind = str((exercise_meta or {}).get("input_kind", "")).strip()
+    if input_kind in ("time", "cardio_time"):
+        return True
+
+    candidates = []
+    if isinstance(result_item, dict):
+        candidates.append(result_item.get("achieved_reps", ""))
+        raw_sets = result_item.get("sets", [])
+        if isinstance(raw_sets, list):
+            for s in raw_sets:
+                if isinstance(s, dict):
+                    candidates.append(s.get("reps", ""))
+
+    for value in candidates:
+        s = str(value or "").lower()
+        if "sek" in s or "sec" in s or "min" in s:
+            return True
+    return False
+
+def _estimate_effective_load_for_result(result_item, exercise_meta, bodyweight_kg, explicit_load):
+    try:
+        explicit_load = float(explicit_load or 0)
+    except Exception:
+        explicit_load = 0.0
+
+    if explicit_load > 0:
+        return explicit_load
+
+    meta = exercise_meta or {}
+    supports_bodyweight = bool(meta.get("supports_bodyweight", False))
+    equipment_type = str(meta.get("equipment_type", "")).strip()
+    input_kind = str(meta.get("input_kind", "")).strip()
+    load_optional = bool(meta.get("load_optional", False))
+
+    if supports_bodyweight or equipment_type == "bodyweight" or input_kind in ("time", "bodyweight_reps", "cardio_time") or load_optional:
+        if bodyweight_kg > 0:
+            return 0.4 * bodyweight_kg
+
+    return 0.0
+
+def build_session_summary(session_item):
+    results = session_item.get("results", []) if isinstance(session_item, dict) else []
+    if not isinstance(results, list):
+        results = []
+
+    total_exercises = len(results)
+    completed_exercises = sum(1 for r in results if bool(r.get("completed", False)))
+    hit_failure_count = sum(1 for r in results if bool(r.get("hit_failure", False)))
+
+    total_sets = 0
+    total_reps = 0
+    total_time_under_tension_sec = 0.0
+    estimated_volume = 0.0
+    progress_flags = []
+
+    bodyweight_kg = _get_bodyweight_kg_for_session(session_item)
+
+    for r in results:
+        if not isinstance(r, dict):
+            continue
+
+        exercise_id = str(r.get("exercise_id", "")).strip()
+        exercise_meta = _get_exercise_meta_for_summary(exercise_id)
+        is_time_based = _is_time_based_result(r, exercise_meta)
+
+        sets = r.get("sets", [])
+        achieved_reps = _safe_int(r.get("achieved_reps", "0"))
+        achieved_tut = _parse_time_under_tension_seconds(r.get("achieved_reps", ""))
+        base_load = _safe_float(r.get("load", "0"))
+        effective_load = _estimate_effective_load_for_result(r, exercise_meta, bodyweight_kg, base_load)
+
+        if isinstance(sets, list) and sets:
+            non_empty_sets = 0
+            for s in sets:
+                if not isinstance(s, dict):
+                    continue
+
+                reps_val = _safe_int(s.get("reps", "0"))
+                tut_val = _parse_time_under_tension_seconds(s.get("reps", ""))
+                load_val = _safe_float(s.get("load", "0"))
+                effective_set_load = _estimate_effective_load_for_result(r, exercise_meta, bodyweight_kg, load_val)
+
+                if reps_val or tut_val or load_val:
+                    non_empty_sets += 1
+
+                total_reps += reps_val
+                total_time_under_tension_sec += tut_val
+
+                if is_time_based:
+                    estimated_volume += tut_val * effective_set_load
+                else:
+                    estimated_volume += reps_val * effective_set_load
+
+            total_sets += non_empty_sets if non_empty_sets else len(sets)
+        else:
+            if achieved_reps or achieved_tut or base_load:
+                total_sets += 1
+                total_reps += achieved_reps
+                total_time_under_tension_sec += achieved_tut
+                if is_time_based:
+                    estimated_volume += achieved_tut * effective_load
+                else:
+                    estimated_volume += achieved_reps * effective_load
+
+        if bool(r.get("completed", False)):
+            progress_flags.append(f'{exercise_id}_done')
+        if bool(r.get("hit_failure", False)):
+            progress_flags.append(f'{exercise_id}_failure')
+
+    fatigue_points = 0
+    if hit_failure_count >= 2:
+        fatigue_points += 3
+    elif hit_failure_count == 1:
+        fatigue_points += 2
+
+    if total_sets >= 12:
+        fatigue_points += 1
+    if total_time_under_tension_sec >= 180:
+        fatigue_points += 1
+    if estimated_volume >= 3000:
+        fatigue_points += 1
+    if estimated_volume >= 6000:
+        fatigue_points += 1
+
+    if fatigue_points >= 4:
+        fatigue = "high"
+        next_step_hint = "Tag en lettere næste session."
+    elif fatigue_points >= 2:
+        fatigue = "moderate"
+        next_step_hint = "Hold progressionen rolig næste session."
+    else:
+        fatigue = "light"
+        next_step_hint = "Du kan sandsynligvis progressere næste gang."
+
+    return {
+        "session_type": session_item.get("session_type", ""),
+        "completed_exercises": completed_exercises,
+        "total_exercises": total_exercises,
+        "total_sets": total_sets,
+        "total_reps": total_reps,
+        "total_time_under_tension_sec": int(round(total_time_under_tension_sec)),
+        "estimated_volume": round(estimated_volume, 1),
+        "hit_failure_count": hit_failure_count,
+        "fatigue": fatigue,
+        "progress_flags": progress_flags,
+        "next_step_hint": next_step_hint,
+    }
+
+
 def compute_session_load(summary):
     if not isinstance(summary, dict):
         summary = {}
