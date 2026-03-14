@@ -832,7 +832,7 @@ function renderProfileEquipmentCard(){
 
   const accountBtn = document.getElementById("openAccountSettingsBtn");
   if (accountBtn){
-    accountBtn.textContent = "Åbn kontoindstillinger";
+    accountBtn.textContent = "Gå til login";
   }
   if (accountBtn && !accountBtn.dataset.bound){
     accountBtn.dataset.bound = "1";
