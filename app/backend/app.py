@@ -2792,6 +2792,37 @@ def _is_bodyweight_like(result_item, exercise_meta):
             return True
     return False
 
+
+
+def get_progression_channels(exercise_meta):
+    exercise_meta = exercise_meta if isinstance(exercise_meta, dict) else {}
+    channels = exercise_meta.get("progression_channels", [])
+    if not isinstance(channels, list):
+        return []
+    return [str(x).strip() for x in channels if str(x).strip()]
+
+def get_next_variation(exercise_id, exercise_map):
+    exercise_id = str(exercise_id or "").strip()
+    exercise_map = exercise_map if isinstance(exercise_map, dict) else {}
+    exercise_meta = exercise_map.get(exercise_id, {}) or {}
+    ladder = exercise_meta.get("progression_ladder", [])
+    if not isinstance(ladder, list):
+        return None
+
+    normalized = [str(x).strip() for x in ladder if str(x).strip()]
+    if not normalized:
+        return None
+
+    try:
+        idx = normalized.index(exercise_id)
+    except ValueError:
+        return None
+
+    if idx + 1 < len(normalized):
+        return normalized[idx + 1]
+    return None
+
+
 def build_learning_signals(user_id):
     user_id = str(user_id)
 
@@ -2873,11 +2904,20 @@ def build_learning_signals(user_id):
         consistency_signal = round(sum(consistency_values) / len(consistency_values), 2) if consistency_values else 0.0
 
         bodyweight_like = _is_bodyweight_like((rows[0].get("result", {}) if rows else {}), exercise_meta)
+        progression_channels = get_progression_channels(exercise_meta)
+        next_variation = get_next_variation(ex_id, exercise_map)
 
         if failure_signal >= 0.34 or dropoff_signal >= 0.35:
             learned_recommendation = "simplify"
         elif top_hit_rate >= 0.66 and consistency_signal >= 0.75:
-            learned_recommendation = "increase_reps" if bodyweight_like else "increase_load"
+            if "variation" in progression_channels and next_variation:
+                learned_recommendation = "progress_variation"
+            elif "time" in progression_channels:
+                learned_recommendation = "increase_time"
+            elif bodyweight_like:
+                learned_recommendation = "increase_reps"
+            else:
+                learned_recommendation = "increase_load"
         elif top_hit_rate >= 0.33 and consistency_signal >= 0.6:
             learned_recommendation = "hold"
         else:
@@ -2889,7 +2929,9 @@ def build_learning_signals(user_id):
             "failure_signal": failure_signal,
             "dropoff_signal": dropoff_signal,
             "consistency_signal": consistency_signal,
-            "learned_recommendation": learned_recommendation
+            "learned_recommendation": learned_recommendation,
+            "progression_channels": progression_channels,
+            "next_variation": next_variation
         }
 
     return out
