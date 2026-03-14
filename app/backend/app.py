@@ -2794,7 +2794,19 @@ def _is_bodyweight_like(result_item, exercise_meta):
 
 def build_learning_signals(user_id):
     user_id = str(user_id)
-    items = list_session_results_for_user(user_id)
+
+    live_data_path = Path("/var/www/sovereign-strength/data/session_results.json")
+    if live_data_path.exists():
+        try:
+            raw_items = json.loads(live_data_path.read_text(encoding="utf-8"))
+            if not isinstance(raw_items, list):
+                raw_items = []
+        except Exception:
+            raw_items = []
+        items = [x for x in raw_items if isinstance(x, dict) and str(x.get("user_id")) == user_id]
+    else:
+        items = list_session_results_for_user(user_id)
+
     exercises = read_json_file(FILES["exercises"])
     exercise_map = {}
     for ex in exercises or []:
