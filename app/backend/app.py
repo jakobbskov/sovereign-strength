@@ -1009,14 +1009,34 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     exercise_profiles = state.get("exercise_profiles", {}) if isinstance(state, dict) else {}
     identity_graph = state.get("exercise_identity_graph", {}) if isinstance(state, dict) else {}
     family_fatigue_map = state.get("family_fatigue", {}) if isinstance(state, dict) else {}
+    learning_signals = state.get("learning_signals", {}) if isinstance(state, dict) else {}
 
     load_status = str(load_metrics.get("load_status", "underloaded")).strip()
     exercise_id = str((plan_item or {}).get("exercise_id", "")).strip()
     profile = exercise_profiles.get(exercise_id, {}) if isinstance(exercise_profiles, dict) else {}
+    learning = learning_signals.get(exercise_id, {}) if isinstance(learning_signals, dict) else {}
 
     trend = str(profile.get("trend", "stable")).strip()
     recommended = str(profile.get("recommended_action", "hold")).strip()
     confidence = profile.get("confidence", None)
+
+    learned_recommendation = str(learning.get("learned_recommendation", "")).strip()
+    try:
+        top_hit_rate = float(learning.get("top_hit_rate", 0) or 0)
+    except Exception:
+        top_hit_rate = 0.0
+    try:
+        failure_signal = float(learning.get("failure_signal", 0) or 0)
+    except Exception:
+        failure_signal = 0.0
+    try:
+        dropoff_signal = float(learning.get("dropoff_signal", 0) or 0)
+    except Exception:
+        dropoff_signal = 0.0
+    try:
+        consistency_signal = float(learning.get("consistency_signal", 0) or 0)
+    except Exception:
+        consistency_signal = 0.0
 
     node = identity_graph.get(exercise_id, {}) if isinstance(identity_graph, dict) else {}
     family_key = (
@@ -1081,6 +1101,22 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     elif recommended == "simplify":
         explanation.append("øvelsen bør forenkles")
 
+    if learned_recommendation == "increase_load":
+        explanation.append("systemet har lært at mere belastning sandsynligvis er klar")
+    elif learned_recommendation == "increase_reps":
+        explanation.append("systemet har lært at flere reps sandsynligvis er klar")
+    elif learned_recommendation == "simplify":
+        explanation.append("systemet har lært at øvelsen bør forenkles")
+
+    if top_hit_rate >= 0.66:
+        explanation.append(f"høj top-hit-rate ({top_hit_rate})")
+    if failure_signal >= 0.34:
+        explanation.append(f"forhøjet failure-signal ({failure_signal})")
+    if dropoff_signal >= 0.35:
+        explanation.append(f"tydelig set-dropoff ({dropoff_signal})")
+    if consistency_signal >= 0.75:
+        explanation.append(f"god konsistens ({consistency_signal})")
+
     if bool((plan_item or {}).get("equipment_constraint", False)):
         explanation.append("næste vægtspring er større end anbefalet progression")
 
@@ -1088,10 +1124,16 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         decision = "hold"
     elif family_state == "fatigued":
         decision = "simplify"
+    elif learned_recommendation == "simplify":
+        decision = "simplify"
     elif recommended == "simplify":
         decision = "simplify"
     elif trend == "regressing":
         decision = "simplify"
+    elif family_state == "ready" and learned_recommendation in ("increase_load", "increase_reps") and readiness_val >= 4:
+        decision = "progress"
+    elif learned_recommendation in ("increase_load", "increase_reps") and readiness_val >= 4 and load_status not in ("spiking", "elevated"):
+        decision = "progress"
     elif family_state == "ready" and recommended in ("increase_load", "increase_reps") and readiness_val >= 4:
         decision = "progress"
     elif recommended in ("increase_load", "increase_reps") and readiness_val >= 4:
@@ -1115,7 +1157,12 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         "confidence": confidence,
         "family_key": family_key,
         "family_state": family_state,
-        "family_signals": family_signals[:5]
+        "family_signals": family_signals[:5],
+        "learned_recommendation": learned_recommendation,
+        "top_hit_rate": top_hit_rate,
+        "failure_signal": failure_signal,
+        "dropoff_signal": dropoff_signal,
+        "consistency_signal": consistency_signal
     }
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
     program = None
