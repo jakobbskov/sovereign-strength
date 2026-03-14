@@ -2685,6 +2685,157 @@ def build_family_fatigue_map(identity_graph, exercise_profiles):
     return out
 
 
+
+
+def _extract_target_top_value(value):
+    s = str(value or "").strip().lower()
+    if not s:
+        return 0.0
+    if "-" in s:
+        parts = s.split("-")
+        try:
+            return float(str(parts[-1]).replace(",", ".").split()[0])
+        except Exception:
+            pass
+    nums = re.findall(r'\d+(?:[.,]\d+)?', s)
+    if nums:
+        try:
+            return float(str(nums[-1]).replace(",", "."))
+        except Exception:
+            return 0.0
+    return 0.0
+
+def _extract_set_reps_list(result_item):
+    out = []
+    sets = result_item.get("sets", []) if isinstance(result_item, dict) else []
+    if isinstance(sets, list):
+        for s in sets:
+            if not isinstance(s, dict):
+                continue
+            raw = str(s.get("reps", "")).strip()
+            if not raw:
+                continue
+            nums = re.findall(r'\d+(?:[.,]\d+)?', raw)
+            if not nums:
+                continue
+            try:
+                out.append(float(str(nums[0]).replace(",", ".")))
+            except Exception:
+                pass
+    if out:
+        return out
+
+    raw = str((result_item or {}).get("achieved_reps", "")).strip()
+    nums = re.findall(r'\d+(?:[.,]\d+)?', raw)
+    if nums:
+        try:
+            return [float(str(nums[0]).replace(",", "."))]
+        except Exception:
+            return []
+    return []
+
+def _is_bodyweight_like(result_item, exercise_meta):
+    if not isinstance(exercise_meta, dict):
+        exercise_meta = {}
+    if bool(exercise_meta.get("supports_bodyweight", False)):
+        return True
+    if str(exercise_meta.get("equipment_type", "")).strip() in ("bodyweight", ""):
+        raw_load = str((result_item or {}).get("load", "")).strip()
+        if not raw_load:
+            return True
+    return False
+
+def build_learning_signals(user_id):
+    user_id = str(user_id)
+    items = list_session_results_for_user(user_id)
+    exercises = read_json_file(FILES["exercises"])
+    exercise_map = {}
+    for ex in exercises or []:
+        if isinstance(ex, dict) and str(ex.get("id", "")).strip():
+            exercise_map[str(ex.get("id")).strip()] = ex
+
+    grouped = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        for result in item.get("results", []) or []:
+            if not isinstance(result, dict):
+                continue
+            ex_id = str(result.get("exercise_id", "")).strip()
+            if not ex_id:
+                continue
+            grouped.setdefault(ex_id, []).append({
+                "session_date": str(item.get("date", "")).strip(),
+                "created_at": str(item.get("created_at", "")).strip(),
+                "result": result,
+                "session_completed": bool(item.get("completed", False))
+            })
+
+    out = {}
+
+    for ex_id, rows in grouped.items():
+        rows = sorted(
+            rows,
+            key=lambda x: (x.get("session_date", ""), x.get("created_at", "")),
+            reverse=True
+        )[:6]
+
+        exercise_meta = exercise_map.get(ex_id, {}) or {}
+
+        top_hits = 0
+        failure_count = 0
+        dropoffs = []
+        consistency_values = []
+        sample_count = 0
+
+        for row in rows:
+            result = row.get("result", {}) or {}
+            target_top = _extract_target_top_value(result.get("target_reps", ""))
+            reps_list = _extract_set_reps_list(result)
+
+            if result.get("hit_failure", False):
+                failure_count += 1
+
+            if reps_list:
+                sample_count += 1
+                best = max(reps_list)
+                worst = min(reps_list)
+
+                if target_top > 0 and best >= target_top:
+                    top_hits += 1
+
+                if best > 0:
+                    dropoffs.append(max(0.0, (best - worst) / best))
+                    consistency_values.append(max(0.0, min(1.0, worst / best)))
+
+        top_hit_rate = round(top_hits / sample_count, 2) if sample_count else 0.0
+        failure_signal = round(failure_count / len(rows), 2) if rows else 0.0
+        dropoff_signal = round(sum(dropoffs) / len(dropoffs), 2) if dropoffs else 0.0
+        consistency_signal = round(sum(consistency_values) / len(consistency_values), 2) if consistency_values else 0.0
+
+        bodyweight_like = _is_bodyweight_like((rows[0].get("result", {}) if rows else {}), exercise_meta)
+
+        if failure_signal >= 0.34 or dropoff_signal >= 0.35:
+            learned_recommendation = "simplify"
+        elif top_hit_rate >= 0.66 and consistency_signal >= 0.75:
+            learned_recommendation = "increase_reps" if bodyweight_like else "increase_load"
+        elif top_hit_rate >= 0.33 and consistency_signal >= 0.6:
+            learned_recommendation = "hold"
+        else:
+            learned_recommendation = "hold"
+
+        out[ex_id] = {
+            "samples": len(rows),
+            "top_hit_rate": top_hit_rate,
+            "failure_signal": failure_signal,
+            "dropoff_signal": dropoff_signal,
+            "consistency_signal": consistency_signal,
+            "learned_recommendation": learned_recommendation
+        }
+
+    return out
+
+
 def update_adaptation_state(user_id):
     user_id = str(user_id)
 
@@ -2705,6 +2856,7 @@ def update_adaptation_state(user_id):
     load_metrics = compute_load_metrics(items, user_id=user_id)
     exercise_profiles = build_exercise_profiles(user_id)
     family_fatigue = build_family_fatigue_map(identity_graph, exercise_profiles)
+    learning_signals = build_learning_signals(user_id)
 
     state = get_adaptation_state()
     users = state.setdefault("users", {})
@@ -2718,6 +2870,7 @@ def update_adaptation_state(user_id):
     current["exercise_identity_graph"] = identity_graph
     current["exercise_profiles"] = exercise_profiles
     current["family_fatigue"] = family_fatigue
+    current["learning_signals"] = learning_signals
 
     users[user_id] = current
     save_adaptation_state(state)
