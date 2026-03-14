@@ -1021,6 +1021,10 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     confidence = profile.get("confidence", None)
 
     learned_recommendation = str(learning.get("learned_recommendation", "")).strip()
+    next_variation = str(learning.get("next_variation", "")).strip()
+    progression_channels = learning.get("progression_channels", [])
+    if not isinstance(progression_channels, list):
+        progression_channels = []
     try:
         top_hit_rate = float(learning.get("top_hit_rate", 0) or 0)
     except Exception:
@@ -1105,6 +1109,12 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         explanation.append("systemet har lært at mere belastning sandsynligvis er klar")
     elif learned_recommendation == "increase_reps":
         explanation.append("systemet har lært at flere reps sandsynligvis er klar")
+    elif learned_recommendation == "increase_time":
+        explanation.append("systemet har lært at længere tid sandsynligvis er klar")
+    elif learned_recommendation == "progress_variation":
+        explanation.append("systemet har lært at næste variation sandsynligvis er klar")
+        if next_variation:
+            explanation.append(f"næste variation: {next_variation}")
     elif learned_recommendation == "simplify":
         explanation.append("systemet har lært at øvelsen bør forenkles")
 
@@ -1130,9 +1140,9 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         decision = "simplify"
     elif trend == "regressing":
         decision = "simplify"
-    elif family_state == "ready" and learned_recommendation in ("increase_load", "increase_reps") and readiness_val >= 4:
+    elif family_state == "ready" and learned_recommendation in ("increase_load", "increase_reps", "increase_time", "progress_variation") and readiness_val >= 4:
         decision = "progress"
-    elif learned_recommendation in ("increase_load", "increase_reps") and readiness_val >= 4 and load_status not in ("spiking", "elevated"):
+    elif learned_recommendation in ("increase_load", "increase_reps", "increase_time", "progress_variation") and readiness_val >= 4 and load_status not in ("spiking", "elevated"):
         decision = "progress"
     elif family_state == "ready" and recommended in ("increase_load", "increase_reps") and readiness_val >= 4:
         decision = "progress"
@@ -1159,6 +1169,8 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         "family_state": family_state,
         "family_signals": family_signals[:5],
         "learned_recommendation": learned_recommendation,
+        "next_variation": next_variation,
+        "progression_channels": progression_channels,
         "top_hit_rate": top_hit_rate,
         "failure_signal": failure_signal,
         "dropoff_signal": dropoff_signal,
