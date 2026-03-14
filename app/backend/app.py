@@ -1802,6 +1802,19 @@ def get_today_plan():
         plan_variant = "default"
 
 
+    timing_state = "on_time"
+    if previous_recommendation:
+        previous_for = str(previous_recommendation.get("recommended_for", "")).strip()
+        if previous_for and checkin_date:
+            day_diff = days_between_iso_dates(checkin_date, previous_for)
+            if day_diff is not None:
+                if day_diff < 0:
+                    timing_state = "early"
+                elif day_diff > 1:
+                    timing_state = "late"
+                else:
+                    timing_state = "on_time"
+
     # meget enkel første beslutningsmotor
     if readiness_score <= 3:
         session_type = "restitution"
