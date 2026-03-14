@@ -1332,6 +1332,19 @@ function formatFamilyState(value){
   return map[v] || (v || "Ukendt");
 }
 
+
+
+function formatLearnedRecommendation(value){
+  const v = String(value || "").trim();
+  const map = {
+    increase_load: "Øg belastning",
+    increase_reps: "Øg reps",
+    hold: "Hold",
+    simplify: "Forenkle"
+  };
+  return map[v] || (v || "Ukendt");
+}
+
 function formatDecisionLabel(decisionObj){
   if (!decisionObj || typeof decisionObj !== "object") return "";
   return String(decisionObj.decision_label || "").trim();
@@ -1427,6 +1440,31 @@ function renderTodayPlan(item){
         ${
           entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.family_signals) && entry.decision.family_signals.length
             ? `<div class="small" style="margin-top:6px"><strong>Systemobservation:</strong> ${esc(entry.decision.family_signals.join(" · "))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.learned_recommendation
+            ? `<div class="small" style="margin-top:6px"><strong>Lært signal:</strong> ${esc(formatLearnedRecommendation(entry.decision.learned_recommendation))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.top_hit_rate != null
+            ? `<div class="small" style="margin-top:6px"><strong>Top-hit-rate:</strong> ${esc(String(entry.decision.top_hit_rate))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.failure_signal != null
+            ? `<div class="small" style="margin-top:6px"><strong>Failure-signal:</strong> ${esc(String(entry.decision.failure_signal))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.dropoff_signal != null
+            ? `<div class="small" style="margin-top:6px"><strong>Dropoff:</strong> ${esc(String(entry.decision.dropoff_signal))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.consistency_signal != null
+            ? `<div class="small" style="margin-top:6px"><strong>Konsistens:</strong> ${esc(String(entry.decision.consistency_signal))}</div>`
             : ""
         }
         ${
