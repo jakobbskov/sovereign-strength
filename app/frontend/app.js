@@ -788,6 +788,9 @@ function renderProfileEquipmentCard(){
   const accountHelpLineEl = document.getElementById("profileAccountHelpLine");
   const accountBtn = document.getElementById("openAccountSettingsBtn");
   const accountBtn2 = document.getElementById("openAccountSettingsSecondaryBtn");
+  const openEquipmentBtn = document.getElementById("openEquipmentSettingsBtn");
+  const cancelEquipmentBtn = document.getElementById("cancelEquipmentSettingsBtn");
+  const saveEquipmentBtn = document.getElementById("saveEquipmentSettingsBtn");
 
   const username = AUTH_USER?.username || "ukendt";
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
@@ -844,6 +847,27 @@ function renderProfileEquipmentCard(){
       });
     }
   });
+
+  if (openEquipmentBtn && !openEquipmentBtn.dataset.bound){
+    openEquipmentBtn.dataset.bound = "1";
+    openEquipmentBtn.addEventListener("click", () => {
+      setEquipmentEditorOpen(true);
+    });
+  }
+
+  if (cancelEquipmentBtn && !cancelEquipmentBtn.dataset.bound){
+    cancelEquipmentBtn.dataset.bound = "1";
+    cancelEquipmentBtn.addEventListener("click", () => {
+      setEquipmentEditorOpen(false);
+    });
+  }
+
+  if (saveEquipmentBtn && !saveEquipmentBtn.dataset.bound){
+    saveEquipmentBtn.dataset.bound = "1";
+    saveEquipmentBtn.addEventListener("click", () => {
+      document.getElementById("equipmentSettingsForm")?.requestSubmit();
+    });
+  }
 }
 
 function populateEquipmentEditor(){
