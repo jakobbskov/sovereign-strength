@@ -1783,35 +1783,22 @@ def get_today_plan():
 
     if recovery_state.get("recovery_state") == "recover":
         fatigue_session_override = "restitution"
+    elif fatigue_score >= 6:
+        fatigue_session_override = "restitution"
+    elif fatigue_score >= 2:
+        fatigue_session_override = "light_strength"
     else:
         fatigue_session_override = None
 
-    # fatigue-based session override
-
-    if fatigue_score >= 6:
-        fatigue_session_override = "restitution"
-
-    timing_state = "on_time"
-    session_type = None
-    template_id = None
-    reason = ""
-    plan_variant = "default"
-    plan_entries = []
-
-    if previous_recommendation:
-        prev_date = previous_recommendation.get("recommended_for", "")
-        cmp = compare_dates(checkin_date, prev_date)
-        if cmp == -1:
-            timing_state = "early"
-        elif cmp == 1:
-            timing_state = "late"
-        else:
-            timing_state = "on_time"
-
-    if readiness_score <= 3:
+    if fatigue_session_override == "restitution":
         session_type = "restitution"
         template_id = "restitution_easy"
-        reason = "lav readiness"
+        plan_entries = build_restitution_plan(time_budget_min)
+        plan_variant = "default"
+        if recovery_state.get("recovery_state") == "recover":
+            reason = "recovery-state kræver restitution"
+        else:
+            reason = "lav readiness"
         plan_variant = "default"
 
 
