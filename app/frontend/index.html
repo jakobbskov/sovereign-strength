@@ -569,5 +569,18 @@
   </div>
 
   <script src="/app.js?v=0.1.26"></script>
+
+  <div id="exerciseViewerModal" class="modal" style="display:none">
+    <div class="modal-backdrop" id="exerciseViewerBackdrop"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="exerciseViewerTitle">
+      <div class="row" style="align-items:center; margin-bottom:12px">
+        <h2 id="exerciseViewerTitle" style="margin:0">Øvelse</h2>
+        <button type="button" id="closeExerciseViewerBtn" style="width:auto;padding:8px 12px">Luk</button>
+      </div>
+      <div id="exerciseViewerMeta" class="small" style="margin-bottom:12px"></div>
+      <div id="exerciseViewerImages"></div>
+    </div>
+  </div>
+
 </body>
 </html>
