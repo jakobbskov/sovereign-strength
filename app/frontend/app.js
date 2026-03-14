@@ -1339,10 +1339,34 @@ function formatLearnedRecommendation(value){
   const map = {
     increase_load: "Øg belastning",
     increase_reps: "Øg reps",
+    increase_time: "Øg tid",
+    progress_variation: "Næste variation",
+    reduce_support: "Mindre støtte",
     hold: "Hold",
     simplify: "Forenkle"
   };
   return map[v] || (v || "Ukendt");
+}
+
+function formatVariationName(value){
+  const v = String(value || "").trim();
+  if (!v) return "";
+  const exercise = getExerciseMeta(v);
+  if (exercise && exercise.name) return exercise.name;
+  return v.replaceAll("_", " ");
+}
+
+function formatProgressionChannels(channels){
+  if (!Array.isArray(channels) || !channels.length) return "";
+  const map = {
+    load: "load",
+    reps: "reps",
+    variation: "variation",
+    tempo: "tempo",
+    time: "tid",
+    support_reduction: "mindre støtte"
+  };
+  return channels.map(x => map[String(x).trim()] || String(x).trim()).join(" · ");
 }
 
 function formatDecisionLabel(decisionObj){
@@ -1445,6 +1469,16 @@ function renderTodayPlan(item){
         ${
           entry.decision && typeof entry.decision === "object" && entry.decision.learned_recommendation
             ? `<div class="small" style="margin-top:6px"><strong>Lært signal:</strong> ${esc(formatLearnedRecommendation(entry.decision.learned_recommendation))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && entry.decision.next_variation
+            ? `<div class="small" style="margin-top:6px"><strong>Næste variation:</strong> ${esc(formatVariationName(entry.decision.next_variation))}</div>`
+            : ""
+        }
+        ${
+          entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.progression_channels) && entry.decision.progression_channels.length
+            ? `<div class="small" style="margin-top:6px"><strong>Kanaler:</strong> ${esc(formatProgressionChannels(entry.decision.progression_channels))}</div>`
             : ""
         }
         ${
