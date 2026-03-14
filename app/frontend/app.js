@@ -831,7 +831,7 @@ function renderProfileEquipmentCard(){
     accountHelpLineEl.textContent = "Adgangskode, login og kontooplysninger åbnes via den centrale auth-side.";
   }
 
-  const authHref = `${AUTH_BASE}/login?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
+  const authHref = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
 
   [accountBtn, accountBtn2].forEach(btn => {
     if (!btn) return;
