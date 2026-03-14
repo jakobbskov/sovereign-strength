@@ -1159,6 +1159,15 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
     if explanation:
         coach_text = label + ". " + " · ".join(explanation) + "."
 
+    suggested_variation = ""
+    if (
+        learned_recommendation == "progress_variation"
+        and next_variation
+        and readiness_val >= 4
+        and load_status not in ("spiking", "elevated")
+    ):
+        suggested_variation = next_variation
+
     return {
         "decision": decision,
         "decision_label": label,
@@ -1170,6 +1179,7 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         "family_signals": family_signals[:5],
         "learned_recommendation": learned_recommendation,
         "next_variation": next_variation,
+        "suggested_variation": suggested_variation,
         "progression_channels": progression_channels,
         "top_hit_rate": top_hit_rate,
         "failure_signal": failure_signal,
