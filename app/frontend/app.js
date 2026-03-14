@@ -1938,6 +1938,11 @@ async function ensureAuthOrRedirect(){
   }
 
   AUTH_USER = data.user || null;
+  if (data.user?.must_change_password){
+    showAuthMessage("Du skal skifte password, før appen kan bruges.");
+    location.href = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
+    return null;
+  }
   showAuthMessage(`Logget ind som ${data.user?.username || "bruger"}. Indlæser app...`);
   return data.user || null;
 }
