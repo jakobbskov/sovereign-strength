@@ -538,59 +538,57 @@ function ensureLoadMetricsMount(){
   return card;
 }
 
-function renderLoadMetrics(loadMetrics){
-  const card = ensureLoadMetricsMount();
-  if (!card) return;
+function renderLoadMetrics(loadMetrics, recoveryState){
+  const root = document.getElementById("loadMetricsRoot") || document.getElementById("loadMetrics");
+  const meta = document.getElementById("loadMetricsMeta") || document.getElementById("loadMeta");
+  if (!root) return;
 
-  const body = document.getElementById("loadMetricsBody");
-  if (!body) return;
+  const lm = loadMetrics && typeof loadMetrics === "object" ? loadMetrics : {};
+  const rs = recoveryState && typeof recoveryState === "object" ? recoveryState : {};
 
-  if (!loadMetrics || typeof loadMetrics !== "object"){
-    setText("loadMetricsMeta", "");
-    body.innerHTML = `<div class="small">Ingen belastningsdata endnu.</div>`;
+  const hasStructured =
+    lm &&
+    (lm.today_load != null || lm.acute_7d_load != null || lm.chronic_28d_load != null || lm.load_status);
+
+  if (!hasStructured){
+    const loadStatus = String(rs.load_status || "").trim();
+    if (!loadStatus){
+      root.innerHTML = `<div class="small">Ingen belastningsdata endnu.</div>`;
+      if (meta) meta.textContent = "";
+      return;
+    }
+
+    root.innerHTML = `
+      <div class="small"><strong>Status:</strong> ${esc(loadStatus)}</div>
+      ${rs.strain_flag ? `<div class="small" style="margin-top:6px"><strong>Belastningsflag:</strong> aktivt</div>` : `<div class="small" style="margin-top:6px"><strong>Belastningsflag:</strong> ikke aktivt</div>`}
+      ${Array.isArray(rs.explanation) && rs.explanation.length ? `<div class="small" style="margin-top:6px">${esc(rs.explanation.join(" · "))}</div>` : ""}
+    `;
+    if (meta) meta.textContent = "Recovery-baseret fallback";
     return;
   }
 
-  const todayLoad = Number(loadMetrics.today_load || 0);
-  const acute7d = Number(loadMetrics.acute_7d_load || 0);
-  const chronic28d = Number(loadMetrics.chronic_28d_load || 0);
-  const ratio = Number(loadMetrics.load_ratio || 0);
-  const status = String(loadMetrics.load_status || "").trim() || "ukendt";
-  const dailyMap = loadMetrics.daily_load_map && typeof loadMetrics.daily_load_map === "object"
-    ? loadMetrics.daily_load_map
-    : {};
+  const today = Number(lm.today_load || 0);
+  const acute = Number(lm.acute_7d_load || 0);
+  const chronic = Number(lm.chronic_28d_load || 0);
+  const ratio = Number(lm.load_ratio || 0);
+  const status = String(lm.load_status || "").trim() || "ukendt";
 
-  const recentDays = Object.entries(dailyMap)
-    .sort((a,b) => String(b[0]).localeCompare(String(a[0])))
-    .slice(0, 7);
+  const dailyMap = lm.daily_load_map && typeof lm.daily_load_map === "object" ? lm.daily_load_map : {};
+  const dailyRows = Object.entries(dailyMap)
+    .sort((a, b) => String(b[0]).localeCompare(String(a[0])))
+    .slice(0, 5)
+    .map(([date, value]) => `<div class="small">${esc(date)} · ${esc(String(value))}</div>`)
+    .join("");
 
-  const statusLabelMap = {
-    underloaded: "Underloaded",
-    balanced: "Balanced",
-    elevated: "Elevated",
-    spiking: "Spiking"
-  };
-  const statusLabel = statusLabelMap[status] || status;
-
-  setText("loadMetricsMeta", `Status: ${statusLabel}`);
-
-  body.innerHTML = `
-    <div style="margin-bottom:10px">
-      <strong>I dag:</strong> ${esc(String(todayLoad))}<br>
-      <strong>7 dage:</strong> ${esc(String(acute7d))}<br>
-      <strong>28 dage:</strong> ${esc(String(chronic28d))}<br>
-      <strong>Ratio:</strong> ${esc(String(ratio))}<br>
-      <strong>Status:</strong> ${esc(String(statusLabel))}
-    </div>
-    <div>
-      <strong>Seneste dage</strong>
-      <div style="margin-top:6px">
-        ${recentDays.length
-          ? recentDays.map(([day, load]) => `<div>${esc(day)} · ${esc(String(load))}</div>`).join("")
-          : '<div class="small">Ingen daglige load-data endnu.</div>'}
-      </div>
-    </div>
+  root.innerHTML = `
+    <div class="small"><strong>I dag:</strong> ${esc(String(today))}</div>
+    <div class="small"><strong>7 dage:</strong> ${esc(String(acute))}</div>
+    <div class="small"><strong>28 dage:</strong> ${esc(String(chronic))}</div>
+    <div class="small"><strong>Ratio:</strong> ${esc(String(ratio))}</div>
+    <div class="small"><strong>Status:</strong> ${esc(status)}</div>
+    ${dailyRows ? `<div style="margin-top:10px">${dailyRows}</div>` : ""}
   `;
+  if (meta) meta.textContent = "";
 }
 
 
@@ -788,12 +786,16 @@ function renderProfileEquipmentCard(){
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
   const accountHelpLineEl = document.getElementById("profileAccountHelpLine");
+  const accountBtn = document.getElementById("openAccountSettingsBtn");
+  const accountBtn2 = document.getElementById("openAccountSettingsSecondaryBtn");
 
   const username = AUTH_USER?.username || "ukendt";
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+
   const available = settings.available_equipment && typeof settings.available_equipment === "object"
     ? settings.available_equipment
     : {};
+
   const increments = settings.equipment_increments && typeof settings.equipment_increments === "object"
     ? settings.equipment_increments
     : {};
@@ -802,23 +804,22 @@ function renderProfileEquipmentCard(){
     .filter(([, enabled]) => Boolean(enabled))
     .map(([key]) => key);
 
-  const incrementText = Object.entries(increments)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(" · ");
+  const incrementEntries = Object.entries(increments)
+    .filter(([, value]) => value !== "" && value != null && !Number.isNaN(Number(value)));
 
   if (displayNameEl){
     displayNameEl.textContent = username;
   }
 
   if (equipmentLineEl){
-    equipmentLineEl.textContent = enabledEquipment.length > 0
+    equipmentLineEl.textContent = enabledEquipment.length
       ? `Tilgængeligt udstyr: ${enabledEquipment.join(", ")}`
       : "Intet udstyr registreret endnu.";
   }
 
   if (incrementLineEl){
-    incrementLineEl.textContent = incrementText
-      ? `Vægtspring: ${incrementText}`
+    incrementLineEl.textContent = incrementEntries.length
+      ? `Vægtspring: ${incrementEntries.map(([k, v]) => `${k}: ${v}`).join(" · ")}`
       : "Ingen vægtspring registreret endnu.";
   }
 
@@ -830,26 +831,19 @@ function renderProfileEquipmentCard(){
     accountHelpLineEl.textContent = "Adgangskode, login og kontooplysninger åbnes via den centrale auth-side.";
   }
 
-  const accountBtn = document.getElementById("openAccountSettingsBtn");
-  if (accountBtn){
-    accountBtn.textContent = "Gå til login";
-  }
-  if (accountBtn && !accountBtn.dataset.bound){
-    accountBtn.dataset.bound = "1";
-    accountBtn.addEventListener("click", () => {
-      location.href = `${AUTH_BASE}/login?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
-    });
-  }
+  const authHref = `${AUTH_BASE}/login?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
 
-  const equipmentBtn = document.getElementById("openEquipmentSettingsBtn");
-  if (equipmentBtn && !equipmentBtn.dataset.bound){
-    equipmentBtn.dataset.bound = "1";
-    equipmentBtn.addEventListener("click", () => {
-      setEquipmentEditorOpen(true);
-      const el = document.getElementById("profileEquipmentCard");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
+  [accountBtn, accountBtn2].forEach(btn => {
+    if (!btn) return;
+    if (btn.tagName === "A"){
+      btn.setAttribute("href", authHref);
+    } else if (!btn.dataset.bound){
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", () => {
+        location.href = authHref;
+      });
+    }
+  });
 }
 
 function populateEquipmentEditor(){
@@ -1501,7 +1495,7 @@ async function refreshAll(){
   setText("recoveryCount", Array.isArray(recoveryFile) ? recoveryFile.length : 0);
 
   renderWorkouts(STATE.sessionResults);
-  renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null);
+  renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null, todayPlanApi && todayPlanApi.item ? todayPlanApi.item.recovery_state : null);
   renderSessionHistory(STATE.sessionResults);
   renderExercises(STATE.exercises);
   renderRecovery(recoveryApi.items || []);
