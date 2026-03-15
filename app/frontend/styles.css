@@ -1,0 +1,18 @@
+
+/* training options layout */
+.training-option{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:8px 0;
+}
+
+.training-option input{
+  width:18px;
+  height:18px;
+}
+
+.training-option span{
+  flex:1;
+}
+

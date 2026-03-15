@@ -291,13 +291,18 @@ function renderWorkouts(items){
       : buildSessionSummaryFromResults(item);
 
     const results = Array.isArray(item.results) ? item.results : [];
-    const entriesHtml = results.length
+    const isCardio = String(item?.session_type || "").trim().toLowerCase() === "løb";
+    const cardioMeta = buildCardioHistoryMeta(item);
+    const entriesHtml = isCardio
+      ? ""
+      : results.length
       ? `
         <div style="margin-top:8px">
           ${results.map(result => {
             const sets = Array.isArray(result.sets) ? result.sets : [];
             const setCount = sets.filter(x => x && typeof x === "object" && (String(x.reps || "").trim() || String(x.load || "").trim())).length;
-            const loadText = String(result.load || "").trim() ? ` · ${esc(String(result.load || "").trim())}` : "";
+            const estimatedLoadLabel = formatEstimatedLoadLabel(result.exercise_id, result.load || "");
+            const loadText = estimatedLoadLabel ? ` · load ${esc(String(estimatedLoadLabel))}` : "";
             const achievedText = String(result.achieved_reps || "").trim()
               ? ` · opnået ${esc(String(result.achieved_reps || "").trim())}`
               : "";
@@ -326,9 +331,9 @@ function renderWorkouts(items){
           <span class="small">${esc(item.date || "")}</span>
         </div>
         <div class="small">
-          ${summary.total_sets != null ? `${esc(String(summary.total_sets))} sæt` : ""}
-          ${summary.total_reps != null ? ` · ${esc(String(summary.total_reps))} reps` : ""}
-          ${summary.estimated_volume != null ? ` · volumen ${esc(String(summary.estimated_volume))}` : ""}
+          ${isCardio
+            ? esc(cardioMeta || "")
+            : `${summary.total_sets != null ? `${esc(String(summary.total_sets))} sæt` : ""}${summary.total_reps != null ? ` · ${esc(String(summary.total_reps))} reps` : ""}${summary.estimated_volume != null ? ` · volumen ${esc(String(summary.estimated_volume))}` : ""}`}
         </div>
         ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
         ${entriesHtml}
@@ -340,6 +345,54 @@ function renderWorkouts(items){
 }
 
 
+
+function formatCardioKindLabel(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (x === "restitution") return "Restitution";
+  if (x === "base") return "Base";
+  if (x === "tempo") return "Tempo";
+  if (x === "interval" || x === "intervals") return "Intervaller";
+  if (x === "test" || x === "benchmark") return "Test";
+  return x || "Cardio";
+}
+
+function formatDurationFromSeconds(totalSec){
+  const n = Number(totalSec || 0);
+  if (!n || n <= 0) return "";
+  const mins = Math.floor(n / 60);
+  const secs = Math.round(n % 60);
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+function formatPaceLabel(secPerKm){
+  const n = Number(secPerKm || 0);
+  if (!n || n <= 0) return "";
+  const mins = Math.floor(n / 60);
+  const secs = Math.round(n % 60);
+  return `${mins}:${String(secs).padStart(2, "0")}/km`;
+}
+
+function buildCardioHistoryMeta(item){
+  const cardioKind = formatCardioKindLabel(item?.cardio_kind || "");
+  const distance = item?.distance_km != null && item?.distance_km !== ""
+    ? `${String(item.distance_km).replace(".", ",")} km`
+    : "";
+  const duration = formatDurationFromSeconds(item?.duration_total_sec);
+  const pace = formatPaceLabel(item?.pace_sec_per_km);
+  const rpe = item?.avg_rpe != null && item?.avg_rpe !== "" ? `RPE ${item.avg_rpe}` : "";
+
+  return [cardioKind, distance, duration, pace, rpe].filter(Boolean).join(" · ");
+}
+
+function getUserBodyweightKg(){
+  const profile = STATE.userSettings && typeof STATE.userSettings === "object" && STATE.userSettings.profile && typeof STATE.userSettings.profile === "object"
+    ? STATE.userSettings.profile
+    : {};
+  const raw = profile.bodyweight_kg;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 85;
+}
+
 function parseNumericToken(value){
   const str = String(value || "").trim();
   if (!str) return 0;
@@ -350,6 +403,48 @@ function parseNumericToken(value){
     .filter(x => Number.isFinite(x));
   if (!nums.length) return 0;
   return Math.max(...nums);
+}
+
+function estimateBodyweightLoadForExercise(exerciseId){
+  const id = String(exerciseId || "").trim();
+  const bw = getUserBodyweightKg();
+
+  const factors = {
+    pull_ups: 1.0,
+    chin_ups: 1.0,
+    dips: 0.9,
+    push_ups: 0.65,
+    incline_push_ups: 0.5,
+    diamond_push_ups: 0.7,
+    lunges: 0.75,
+    split_squat: 0.75,
+    step_ups: 0.7,
+    single_leg_sit_to_stand: 0.75,
+    glute_bridge: 0.55,
+    single_leg_glute_bridge: 0.6,
+    hamstring_walkouts: 0.5,
+    hip_hinge_bw: 0.6,
+    plank: 0.0,
+    side_plank: 0.0,
+    dead_bug: 0.0,
+    bird_dog: 0.0,
+    superman_hold: 0.0,
+    reverse_snow_angels: 0.15,
+  };
+
+  const factor = Object.prototype.hasOwnProperty.call(factors, id) ? factors[id] : 0.4;
+  const load = Number(factor) * Number(bw || 0);
+  return Number.isFinite(load) && load > 0 ? Math.round(load * 10) / 10 : 0;
+}
+
+function formatEstimatedLoadLabel(exerciseId, explicitLoad){
+  const explicit = parseNumericToken(explicitLoad);
+  if (explicit > 0){
+    return `${explicit} kg`;
+  }
+
+  const estimated = estimateBodyweightLoadForExercise(exerciseId);
+  return estimated > 0 ? `${estimated} kg` : "";
 }
 
 function buildSessionSummaryFromResults(item){
@@ -373,7 +468,8 @@ function buildSessionSummaryFromResults(item){
       if (!repsRaw && !loadRaw) return;
 
       const repsVal = parseNumericToken(repsRaw);
-      const loadVal = parseNumericToken(loadRaw);
+      const parsedLoadVal = parseNumericToken(loadRaw);
+      const loadVal = parsedLoadVal > 0 ? parsedLoadVal : estimateBodyweightLoadForExercise(result.exercise_id);
 
       setCount += 1;
       totalReps += repsVal;
@@ -385,7 +481,8 @@ function buildSessionSummaryFromResults(item){
       const loadRaw = String(result.load || "").trim();
       if (achievedRaw || loadRaw){
         const repsVal = parseNumericToken(achievedRaw);
-        const loadVal = parseNumericToken(loadRaw);
+        const parsedLoadVal = parseNumericToken(loadRaw);
+        const loadVal = parsedLoadVal > 0 ? parsedLoadVal : estimateBodyweightLoadForExercise(result.exercise_id);
         setCount += 1;
         totalReps += repsVal;
         estimatedVolume += repsVal * loadVal;
@@ -482,6 +579,8 @@ function renderSessionHistory(items){
     const notes = String(item && item.notes || "").trim();
     const typeLabel = formatSessionType(item && item.session_type || "");
     const dateLabel = String(item && item.date || "");
+    const isCardio = String(item?.session_type || "").trim().toLowerCase() === "løb";
+    const cardioMeta = buildCardioHistoryMeta(item);
 
     return `
       <li>
@@ -490,7 +589,9 @@ function renderSessionHistory(items){
           <span class="small">fatigue ${esc(fatigue)}</span>
         </div>
         <div class="small" style="margin-top:6px">
-          Sæt: ${esc(String(totalSets))} · Reps: ${esc(String(totalReps))}${totalTUT ? ` · TUT: ${esc(String(totalTUT))} sek` : ""} · Volumen: ${esc(String(estimatedVolume))}
+          ${isCardio
+            ? esc(cardioMeta || "Ingen cardio-data")
+            : `Sæt: ${esc(String(totalSets))} · Reps: ${esc(String(totalReps))}${totalTUT ? ` · TUT: ${esc(String(totalTUT))} sek` : ""} · Volumen: ${esc(String(estimatedVolume))}`}
         </div>
         <div class="small" style="margin-top:6px">
           Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
@@ -662,37 +763,98 @@ function formatSessionType(value){
 
 
 function buildForecastLeadText(planItem){
-  if (!planItem || !Array.isArray(planItem.entries) || planItem.entries.length === 0){
-    return "Ingen plan endnu. Start med et check-in, så beregner systemet dagens træning.";
+  if (!planItem || typeof planItem !== "object"){
+    return "Ingen plan endnu.";
   }
 
-  const lines = planItem.entries.slice(0, 2).map(entry => {
-    const name = formatExerciseName(entry.exercise_id);
-    const action = formatPlanActionText(entry);
+  const sessionType = String(planItem.session_type || "").trim().toLowerCase();
+  const entries = Array.isArray(planItem.entries) ? planItem.entries : [];
+  const firstEntry = entries.length ? entries[0] : null;
+  const firstExercise = String(firstEntry?.exercise_id || "").trim().toLowerCase();
+  const targetReps = String(firstEntry?.target_reps || "").trim();
 
-    if (entry.progression_decision === "use_start_weight"){
-      return `${name}: start roligt`;
+  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
+    if (firstExercise.includes("restitution")){
+      return targetReps
+        ? `Restitution · ${targetReps}`
+        : "Restitution · rolig bevægelse og lav belastning";
     }
-    if (entry.progression_decision === "hold"){
-      return `${name}: hold dagens niveau`;
+    if (firstExercise.includes("interval")){
+      return targetReps
+        ? `Intervaller · ${targetReps}`
+        : "Intervaller · kort, hårdt pas med pauser";
     }
-    if (entry.progression_decision === "increase"){
-      return `${name}: klar til progression`;
+    if (firstExercise.includes("tempo")){
+      return targetReps
+        ? `Tempopas · ${targetReps}`
+        : "Tempopas · kontrolleret hård løbebelastning";
     }
-    return `${name}: følg planen`;
-  });
-
-  if (planItem.entries.length > 2){
-    lines.push(`+${planItem.entries.length - 2} mere`);
+    if (firstExercise.includes("base")){
+      return targetReps
+        ? `Basepas · ${targetReps}`
+        : "Basepas · roligt løb i snakketempo";
+    }
+    return targetReps
+      ? `Løb · ${targetReps}`
+      : "Løb · planlagt cardiopas";
   }
 
-  return lines.join(" · ");
+  if (sessionType === "restitution"){
+    if (entries.length){
+      const bits = entries.slice(0, 2).map(entry => formatExerciseName(entry.exercise_id)).filter(Boolean);
+      return bits.length
+        ? `Restitution · ${bits.join(" + ")}`
+        : "Restitution · rolig bevægelse og mobilitet";
+    }
+    return "Restitution · rolig bevægelse og mobilitet";
+  }
+
+  if (sessionType === "styrke" || sessionType === "strength"){
+    if (entries.length){
+      const bits = entries.slice(0, 3).map(entry => formatExerciseName(entry.exercise_id)).filter(Boolean);
+      return bits.length
+        ? `Styrkepas · ${bits.join(" + ")}`
+        : "Styrkepas · planlagt træning";
+    }
+    return "Styrkepas · planlagt træning";
+  }
+
+  return formatSessionType(planItem.session_type || "ukendt");
 }
 
 
+function getForecastTypeLabel(planItem){
+  if (!planItem || typeof planItem !== "object"){
+    return formatSessionType("");
+  }
+
+  const sessionType = String(planItem.session_type || "").trim().toLowerCase();
+  const entries = Array.isArray(planItem.entries) ? planItem.entries : [];
+  const firstEntry = entries.length ? entries[0] : null;
+  const firstExercise = String(firstEntry?.exercise_id || "").trim().toLowerCase();
+
+  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
+    if (firstExercise.includes("restitution")) return "Restitution";
+    if (firstExercise.includes("interval")) return "Intervaller";
+    if (firstExercise.includes("tempo")) return "Tempopas";
+    if (firstExercise.includes("base")) return "Basepas";
+    return "Løb";
+  }
+
+  if (sessionType === "restitution"){
+    return "Restitution";
+  }
+
+  if (sessionType === "styrke" || sessionType === "strength"){
+    return "Styrkepas";
+  }
+
+  return formatSessionType(planItem.session_type || "ukendt");
+}
+
 function renderForecastHero(planItem, latestCheckin){
   setText("forecastDate", planItem?.recommended_for || latestCheckin?.date || "");
-  setText("forecastType", formatSessionType(planItem?.session_type || ""));
+  setText("forecastType", getForecastTypeLabel(planItem));
 
   if (!planItem){
     setText("forecastSummary", "Velkommen. Du starter uden historik, så første skridt er et check-in. Derefter beregner SovereignStrength dagens træning.");
@@ -727,6 +889,16 @@ function renderForecastHero(planItem, latestCheckin){
 
 
 
+function formatOverviewReadinessLabel(value){
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "ukendt";
+  if (n >= 4.5) return "meget klar";
+  if (n >= 3.5) return "klar";
+  if (n >= 2.5) return "moderat";
+  if (n >= 1.5) return "tag det roligt";
+  return "restitution anbefales";
+}
+
 function renderOverviewStatus(planItem, latestCheckin, workouts){
   const readinessValue = document.getElementById("overviewReadinessValue");
   const latestCheckinLine = document.getElementById("overviewLatestCheckinLine");
@@ -737,13 +909,16 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
   const isFirstTime = !planItem && !latestCheckin && sessionCount === 0;
 
   if (readinessValue){
-    readinessValue.textContent = isFirstTime
-      ? "Klar"
-      : String(
-          planItem?.readiness_score ??
-          latestCheckin?.readiness_score ??
-          "-"
-        );
+    if (isFirstTime){
+      readinessValue.textContent = "Klar";
+    } else {
+      const readiness = planItem?.readiness_score ?? latestCheckin?.readiness_score ?? null;
+      if (readiness == null || readiness === ""){
+        readinessValue.textContent = "-";
+      } else {
+        readinessValue.textContent = `${readiness} · ${formatOverviewReadinessLabel(readiness)}`;
+      }
+    }
   }
 
   if (latestCheckinLine){
@@ -794,6 +969,15 @@ function renderProfileEquipmentCard(){
 
   const username = AUTH_USER?.username || "ukendt";
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const profile = settings.profile && typeof settings.profile === "object"
+    ? settings.profile
+    : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object"
+    ? settings.preferences
+    : {};
+  const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
+    ? preferences.training_types
+    : {};
 
   const available = settings.available_equipment && typeof settings.available_equipment === "object"
     ? settings.available_equipment
@@ -808,16 +992,32 @@ function renderProfileEquipmentCard(){
     .map(([key]) => key);
 
   const incrementEntries = Object.entries(increments)
-    .filter(([, value]) => value !== "" && value != null && !Number.isNaN(Number(value)));
+    .filter(([key, value]) => key !== "bodyweight" && value !== "" && value != null && !Number.isNaN(Number(value)));
 
   if (displayNameEl){
     displayNameEl.textContent = username;
   }
 
   if (equipmentLineEl){
-    equipmentLineEl.textContent = enabledEquipment.length
+    const profileBits = [];
+    if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(`Højde: ${profile.height_cm} cm`);
+    if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(`Kropsvægt: ${profile.bodyweight_kg} kg`);
+
+    const selectedTraining = [
+      trainingTypes.running ? "løb" : "",
+      trainingTypes.strength_weights ? "vægte" : "",
+      trainingTypes.bodyweight ? "kropsvægt" : "",
+      trainingTypes.mobility ? "mobilitet" : ""
+    ].filter(Boolean);
+
+    if (selectedTraining.length){
+      profileBits.push(`Træningstyper: ${selectedTraining.join(", ")}`);
+    }
+
+    const equipmentText = enabledEquipment.length
       ? `Tilgængeligt udstyr: ${enabledEquipment.join(", ")}`
       : "Intet udstyr registreret endnu.";
+    equipmentLineEl.textContent = [...profileBits, equipmentText].join(" · ");
   }
 
   if (incrementLineEl){
@@ -862,16 +1062,19 @@ function renderProfileEquipmentCard(){
     });
   }
 
-  if (saveEquipmentBtn && !saveEquipmentBtn.dataset.bound){
-    saveEquipmentBtn.dataset.bound = "1";
-    saveEquipmentBtn.addEventListener("click", () => {
-      document.getElementById("equipmentSettingsForm")?.requestSubmit();
-    });
   }
-}
 
 function populateEquipmentEditor(){
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const profile = settings.profile && typeof settings.profile === "object"
+    ? settings.profile
+    : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object"
+    ? settings.preferences
+    : {};
+  const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
+    ? preferences.training_types
+    : {};
   const available = settings.available_equipment && typeof settings.available_equipment === "object"
     ? settings.available_equipment
     : {};
@@ -884,23 +1087,35 @@ function populateEquipmentEditor(){
     if (el) el.value = String(value);
   };
 
+  const setChecked = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = Boolean(value);
+  };
+
+  setVal("profile_height_cm", profile.height_cm ?? "");
+  setVal("profile_bodyweight_kg", profile.bodyweight_kg ?? "");
+
+  setChecked("pref_running", trainingTypes.running !== false);
+  setChecked("pref_strength_weights", trainingTypes.strength_weights !== false);
+  setChecked("pref_bodyweight", trainingTypes.bodyweight !== false);
+  setChecked("pref_mobility", trainingTypes.mobility !== false);
+
   setVal("eq_barbell_enabled", available.barbell === false ? "false" : "true");
   setVal("eq_dumbbell_enabled", available.dumbbell === false ? "false" : "true");
   setVal("eq_bodyweight_enabled", available.bodyweight === false ? "false" : "true");
 
   setVal("eq_barbell_increment", increments.barbell ?? 10);
   setVal("eq_dumbbell_increment", increments.dumbbell ?? 5);
-  setVal("eq_bodyweight_increment", increments.bodyweight ?? 0);
 }
 
 function setEquipmentEditorOpen(isOpen){
-  const wrap = document.getElementById("equipmentEditorWrap");
-  if (!wrap) return;
-  wrap.classList.toggle("wizard-step-hidden", !isOpen);
+  const modal = document.getElementById("equipmentSettingsModal");
+  if (!modal) return;
+  modal.classList.toggle("wizard-step-hidden", !isOpen);
   if (isOpen){
     populateEquipmentEditor();
     const status = document.getElementById("equipmentSettingsStatus");
-    if (status) status.textContent = "Redigér udstyr og vægtspring, og gem når du er klar.";
+    if (status) status.textContent = "Redigér profil og udstyr, og gem når du er klar.";
   }
 }
 
@@ -908,6 +1123,7 @@ async function handleEquipmentSettingsSubmit(ev){
   ev.preventDefault();
 
   const statusEl = document.getElementById("equipmentSettingsStatus");
+
   const readBool = (id) => document.getElementById(id)?.value === "true";
   const readNum = (id, fallback = 0) => {
     const raw = document.getElementById(id)?.value ?? "";
@@ -915,7 +1131,28 @@ async function handleEquipmentSettingsSubmit(ev){
     return Number.isFinite(n) && n >= 0 ? n : fallback;
   };
 
+  const readOptionalNum = (id) => {
+    const raw = document.getElementById(id)?.value ?? "";
+    if (raw === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+
+  const readChecked = (id) => Boolean(document.getElementById(id)?.checked);
+
   const payload = {
+    profile: {
+      height_cm: readOptionalNum("profile_height_cm"),
+      bodyweight_kg: readOptionalNum("profile_bodyweight_kg"),
+    },
+    preferences: {
+      training_types: {
+        running: readChecked("pref_running"),
+        strength_weights: readChecked("pref_strength_weights"),
+        bodyweight: readChecked("pref_bodyweight"),
+        mobility: readChecked("pref_mobility"),
+      }
+    },
     available_equipment: {
       barbell: readBool("eq_barbell_enabled"),
       dumbbell: readBool("eq_dumbbell_enabled"),
@@ -924,7 +1161,7 @@ async function handleEquipmentSettingsSubmit(ev){
     equipment_increments: {
       barbell: readNum("eq_barbell_increment", 10),
       dumbbell: readNum("eq_dumbbell_increment", 5),
-      bodyweight: readNum("eq_bodyweight_increment", 0),
+      bodyweight: 0,
     }
   };
 
@@ -936,21 +1173,35 @@ async function handleEquipmentSettingsSubmit(ev){
     setEquipmentEditorOpen(false);
     if (statusEl) statusEl.textContent = "Udstyr gemt.";
   }catch(err){
+    console.error("equipment save error", err);
     if (statusEl) statusEl.textContent = "Fejl: " + (err?.message || String(err));
   }
 }
 
 function bindEquipmentEditor(){
   const form = document.getElementById("equipmentSettingsForm");
-  if (form && !form.dataset.bound){
-    form.dataset.bound = "1";
-    form.addEventListener("submit", handleEquipmentSettingsSubmit);
+  const saveBtn = document.getElementById("saveEquipmentSettingsBtn");
+  const cancelBtn = document.getElementById("cancelEquipmentSettingsBtn");
+  const statusEl = document.getElementById("equipmentSettingsStatus");
+
+  if (form){
+    form.onsubmit = handleEquipmentSettingsSubmit;
   }
 
-  const cancelBtn = document.getElementById("cancelEquipmentSettingsBtn");
-  if (cancelBtn && !cancelBtn.dataset.bound){
-    cancelBtn.dataset.bound = "1";
-    cancelBtn.addEventListener("click", () => setEquipmentEditorOpen(false));
+  if (saveBtn){
+    saveBtn.onclick = (ev) => {
+      ev.preventDefault();
+      if (statusEl) statusEl.textContent = "DEBUG: klik på Gem udstyr";
+      if (form?.requestSubmit){
+        form.requestSubmit();
+      } else if (form){
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      }
+    };
+  }
+
+  if (cancelBtn){
+    cancelBtn.onclick = () => setEquipmentEditorOpen(false);
   }
 }
 
@@ -1144,14 +1395,145 @@ function buildReviewSetFields(entry, idx, setIdx){
 }
 
 
+
+
+const RPE_HELP = {
+  "1": "Minimal indsats",
+  "2": "Meget let",
+  "3": "Let, du kan snakke frit",
+  "4": "Komfortabelt tempo",
+  "5": "Moderat, lidt pres",
+  "6": "Hårdt men kontrolleret",
+  "7": "Meget hårdt",
+  "8": "Næsten maks",
+  "9": "Tæt på maks",
+  "10": "Maksimal indsats"
+};
+
+function setRpePickerValue(value){
+  const wrap = document.getElementById("rpePicker");
+  const hidden = document.getElementById("avg_rpe");
+  const help = document.getElementById("rpeHelp");
+  const normalized = String(value || "").trim();
+
+  if (hidden) hidden.value = normalized;
+
+  if (wrap){
+    wrap.querySelectorAll("button[data-rpe]").forEach(btn => {
+      btn.classList.toggle("active", String(btn.dataset.rpe || "") === normalized);
+    });
+  }
+
+  if (help){
+    help.textContent = normalized
+      ? `Valgt: RPE ${normalized} – ${RPE_HELP[normalized] || ""}`
+      : "Vælg hvor hårdt passet føltes.";
+  }
+}
+
+function bindRpePicker(){
+  const wrap = document.getElementById("rpePicker");
+  const hidden = document.getElementById("avg_rpe");
+  if (!wrap || !hidden) return;
+
+  wrap.querySelectorAll("button[data-rpe]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const value = String(btn.dataset.rpe || "").trim();
+      setRpePickerValue(value);
+    });
+  });
+
+  setRpePickerValue(hidden.value || "");
+}
+
+function formatPaceFromSeconds(secPerKm){
+  const total = Number(secPerKm || 0);
+  if (!total || total <= 0) return "";
+  const mins = Math.floor(total / 60);
+  const secs = Math.round(total % 60);
+  return `${mins}:${String(secs).padStart(2, "0")} / km`;
+}
+
+function updateCardioPacePreview(){
+  const kmWholeEl = document.getElementById("cardio_distance_km_whole");
+  const kmPartEl = document.getElementById("cardio_distance_km_part");
+  const minEl = document.getElementById("cardio_duration_min");
+  const secEl = document.getElementById("cardio_duration_sec");
+  const previewEl = document.getElementById("cardioPacePreview");
+
+  if (!kmWholeEl || !kmPartEl || !minEl || !secEl || !previewEl) return;
+
+  const kmWhole = Number(kmWholeEl.value || 0);
+  const kmPartMeters = Number(kmPartEl.value || 0);
+  const distance = kmWhole + (kmPartMeters / 1000);
+  const mins = Number(minEl.value || 0);
+  const secs = Number(secEl.value || 0);
+  const totalSec = (mins * 60) + secs;
+
+  if (distance > 0 && totalSec > 0){
+    const pace = totalSec / distance;
+    previewEl.textContent = `Beregnet tempo: ${formatPaceFromSeconds(pace)}`;
+  } else {
+    previewEl.textContent = "";
+  }
+}
+
+function toggleCardioReviewFields(item){
+  const wrap = document.getElementById("cardioReviewFields");
+  if (!wrap) return;
+
+  const sessionType = String(item?.session_type || "").trim().toLowerCase();
+  const isCardio = sessionType === "løb" || sessionType === "cardio" || sessionType === "run";
+
+  wrap.style.display = isCardio ? "block" : "none";
+
+  const cardioKindEl = document.getElementById("cardio_kind");
+  const avgRpeEl = document.getElementById("avg_rpe");
+
+  if (!isCardio){
+    if (cardioKindEl) cardioKindEl.value = "";
+    if (avgRpeEl) avgRpeEl.value = "";
+    setRpePickerValue("");
+
+    const kmWholeEl = document.getElementById("cardio_distance_km_whole");
+    const kmPartEl = document.getElementById("cardio_distance_km_part");
+    const minEl = document.getElementById("cardio_duration_min");
+    const secEl = document.getElementById("cardio_duration_sec");
+    const previewEl = document.getElementById("cardioPacePreview");
+
+    if (kmWholeEl) kmWholeEl.value = "";
+    if (kmPartEl) kmPartEl.value = "0";
+    if (minEl) minEl.value = "";
+    if (secEl) secEl.value = "0";
+    if (previewEl) previewEl.textContent = "";
+    return;
+  }
+
+  const firstEntry = Array.isArray(item?.entries) && item.entries.length ? item.entries[0] : null;
+  const exId = String(firstEntry?.exercise_id || "").trim().toLowerCase();
+
+  if (cardioKindEl && !cardioKindEl.value){
+    if (exId.includes("interval")) cardioKindEl.value = "interval";
+    else if (exId.includes("tempo")) cardioKindEl.value = "tempo";
+    else if (exId.includes("restitution")) cardioKindEl.value = "restitution";
+    else cardioKindEl.value = "base";
+  }
+
+  setRpePickerValue(avgRpeEl?.value || "");
+  updateCardioPacePreview();
+}
+
 function renderSessionReview(item){
   const root = document.getElementById("sessionReviewList");
   if (!root) return;
 
   if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
     root.innerHTML = `<li><div class="small">Ingen øvelser at reviewe endnu.</div></li>`;
+    toggleCardioReviewFields(null);
     return;
   }
+
+  toggleCardioReviewFields(item);
 
   root.innerHTML = item.entries.map((entry, idx) => {
     const setCount = Math.max(1, Number(entry.sets || 1));
@@ -1159,6 +1541,26 @@ function renderSessionReview(item){
     const inputKind = String(meta?.input_kind || "");
     const isTime = inputKind === "time" || inputKind === "cardio_time";
     const isBodyweight = inputKind === "bodyweight_reps";
+    const isCardioEntry = String(item?.session_type || "").trim().toLowerCase() === "løb"
+      || String(entry?.exercise_id || "").trim().toLowerCase().startsWith("cardio_");
+
+    if (isCardioEntry){
+      return `
+        <li>
+          <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
+          <div class="small" style="margin-bottom:10px">
+            Mål: ${entry.target_reps ? esc(entry.target_reps) : "Cardiopas"}
+          </div>
+          <div class="small" style="margin-bottom:10px">
+            Type: løb
+          </div>
+          <label>
+            Session-note
+            <input type="text" name="review_notes_${idx}" placeholder="fx rolig tur, gode ben">
+          </label>
+        </li>
+      `;
+    }
 
     const setFields = Array.from({length: setCount}, (_, setIdx) =>
       buildReviewSetFields(entry, idx, setIdx)
@@ -1356,6 +1758,128 @@ function formatVariationName(value){
   return v.replaceAll("_", " ");
 }
 
+
+function getExerciseImages(exerciseId){
+  const meta = getExerciseMeta(exerciseId);
+  const images = Array.isArray(meta?.external_images) ? meta.external_images : [];
+  return images.filter(Boolean);
+}
+
+function openExerciseViewer(exerciseId){
+  try {
+    const modal = document.getElementById("exerciseViewerModal");
+    const titleEl = document.getElementById("exerciseViewerTitle");
+    const metaEl = document.getElementById("exerciseViewerMeta");
+    const imagesEl = document.getElementById("exerciseViewerImages");
+
+    if (!modal || !titleEl || !metaEl || !imagesEl){
+      return;
+    }
+
+    const meta = getExerciseMeta(exerciseId) || {};
+    const name = meta.name || exerciseId || "Øvelse";
+    const images = getExerciseImages(exerciseId);
+    const notes = String(meta.notes || "").trim();
+    const category = String(meta.category || "").trim();
+
+    titleEl.textContent = name;
+
+    const metaParts = [];
+    if (images.length){
+      metaParts.push(`${images.length} billede${images.length === 1 ? "" : "r"}`);
+    }
+    if (category){
+      metaParts.push(`Kategori: ${category}`);
+    }
+    if (notes){
+      metaParts.push(notes);
+    }
+
+    metaEl.textContent = metaParts.join(" · ");
+
+    if (!images.length){
+      imagesEl.innerHTML = `<div class="small">Ingen billeder tilgængelige endnu.</div>`;
+    } else {
+      imagesEl.innerHTML = images.map((src, idx) => `
+        <div style="margin-top:${idx === 0 ? 0 : 12}px">
+          <img
+            src="${esc(src)}"
+            alt="${esc(name)} ${idx + 1}"
+            loading="lazy"
+            style="width:100%;height:auto;border-radius:18px;display:block;background:#111;border:1px solid rgba(255,255,255,0.08)"
+          />
+        </div>
+      `).join("");
+    }
+
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function closeExerciseViewer(){
+  const modal = document.getElementById("exerciseViewerModal");
+  if (!modal) return;
+  modal.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+
+document.addEventListener("click", function(ev){
+  const openBtn = ev.target.closest("[data-exercise-viewer]");
+  if (openBtn){
+    ev.preventDefault();
+    openExerciseViewer(openBtn.getAttribute("data-exercise-viewer"));
+    return;
+  }
+
+  const closeBtn = ev.target.closest("#closeExerciseViewerBtn");
+  if (closeBtn){
+    ev.preventDefault();
+    closeExerciseViewer();
+    return;
+  }
+
+  const backdrop = ev.target.closest("#exerciseViewerBackdrop");
+  if (backdrop){
+    ev.preventDefault();
+    closeExerciseViewer();
+  }
+});
+
+function bindExerciseViewer(){
+  return;
+}
+
+
+
+function formatTrainingDays(days){
+  if (!Array.isArray(days) || !days.length) return "";
+  const labels = {
+    mon: "man",
+    tue: "tir",
+    wed: "ons",
+    thu: "tor",
+    fri: "fre",
+    sat: "lør",
+    sun: "søn"
+  };
+  return days.map(x => labels[String(x).trim().toLowerCase()] || x).join(" · ");
+}
+
+function formatFamiliesSelected(items){
+  if (!Array.isArray(items) || !items.length) return "";
+  return items.map(item => {
+    const family = String(item?.family_key || "").trim();
+    const exId = String(item?.exercise_id || "").trim();
+    const exMeta = getExerciseMeta(exId);
+    const exName = exMeta?.name || exId || "ukendt";
+    return `${family} → ${exName}`;
+  }).join(" · ");
+}
+
 function formatProgressionChannels(channels){
   if (!Array.isArray(channels) || !channels.length) return "";
   const map = {
@@ -1372,6 +1896,64 @@ function formatProgressionChannels(channels){
 function formatDecisionLabel(decisionObj){
   if (!decisionObj || typeof decisionObj !== "object") return "";
   return String(decisionObj.decision_label || "").trim();
+}
+
+
+function renderExerciseLibrary(){
+  const root = document.getElementById("exerciseLibrary");
+  if (!root) return;
+
+  const items = Array.isArray(STATE.exercises) ? STATE.exercises.slice() : [];
+  if (!items.length){
+    root.innerHTML = `<div class="small">Ingen øvelser indlæst endnu.</div>`;
+    return;
+  }
+
+  const grouped = {};
+  for (const item of items){
+    if (!item || typeof item !== "object") continue;
+    const category = String(item.category || "andet").trim() || "andet";
+    if (!grouped[category]) grouped[category] = [];
+    grouped[category].push(item);
+  }
+
+  const order = Object.keys(grouped).sort((a, b) => a.localeCompare(b, "da"));
+
+  root.innerHTML = order.map(category => {
+    const rows = grouped[category]
+      .slice()
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "da"))
+      .map(item => {
+        const exId = String(item.id || "").trim();
+        const name = String(item.name || exId || "Ukendt øvelse").trim();
+        const notes = String(item.notes || "").trim();
+        return `
+          <div class="card" style="margin-top:10px;padding:14px">
+            <div class="row" style="align-items:flex-start;gap:12px">
+              <div style="flex:1">
+                <div style="font-weight:700">${esc(name)}</div>
+                ${notes ? `<div class="small" style="margin-top:6px">${esc(notes)}</div>` : ""}
+              </div>
+              <button
+                type="button"
+                class="secondary"
+                data-exercise-viewer="${esc(exId)}"
+                style="width:auto;padding:8px 12px;white-space:nowrap"
+              >Se øvelse</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+    return `
+      <div style="margin-top:14px">
+        <h3 style="margin:0 0 8px 0">${esc(category.charAt(0).toUpperCase() + category.slice(1))}</h3>
+        ${rows}
+      </div>
+    `;
+  }).join("");
+
+  bindExerciseViewer();
 }
 
 function renderTodayPlan(item){
@@ -1405,9 +1987,23 @@ function renderTodayPlan(item){
   const recoveryLabel = recovery ? formatRecoveryState(recovery.recovery_state || "") : "";
   const recoveryText = recoveryLabel ? ` · Recovery: ${recoveryLabel}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` : "";
 
+  const templateMode = String(item?.template_mode || "").trim();
+  const planMotorLabel =
+    templateMode === "autoplan_v0_1" || templateMode === "autoplan_cardio_v0_1"
+      ? "Autoplan"
+      : "Fast plan";
+  const familiesSelectedText = formatFamiliesSelected(item?.families_selected || []);
+  const trainingCtx = item?.training_day_context && typeof item.training_day_context === "object" ? item.training_day_context : {};
+  const trainingDaysText = formatTrainingDays(trainingCtx.training_days || []);
+  const trainingDaySummary = trainingDaysText ? `Træningsdage: ${trainingDaysText}` : "";
+  const trainingAllowedSummary = trainingCtx.is_training_day === false ? "I dag er ikke en planlagt træningsdag" : "";
+  const baseSummary = `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
+  const motorSummary = `Planmotor: ${planMotorLabel}`;
+  const familiesSummary = familiesSelectedText ? `Valgte familier: ${familiesSelectedText}` : "";
+
   setText(
     "todayPlanSummary",
-    `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`
+    [baseSummary, motorSummary, familiesSummary, trainingDaySummary, trainingAllowedSummary].filter(Boolean).join("\n")
   );
 
   if (!Array.isArray(item.entries) || item.entries.length === 0){
@@ -1507,6 +2103,9 @@ function renderTodayPlan(item){
             : ""
         }
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
+        <div style="margin-top:10px">
+          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">Se øvelse</button>
+        </div>
         ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">Udstyr: næste mulige spring er højere end anbefalet.</div>` : ""}
       </li>
       `;
@@ -1561,13 +2160,13 @@ function renderPrograms(programs, exercises){
 
 async function refreshAll(){
   const debug = {};
-  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettings, workoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
+  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettingsApi, workoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
     getJson(FILES.workouts),
     getJson(FILES.runs),
     getJson(FILES.recovery),
     getJson(FILES.programs),
     getJson(FILES.exercises),
-    getJson(FILES.user_settings),
+    apiGet("/api/user-settings"),
     apiGet("/api/workouts"),
     apiGet("/api/checkins"),
     apiGet("/api/checkin/latest"),
@@ -1577,7 +2176,9 @@ async function refreshAll(){
 
   STATE.exercises = Array.isArray(exercises) ? exercises : [];
   STATE.programs = Array.isArray(programs) ? programs : [];
-  STATE.userSettings = userSettings && typeof userSettings === "object" ? userSettings : {};
+  STATE.userSettings = userSettingsApi && userSettingsApi.item && typeof userSettingsApi.item === "object"
+    ? userSettingsApi.item
+    : {};
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
 
   fillSelect("program_id", STATE.programs, x => x.id, x => x.name, "(Intet program)");
@@ -1594,6 +2195,7 @@ async function refreshAll(){
   renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null, todayPlanApi && todayPlanApi.item ? todayPlanApi.item.recovery_state : null);
   renderSessionHistory(STATE.sessionResults);
   renderExercises(STATE.exercises);
+  renderExerciseLibrary();
   renderRecovery(recoveryApi.items || []);
   renderReadiness(latestRecoveryApi.item || null);
   renderForecastHero(todayPlanApi.item || null, latestRecoveryApi.item || null);
@@ -1615,7 +2217,7 @@ async function refreshAll(){
   debug.runs = runs;
   debug.programs = programs;
   debug.exercises = exercises;
-  debug.user_settings = userSettings;
+  debug.user_settings = userSettingsApi && userSettingsApi.item ? userSettingsApi.item : {};
 
   setText("status", "Frontend + API OK");
   document.getElementById("status")?.classList.add("ok");
@@ -1887,13 +2489,28 @@ async function handleSessionResultSubmit(ev){
     return;
   }
 
+  const cardioKmWhole = Number(form.cardio_distance_km_whole?.value || 0);
+  const cardioKmPartMeters = Number(form.cardio_distance_km_part?.value || 0);
+  const cardioDistanceKm = (cardioKmWhole + (cardioKmPartMeters / 1000)).toFixed(1).replace(/\.0$/, "");
+  const cardioDurationMin = form.cardio_duration_min?.value?.trim() || "";
+  const cardioDurationSec = form.cardio_duration_sec?.value?.trim() || "";
+
   const payload = {
     date: plan.date || new Date().toISOString().slice(0,10),
-    session_type: plan.session_type || "",
+    
+session_type:
+  plan.session_type
+  || (Array.isArray(plan.entries) && plan.entries.some(e => String(e.exercise_id||"").includes("cardio")) ? "løb" : "styrke"),
+
     timing_state: plan.timing_state || "",
     readiness_score: plan.readiness_score ?? null,
     completed: String(form.session_completed.value) === "true",
     notes: form.session_notes.value.trim(),
+    cardio_kind: form.cardio_kind?.value?.trim() || "",
+    avg_rpe: form.avg_rpe?.value?.trim() || "",
+    distance_km: cardioDistanceKm === "0" ? "" : cardioDistanceKm,
+    duration_min: cardioDurationMin,
+    duration_sec: cardioDurationSec,
     results: Array.isArray(plan.entries) ? plan.entries.map((entry, idx) => {
       const setCount = Math.max(1, Number(entry.sets || 1));
       const meta = getReviewExerciseMeta(entry.exercise_id);
@@ -2082,6 +2699,7 @@ function getWizardSections(){
 }
 
 function renderWizardNav(){
+
   const root = document.getElementById("wizardNav");
   if (!root) return;
 
@@ -2205,6 +2823,11 @@ async function boot(){
     const sessionResultForm = document.getElementById("sessionResultForm");
     if (sessionResultForm){
       sessionResultForm.addEventListener("submit", handleSessionResultSubmit);
+
+      document.getElementById("cardio_distance_km_whole")?.addEventListener("change", updateCardioPacePreview);
+      document.getElementById("cardio_distance_km_part")?.addEventListener("change", updateCardioPacePreview);
+      document.getElementById("cardio_duration_min")?.addEventListener("change", updateCardioPacePreview);
+      document.getElementById("cardio_duration_sec")?.addEventListener("change", updateCardioPacePreview);
     }
 
     document.getElementById("addEntryBtn")?.addEventListener("click", handleAddEntry);
@@ -2213,6 +2836,7 @@ async function boot(){
     document.getElementById("program_id")?.addEventListener("change", refreshProgramDaySelect);
     document.getElementById("entry_exercise_id")?.addEventListener("change", handleExerciseChange);
     bindEquipmentEditor();
+    bindRpePicker();
 
     await refreshAll();
     renderWizardNav();
