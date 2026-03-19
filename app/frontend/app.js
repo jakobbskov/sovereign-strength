@@ -43,26 +43,75 @@ function updateLanguageToggleLabel(){
   const btn = document.getElementById("languageToggleBtn");
   if (!btn) return;
   const lang = getCurrentLang();
-  btn.textContent = lang === "da" ? "DA / EN" : "EN / DA";
+  btn.textContent = lang === "da" ? "🇩🇰 Dansk ▾" : "🇬🇧 English ▾";
 }
 
 async function initLanguageToggle(){
   const btn = document.getElementById("languageToggleBtn");
+  const menu = document.getElementById("languageMenu");
+  const wrap = document.getElementById("languageMenuWrap");
   if (!btn) return;
+
   updateLanguageToggleLabel();
-  btn.addEventListener("click", async () => {
-    try{
-      const next = getNextLang();
-      await window.I18N.load(next);
-      updateLanguageToggleLabel();
-      applyStaticTranslations();
-      renderWizardNav();
-      renderAuthBar();
-      await refreshAll();
-      showWizardStep(CURRENT_STEP || "overview");
-    }catch(err){
-      setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
-    }
+
+  if (!menu || !wrap){
+    btn.addEventListener("click", async () => {
+      try{
+        const next = getNextLang();
+        await window.I18N.load(next);
+        updateLanguageToggleLabel();
+        applyStaticTranslations();
+        renderWizardNav();
+        renderAuthBar();
+        await refreshAll();
+        showWizardStep(CURRENT_STEP || "overview");
+      }catch(err){
+        setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
+      }
+    });
+    return;
+  }
+
+  if (btn.dataset.langMenuBound === "1") return;
+  btn.dataset.langMenuBound = "1";
+
+  btn.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    menu.hidden = !menu.hidden;
+  });
+
+  document.querySelectorAll("[data-language-choice]").forEach((opt) => {
+    if (opt.dataset.bound === "1") return;
+    opt.dataset.bound = "1";
+
+    opt.addEventListener("click", async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const chosen = opt.getAttribute("data-language-choice");
+      menu.hidden = true;
+      if (!chosen || chosen === getCurrentLang()) return;
+
+      try{
+        await window.I18N.load(chosen);
+        updateLanguageToggleLabel();
+        applyStaticTranslations();
+        renderWizardNav();
+        renderAuthBar();
+        await refreshAll();
+        showWizardStep(CURRENT_STEP || "overview");
+      }catch(err){
+        setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
+      }
+    });
+  });
+
+  document.addEventListener("click", (ev) => {
+    if (!wrap.contains(ev.target)) menu.hidden = true;
+  });
+
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") menu.hidden = true;
   });
 }
 

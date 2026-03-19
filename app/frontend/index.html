@@ -306,7 +306,16 @@
 </head>
 <body>
   <div class="wrap">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="margin:0">SovereignStrength</h1><button type="button" id="languageToggleBtn" class="secondary" style="width:auto;padding:8px 12px">DA / EN</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h1 style="margin:0">SovereignStrength</h1>
+      <div id="languageMenuWrap" style="position:relative">
+        <button type="button" id="languageToggleBtn" class="secondary" style="width:auto;padding:8px 12px">🇩🇰 Dansk ▾</button>
+        <div id="languageMenu" hidden style="position:absolute;right:0;top:calc(100% + 6px);min-width:170px;background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:40">
+          <button type="button" data-language-choice="da" class="secondary" style="display:block;width:100%;text-align:left;padding:10px 12px;border:none;background:transparent">🇩🇰 Dansk</button>
+          <button type="button" data-language-choice="en" class="secondary" style="display:block;width:100%;text-align:left;padding:10px 12px;border:none;background:transparent">🇬🇧 English</button>
+        </div>
+      </div>
+    </div>
     <p data-i18n="app.tagline">Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
     <div id="wizardNav" class="wizard-nav"></div>
 
@@ -335,7 +344,7 @@
 
       <section class="card" id="profileEquipmentCard" style="grid-column:1/-1">
         <div class="row">
-          <h2>Profil og udstyr</h2>
+          <h2 data-i18n="overview.profile_equipment">Profil og udstyr</h2>
           <div class="small" id="profileDisplayName">-</div>
         </div>
         <div class="overview-status">
@@ -348,8 +357,8 @@
           <div class="stat-line" id="profileAccountHelpLine">Profil og adgangskode håndteres centralt via auth.</div>
         </div>
         <div class="btn-row" style="margin-top:12px">
-          <button type="button" id="openEquipmentSettingsBtn">Redigér profil og udstyr</button>
-          <button type="button" id="openAccountSettingsSecondaryBtn">Konto og adgangskode</button>
+          <button type="button" id="openEquipmentSettingsBtn" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
+          <button type="button" id="openAccountSettingsSecondaryBtn" data-i18n="button.account_password">Konto og adgangskode</button>
         </div>
 
       <div id="equipmentEditorWrap" class="wizard-step-hidden"></div>
@@ -357,7 +366,7 @@
       <div id="equipmentSettingsModal" class="modal-backdrop wizard-step-hidden">
         <div class="modal-card">
           <div class="row" style="align-items:center; margin-bottom:10px">
-            <h3 style="margin:0">Profil og udstyr</h3>
+            <h3 style="margin:0" data-i18n="overview.profile_equipment">Profil og udstyr</h3>
             <button type="button" id="cancelEquipmentSettingsBtn" class="small">Luk</button>
           </div>
 
@@ -384,13 +393,13 @@
             <div style="margin:16px 0 6px; font-weight:700">Jeg kan typisk træne på</div>
             <div class="small" style="margin-bottom:8px">Dage du ikke vælger her, bliver altid hviledage.</div>
 
-            <label class="training-option"><input id="day_mon" type="checkbox"><span>Mandag</span></label>
-            <label class="training-option"><input id="day_tue" type="checkbox"><span>Tirsdag</span></label>
-            <label class="training-option"><input id="day_wed" type="checkbox"><span>Onsdag</span></label>
-            <label class="training-option"><input id="day_thu" type="checkbox"><span>Torsdag</span></label>
-            <label class="training-option"><input id="day_fri" type="checkbox"><span>Fredag</span></label>
-            <label class="training-option"><input id="day_sat" type="checkbox"><span>Lørdag</span></label>
-            <label class="training-option"><input id="day_sun" type="checkbox"><span>Søndag</span></label>
+            <label class="training-option"><input id="day_mon" type="checkbox"><span data-i18n="weekday.mon">Mandag</span></label>
+            <label class="training-option"><input id="day_tue" type="checkbox"><span data-i18n="weekday.tue">Tirsdag</span></label>
+            <label class="training-option"><input id="day_wed" type="checkbox"><span data-i18n="weekday.wed">Onsdag</span></label>
+            <label class="training-option"><input id="day_thu" type="checkbox"><span data-i18n="weekday.thu">Torsdag</span></label>
+            <label class="training-option"><input id="day_fri" type="checkbox"><span data-i18n="weekday.fri">Fredag</span></label>
+            <label class="training-option"><input id="day_sat" type="checkbox"><span data-i18n="weekday.sat">Lørdag</span></label>
+            <label class="training-option"><input id="day_sun" type="checkbox"><span data-i18n="weekday.sun">Søndag</span></label>
 
             <label>
               <span>Jeg sigter mod (pas pr. uge)</span>
@@ -883,7 +892,7 @@
       <h2>Status</h2>
       <div class="card" style="margin-top:16px">
   <div class="row" style="justify-content:space-between;align-items:center">
-    <strong>System info</strong>
+    <strong data-i18n="status.system_info">System info</strong>
     <button type="button" id="toggleSystemInfo" class="secondary" style="width:auto;padding:6px 10px">Skjul</button>
   </div>
   <div id="systemInfoContent" style="margin-top:10px">
