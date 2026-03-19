@@ -139,6 +139,55 @@ def append_user_item(file_key, item):
 def get_latest_user_item(file_key, user_id, sort_keys=("created_at", "date")):
     return get_storage().get_latest_user_item(file_key, user_id, sort_keys=sort_keys)
 
+
+
+def get_iso_weekday_key(date_str):
+    date_str = str(date_str or "").strip()
+    if not date_str:
+        return None
+    try:
+        dt = datetime.fromisoformat(date_str).date()
+    except Exception:
+        return None
+
+    mapping = {
+        1: "mon",
+        2: "tue",
+        3: "wed",
+        4: "thu",
+        5: "fri",
+        6: "sat",
+        7: "sun",
+    }
+    return mapping.get(dt.isoweekday())
+
+
+def get_training_day_context(user_settings, date_str):
+    if not isinstance(user_settings, dict):
+        user_settings = {}
+
+    training_days = user_settings.get("training_days", [])
+    if not isinstance(training_days, list):
+        training_days = []
+
+    training_days = [str(x).strip().lower() for x in training_days if str(x).strip()]
+    preferred_sessions = user_settings.get("preferred_sessions_per_week", 3)
+    try:
+        preferred_sessions = int(preferred_sessions)
+    except Exception:
+        preferred_sessions = 3
+
+    weekday_key = get_iso_weekday_key(date_str)
+    is_training_day = bool(weekday_key and weekday_key in training_days)
+
+    return {
+        "weekday_key": weekday_key,
+        "training_days": training_days,
+        "preferred_sessions_per_week": preferred_sessions,
+        "is_training_day": is_training_day,
+    }
+
+
 def get_user_settings_for(user_id):
     return get_storage().get_user_settings_for(user_id)
 
@@ -197,6 +246,8 @@ def create_workout(user_id, payload):
         "program_id": program_id,
         "program_day_label": program_day_label,
         "entries": clean_entries,
+        "is_manual_override": True,
+        "is_consumed": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
@@ -256,6 +307,54 @@ def create_checkin(user_id, payload):
     item, count = append_user_item("checkins", item)
     return item, None, count
 
+
+def consume_manual_override_workout(user_id, date):
+    items = read_json_file(FILES["workouts"])
+    changed = False
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("user_id")) != str(user_id):
+            continue
+        if str(item.get("date", "")).strip() != str(date).strip():
+            continue
+        if not bool(item.get("is_manual_override", False)):
+            continue
+        if bool(item.get("is_consumed", False)):
+            continue
+        item["is_consumed"] = True
+        changed = True
+
+    if changed:
+        write_json_file(FILES["workouts"], items)
+
+    return changed
+
+
+def delete_session_result_for_user(user_id, session_result_id):
+    items = read_json_file(FILES["session_results"])
+    out = []
+    deleted = None
+
+    for item in items:
+        if not isinstance(item, dict):
+            out.append(item)
+            continue
+
+        same_user = str(item.get("user_id")) == str(user_id)
+        same_id = str(item.get("id", "")).strip() == str(session_result_id).strip()
+
+        if same_user and same_id and deleted is None:
+            deleted = item
+            continue
+
+        out.append(item)
+
+    if deleted is not None:
+        write_json_file(FILES["session_results"], out)
+
+    return deleted
+
 def list_session_results_for_user(user_id):
     return list_user_items("session_results", user_id)
 
@@ -266,11 +365,15 @@ def create_session_result(user_id, payload):
     notes = str(payload.get("notes", "")).strip()
     completed = bool(payload.get("completed", False))
     readiness_score = payload.get("readiness_score", None)
+    source = str(payload.get("source", "autoplan")).strip() or "autoplan"
     results = payload.get("results", [])
 
     if not date:
         return None, {"ok": False, "error": "date mangler"}, 400
-    if session_type not in ("styrke", "cardio", "restitution"):
+    if session_type == "cardio":
+        session_type = "løb"
+
+    if session_type not in ("styrke", "løb", "restitution"):
         return None, {"ok": False, "error": "ugyldig session_type"}, 400
     if timing_state not in ("early", "on_time", "late", ""):
         return None, {"ok": False, "error": "ugyldig timing_state"}, 400
@@ -317,7 +420,98 @@ def create_session_result(user_id, payload):
         })
 
     if not clean_results:
-        return None, {"ok": False, "error": "ingen træningsdata at gemme"}, 400
+        # cardio-sessioner kan være gyldige uden sets
+        if session_type in ("løb", "cardio", "run"):
+            clean_results.append({
+                "exercise_id": "cardio_session",
+                "completed": True,
+                "target_reps": "",
+                "achieved_reps": "",
+                "load": "",
+                "sets": [],
+                "hit_failure": False,
+                "notes": ""
+            })
+        else:
+            return None, {"ok": False, "error": "ingen træningsdata at gemme"}, 400
+
+    cardio_kind = str(payload.get("cardio_kind", "")).strip().lower()
+    avg_rpe = payload.get("avg_rpe", None)
+    distance_km = payload.get("distance_km", None)
+    duration_min = payload.get("duration_min", None)
+    duration_sec = payload.get("duration_sec", None)
+
+    try:
+        avg_rpe = int(avg_rpe) if avg_rpe not in (None, "", "null") else None
+    except Exception:
+        avg_rpe = None
+
+    try:
+        distance_km = float(distance_km) if distance_km not in (None, "", "null") else None
+    except Exception:
+        distance_km = None
+
+    try:
+        duration_min = int(duration_min) if duration_min not in (None, "", "null") else 0
+    except Exception:
+        duration_min = 0
+
+    try:
+        duration_sec = int(duration_sec) if duration_sec not in (None, "", "null") else 0
+    except Exception:
+        duration_sec = 0
+
+    if duration_min < 0:
+        duration_min = 0
+    if duration_sec < 0:
+        duration_sec = 0
+    if duration_sec > 59:
+        duration_sec = 59
+
+    duration_total_sec = (duration_min * 60) + duration_sec
+
+    pace_sec_per_km = None
+    if distance_km and distance_km > 0 and duration_total_sec > 0:
+        try:
+            pace_sec_per_km = round(duration_total_sec / float(distance_km), 2)
+        except Exception:
+            pace_sec_per_km = None
+
+    session_type_normalized = str(session_type or "").strip().lower()
+    counts_toward_weekly_goal = False
+
+    has_meaningful_results = False
+    for r in clean_results:
+        if not isinstance(r, dict):
+            continue
+        if str(r.get("exercise_id", "")).strip():
+            has_meaningful_results = True
+            break
+        if str(r.get("achieved_reps", "")).strip():
+            has_meaningful_results = True
+            break
+        raw_sets = r.get("sets", [])
+        if isinstance(raw_sets, list) and raw_sets:
+            has_meaningful_results = True
+            break
+
+    if completed:
+        if session_type_normalized in ("styrke", "strength"):
+            counts_toward_weekly_goal = has_meaningful_results
+        elif session_type_normalized in ("løb", "run", "cardio"):
+            dist_ok = False
+            dur_ok = False
+            try:
+                dist_ok = float(distance_km or 0) > 0
+            except Exception:
+                dist_ok = False
+            try:
+                dur_ok = float(duration_total_sec or 0) > 0
+            except Exception:
+                dur_ok = False
+            counts_toward_weekly_goal = bool(dist_ok or dur_ok or has_meaningful_results)
+        elif session_type_normalized in ("restitution", "mobilitet", "mobility", "recovery"):
+            counts_toward_weekly_goal = False
 
     item = {
         "id": str(uuid.uuid4()),
@@ -327,7 +521,14 @@ def create_session_result(user_id, payload):
         "timing_state": timing_state,
         "readiness_score": readiness_score,
         "completed": completed,
+        "source": source,
+        "counts_toward_weekly_goal": counts_toward_weekly_goal,
         "notes": notes,
+        "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run") else "",
+        "avg_rpe": avg_rpe if session_type in ("løb", "cardio", "run") else None,
+        "distance_km": distance_km if session_type in ("løb", "cardio", "run") else None,
+        "duration_total_sec": duration_total_sec if session_type in ("løb", "cardio", "run") else None,
+        "pace_sec_per_km": pace_sec_per_km if session_type in ("løb", "cardio", "run") else None,
         "results": clean_results,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -337,12 +538,129 @@ def create_session_result(user_id, payload):
     item, count = append_user_item("session_results", item)
     return item, None, count
 
+
+def create_session_result_from_workout(user_id, workout_item):
+    if not isinstance(workout_item, dict):
+        return None, {"ok": False, "error": "ugyldigt workout_item"}, 400
+
+    date = str(workout_item.get("date", "")).strip()
+    session_type = str(workout_item.get("session_type", "")).strip() or "styrke"
+    notes = str(workout_item.get("notes", "")).strip()
+    entries = workout_item.get("entries", [])
+    if not isinstance(entries, list):
+        entries = []
+
+    clean_results = []
+    for e in entries:
+        if not isinstance(e, dict):
+            continue
+
+        sets_raw = str(e.get("sets", "")).strip()
+        reps_raw = str(e.get("reps", "")).strip()
+        load_raw = str(e.get("load", "")).strip()
+        achieved_raw = str(e.get("achieved_reps", "")).strip()
+
+        set_items = []
+        try:
+            set_count = int(float(sets_raw)) if sets_raw else 0
+        except Exception:
+            set_count = 0
+
+        if set_count > 0 and (reps_raw or load_raw):
+            for _ in range(set_count):
+                set_items.append({
+                    "reps": achieved_raw or reps_raw,
+                    "load": load_raw
+                })
+
+        clean_results.append({
+            "exercise_id": str(e.get("exercise_id", "")).strip(),
+            "target_reps": reps_raw,
+            "achieved_reps": achieved_raw or reps_raw,
+            "load": load_raw,
+            "completed": True,
+            "hit_failure": False,
+            "notes": str(e.get("notes", "")).strip(),
+            "sets": set_items
+        })
+
+    payload = {
+        "date": date,
+        "session_type": session_type,
+        "timing_state": "",
+        "completed": True,
+        "readiness_score": None,
+        "notes": notes,
+        "results": clean_results,
+        "source": "manual_override"
+    }
+
+    return create_session_result(user_id, payload)
+
 def get_exercise_config(exercises, exercise_id):
     for ex in (exercises or []):
         if str(ex.get("id", "")).strip() == str(exercise_id).strip():
             return ex
     return {}
 
+
+def get_training_type_preferences(user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {})
+    if not isinstance(preferences, dict):
+        preferences = {}
+    training_types = preferences.get("training_types", {})
+    if not isinstance(training_types, dict):
+        training_types = {}
+
+    return {
+        "running": bool(training_types.get("running", True)),
+        "strength_weights": bool(training_types.get("strength_weights", True)),
+        "bodyweight": bool(training_types.get("bodyweight", True)),
+        "mobility": bool(training_types.get("mobility", True)),
+    }
+
+def get_training_day_preferences(user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {})
+    if not isinstance(preferences, dict):
+        preferences = {}
+    training_days = preferences.get("training_days", {})
+    if not isinstance(training_days, dict):
+        training_days = {}
+
+    defaults = {
+        "mon": True,
+        "tue": True,
+        "wed": True,
+        "thu": True,
+        "fri": True,
+        "sat": True,
+        "sun": True,
+    }
+
+    return {
+        key: bool(training_days.get(key, default))
+        for key, default in defaults.items()
+    }
+
+def get_weekly_target_sessions(user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {})
+    if not isinstance(preferences, dict):
+        preferences = {}
+
+    raw = preferences.get("weekly_target_sessions", 3)
+    try:
+        val = int(raw)
+    except Exception:
+        val = 3
+
+    if val < 1:
+        val = 1
+    if val > 7:
+        val = 7
+    return val
 
 def get_effective_load_increment(exercise, user_settings):
     if not isinstance(exercise, dict):
@@ -1186,12 +1504,282 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         "dropoff_signal": dropoff_signal,
         "consistency_signal": consistency_signal
     }
+
+
+def compute_cardio_load_metrics(user_id):
+    user_id = str(user_id or "").strip()
+
+    session_items = list_session_results_for_user(user_id)
+    cardio_items = []
+
+    for item in session_items:
+        if not isinstance(item, dict):
+            continue
+        session_type = str(item.get("session_type", item.get("type", ""))).strip().lower()
+        if session_type not in ("løb", "cardio", "run"):
+            continue
+        cardio_items.append(item)
+
+    if not cardio_items:
+        workouts = list_workouts_for_user(user_id)
+        for item in workouts:
+            if not isinstance(item, dict):
+                continue
+            session_type = str(item.get("session_type", item.get("type", ""))).strip().lower()
+            if session_type not in ("løb", "cardio", "run"):
+                continue
+            cardio_items.append(item)
+
+    cardio_items = sorted(
+        cardio_items,
+        key=lambda x: str(x.get("date", x.get("created_at", "")))
+    )
+
+    today_str = datetime.now(timezone.utc).date().isoformat()
+    weekly_cardio_load = 0.0
+    last_cardio_kind = None
+    days_since_last_cardio = None
+    last_hard_cardio_days_ago = None
+
+    def cardio_intensity_factor(kind):
+        k = str(kind or "").strip().lower()
+        mapping = {
+            "restitution": 0.6,
+            "recovery": 0.6,
+            "base": 1.0,
+            "tempo": 1.4,
+            "threshold": 1.4,
+            "interval": 1.8,
+            "intervals": 1.8,
+            "test": 2.0,
+            "benchmark": 2.0,
+        }
+        return mapping.get(k, 1.0)
+
+    for item in cardio_items:
+        date_str = str(item.get("date", "")).strip()
+        kind = str(item.get("cardio_kind", item.get("cardio_type", "base"))).strip().lower() or "base"
+        duration = item.get("duration_min", 0)
+        try:
+            duration = int(duration or 0)
+        except Exception:
+            duration = 0
+
+        rpe = item.get("avg_rpe", None)
+        try:
+            rpe = int(rpe) if rpe not in (None, "", "null") else None
+        except Exception:
+            rpe = None
+
+        rpe_factor = 1.0
+        if rpe is not None:
+            rpe_factor = max(0.7, min(1.3, rpe / 5.0))
+
+        if date_str:
+            diff = days_between_iso_dates(today_str, date_str)
+            if diff is not None and diff >= 0 and diff <= 6:
+                weekly_cardio_load += duration * cardio_intensity_factor(kind) * rpe_factor
+
+    if cardio_items:
+        last = cardio_items[-1]
+        last_cardio_kind = str(last.get("cardio_kind", last.get("cardio_type", "base"))).strip().lower() or "base"
+        last_date = str(last.get("date", "")).strip()
+        if last_date:
+            days_since_last_cardio = days_between_iso_dates(today_str, last_date)
+
+        for item in reversed(cardio_items):
+            kind = str(item.get("cardio_kind", item.get("cardio_type", "base"))).strip().lower()
+            if kind in ("tempo", "threshold", "interval", "intervals", "test", "benchmark"):
+                last_date = str(item.get("date", "")).strip()
+                if last_date:
+                    last_hard_cardio_days_ago = days_between_iso_dates(today_str, last_date)
+                break
+
+    load_status = "balanced"
+    if weekly_cardio_load < 30:
+        load_status = "underloaded"
+    elif weekly_cardio_load <= 75:
+        load_status = "balanced"
+    elif weekly_cardio_load <= 110:
+        load_status = "elevated"
+    else:
+        load_status = "spiking"
+
+    return {
+        "weekly_cardio_load": round(weekly_cardio_load, 2),
+        "last_cardio_kind": last_cardio_kind,
+        "days_since_last_cardio": days_since_last_cardio,
+        "last_hard_cardio_days_ago": last_hard_cardio_days_ago,
+        "load_status": load_status,
+    }
+
+
+def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None):
+    user_id = str(user_id or "").strip()
+    metrics = compute_cardio_load_metrics(user_id)
+
+    try:
+        readiness_val = int(readiness if readiness is not None else 0)
+    except Exception:
+        readiness_val = 0
+
+    try:
+        time_val = int(time_budget_min if time_budget_min is not None else 30)
+    except Exception:
+        time_val = 30
+
+    recovery_key = ""
+    if isinstance(recovery_state, dict):
+        recovery_key = str(recovery_state.get("recovery_state", "")).strip().lower()
+
+    training_ctx = training_day_context if isinstance(training_day_context, dict) else {}
+    is_training_day = training_ctx.get("is_training_day", True)
+
+    weekly_cardio_load = float(metrics.get("weekly_cardio_load", 0) or 0)
+    last_cardio_kind = str(metrics.get("last_cardio_kind", "")).strip().lower()
+    last_hard_days = metrics.get("last_hard_cardio_days_ago")
+    load_status = str(metrics.get("load_status", "balanced")).strip().lower()
+
+    kind = "base"
+    duration = 30
+    reason = []
+
+    # first gate: recovery / off-day
+    if recovery_key == "recover":
+        kind = "restitution"
+        duration = min(time_val, 20) if time_val > 0 else 20
+        reason.extend(["recovery kræver restitution", "lav belastning prioriteres"])
+    elif is_training_day is False:
+        if readiness_val >= 4 and load_status in ("underloaded", "balanced"):
+            kind = "base"
+            duration = min(max(20, time_val), 35)
+            reason.extend(["ikke planlagt træningsdag", "valgt som frivilligt let pas"])
+        else:
+            kind = "restitution"
+            duration = min(time_val, 20) if time_val > 0 else 20
+            reason.extend(["ikke planlagt træningsdag", "restitution prioriteres"])
+    else:
+        # planned training day
+        if readiness_val <= 2:
+            kind = "restitution"
+            duration = min(time_val, 20) if time_val > 0 else 20
+            reason.extend(["lav readiness", "let cardio prioriteres"])
+        elif time_val <= 20:
+            if (last_hard_days is None or last_hard_days >= 4) and load_status in ("underloaded", "balanced") and readiness_val >= 4:
+                kind = "interval"
+                duration = 20
+                reason.extend(["kort tid", "ingen hård cardio for nylig", "høj readiness"])
+            else:
+                kind = "base"
+                duration = 20
+                reason.extend(["kort tid", "rolig base er mest robust"])
+        else:
+            if (last_hard_days is None or last_hard_days >= 4) and readiness_val >= 4 and load_status in ("underloaded", "balanced"):
+                if weekly_cardio_load < 45:
+                    kind = "tempo"
+                    duration = min(max(25, time_val), 40)
+                    reason.extend(["høj readiness", "lav/moderat cardio-belastning", "tempo prioriteres"])
+                else:
+                    kind = "base"
+                    duration = min(max(25, time_val), 40)
+                    reason.extend(["cardio-belastning er allerede moderat", "rolig base prioriteres"])
+            elif load_status == "spiking":
+                kind = "restitution"
+                duration = min(time_val, 25)
+                reason.extend(["cardio-belastning er høj", "restitution prioriteres"])
+            else:
+                kind = "base"
+                duration = min(max(25, time_val), 40)
+                reason.extend(["moderat readiness", "basepas prioriteres"])
+
+    # avoid repeating hard sessions too close together
+    if kind in ("interval", "tempo") and last_cardio_kind in ("interval", "tempo", "threshold", "test", "benchmark"):
+        if last_hard_days is not None and last_hard_days < 3:
+            kind = "base"
+            duration = min(max(20, time_val), 35)
+            reason.append("hård cardio for nylig, nedjusteret til base")
+
+    return {
+        "cardio_kind": kind,
+        "duration_min": int(duration),
+        "reason": reason[:6],
+        "metrics": metrics,
+    }
+
+
+def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None):
+    picked = choose_cardio_session(
+        user_id=user_id,
+        readiness=readiness,
+        time_budget_min=time_budget_min,
+        recovery_state=recovery_state,
+        training_day_context=training_day_context,
+    )
+
+    kind = str(picked.get("cardio_kind", "base")).strip().lower()
+    duration = int(picked.get("duration_min", 30) or 30)
+
+    if kind == "restitution":
+        target_reps = f"{duration} min rolig gang eller meget let jog"
+        exercise_id = "cardio_restitution"
+    elif kind == "interval":
+        work_blocks = max(6, min(10, duration // 2))
+        target_reps = f"10 min opvarmning + {work_blocks}x(1 min hurtigt / 1 min roligt) + 5 min nedkøling"
+        exercise_id = "cardio_intervals"
+    elif kind == "tempo":
+        target_reps = "10 min opvarmning + 2 x 8 min kontrolleret hårdt tempo + 2 min roligt mellem + 5 min nedkøling"
+        exercise_id = "cardio_tempo"
+    else:
+        target_reps = f"{duration} min roligt løb i snakketempo"
+        exercise_id = "cardio_base"
+
+    entry = {
+        "exercise_id": exercise_id,
+        "sets": 1,
+        "target_reps": target_reps,
+        "target_load": None,
+        "progression_decision": "autoplan_cardio_initial",
+        "progression_reason": "autoplan valgte cardiopas ud fra readiness, recovery og nylig cardio-belastning",
+        "recommended_next_load": None,
+        "actual_possible_next_load": None,
+        "equipment_constraint": False,
+        "secondary_constraints": [],
+        "next_target_reps": None,
+        "substituted_from": None,
+        "autoplan_family": "cardio",
+        "autoplan_score": None,
+        "autoplan_reason": picked.get("reason", []),
+        "decision": {
+            "decision": kind,
+            "decision_label": kind.title(),
+            "explanation": picked.get("reason", []),
+            "coach_text": " · ".join(picked.get("reason", [])),
+            "metrics": picked.get("metrics", {}),
+        }
+    }
+
+    return {
+        "session_type": "løb",
+        "template_mode": "autoplan_cardio_v0_1",
+        "cardio_kind": kind,
+        "reason": picked.get("reason", []),
+        "entries": [entry],
+    }
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
     program = None
+
     for p in programs:
-        if p.get("id") == "base_strength_a":
+        if p.get("id") == "starter_strength_2x":
             program = p
             break
+
+    if not program:
+        for p in programs:
+            if p.get("id") == "base_strength_a":
+                program = p
+                break
 
     if not program:
         return {
@@ -1382,6 +1970,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
 
 
 def build_progression_context(exercise_id, user_id=None):
+    exercise = {}
     workouts = read_json_file(FILES["workouts"])
     exercises = read_json_file(FILES["exercises"])
     user_settings = get_user_settings_for(user_id) if user_id not in (None, "") else {}
@@ -1773,7 +2362,7 @@ def debug_exercise_config(exercise_id):
 
     exercises = read_json_file(FILES["exercises"])
     user_settings = get_user_settings_for(auth_user.get("user_id"))
-    exercise = get_exercise_config(exercises, exercise_id)
+    exercise = get_exercise_config(exercises, exercise_id) or {}
 
     return jsonify({
         "ok": True,
@@ -1816,8 +2405,90 @@ def get_today_plan():
 
     latest_checkin = sorted(checkins, key=lambda x: str(x.get("created_at", x.get("date", ""))), reverse=True)[0]
     readiness_score = int(latest_checkin.get("readiness_score", 0))
+
+    checkin_date = str(latest_checkin.get("date", "")).strip()
+    time_budget_min = int(latest_checkin.get("time_budget_min", 45) or 45)
+    user_settings = get_user_settings_for(auth_user.get("user_id"))
+    training_day_ctx = get_training_day_context(user_settings, checkin_date)
+    weekly_target_sessions = get_weekly_target_sessions(user_settings)
+    weekly_status = build_weekly_training_status(
+        user_id=auth_user.get("user_id"),
+        checkin_date=checkin_date,
+        training_day_prefs=get_training_day_preferences(user_settings),
+        weekly_target_sessions=weekly_target_sessions,
+    )
+
+    checkin_date = str(latest_checkin.get("date", "")).strip()
+    manual_override = None
+    for w in sorted(workouts, key=lambda x: str(x.get("created_at", x.get("date", ""))), reverse=True):
+        if not isinstance(w, dict):
+            continue
+        if str(w.get("date", "")).strip() != checkin_date:
+            continue
+        if not bool(w.get("is_manual_override", False)):
+            continue
+        if bool(w.get("is_consumed", False)):
+            continue
+        manual_override = w
+        break
+
+    if manual_override:
+        override_entries = []
+        raw_entries = manual_override.get("entries", [])
+        if not isinstance(raw_entries, list):
+            raw_entries = []
+
+        for e in raw_entries:
+            if not isinstance(e, dict):
+                continue
+            override_entries.append({
+                "exercise_id": str(e.get("exercise_id", "")).strip(),
+                "sets": e.get("sets", ""),
+                "target_reps": str(e.get("reps", "")).strip(),
+                "target_load": str(e.get("load", "")).strip() or None,
+                "progression_decision": "manual_override",
+                "progression_reason": "Manuel plan valgt som dagens træning",
+                "recommended_next_load": None,
+                "actual_possible_next_load": None,
+                "equipment_constraint": False,
+                "secondary_constraints": [],
+                "next_target_reps": None,
+                "substituted_from": None
+            })
+
+        return jsonify({
+            "ok": True,
+            "item": {
+                "checkin_id": latest_checkin.get("id"),
+                "date": checkin_date,
+                "recommended_for": checkin_date,
+                "decision_mode": "manual_override_v0_1",
+                "timing_state": "on_time",
+                "previous_recommended_for": None,
+                "readiness_score": readiness_score,
+                "weekly_status": None,
+                "time_budget_min": latest_checkin.get("time_budget_min"),
+                "session_type": str(manual_override.get("session_type", "")).strip() or "styrke",
+                "latest_strength_failed": None,
+                "latest_strength_load_drop_count": 0,
+                "latest_strength_completed": None,
+                "fatigue_score": 0,
+                "recovery_state": None,
+                "template_id": str(manual_override.get("program_id", "")).strip() or "manual_override",
+                "template_mode": "manual_override_v0_1",
+                "plan_variant": "manual_override",
+                "reason": "Manuel plan overstyrer dagens autoplan.",
+                "families_selected": [],
+                "training_day_context": {},
+                "entries": override_entries,
+                "source": "manual_override",
+                "manual_override_workout_id": manual_override.get("id")
+            }
+        })
     time_budget_min = int(latest_checkin.get("time_budget_min", 45) or 45)
     checkin_date = latest_checkin.get("date", "")
+    user_settings = get_user_settings_for(auth_user.get("user_id"))
+    training_day_ctx = get_training_day_context(user_settings, checkin_date)
 
     latest_strength = find_latest_strength_workout(workouts)
     days_since_last_strength = None
@@ -1864,6 +2535,7 @@ def get_today_plan():
         template_id = "restitution_easy"
         plan_entries = build_restitution_plan(time_budget_min)
         plan_variant = "default"
+        autoplan_meta = None
         if recovery_state.get("recovery_state") == "recover":
             reason = "recovery-state kræver restitution"
         else:
@@ -1987,7 +2659,6 @@ def get_today_plan():
                 }
             ]
     else:
-        user_settings = get_user_settings_for(auth_user.get("user_id"))
         strength_ctx = build_strength_plan(
             programs=programs,
             exercises=exercises,
@@ -1998,13 +2669,232 @@ def get_today_plan():
             user_id=auth_user.get("user_id"),
         )
 
-        session_type = "styrke"
-        template_id = strength_ctx.get("template_id")
-        plan_entries = strength_ctx.get("plan_entries", [])
-        plan_variant = strength_ctx.get("plan_variant", "default")
-        reason = strength_ctx.get("reason", "styrke prioriteres")
+        prefs = get_training_type_preferences(user_settings)
+        training_day_prefs = get_training_day_preferences(user_settings)
+        weekly_target_sessions = get_weekly_target_sessions(user_settings)
+        weekly_status = build_weekly_training_status(
+            user_id=auth_user.get("user_id"),
+            checkin_date=checkin_date,
+            training_day_prefs=training_day_prefs,
+            weekly_target_sessions=weekly_target_sessions,
+        )
+
+        completed_sessions_this_week = int((weekly_status or {}).get("completed_sessions", 0) or 0)
+        weekly_goal_reached = completed_sessions_this_week >= int(weekly_target_sessions or 3)
+
+        planning_mode = "fixed"
+        if isinstance(user_settings, dict):
+            planning_mode = str(user_settings.get("planning_mode", "fixed")).strip() or "fixed"
+
+        autoplan_meta = None
+
+        weekday_key = None
+        try:
+            weekday_idx = datetime.fromisoformat(str(checkin_date)).weekday()
+            weekday_key = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][weekday_idx]
+        except Exception:
+            weekday_key = None
+
+        if weekday_key and not training_day_prefs.get(weekday_key, True):
+            session_type = "restitution"
+            template_id = "restitution_easy"
+            plan_entries = build_restitution_plan(time_budget_min)
+            plan_variant = "calendar_rest"
+            reason = "dagen er ikke valgt som mulig træningsdag"
+            autoplan_meta = {
+                "template_mode": "calendar_rest",
+                "families_selected": [],
+                "blocked_by_training_day_preferences": True,
+                "weekday": weekday_key,
+            }
+
+        elif weekly_goal_reached and isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
+            session_type = "restitution"
+            template_id = "weekly_goal_reached_restitution"
+            plan_entries = build_restitution_plan(time_budget_min)
+            plan_variant = "weekly_goal_cap"
+            reason = "ugemål nået · ikke planlagt træningsdag · restitution prioriteres"
+            autoplan_meta = {
+                "template_mode": "weekly_goal_cap_v0_1",
+                "families_selected": [],
+                "weekly_goal_reached": True,
+            }
+
+        elif isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
+            if prefs.get("running", True):
+                cardio_plan = build_autoplan_cardio(
+                    user_id=auth_user.get("user_id"),
+                    readiness=readiness_score,
+                    time_budget_min=time_budget_min,
+                    recovery_state=recovery_state,
+                    training_day_context=training_day_ctx,
+                )
+
+                session_type = "løb"
+                template_id = "autoplan_cardio"
+                plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+                plan_variant = "autoplan_cardio"
+                reason = "ikke planlagt styrkedag · cardio-autoplan aktiv"
+
+                if isinstance(cardio_plan, dict):
+                    autoplan_meta = {
+                        "template_mode": cardio_plan.get("template_mode"),
+                        "families_selected": []
+                    }
+
+                if not plan_entries:
+                    if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                        session_type = "styrke"
+                        template_id = strength_ctx.get("template_id")
+                        plan_entries = strength_ctx.get("plan_entries", [])
+                        plan_variant = strength_ctx.get("plan_variant", "default")
+                        reason = "ikke planlagt styrkedag · cardio tom, fallback til styrkeplan"
+                        autoplan_meta = None
+                    else:
+                        session_type = "restitution"
+                        template_id = "restitution_easy"
+                        plan_entries = build_restitution_plan(time_budget_min)
+                        plan_variant = "default"
+                        reason = "løb fravalgt og ingen styrkevalg · restitution vælges"
+                        autoplan_meta = None
+            elif prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                session_type = "styrke"
+                template_id = strength_ctx.get("template_id")
+                plan_entries = strength_ctx.get("plan_entries", [])
+                plan_variant = strength_ctx.get("plan_variant", "default")
+                reason = "løb fravalgt · styrke vælges på ikke-planlagt styrkedag"
+                autoplan_meta = None
+            else:
+                session_type = "restitution"
+                template_id = "restitution_easy"
+                plan_entries = build_restitution_plan(time_budget_min)
+                plan_variant = "default"
+                reason = "løb og styrke fravalgt · restitution vælges"
+                autoplan_meta = None
+
+        elif planning_mode == "autoplan":
+            if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                autoplan = build_autoplan_strength(
+                    user_id=auth_user.get("user_id"),
+                    readiness=readiness_score,
+                    time_budget_min=time_budget_min,
+                    user_settings=user_settings,
+                    limit=3 if int(time_budget_min or 0) >= 20 else 2
+                )
+
+                session_type = "styrke"
+                template_id = "autoplan_strength"
+                plan_entries = autoplan.get("entries", []) if isinstance(autoplan, dict) else []
+                plan_variant = "autoplan"
+                reason = "styrke prioriteres · autoplan aktiv"
+
+                if isinstance(autoplan, dict):
+                    autoplan_meta = {
+                        "template_mode": autoplan.get("template_mode"),
+                        "families_selected": autoplan.get("families_selected", [])
+                    }
+
+                if not plan_entries:
+                    session_type = "styrke"
+                    template_id = strength_ctx.get("template_id")
+                    plan_entries = strength_ctx.get("plan_entries", [])
+                    plan_variant = strength_ctx.get("plan_variant", "default")
+                    reason = "styrke prioriteres · autoplan tom, fallback til fast plan"
+                    autoplan_meta = None
+            elif prefs.get("running", True):
+                cardio_plan = build_autoplan_cardio(
+                    user_id=auth_user.get("user_id"),
+                    readiness=readiness_score,
+                    time_budget_min=time_budget_min,
+                    recovery_state=recovery_state,
+                    training_day_context=training_day_ctx,
+                )
+                session_type = "løb"
+                template_id = "autoplan_cardio"
+                plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+                plan_variant = "autoplan_cardio"
+                reason = "styrke fravalgt · cardio vælges"
+                autoplan_meta = {
+                    "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
+                    "families_selected": []
+                }
+            else:
+                session_type = "restitution"
+                template_id = "restitution_easy"
+                plan_entries = build_restitution_plan(time_budget_min)
+                plan_variant = "default"
+                reason = "løb og styrke fravalgt · restitution vælges"
+                autoplan_meta = None
+        else:
+            if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                session_type = "styrke"
+                template_id = strength_ctx.get("template_id")
+                plan_entries = strength_ctx.get("plan_entries", [])
+                plan_variant = strength_ctx.get("plan_variant", "default")
+                reason = strength_ctx.get("reason", "styrke prioriteres")
+                autoplan_meta = None
+            elif prefs.get("running", True):
+                cardio_plan = build_autoplan_cardio(
+                    user_id=auth_user.get("user_id"),
+                    readiness=readiness_score,
+                    time_budget_min=time_budget_min,
+                    recovery_state=recovery_state,
+                    training_day_context=training_day_ctx,
+                )
+                session_type = "løb"
+                template_id = "autoplan_cardio"
+                plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+                plan_variant = "autoplan_cardio"
+                reason = "styrke fravalgt · cardio vælges"
+                autoplan_meta = {
+                    "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
+                    "families_selected": []
+                }
+            else:
+                session_type = "restitution"
+                template_id = "restitution_easy"
+                plan_entries = build_restitution_plan(time_budget_min)
+                plan_variant = "default"
+                reason = "løb og styrke fravalgt · restitution vælges"
+                autoplan_meta = None
 
     recommended_for = checkin_date
+
+    todays_results = list_session_results_for_user(auth_user.get("user_id"))
+    already_logged_today = False
+    if isinstance(todays_results, list):
+        for sr in reversed(todays_results):
+            if not isinstance(sr, dict):
+                continue
+            if str(sr.get("date", "")).strip() != str(checkin_date).strip():
+                continue
+            if bool(sr.get("completed", False)):
+                already_logged_today = True
+                break
+
+    if already_logged_today:
+        return jsonify({
+            "ok": True,
+            "item": {
+                "date": checkin_date,
+                "recommended_for": recommended_for,
+                "session_type": "restitution",
+                "template_id": "completed_today",
+                "template_mode": "completed_today_v0_1",
+                "plan_variant": "completed_today",
+                "readiness_score": readiness_score,
+                "time_budget_min": time_budget_min,
+                "timing_state": "",
+                "reason": "Dagens træning er allerede registreret.",
+                "recovery_state": None,
+                "weekly_status": None,
+                "training_day_context": {},
+                "families_selected": [],
+                "entries": []
+            }
+        })
+
+
 
     item = {
         "checkin_id": latest_checkin.get("id"),
@@ -2014,6 +2904,7 @@ def get_today_plan():
         "timing_state": timing_state,
         "previous_recommended_for": previous_recommendation.get("recommended_for") if previous_recommendation else None,
         "readiness_score": readiness_score,
+            "weekly_status": weekly_status,
         "time_budget_min": time_budget_min,
         "session_type": session_type,
         "latest_strength_failed": latest_strength_failed,
@@ -2022,6 +2913,9 @@ def get_today_plan():
         "fatigue_score": fatigue_score,
         "recovery_state": recovery_state,
         "template_id": template_id,
+        "template_mode": autoplan_meta.get("template_mode") if isinstance(locals().get("autoplan_meta"), dict) else None,
+        "families_selected": autoplan_meta.get("families_selected", []) if isinstance(locals().get("autoplan_meta"), dict) else [],
+        "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": days_since_last_strength,
         "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
@@ -2056,11 +2950,15 @@ def post_user_settings():
 
     equipment_increments = payload.get("equipment_increments", current.get("equipment_increments", {}))
     available_equipment = payload.get("available_equipment", current.get("available_equipment", {}))
+    profile = payload.get("profile", current.get("profile", {}))
+    preferences = payload.get("preferences", current.get("preferences", {}))
 
     item = {
         "user_id": auth_user.get("user_id"),
         "equipment_increments": equipment_increments if isinstance(equipment_increments, dict) else {},
         "available_equipment": available_equipment if isinstance(available_equipment, dict) else {},
+        "profile": profile if isinstance(profile, dict) else {},
+        "preferences": preferences if isinstance(preferences, dict) else {},
     }
 
     item = save_user_settings_for(auth_user.get("user_id"), item)
@@ -2094,6 +2992,242 @@ def _parse_time_under_tension_seconds(value):
         return float(num)
     return 0.0
 
+def build_weekly_training_status(user_id, checkin_date, training_day_prefs, weekly_target_sessions):
+    status = {
+        "week_start": None,
+        "week_end": None,
+        "completed_sessions": 0,
+        "completed_strength_sessions": 0,
+        "completed_running_sessions": 0,
+        "completed_restitution_sessions": 0,
+        "allowed_days_total": 0,
+        "allowed_days_remaining": 0,
+        "weekly_target_sessions": int(weekly_target_sessions or 3),
+    }
+
+    try:
+        dt = datetime.fromisoformat(str(checkin_date))
+    except Exception:
+        return status
+
+    week_start = dt - timedelta(days=dt.weekday())
+    week_end = week_start + timedelta(days=6)
+
+    status["week_start"] = week_start.date().isoformat()
+    status["week_end"] = week_end.date().isoformat()
+
+    allowed_days_total = 0
+    allowed_days_remaining = 0
+    day_keys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+    for i in range(7):
+        current = week_start + timedelta(days=i)
+        key = day_keys[current.weekday()]
+        allowed = bool(training_day_prefs.get(key, True))
+        if allowed:
+            allowed_days_total += 1
+            if current.date() >= dt.date():
+                allowed_days_remaining += 1
+
+    status["allowed_days_total"] = allowed_days_total
+    status["allowed_days_remaining"] = allowed_days_remaining
+
+    try:
+        session_results = read_json_file(FILES["session_results"])
+    except Exception:
+        session_results = []
+
+    if not isinstance(session_results, list):
+        session_results = []
+
+    seen_sessions = set()
+
+    def normalize_session_type(raw):
+        x = str(raw or "").strip().lower()
+        if x in ("styrke", "strength"):
+            return "strength"
+        if x in ("løb", "run", "cardio"):
+            return "running"
+        if x in ("restitution", "mobility", "recovery", "mobilitet"):
+            return "restitution"
+        return x or "unknown"
+
+    for item in session_results:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("user_id", "")) != str(user_id):
+            continue
+
+        raw_date = str(item.get("date", "")).strip()
+        try:
+            item_dt = datetime.fromisoformat(raw_date)
+        except Exception:
+            continue
+
+        if item_dt.date() < week_start.date() or item_dt.date() > week_end.date():
+            continue
+
+        normalized_type = normalize_session_type(item.get("session_type", ""))
+
+        counts_toward_weekly_goal = item.get("counts_toward_weekly_goal", None)
+        if counts_toward_weekly_goal is None:
+            fallback_completed = bool(item.get("completed", False))
+            fallback_counts = False
+
+            results = item.get("results", [])
+            if not isinstance(results, list):
+                results = []
+
+            has_meaningful_results = False
+            for r in results:
+                if not isinstance(r, dict):
+                    continue
+                if str(r.get("exercise_id", "")).strip():
+                    has_meaningful_results = True
+                    break
+                if str(r.get("achieved_reps", "")).strip():
+                    has_meaningful_results = True
+                    break
+                raw_sets = r.get("sets", [])
+                if isinstance(raw_sets, list) and raw_sets:
+                    has_meaningful_results = True
+                    break
+
+            if fallback_completed and normalized_type == "strength":
+                fallback_counts = has_meaningful_results
+            elif fallback_completed and normalized_type == "running":
+                dist_ok = False
+                dur_ok = False
+                try:
+                    dist_ok = float(item.get("distance_km", 0) or 0) > 0
+                except Exception:
+                    dist_ok = False
+                try:
+                    dur_ok = float(item.get("duration_total_sec", 0) or 0) > 0
+                except Exception:
+                    dur_ok = False
+                fallback_counts = bool(dist_ok or dur_ok or has_meaningful_results)
+
+            counts_toward_weekly_goal = fallback_counts
+
+        if counts_toward_weekly_goal is not True:
+            if normalized_type == "restitution":
+                status["completed_restitution_sessions"] += 1
+            continue
+
+        results = item.get("results", [])
+        if not isinstance(results, list):
+            results = []
+
+        has_meaningful_results = False
+        for r in results:
+            if not isinstance(r, dict):
+                continue
+            if str(r.get("exercise_id", "")).strip():
+                has_meaningful_results = True
+                break
+            if str(r.get("achieved_reps", "")).strip():
+                has_meaningful_results = True
+                break
+            raw_sets = r.get("sets", [])
+            if isinstance(raw_sets, list) and raw_sets:
+                has_meaningful_results = True
+                break
+
+        if normalized_type == "strength":
+            if not has_meaningful_results:
+                continue
+
+        elif normalized_type == "running":
+            dist = item.get("distance_km", 0) or 0
+            dur_sec = item.get("duration_total_sec", 0) or 0
+            try:
+                dist = float(dist)
+            except Exception:
+                dist = 0.0
+            try:
+                dur_sec = float(dur_sec)
+            except Exception:
+                dur_sec = 0.0
+            if dist <= 0 and dur_sec <= 0 and not has_meaningful_results:
+                continue
+
+        elif normalized_type == "restitution":
+            if not has_meaningful_results:
+                continue
+
+        session_key = (item_dt.date().isoformat(), normalized_type)
+        if session_key in seen_sessions:
+            continue
+        seen_sessions.add(session_key)
+
+        if normalized_type == "strength":
+            status["completed_sessions"] += 1
+            status["completed_strength_sessions"] += 1
+        elif normalized_type == "running":
+            status["completed_sessions"] += 1
+            status["completed_running_sessions"] += 1
+        elif normalized_type == "restitution":
+            status["completed_restitution_sessions"] += 1
+
+    return status
+
+    week_start = dt - timedelta(days=dt.weekday())
+    week_end = week_start + timedelta(days=6)
+
+    status["week_start"] = week_start.date().isoformat()
+    status["week_end"] = week_end.date().isoformat()
+
+    allowed_days_total = 0
+    allowed_days_remaining = 0
+    day_keys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+    for i in range(7):
+        current = week_start + timedelta(days=i)
+        key = day_keys[current.weekday()]
+        allowed = bool(training_day_prefs.get(key, True))
+        if allowed:
+            allowed_days_total += 1
+            if current.date() >= dt.date():
+                allowed_days_remaining += 1
+
+    status["allowed_days_total"] = allowed_days_total
+    status["allowed_days_remaining"] = allowed_days_remaining
+
+    try:
+        session_results = read_json_file(FILES["session_results"])
+    except Exception:
+        session_results = []
+
+    if not isinstance(session_results, list):
+        session_results = []
+
+    for item in session_results:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("user_id", "")) != str(user_id):
+            continue
+
+        raw_date = str(item.get("date", "")).strip()
+        try:
+            item_dt = datetime.fromisoformat(raw_date)
+        except Exception:
+            continue
+
+        if item_dt.date() < week_start.date() or item_dt.date() > week_end.date():
+            continue
+
+        status["completed_sessions"] += 1
+        session_type = str(item.get("session_type", "")).strip().lower()
+        if session_type in ("styrke", "strength"):
+            status["completed_strength_sessions"] += 1
+        elif session_type in ("løb", "run", "cardio"):
+            status["completed_running_sessions"] += 1
+        elif session_type in ("restitution", "mobility", "recovery"):
+            status["completed_restitution_sessions"] += 1
+
+    return status
+
 def _get_bodyweight_kg_for_session(session_item):
     if isinstance(session_item, dict):
         try:
@@ -2102,16 +3236,52 @@ def _get_bodyweight_kg_for_session(session_item):
                 return direct
         except Exception:
             pass
+
         user_id = session_item.get("user_id")
         if user_id not in (None, ""):
             settings = get_user_settings_for(user_id)
-            try:
-                val = float(settings.get("bodyweight_kg", 0) or 0)
-                if val > 0:
-                    return val
-            except Exception:
-                pass
+            if isinstance(settings, dict):
+                profile = settings.get("profile", {})
+                if isinstance(profile, dict):
+                    try:
+                        val = float(profile.get("bodyweight_kg", 0) or 0)
+                        if val > 0:
+                            return val
+                    except Exception:
+                        pass
+
+                # fallback for legacy flat structure
+                try:
+                    val = float(settings.get("bodyweight_kg", 0) or 0)
+                    if val > 0:
+                        return val
+                except Exception:
+                    pass
+
     return 0.0
+
+BODYWEIGHT_LOAD_FACTORS = {
+    "pull_ups": 1.0,
+    "chin_ups": 1.0,
+    "dips": 0.9,
+    "push_ups": 0.65,
+    "incline_push_ups": 0.5,
+    "diamond_push_ups": 0.7,
+    "lunges": 0.75,
+    "split_squat": 0.75,
+    "step_ups": 0.7,
+    "single_leg_sit_to_stand": 0.75,
+    "glute_bridge": 0.55,
+    "single_leg_glute_bridge": 0.6,
+    "hamstring_walkouts": 0.5,
+    "hip_hinge_bw": 0.6,
+    "plank": 0.0,
+    "side_plank": 0.0,
+    "dead_bug": 0.0,
+    "bird_dog": 0.0,
+    "superman_hold": 0.0,
+    "reverse_snow_angels": 0.15,
+}
 
 def _get_exercise_meta_for_summary(exercise_id):
     try:
@@ -2150,6 +3320,7 @@ def _estimate_effective_load_for_result(result_item, exercise_meta, bodyweight_k
         return explicit_load
 
     meta = exercise_meta or {}
+    exercise_id = str(meta.get("id", "")).strip()
     supports_bodyweight = bool(meta.get("supports_bodyweight", False))
     equipment_type = str(meta.get("equipment_type", "")).strip()
     input_kind = str(meta.get("input_kind", "")).strip()
@@ -2157,7 +3328,14 @@ def _estimate_effective_load_for_result(result_item, exercise_meta, bodyweight_k
 
     if supports_bodyweight or equipment_type == "bodyweight" or input_kind in ("time", "bodyweight_reps", "cardio_time") or load_optional:
         if bodyweight_kg > 0:
-            return 0.4 * bodyweight_kg
+            factor = BODYWEIGHT_LOAD_FACTORS.get(exercise_id, 0.4)
+            try:
+                factor = float(factor)
+            except Exception:
+                factor = 0.4
+            if factor <= 0:
+                return 0.0
+            return factor * bodyweight_kg
 
     return 0.0
 
@@ -2845,6 +4023,605 @@ def get_next_variation(exercise_id, exercise_map):
     return None
 
 
+
+
+def get_family_key_for_exercise(exercise_id, identity_graph=None):
+    exercise_id = str(exercise_id or "").strip()
+    identity_graph = identity_graph if isinstance(identity_graph, dict) else {}
+    node = identity_graph.get(exercise_id, {}) if isinstance(identity_graph, dict) else {}
+    if not isinstance(node, dict):
+        node = {}
+    family_key = (
+        str(node.get("fatigue_group", "")).strip()
+        or str(node.get("movement_pattern", "")).strip()
+        or str(node.get("category", "")).strip()
+    )
+    return family_key or None
+
+
+def build_family_last_trained_map(user_id, identity_graph=None):
+    user_id = str(user_id or "").strip()
+    identity_graph = identity_graph if isinstance(identity_graph, dict) else {}
+
+    live_data_path = Path("/var/www/sovereign-strength/data/session_results.json")
+    if live_data_path.exists():
+        try:
+            raw_items = json.loads(live_data_path.read_text(encoding="utf-8"))
+            if not isinstance(raw_items, list):
+                raw_items = []
+        except Exception:
+            raw_items = []
+        items = [x for x in raw_items if isinstance(x, dict) and str(x.get("user_id")) == user_id]
+    else:
+        items = list_session_results_for_user(user_id)
+
+    out = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        session_date = str(item.get("date", "")).strip()
+        if not session_date:
+            continue
+        for result in item.get("results", []) or []:
+            if not isinstance(result, dict):
+                continue
+            ex_id = str(result.get("exercise_id", "")).strip()
+            if not ex_id:
+                continue
+            family_key = get_family_key_for_exercise(ex_id, identity_graph)
+            if not family_key:
+                continue
+            prev = out.get(family_key)
+            if not prev or session_date > prev:
+                out[family_key] = session_date
+    return out
+
+
+
+
+def get_family_role(family_key):
+    family_key = str(family_key or "").strip()
+
+    primary = {
+        "squat",
+        "hinge",
+        "single_leg_squat",
+        "horizontal_push",
+        "horizontal_pull",
+        "vertical_push"
+    }
+
+    support = {
+        "core_bracing",
+        "core_control",
+        "core_lateral",
+        "back_extension",
+        "ankle_extension"
+    }
+
+    tertiary = {
+        "steady_cardio",
+        "interval_cardio",
+        "cardio_general",
+        "mobility_flow",
+        "mobility_squat",
+        "core_dynamic"
+    }
+
+    if family_key in primary:
+        return "primary"
+    if family_key in support:
+        return "support"
+    if family_key in tertiary:
+        return "tertiary"
+    return "support"
+
+
+def build_family_priority_map(user_id, readiness=None, time_budget_min=None):
+    user_id = str(user_id or "").strip()
+    state = get_live_adaptation_state_for(user_id)
+
+    identity_graph = state.get("exercise_identity_graph", {}) if isinstance(state, dict) else {}
+    family_fatigue = state.get("family_fatigue", {}) if isinstance(state, dict) else {}
+    load_metrics = state.get("load_metrics", {}) if isinstance(state, dict) else {}
+
+    if not isinstance(identity_graph, dict):
+        identity_graph = {}
+    if not isinstance(family_fatigue, dict):
+        family_fatigue = {}
+    if not isinstance(load_metrics, dict):
+        load_metrics = {}
+
+    try:
+        readiness_val = int(readiness if readiness is not None else 0)
+    except Exception:
+        readiness_val = 0
+
+    try:
+        time_val = int(time_budget_min if time_budget_min is not None else 0)
+    except Exception:
+        time_val = 0
+
+    today_str = datetime.now(timezone.utc).date().isoformat()
+    last_trained_map = build_family_last_trained_map(user_id, identity_graph)
+
+    family_keys = set(family_fatigue.keys())
+    for ex_id, node in identity_graph.items():
+        family_key = get_family_key_for_exercise(ex_id, identity_graph)
+        if family_key:
+            family_keys.add(family_key)
+
+    out = {}
+
+    for family_key in sorted(family_keys):
+        info = family_fatigue.get(family_key, {})
+        if not isinstance(info, dict):
+            info = {}
+
+        family_state = str(info.get("family_state", "unknown")).strip() or "unknown"
+        signals = info.get("signals", [])
+        if not isinstance(signals, list):
+            signals = []
+
+        last_date = last_trained_map.get(family_key)
+        days_since = None
+        if last_date:
+            try:
+                days_since = days_between_iso_dates(last_date, today_str)
+            except Exception:
+                days_since = None
+
+        priority = 0.0
+        reasons = []
+        family_role = get_family_role(family_key)
+
+        if family_role == "primary":
+            priority += 0.35
+            reasons.append("primær styrkefamilie")
+        elif family_role == "support":
+            priority -= 0.05
+        elif family_role == "tertiary":
+            priority -= 0.75
+            reasons.append("sekundær/tertiær familie i styrkekontekst")
+
+        # recency
+        if days_since is None:
+            priority += 1.2
+            reasons.append("ingen registreret historik i familien")
+        elif days_since >= 5:
+            priority += 1.0
+            reasons.append(f"ikke trænet i {days_since} dage")
+        elif days_since >= 3:
+            priority += 0.6
+            reasons.append(f"ikke trænet i {days_since} dage")
+        elif days_since <= 1:
+            priority -= 0.7
+            reasons.append("trænet for nylig")
+
+        # family state
+        if family_state == "ready":
+            priority += 0.8
+            reasons.append("familien er klar")
+        elif family_state == "stable":
+            priority += 0.2
+            reasons.append("familien er stabil")
+        elif family_state == "fatigued":
+            priority -= 1.0
+            reasons.append("familien viser træthed")
+
+        # readiness
+        if readiness_val >= 4:
+            priority += 0.3
+            reasons.append("høj readiness")
+        elif readiness_val <= 2:
+            priority -= 0.4
+            reasons.append("lav readiness")
+
+        # time budget
+        if time_val and time_val <= 20:
+            if family_key in ("squat", "hinge", "horizontal_push", "horizontal_pull", "single_leg_squat"):
+                priority += 0.15
+                reasons.append("kort tid favoriserer store/simple bevægelser")
+            elif family_key in ("core_bracing", "core_control"):
+                priority -= 0.1
+        elif time_val >= 40 and family_key in ("core_bracing", "core_control", "steady_cardio"):
+            priority += 0.15
+            reasons.append("mere tid giver plads til supplerende arbejde")
+
+        # signals
+        negative_signal_count = 0
+        for s in signals:
+            s_norm = str(s or "").strip().lower()
+            if any(token in s_norm for token in ("failure", "simplify", "lav completion", "regressing")):
+                negative_signal_count += 1
+        if negative_signal_count:
+            penalty = min(0.6, 0.15 * negative_signal_count)
+            priority -= penalty
+            reasons.append(f"{negative_signal_count} negative signaler i familien")
+
+        # load status
+        load_status = str(load_metrics.get("load_status", "")).strip()
+        if load_status == "spiking":
+            if family_key in ("squat", "hinge", "single_leg_squat"):
+                priority -= 0.25
+                reasons.append("samlet belastning er høj")
+        elif load_status == "underloaded":
+            if family_key in ("squat", "hinge", "horizontal_push", "horizontal_pull"):
+                priority += 0.15
+                reasons.append("samlet belastning er lav")
+
+        out[family_key] = {
+            "family_key": family_key,
+            "family_role": family_role,
+            "priority": round(priority, 2),
+            "family_state": family_state,
+            "days_since_last_family": days_since,
+            "negative_signal_count": negative_signal_count,
+            "reason": reasons[:6]
+        }
+
+    return out
+
+
+
+
+def get_exercises_for_family(family_key, exercises=None, identity_graph=None):
+    family_key = str(family_key or "").strip()
+    exercises = exercises if isinstance(exercises, list) else read_json_file(FILES["exercises"])
+    identity_graph = identity_graph if isinstance(identity_graph, dict) else build_exercise_identity_graph(exercises)
+
+    out = []
+    for item in exercises or []:
+        if not isinstance(item, dict):
+            continue
+        ex_id = str(item.get("id", "")).strip()
+        if not ex_id:
+            continue
+        ex_family = get_family_key_for_exercise(ex_id, identity_graph)
+        if ex_family == family_key:
+            out.append(item)
+    return out
+
+
+def build_exercise_last_trained_map(user_id):
+    user_id = str(user_id or "").strip()
+
+    live_data_path = Path("/var/www/sovereign-strength/data/session_results.json")
+    if live_data_path.exists():
+        try:
+            raw_items = json.loads(live_data_path.read_text(encoding="utf-8"))
+            if not isinstance(raw_items, list):
+                raw_items = []
+        except Exception:
+            raw_items = []
+        items = [x for x in raw_items if isinstance(x, dict) and str(x.get("user_id")) == user_id]
+    else:
+        items = list_session_results_for_user(user_id)
+
+    out = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        session_date = str(item.get("date", "")).strip()
+        if not session_date:
+            continue
+        for result in item.get("results", []) or []:
+            if not isinstance(result, dict):
+                continue
+            ex_id = str(result.get("exercise_id", "")).strip()
+            if not ex_id:
+                continue
+            prev = out.get(ex_id)
+            if not prev or session_date > prev:
+                out[ex_id] = session_date
+    return out
+
+
+
+
+
+
+def get_exercise_meta(exercise_id, exercises=None):
+    exercise_id = str(exercise_id or "").strip()
+
+    if exercises is None:
+        exercises = read_json_file(FILES["exercises"])
+
+    if not isinstance(exercises, list):
+        return None
+
+    for item in exercises:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("id", "")).strip() == exercise_id:
+            return item
+
+    return None
+
+
+def build_autoplan_strength(user_id, readiness=None, time_budget_min=None, user_settings=None, limit=3):
+    user_id = str(user_id or "").strip()
+
+    if user_settings is None:
+        user_settings = read_json_file(FILES["user_settings"])
+
+    selected_families = select_training_families(
+        user_id,
+        readiness=readiness,
+        time_budget_min=time_budget_min,
+        limit=limit
+    )
+
+    entries = []
+    family_outputs = []
+
+    for fam in selected_families:
+        if not isinstance(fam, dict):
+            continue
+
+        family_key = str(fam.get("family_key", "")).strip()
+        if not family_key:
+            continue
+
+        picked = choose_exercise_for_family(
+            user_id,
+            family_key,
+            readiness=readiness,
+            time_budget_min=time_budget_min,
+            user_settings=user_settings
+        )
+
+        if not picked or not isinstance(picked, dict):
+            continue
+
+        exercise_id = str(picked.get("exercise_id", "")).strip()
+        if not exercise_id:
+            continue
+
+        exercise_meta = get_exercise_meta(exercise_id) or {}
+
+        sets = exercise_meta.get("default_sets", 3)
+        try:
+            sets = int(sets or 3)
+        except Exception:
+            sets = 3
+        if sets < 1:
+            sets = 3
+
+        target_reps = str(
+            exercise_meta.get("default_reps")
+            or exercise_meta.get("target_reps")
+            or exercise_meta.get("rep_range")
+            or "6-8"
+        ).strip()
+
+        input_kind = str(exercise_meta.get("input_kind", "")).strip()
+        default_unit = str(exercise_meta.get("default_unit", "")).strip()
+        target_load = exercise_meta.get("start_weight", None)
+
+        if input_kind in ("time", "cardio_time", "bodyweight_reps"):
+            target_load = None
+        elif target_load is not None and default_unit:
+            target_load = f"{target_load} {default_unit}"
+        elif target_load is not None:
+            target_load = str(target_load)
+        else:
+            target_load = None
+
+        entry = {
+            "exercise_id": exercise_id,
+            "sets": sets,
+            "target_reps": target_reps,
+            "target_load": target_load,
+            "progression_decision": "autoplan_initial",
+            "progression_reason": "autoplan valgte øvelsen ud fra familieprioritet og historik",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+            "autoplan_family": family_key,
+            "autoplan_score": picked.get("score", 0),
+            "autoplan_reason": picked.get("reason", []),
+            "decision": None
+        }
+
+        entry["decision"] = build_training_decision(
+            user_id=user_id,
+            plan_item=entry,
+            readiness=readiness,
+            time_available=time_budget_min
+        )
+
+        entries.append(entry)
+        family_outputs.append({
+            "family_key": family_key,
+            "family_role": fam.get("family_role"),
+            "priority": fam.get("priority"),
+            "exercise_id": exercise_id,
+            "exercise_score": picked.get("score", 0),
+            "family_reason": fam.get("reason", []),
+            "exercise_reason": picked.get("reason", [])
+        })
+
+    return {
+        "template_mode": "autoplan_v0_1",
+        "families_selected": family_outputs,
+        "entries": entries
+    }
+
+
+def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_min=None, user_settings=None):
+    user_id = str(user_id or "").strip()
+    family_key = str(family_key or "").strip()
+
+    state = get_live_adaptation_state_for(user_id)
+    identity_graph = state.get("exercise_identity_graph", {}) if isinstance(state, dict) else {}
+    learning_signals = state.get("learning_signals", {}) if isinstance(state, dict) else {}
+    if not isinstance(identity_graph, dict):
+        identity_graph = {}
+    if not isinstance(learning_signals, dict):
+        learning_signals = {}
+
+    exercises = read_json_file(FILES["exercises"])
+    candidates = get_exercises_for_family(family_key, exercises=exercises, identity_graph=identity_graph)
+    last_trained_map = build_exercise_last_trained_map(user_id)
+
+    if user_settings is None:
+        user_settings = read_json_file(FILES["user_settings"])
+    available = {}
+    if isinstance(user_settings, dict):
+        available = user_settings.get("available_equipment", {}) or {}
+    if not isinstance(available, dict):
+        available = {}
+
+    scored = []
+
+    for item in candidates:
+        ex_id = str(item.get("id", "")).strip()
+        if not ex_id:
+            continue
+
+        equipment = str(item.get("equipment", "") or item.get("default_equipment", "") or "").strip().lower()
+        equipment_ok = True
+        if equipment and equipment not in ("bodyweight", "none"):
+            if available:
+                equipment_ok = bool(available.get(equipment, False))
+
+        if not equipment_ok:
+            continue
+
+        learning = learning_signals.get(ex_id, {}) if isinstance(learning_signals, dict) else {}
+        if not isinstance(learning, dict):
+            learning = {}
+
+        learned = str(learning.get("learned_recommendation", "")).strip()
+        next_variation = str(learning.get("next_variation", "")).strip()
+
+        score = 0.0
+        reasons = []
+
+        if learned == "progress_variation":
+            score += 1.0
+            reasons.append("læring peger mod progression")
+        elif learned in ("increase_load", "increase_reps", "increase_time"):
+            score += 0.5
+            reasons.append("læring peger mod progression")
+        elif learned == "hold":
+            score += 0.2
+        elif learned == "simplify":
+            score -= 0.5
+            reasons.append("læring peger mod forenkling")
+
+        if next_variation and ex_id == next_variation:
+            score += 1.2
+            reasons.append("er foreslået næste variation")
+
+        last_date = last_trained_map.get(ex_id)
+        if last_date:
+            score += 0.3
+            reasons.append("har historik")
+        else:
+            score += 0.1
+
+        progression_mode = str(item.get("progression_mode", "")).strip()
+        if progression_mode == "double_progression":
+            score += 0.15
+
+        input_kind = str(item.get("input_kind", "")).strip()
+        if readiness is not None:
+            try:
+                readiness_val = int(readiness)
+            except Exception:
+                readiness_val = 0
+            if readiness_val <= 2 and input_kind in ("time", "bodyweight_reps"):
+                score += 0.1
+
+        scored.append({
+            "exercise_id": ex_id,
+            "score": round(score, 2),
+            "reason": reasons[:4],
+            "item": item
+        })
+
+    scored.sort(key=lambda x: (x.get("score", 0), x.get("exercise_id", "")), reverse=True)
+
+    if not scored:
+        return None
+
+    top = scored[0]
+    return {
+        "family_key": family_key,
+        "exercise_id": top.get("exercise_id"),
+        "score": top.get("score", 0),
+        "reason": top.get("reason", []),
+        "alternatives": [
+            {
+                "exercise_id": x.get("exercise_id"),
+                "score": x.get("score", 0)
+            }
+            for x in scored[1:4]
+        ]
+    }
+
+
+def select_training_families(user_id, readiness=None, time_budget_min=None, limit=3):
+    family_map = build_family_priority_map(user_id, readiness=readiness, time_budget_min=time_budget_min)
+    items = [x for x in family_map.values() if isinstance(x, dict)]
+
+    items.sort(key=lambda x: (x.get("priority", 0), str(x.get("family_key", ""))), reverse=True)
+
+    limit = int(limit or 3)
+    selected = []
+    seen = set()
+
+    primary_items = [x for x in items if str(x.get("family_role", "")).strip() == "primary"]
+    support_items = [x for x in items if str(x.get("family_role", "")).strip() == "support"]
+    tertiary_items = [x for x in items if str(x.get("family_role", "")).strip() == "tertiary"]
+
+    # first pass: prefer up to 2 primary families
+    for item in primary_items:
+        family_key = str(item.get("family_key", "")).strip()
+        if not family_key or family_key in seen:
+            continue
+        if len(selected) >= min(limit, 2):
+            break
+        selected.append(item)
+        seen.add(family_key)
+
+    # second pass: add at most 1 support family
+    for item in support_items:
+        family_key = str(item.get("family_key", "")).strip()
+        if not family_key or family_key in seen:
+            continue
+        if len(selected) >= limit:
+            break
+        if any(str(x.get("family_role", "")).strip() == "support" for x in selected):
+            continue
+        selected.append(item)
+        seen.add(family_key)
+
+    # third pass: fill from remaining primary, then support, avoid tertiary unless necessary
+    for pool in (primary_items, support_items, tertiary_items):
+        for item in pool:
+            family_key = str(item.get("family_key", "")).strip()
+            if not family_key or family_key in seen:
+                continue
+            if len(selected) >= limit:
+                break
+            if str(item.get("family_role", "")).strip() == "tertiary":
+                # tertiary only if still missing slots entirely
+                if len(selected) >= max(1, limit - 1):
+                    continue
+            selected.append(item)
+            seen.add(family_key)
+        if len(selected) >= limit:
+            break
+
+    return selected
+
+
 def build_learning_signals(user_id):
     user_id = str(user_id)
 
@@ -3021,6 +4798,7 @@ def post_session_result():
         return jsonify(err_payload), third
 
     summary = build_session_summary(item)
+    consume_manual_override_workout(auth_user.get("user_id"), item.get("date"))
     adaptation_state = update_adaptation_state(auth_user.get("user_id"))
 
     return jsonify({

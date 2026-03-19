@@ -88,7 +88,7 @@ class JSONStorage:
                 if isinstance(item, dict) and item.get("user_id") == user_id:
                     return item
 
-        if "equipment_increments" in raw or "available_equipment" in raw:
+        if "equipment_increments" in raw or "available_equipment" in raw or "profile" in raw or "preferences" in raw:
             merged = dict(raw)
             merged.setdefault("user_id", user_id)
             return merged
@@ -102,13 +102,17 @@ class JSONStorage:
 
         if "users" not in raw or not isinstance(raw.get("users"), dict):
             legacy = {}
-            if raw and ("equipment_increments" in raw or "available_equipment" in raw):
+            if raw and ("equipment_increments" in raw or "available_equipment" in raw or "profile" in raw or "preferences" in raw):
                 legacy_user_id = raw.get("user_id", 1)
                 legacy[str(legacy_user_id)] = dict(raw)
             raw = {"users": legacy}
 
         clean = dict(settings or {})
         clean["user_id"] = user_id
+        if not isinstance(clean.get("profile"), dict):
+            clean["profile"] = {}
+        if not isinstance(clean.get("preferences"), dict):
+            clean["preferences"] = {}
         raw["users"][str(user_id)] = clean
         self._write_object("user_settings", raw)
         return clean
@@ -253,6 +257,8 @@ class SQLiteStorage:
             "user_id": row["user_id"],
             "equipment_increments": json.loads(row["equipment_increments"] or "{}"),
             "available_equipment": json.loads(row["available_equipment"] or "{}"),
+            "profile": json.loads(row["profile"] or "{}") if "profile" in row.keys() else {},
+            "preferences": json.loads(row["preferences"] or "{}") if "preferences" in row.keys() else {},
         }
 
     def save_user_settings_for(self, user_id, settings):
@@ -260,11 +266,15 @@ class SQLiteStorage:
 
         equipment_increments = settings.get("equipment_increments", {})
         available_equipment = settings.get("available_equipment", {})
+        profile = settings.get("profile", {})
+        preferences = settings.get("preferences", {})
 
         clean = {
             "user_id": user_id,
             "equipment_increments": equipment_increments if isinstance(equipment_increments, dict) else {},
             "available_equipment": available_equipment if isinstance(available_equipment, dict) else {},
+            "profile": profile if isinstance(profile, dict) else {},
+            "preferences": preferences if isinstance(preferences, dict) else {},
         }
 
         with self._conn() as conn:
