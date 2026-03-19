@@ -172,6 +172,7 @@
   "profile.account": "Account",
   "button.show": "Show",
   "profile.account_help_extended": "Password, login and account settings are handled via the central auth page.",
+<<<<<<< HEAD
   "workout.new": "New workout",
   "workout.date": "Date",
   "workout.type": "Type",
@@ -223,4 +224,12 @@
   "plan.mobility_note": "Light movement and mobility",
   "common.type": "Type",
   "plan.light_movement_today": "Light movement is recommended today."
+=======
+  "overview.status_right_now": "Status right now",
+  "overview.see_today_plan": "See today's plan",
+  "overview.latest_checkin": "Latest check-in",
+  "overview.logged_sessions": "Logged sessions",
+  "plan.recovery_summary": "Recovery · light movement and mobility",
+  "common.type": "Type"
+>>>>>>> bebfeb4 (checkpoint before i18n restart)
 }

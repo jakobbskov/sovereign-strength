@@ -43,7 +43,7 @@ function updateLanguageToggleLabel(){
   const btn = document.getElementById("languageToggleBtn");
   if (!btn) return;
   const lang = getCurrentLang();
-  btn.textContent = lang === "da" ? "DA / EN" : "EN / DA";
+  btn.textContent = lang === "da" ? "🇩🇰 Dansk" : "🇬🇧 English";
 }
 
 async function initLanguageToggle(){
@@ -896,9 +896,9 @@ function buildForecastLeadText(planItem){
       const bits = entries.slice(0, 2).map(entry => formatExerciseName(entry.exercise_id)).filter(Boolean);
       return bits.length
         ? `Restitution · ${bits.join(" + ")}`
-        : "Restitution · rolig bevægelse og mobilitet";
+        : tr("plan.recovery_summary");
     }
-    return "Restitution · rolig bevægelse og mobilitet";
+    return tr("plan.recovery_summary");
   }
 
   if (sessionType === "styrke" || sessionType === "strength"){
@@ -962,7 +962,7 @@ function renderForecastHero(planItem, latestCheckin){
   const leadText = buildForecastLeadText(planItem);
 
   const bits = [];
-  if (planItem.readiness_score != null) bits.push(`Parathed: ${planItem.readiness_score}`);
+  if (planItem.readiness_score != null) bits.push(`${tr("overview.readiness")}: ${planItem.readiness_score}`);
   if (planItem.time_budget_min) bits.push(`Tid: ${planItem.time_budget_min} min`);
   if (planItem.timing_state) bits.push(`Timing: ${formatTimingState(planItem.timing_state)}`);
   const planVariantLabel = formatPlanVariant(planItem.plan_variant || "");
@@ -976,7 +976,7 @@ function renderForecastHero(planItem, latestCheckin){
 
   const btn = document.getElementById("forecastPrimaryBtn");
   if (btn){
-    btn.textContent = "Se dagens plan";
+    btn.textContent = tr("overview.see_today_plan");
     btn.onclick = () => showWizardStep("plan");
   }
 }
@@ -1020,7 +1020,7 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     if (isFirstTime){
       latestCheckinLine.textContent = "Første gang i SovereignStrength.";
     } else if (latestCheckin?.date){
-      latestCheckinLine.textContent = `Seneste check-in: ${latestCheckin.date}`;
+      latestCheckinLine.textContent = `${tr("overview.latest_checkin")}: ${latestCheckin.date}`;
     } else {
       latestCheckinLine.textContent = "Ingen check-in endnu.";
     }
@@ -1030,7 +1030,7 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     if (isFirstTime){
       overviewTimeLine.textContent = "Start med et check-in for at beregne dagens træning.";
     } else if (planItem?.time_budget_min){
-      overviewTimeLine.textContent = `Tid i dag: ${planItem.time_budget_min} min`;
+      overviewTimeLine.textContent = `${tr("overview.time_today")}: ${planItem.time_budget_min} min`;
     } else if (latestCheckin?.time_budget_min){
       overviewTimeLine.textContent = `Senest angivet tid: ${latestCheckin.time_budget_min} min`;
     } else {
@@ -1042,7 +1042,7 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     if (isFirstTime){
       overviewWorkoutLine.textContent = "Ingen historik endnu. Du bygger første datapunkt nu.";
     } else if (sessionCount > 0){
-      overviewWorkoutLine.textContent = `Registrerede sessioner: ${sessionCount}`;
+      overviewWorkoutLine.textContent = `${tr("overview.logged_sessions")}: ${sessionCount}`;
     } else {
       overviewWorkoutLine.textContent = "Ingen historik endnu.";
     }
@@ -2166,7 +2166,7 @@ function renderTodayPlan(item){
   const variantLabel = formatPlanVariant(item.plan_variant || "");
   const timingLabel = formatTimingState(item.timing_state || "");
   const timingExplanation = formatTimingExplanation(item.timing_state || "");
-  const timeLabel = item.time_budget_min ? ` · Tid i dag: ${item.time_budget_min} min` : "";
+  const timeLabel = item.time_budget_min ? ` · ${tr("overview.time_today")}: ${item.time_budget_min} min` : "";
   const variantText = variantLabel ? ` · Plan: ${variantLabel}` : "";
 
   setText(
@@ -2210,7 +2210,11 @@ function renderTodayPlan(item){
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
+<<<<<<< HEAD
   const baseSummary = `Type: ${item.session_type || tr("common.unknown_lower")} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
+=======
+  const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
+>>>>>>> bebfeb4 (checkpoint before i18n restart)
   const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
     ? tr("plan.light_movement_today")
     : "";

@@ -1,0 +1,812 @@
+app/frontend/app.js	ss_lang
+app/frontend/app.js	da
+app/frontend/app.js	en
+app/frontend/app.js	languageToggleBtn
+app/frontend/app.js	🇩🇰 Dansk
+app/frontend/app.js	🇬🇧 English
+app/frontend/app.js	click
+app/frontend/app.js	overview
+app/frontend/app.js	status
+app/frontend/app.js	Fejl ved sprogskift:
+app/frontend/app.js	forecastPrimaryBtn
+app/frontend/app.js	checkinIntro
+app/frontend/app.js	toggleSystemInfo
+app/frontend/app.js	Skjul
+app/frontend/app.js	',
+app/frontend/app.js	object
+app/frontend/app.js	program_id
+app/frontend/app.js	entryInputModeHint
+app/frontend/app.js	entry_notes
+app/frontend/app.js	label
+app/frontend/app.js	small
+app/frontend/app.js	4px
+app/frontend/app.js	wizard-step-hidden
+app/frontend/app.js	entry_sets
+app/frontend/app.js	entry_reps
+app/frontend/app.js	entry_load
+app/frontend/app.js	entry_achieved_reps
+app/frontend/app.js	SELECT
+app/frontend/app.js	time
+app/frontend/app.js	cardio_time
+app/frontend/app.js	20 sek
+app/frontend/app.js	30 sek
+app/frontend/app.js	40 sek
+app/frontend/app.js	45 sek
+app/frontend/app.js	60 sek
+app/frontend/app.js	fx 45 sek
+app/frontend/app.js	Belastning: Kropsvægt. Vælg tid i en fast liste for ensartet data.
+app/frontend/app.js	6-8
+app/frontend/app.js	8-10
+app/frontend/app.js	10-12
+app/frontend/app.js	bodyweight_reps
+app/frontend/app.js	fx 8
+app/frontend/app.js	Belastning: Kropsvægt.
+app/frontend/app.js	(Tom = kropsvægt)
+app/frontend/app.js	(Vælg belastning)
+app/frontend/app.js	Belastning er valgfri. Tomt felt tolkes som kropsvægt.
+app/frontend/app.js	Angiv belastning i standardiserede spring.
+app/frontend/app.js	program_day_idx
+app/frontend/app.js	no-store
+app/frontend/app.js	POST
+app/frontend/app.js	Content-Type
+app/frontend/app.js	application/json
+app/frontend/app.js	pendingEntriesList
+app/frontend/app.js	entryStatus
+app/frontend/app.js	Ingen øvelser tilføjet endnu.
+app/frontend/app.js	kg
+app/frontend/app.js	row
+app/frontend/app.js	ukendt
+app/frontend/app.js	button
+app/frontend/app.js	width:auto;padding:8px 12px
+app/frontend/app.js	margin-top:6px
+app/frontend/app.js	[data-remove-entry]
+app/frontend/app.js	data-remove-entry
+app/frontend/app.js	workoutsList
+app/frontend/app.js	listMeta
+app/frontend/app.js	0 elementer
+app/frontend/app.js	).trim().toLowerCase() ===
+app/frontend/app.js	margin-top:8px
+app/frontend/app.js	).trim() || String(x.load ||
+app/frontend/app.js	restitution
+app/frontend/app.js	Recovery dag
+app/frontend/app.js	base
+app/frontend/app.js	Base
+app/frontend/app.js	tempo
+app/frontend/app.js	Tempo
+app/frontend/app.js	interval
+app/frontend/app.js	intervals
+app/frontend/app.js	Intervaller
+app/frontend/app.js	test
+app/frontend/app.js	benchmark
+app/frontend/app.js	Test
+app/frontend/app.js	Cardio
+app/frontend/app.js	exercise
+app/frontend/app.js	light
+app/frontend/app.js	high
+app/frontend/app.js	moderate
+app/frontend/app.js	Du kan sandsynligvis progressere næste gang.
+app/frontend/app.js	Reducer belastning eller volumen næste gang.
+app/frontend/app.js	Hold progressionen rolig næste gang.
+app/frontend/app.js	sessionResultsList
+app/frontend/app.js	div
+app/frontend/app.js	card
+app/frontend/app.js	sessionResultsMeta
+app/frontend/app.js	).trim() ||
+app/frontend/app.js	Ingen cardio-data
+app/frontend/app.js	Ingen anbefaling
+app/frontend/app.js	Ingen progress flags
+app/frontend/app.js	loadMetricsCard
+app/frontend/app.js	historyTopSection
+app/frontend/app.js	historyBottomSection
+app/frontend/app.js	16px
+app/frontend/app.js	loadMetricsMeta
+app/frontend/app.js	loadMetricsBody
+app/frontend/app.js	loadMetricsRoot
+app/frontend/app.js	loadMetrics
+app/frontend/app.js	loadMeta
+app/frontend/app.js	Recovery-baseret fallback
+app/frontend/app.js	margin-top:10px
+app/frontend/app.js	exercisesList
+app/frontend/app.js	exerciseMeta
+app/frontend/app.js	pill
+app/frontend/app.js	recoveryList
+app/frontend/app.js	recoveryMeta
+app/frontend/app.js	styrke
+app/frontend/app.js	Styrke
+app/frontend/app.js	cardio
+app/frontend/app.js	løb
+app/frontend/app.js	Løb
+app/frontend/app.js	mobilitet
+app/frontend/app.js	Mobilitet
+app/frontend/app.js	Ingen plan
+app/frontend/app.js	Ingen plan endnu.
+app/frontend/app.js	run
+app/frontend/app.js	Restitution · rolig bevægelse og lav belastning
+app/frontend/app.js	Intervaller · kort, hårdt pas med pauser
+app/frontend/app.js	Tempopas · kontrolleret hård løbebelastning
+app/frontend/app.js	Basepas · roligt løb i snakketempo
+app/frontend/app.js	Løb · planlagt cardiopas
+app/frontend/app.js	strength
+app/frontend/app.js	Styrkepas · planlagt træning
+app/frontend/app.js	Restitution
+app/frontend/app.js	Tempopas
+app/frontend/app.js	Basepas
+app/frontend/app.js	Styrkepas
+app/frontend/app.js	forecastDate
+app/frontend/app.js	forecastType
+app/frontend/app.js	forecastSummary
+app/frontend/app.js	forecastReason
+app/frontend/app.js	}` :
+app/frontend/app.js	Gå til check-in
+app/frontend/app.js	checkin
+app/frontend/app.js	plan
+app/frontend/app.js	meget klar
+app/frontend/app.js	klar
+app/frontend/app.js	moderat
+app/frontend/app.js	tag det roligt
+app/frontend/app.js	restitution anbefales
+app/frontend/app.js	overviewReadinessValue
+app/frontend/app.js	overviewLatestCheckinLine
+app/frontend/app.js	overviewTimeLine
+app/frontend/app.js	overviewWorkoutLine
+app/frontend/app.js	Klar
+app/frontend/app.js	Første gang i SovereignStrength.
+app/frontend/app.js	Ingen check-in endnu.
+app/frontend/app.js	Start med et check-in for at beregne dagens træning.
+app/frontend/app.js	Ingen tidsvurdering endnu.
+app/frontend/app.js	Ingen historik endnu. Du bygger første datapunkt nu.
+app/frontend/app.js	Ingen historik endnu.
+app/frontend/app.js	profileDisplayName
+app/frontend/app.js	profileBodyLine
+app/frontend/app.js	profileTrainingTypesLine
+app/frontend/app.js	profileTrainingDaysLine
+app/frontend/app.js	profileEquipmentLine
+app/frontend/app.js	profileIncrementLine
+app/frontend/app.js	profileAccountLine
+app/frontend/app.js	profileAccountHelpLine
+app/frontend/app.js	openAccountSettingsBtn
+app/frontend/app.js	openAccountSettingsSecondaryBtn
+app/frontend/app.js	openEquipmentSettingsBtn
+app/frontend/app.js	cancelEquipmentSettingsBtn
+app/frontend/app.js	saveEquipmentSettingsBtn
+app/frontend/app.js	bodyweight
+app/frontend/app.js	vægte
+app/frontend/app.js	kropsvægt
+app/frontend/app.js	man
+app/frontend/app.js	tir
+app/frontend/app.js	ons
+app/frontend/app.js	tor
+app/frontend/app.js	fre
+app/frontend/app.js	lør
+app/frontend/app.js	søn
+app/frontend/app.js	Ingen højde eller kropsvægt registreret endnu.
+app/frontend/app.js	Træningstyper: ingen valgt endnu.
+app/frontend/app.js	Mulige træningsdage: ingen valgt endnu.
+app/frontend/app.js	Intet udstyr registreret endnu.
+app/frontend/app.js	Ingen vægtspring registreret endnu.
+app/frontend/app.js	Adgangskode, login og kontooplysninger åbnes via den centrale auth-side.
+app/frontend/app.js	href
+app/frontend/app.js	profile_height_cm
+app/frontend/app.js	profile_bodyweight_kg
+app/frontend/app.js	pref_running
+app/frontend/app.js	pref_strength_weights
+app/frontend/app.js	pref_bodyweight
+app/frontend/app.js	pref_mobility
+app/frontend/app.js	day_mon
+app/frontend/app.js	day_tue
+app/frontend/app.js	day_wed
+app/frontend/app.js	day_thu
+app/frontend/app.js	day_fri
+app/frontend/app.js	day_sat
+app/frontend/app.js	day_sun
+app/frontend/app.js	weekly_target_sessions
+app/frontend/app.js	eq_barbell_enabled
+app/frontend/app.js	false
+app/frontend/app.js	true
+app/frontend/app.js	eq_dumbbell_enabled
+app/frontend/app.js	eq_bodyweight_enabled
+app/frontend/app.js	eq_barbell_increment
+app/frontend/app.js	eq_dumbbell_increment
+app/frontend/app.js	equipmentSettingsModal
+app/frontend/app.js	equipmentSettingsStatus
+app/frontend/app.js	Redigér profil og udstyr, og gem når du er klar.
+app/frontend/app.js	Gemmer udstyr...
+app/frontend/app.js	/api/user-settings
+app/frontend/app.js	Udstyr gemt.
+app/frontend/app.js	equipment save error
+app/frontend/app.js	Fejl:
+app/frontend/app.js	equipmentSettingsForm
+app/frontend/app.js	DEBUG: klik på Gem udstyr
+app/frontend/app.js	submit
+app/frontend/app.js	overviewSection
+app/frontend/app.js	:scope > section.card
+app/frontend/app.js	forecastHero
+app/frontend/app.js	overviewStatusCard
+app/frontend/app.js	profileEquipmentCard
+app/frontend/app.js	weekPlanCard
+app/frontend/app.js	overview-metric-hidden
+app/frontend/app.js	readinessScore
+app/frontend/app.js	readinessLabel
+app/frontend/app.js	Ingen data endnu
+app/frontend/app.js	readinessSuggestion
+app/frontend/app.js	readinessAction
+app/frontend/app.js	Dagens forslag: tung styrke eller kvalitetsløb.
+app/frontend/app.js	Dagens forslag: almindeligt pas med normal volumen.
+app/frontend/app.js	Rolig gang
+app/frontend/app.js	Rolig cardio
+app/frontend/app.js	increase
+app/frontend/app.js	Øg næste gang
+app/frontend/app.js	increase_reps
+app/frontend/app.js	hold
+app/frontend/app.js	Hold i dag
+app/frontend/app.js	use_start_weight
+app/frontend/app.js	Startvægt
+app/frontend/app.js	no_progression
+app/frontend/app.js	Ingen auto-progression
+app/frontend/app.js	early
+app/frontend/app.js	tidligt
+app/frontend/app.js	on_time
+app/frontend/app.js	til tiden
+app/frontend/app.js	late
+app/frontend/app.js	sent
+app/frontend/app.js	short_20
+app/frontend/app.js	kort (20 min)
+app/frontend/app.js	short_30
+app/frontend/app.js	kort (30 min)
+app/frontend/app.js	full
+app/frontend/app.js	fuld
+app/frontend/app.js	default
+app/frontend/app.js	standard
+app/frontend/app.js	completed_today
+app/frontend/app.js	))].join(
+app/frontend/app.js	0 kg
+app/frontend/app.js	3 kg
+app/frontend/app.js	6 kg
+app/frontend/app.js	9 kg
+app/frontend/app.js	12 kg
+app/frontend/app.js	15 kg
+app/frontend/app.js	margin-top:10px; padding:12px
+app/frontend/app.js	margin-bottom:8px
+app/frontend/app.js	10
+app/frontend/app.js	Maksimal indsats
+app/frontend/app.js	rpePicker
+app/frontend/app.js	avg_rpe
+app/frontend/app.js	rpeHelp
+app/frontend/app.js	button[data-rpe]
+app/frontend/app.js	active
+app/frontend/app.js	Vælg hvor hårdt passet føltes.
+app/frontend/app.js	cardio_distance_km_whole
+app/frontend/app.js	cardio_distance_km_part
+app/frontend/app.js	cardio_duration_min
+app/frontend/app.js	cardio_duration_sec
+app/frontend/app.js	cardioPacePreview
+app/frontend/app.js	cardioReviewFields
+app/frontend/app.js	block
+app/frontend/app.js	none
+app/frontend/app.js	cardio_kind
+app/frontend/app.js	sessionReviewList
+app/frontend/app.js	).trim().toLowerCase().startsWith(
+app/frontend/app.js	font-weight:700; margin-bottom:8px
+app/frontend/app.js	margin-bottom:10px
+app/frontend/app.js	Cardiopas
+app/frontend/app.js	text
+app/frontend/app.js	fx rolig tur, gode ben
+app/frontend/app.js	fx tung sidste sæt
+app/frontend/app.js	reviewPlanSummary
+app/frontend/app.js	margin-bottom:6px
+app/frontend/app.js	<br>
+app/frontend/app.js	Ukendt
+app/frontend/app.js	Øg belastningen i dag
+app/frontend/app.js	Øg reps næste gang
+app/frontend/app.js	Hold nuværende belastning i dag
+app/frontend/app.js	Brug startvægt i dag
+app/frontend/app.js	Ingen automatisk progression
+app/frontend/app.js	Følg planen i dag
+app/frontend/app.js	Forsigtig
+app/frontend/app.js	Træt
+app/frontend/app.js	Stabil
+app/frontend/app.js	Øg belastning
+app/frontend/app.js	Øg reps
+app/frontend/app.js	Øg tid
+app/frontend/app.js	Næste variation
+app/frontend/app.js	Mindre støtte
+app/frontend/app.js	Hold
+app/frontend/app.js	Forenkle
+app/frontend/app.js	exerciseViewerModal
+app/frontend/app.js	exerciseViewerTitle
+app/frontend/app.js	exerciseViewerMeta
+app/frontend/app.js	exerciseViewerImages
+app/frontend/app.js	Øvelse
+app/frontend/app.js	lazy
+app/frontend/app.js	width:100%;height:auto;border-radius:18px;display:block;background:#111;border:1px solid rgba(255,255,255,0.08)
+app/frontend/app.js	hidden
+app/frontend/app.js	[data-exercise-viewer]
+app/frontend/app.js	data-exercise-viewer
+app/frontend/app.js	#closeExerciseViewerBtn
+app/frontend/app.js	#exerciseViewerBackdrop
+app/frontend/app.js	load
+app/frontend/app.js	reps
+app/frontend/app.js	variation
+app/frontend/app.js	tid
+app/frontend/app.js	mindre støtte
+app/frontend/app.js	exerciseLibrary
+app/frontend/app.js	andet
+app/frontend/app.js	).localeCompare(String(b.name ||
+app/frontend/app.js	),
+app/frontend/app.js	Ukendt øvelse
+app/frontend/app.js	margin-top:10px;padding:14px
+app/frontend/app.js	align-items:flex-start;gap:12px
+app/frontend/app.js	flex:1
+app/frontend/app.js	font-weight:700
+app/frontend/app.js	secondary
+app/frontend/app.js	width:auto;padding:8px 12px;white-space:nowrap
+app/frontend/app.js	margin-top:14px
+app/frontend/app.js	margin:0 0 8px 0
+app/frontend/app.js	todayPlanList
+app/frontend/app.js	todayPlanMeta
+app/frontend/app.js	todayPlanTiming
+app/frontend/app.js	Ingen timing endnu.
+app/frontend/app.js	todayPlanSummary
+app/frontend/app.js	Ingen plan endnu. Første plan bliver genereret efter dit check-in.
+app/frontend/app.js	) :
+app/frontend/app.js	autoplan_v0_1
+app/frontend/app.js	autoplan_cardio_v0_1
+app/frontend/app.js	Autoplan
+app/frontend/app.js	weekly_goal_cap_v0_1
+app/frontend/app.js	Ugemål-bremse
+app/frontend/app.js	manual_override_v0_1
+app/frontend/app.js	Manuel overstyring
+app/frontend/app.js	completed_today_v0_1
+app/frontend/app.js	Dagens træning registreret
+app/frontend/app.js	Fast plan
+app/frontend/app.js	rest
+app/frontend/app.js	I dag er planlagt som hviledag i ugeplanen.
+app/frontend/app.js	unknown
+app/frontend/app.js	Let bevægelse anbefales i dag.
+app/frontend/app.js	\n
+app/frontend/app.js	margin-top:6px; font-size:1.35rem; font-weight:700
+app/frontend/app.js	Belastningsflag aktivt
+app/frontend/app.js	Intet belastningsflag
+app/frontend/app.js	margin-top:6px; font-weight:600
+app/frontend/app.js	)}
+app/frontend/app.js	programsRoot
+app/frontend/app.js	programMeta
+app/frontend/app.js	margin-top:12px; background:#141414
+app/frontend/app.js	Program
+app/frontend/app.js	program-day
+app/frontend/app.js	Dag
+app/frontend/app.js	/api/workouts
+app/frontend/app.js	/api/checkins
+app/frontend/app.js	/api/checkin/latest
+app/frontend/app.js	/api/today-plan
+app/frontend/app.js	/api/session-results
+app/frontend/app.js	(Intet program)
+app/frontend/app.js	mobility_basic
+app/frontend/app.js	base_run_3x
+app/frontend/app.js	starter_run_2x
+app/frontend/app.js	starter_strength_2x
+app/frontend/app.js	base_strength_a
+app/frontend/app.js	entry_exercise_id
+app/frontend/app.js	(Ingen valgt)
+app/frontend/app.js	workoutsCount
+app/frontend/app.js	exercisesCount
+app/frontend/app.js	programsCount
+app/frontend/app.js	recoveryCount
+app/frontend/app.js	Frontend + API OK
+app/frontend/app.js	ok
+app/frontend/app.js	debug
+app/frontend/app.js	workoutForm
+app/frontend/app.js	progressionHint
+app/frontend/app.js	Intet load-forslag endnu.
+app/frontend/app.js	) !==
+app/frontend/app.js	Tid styres via faste valg.
+app/frontend/app.js	Kropsvægtsøvelse: ingen load-forslag.
+app/frontend/app.js	Ingen progression tilgængelig for denne øvelse.
+app/frontend/app.js	· beslutning: stig
+app/frontend/app.js	· beslutning: hold
+app/frontend/app.js	· beslutning: startvægt
+app/frontend/app.js	· beslutning: ingen progression
+app/frontend/app.js	equipment_constraint
+app/frontend/app.js	· udstyr: næste mulige spring er højere end anbefalet
+app/frontend/app.js	Kunne ikke hente progression.
+app/frontend/app.js	Vælg en øvelse først.
+app/frontend/app.js	warn
+app/frontend/app.js	programLoadStatus
+app/frontend/app.js	Vælg et program først.
+app/frontend/app.js	Vælg en dag fra programmet.
+app/frontend/app.js	formStatus
+app/frontend/app.js	Workout gemt.
+app/frontend/app.js	Intet program indlæst endnu.
+app/frontend/app.js	recoveryFormStatus
+app/frontend/app.js	/api/checkin
+app/frontend/app.js	Check-in gemt. Dagens plan opdateret.
+app/frontend/app.js	45
+app/frontend/app.js	sessionResultStatus
+app/frontend/app.js	Ingen dagens plan at gemme endnu.
+app/frontend/app.js	).includes(
+app/frontend/app.js	)) ?
+app/frontend/app.js	Gemmer session-resultat...
+app/frontend/app.js	/api/session-result
+app/frontend/app.js	Session-resultat gemt.
+app/frontend/app.js	history
+app/frontend/app.js	authBar
+app/frontend/app.js	flex
+app/frontend/app.js	space-between
+app/frontend/app.js	center
+app/frontend/app.js	12px
+app/frontend/app.js	wrap
+app/frontend/app.js	12px 14px
+app/frontend/app.js	1px solid #2c2c2c
+app/frontend/app.js	14px
+app/frontend/app.js	#1b1b1b
+app/frontend/app.js	color:#b9b9b9;font-size:.95rem
+app/frontend/app.js	color:#f3f3f3
+app/frontend/app.js	logoutBtn
+app/frontend/app.js	include
+app/frontend/app.js	GET
+app/frontend/app.js	review
+app/frontend/app.js	manual
+app/frontend/app.js	checkinSection
+app/frontend/app.js	todayPlanSection
+app/frontend/app.js	manualWorkoutSection
+app/frontend/app.js	wizardNav
+app/frontend/app.js	[data-step]
+app/frontend/app.js	data-step
+app/frontend/app.js	sessionReviewHeading
+app/frontend/app.js	todayPlanHeading
+app/frontend/app.js	sessionResultForm
+app/frontend/app.js	date
+app/frontend/app.js	recovery_date
+app/frontend/app.js	recoveryForm
+app/frontend/app.js	change
+app/frontend/app.js	addEntryBtn
+app/frontend/app.js	clearEntriesBtn
+app/frontend/app.js	loadProgramDayBtn
+app/frontend/app.js	Fejl før opstart:
+app/frontend/app.js	systemInfoContent
+app/frontend/app.js	systemInfoHidden
+app/frontend/app.js	Vis
+app/frontend/app.js	Søvn
+app/frontend/app.js	Vælg hvor god din søvn har været i nat.
+app/frontend/app.js	Meget dårlig
+app/frontend/app.js	Dårlig
+app/frontend/app.js	Okay
+app/frontend/app.js	God
+app/frontend/app.js	Meget god
+app/frontend/app.js	Energi
+app/frontend/app.js	Vælg hvor meget energi du føler du har lige nu.
+app/frontend/app.js	Helt flad
+app/frontend/app.js	Lav
+app/frontend/app.js	Middel
+app/frontend/app.js	Høj
+app/frontend/app.js	Ømhed
+app/frontend/app.js	Vælg hvor øm kroppen føles lige nu.
+app/frontend/app.js	Ingen
+app/frontend/app.js	Let
+app/frontend/app.js	Mærkbar
+app/frontend/app.js	Meget høj
+app/frontend/app.js	checkinScoreStyles
+app/frontend/app.js	style
+app/frontend/app.js	checkin-score-hidden
+app/frontend/app.js	checkin-score-wrap
+app/frontend/app.js	checkin-score-title
+app/frontend/app.js	checkin-score-help
+app/frontend/app.js	checkin-score-row
+app/frontend/app.js	checkin-score-value
+app/frontend/app.js	is-active
+app/frontend/app.js	score-red
+app/frontend/app.js	score-orange
+app/frontend/app.js	score-yellow
+app/frontend/app.js	score-lightgreen
+app/frontend/app.js	score-green
+app/frontend/app.js	soreness_score
+app/frontend/app.js	input
+app/frontend/app.js	afterend
+app/frontend/app.js	sleep_score
+app/frontend/app.js	energy_score
+app/frontend/app.js	mon
+app/frontend/app.js	tue
+app/frontend/app.js	wed
+app/frontend/app.js	thu
+app/frontend/app.js	fri
+app/frontend/app.js	sat
+app/frontend/app.js	sun
+app/frontend/app.js	træning
+app/frontend/app.js	Ugeplan: ingen faste træningsdage valgt · recovery og fleksibel plan anbefales.
+app/frontend/app.js	weekPlanPreviewStyles
+app/frontend/app.js	forecastCard
+app/frontend/app.js	section
+app/frontend/app.js	1 / -1
+app/frontend/app.js	weekPlanMeta
+app/frontend/app.js	weekPlanIntro
+app/frontend/app.js	weekplan-grid
+app/frontend/app.js	weekPlanGrid
+app/frontend/app.js	running
+app/frontend/app.js	mobility
+app/frontend/app.js	recovery
+app/frontend/app.js	Planlagt styrkedag
+app/frontend/app.js	kind-strength
+app/frontend/app.js	Planlagt løbedag
+app/frontend/app.js	kind-run
+app/frontend/app.js	Let bevægelse og mobilitet
+app/frontend/app.js	kind-mobility
+app/frontend/app.js	Recovery
+app/frontend/app.js	Restitution anbefales
+app/frontend/app.js	kind-recovery
+app/frontend/app.js	Hvile
+app/frontend/app.js	Ikke planlagt træningsdag
+app/frontend/app.js	kind-rest
+app/frontend/app.js	Man
+app/frontend/app.js	Tir
+app/frontend/app.js	Ons
+app/frontend/app.js	Tor
+app/frontend/app.js	Fre
+app/frontend/app.js	Lør
+app/frontend/app.js	Søn
+app/frontend/app.js	weekplan-day-label
+app/frontend/app.js	weekplan-day-note
+app/frontend/app.js	selected
+app/frontend/app.js	is-today
+app/frontend/app.js	· i dag
+app/frontend/app.js	· kropsvægt
+app/frontend/app.js	: ""}
+app/frontend/index.html	da
+app/frontend/index.html	utf-8
+app/frontend/index.html	viewport
+app/frontend/index.html	width=device-width,initial-scale=1
+app/frontend/index.html	theme-color
+app/frontend/index.html	#111111
+app/frontend/index.html	manifest
+app/frontend/index.html	checkbox
+app/frontend/index.html	exerciseViewerFix
+app/frontend/index.html	exerciseViewerMetaFix
+app/frontend/index.html	wrap
+app/frontend/index.html	display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap
+app/frontend/index.html	margin:0
+app/frontend/index.html	button
+app/frontend/index.html	languageToggleBtn
+app/frontend/index.html	secondary
+app/frontend/index.html	width:auto;padding:8px 12px
+app/frontend/index.html	wizardNav
+app/frontend/index.html	wizard-nav
+app/frontend/index.html	grid
+app/frontend/index.html	overviewSection
+app/frontend/index.html	card
+app/frontend/index.html	forecastHero
+app/frontend/index.html	grid-column:1/-1
+app/frontend/index.html	row
+app/frontend/index.html	small
+app/frontend/index.html	forecastDate
+app/frontend/index.html	metric
+app/frontend/index.html	forecastType
+app/frontend/index.html	forecastSummary
+app/frontend/index.html	margin-top:8px
+app/frontend/index.html	forecastReason
+app/frontend/index.html	btn-row
+app/frontend/index.html	margin-top:12px
+app/frontend/index.html	forecastPrimaryBtn
+app/frontend/index.html	primary-cta
+app/frontend/index.html	overviewStatusCard
+app/frontend/index.html	overview-status
+app/frontend/index.html	stat-line
+app/frontend/index.html	overviewReadinessValue
+app/frontend/index.html	overviewLatestCheckinLine
+app/frontend/index.html	overviewTimeLine
+app/frontend/index.html	overviewWorkoutLine
+app/frontend/index.html	profileEquipmentCard
+app/frontend/index.html	profileDisplayName
+app/frontend/index.html	profileBodyLine
+app/frontend/index.html	profileTrainingTypesLine
+app/frontend/index.html	profileTrainingDaysLine
+app/frontend/index.html	profileEquipmentLine
+app/frontend/index.html	profileIncrementLine
+app/frontend/index.html	profileAccountLine
+app/frontend/index.html	profileAccountHelpLine
+app/frontend/index.html	openEquipmentSettingsBtn
+app/frontend/index.html	openAccountSettingsSecondaryBtn
+app/frontend/index.html	equipmentEditorWrap
+app/frontend/index.html	wizard-step-hidden
+app/frontend/index.html	equipmentSettingsModal
+app/frontend/index.html	modal-backdrop wizard-step-hidden
+app/frontend/index.html	modal-card
+app/frontend/index.html	align-items:center; margin-bottom:10px
+app/frontend/index.html	cancelEquipmentSettingsBtn
+app/frontend/index.html	equipmentSettingsForm
+app/frontend/index.html	profile_height_cm
+app/frontend/index.html	number
+app/frontend/index.html	50
+app/frontend/index.html	250
+app/frontend/index.html	placeholder=
+app/frontend/index.html	profile_bodyweight_kg
+app/frontend/index.html	20
+app/frontend/index.html	400
+app/frontend/index.html	fx 82
+app/frontend/index.html	margin:12px 0 6px; font-weight:700
+app/frontend/index.html	training-option
+app/frontend/index.html	pref_running
+app/frontend/index.html	pref_strength_weights
+app/frontend/index.html	pref_bodyweight
+app/frontend/index.html	pref_mobility
+app/frontend/index.html	margin:16px 0 6px; font-weight:700
+app/frontend/index.html	margin-bottom:8px
+app/frontend/index.html	day_mon
+app/frontend/index.html	day_tue
+app/frontend/index.html	day_wed
+app/frontend/index.html	day_thu
+app/frontend/index.html	day_fri
+app/frontend/index.html	day_sat
+app/frontend/index.html	day_sun
+app/frontend/index.html	weekly_target_sessions
+app/frontend/index.html	eq_barbell_enabled
+app/frontend/index.html	true
+app/frontend/index.html	false
+app/frontend/index.html	eq_dumbbell_enabled
+app/frontend/index.html	eq_bodyweight_enabled
+app/frontend/index.html	eq_barbell_increment
+app/frontend/index.html	step=
+app/frontend/index.html	value=
+app/frontend/index.html	eq_dumbbell_increment
+app/frontend/index.html	submit
+app/frontend/index.html	saveEquipmentSettingsBtn
+app/frontend/index.html	equipmentSettingsStatus
+app/frontend/index.html	workoutsCount
+app/frontend/index.html	exercisesCount
+app/frontend/index.html	programsCount
+app/frontend/index.html	recoveryCount
+app/frontend/index.html	readinessScore
+app/frontend/index.html	readinessLabel
+app/frontend/index.html	readinessSuggestion
+app/frontend/index.html	readinessAction
+app/frontend/index.html	manualWorkoutSection
+app/frontend/index.html	margin-top:18px
+app/frontend/index.html	workoutForm
+app/frontend/index.html	date
+app/frontend/index.html	type
+app/frontend/index.html	styrke
+app/frontend/index.html	løb
+app/frontend/index.html	mobilitet
+app/frontend/index.html	andet
+app/frontend/index.html	program_id
+app/frontend/index.html	program_day_idx
+app/frontend/index.html	loadProgramDayBtn
+app/frontend/index.html	programLoadStatus
+app/frontend/index.html	duration_min
+app/frontend/index.html	entry-box
+app/frontend/index.html	entry_exercise_id
+app/frontend/index.html	entry_sets
+app/frontend/index.html	entry_reps
+app/frontend/index.html	entry_achieved_reps
+app/frontend/index.html	text
+app/frontend/index.html	fx 8
+app/frontend/index.html	entry_load
+app/frontend/index.html	progressionHint
+app/frontend/index.html	entry_notes
+app/frontend/index.html	fx rolig teknik
+app/frontend/index.html	addEntryBtn
+app/frontend/index.html	clearEntriesBtn
+app/frontend/index.html	entryStatus
+app/frontend/index.html	pendingEntriesList
+app/frontend/index.html	notes
+app/frontend/index.html	Fx helkrop, roligt pas, tung dag, interval osv.
+app/frontend/index.html	formStatus
+app/frontend/index.html	todayPlanSection
+app/frontend/index.html	todayPlanHeading
+app/frontend/index.html	todayPlanMeta
+app/frontend/index.html	todayPlanTiming
+app/frontend/index.html	todayPlanSummary
+app/frontend/index.html	white-space:pre-line
+app/frontend/index.html	todayPlanList
+app/frontend/index.html	margin-top:14px
+app/frontend/index.html	sessionReviewHeading
+app/frontend/index.html	reviewPlanSummary
+app/frontend/index.html	margin-bottom:12px
+app/frontend/index.html	sessionResultForm
+app/frontend/index.html	session_completed
+app/frontend/index.html	session_notes
+app/frontend/index.html	Fx tung men god, sprang sidste øvelse over, fin energi
+app/frontend/index.html	margin:0 0 10px
+app/frontend/index.html	sessionReviewList
+app/frontend/index.html	cardioReviewFields
+app/frontend/index.html	display:none; margin-top:14px
+app/frontend/index.html	cardio_kind
+app/frontend/index.html	restitution
+app/frontend/index.html	base
+app/frontend/index.html	tempo
+app/frontend/index.html	interval
+app/frontend/index.html	test
+app/frontend/index.html	margin-top:10px
+app/frontend/index.html	rpePicker
+app/frontend/index.html	rpe-grid
+app/frontend/index.html	RPE-vælger
+app/frontend/index.html	10
+app/frontend/index.html	hidden
+app/frontend/index.html	avg_rpe
+app/frontend/index.html	rpeHelp
+app/frontend/index.html	margin-top:10px; gap:10px
+app/frontend/index.html	flex:1
+app/frontend/index.html	cardio_distance_km_whole
+app/frontend/index.html	11
+app/frontend/index.html	12
+app/frontend/index.html	13
+app/frontend/index.html	14
+app/frontend/index.html	15
+app/frontend/index.html	16
+app/frontend/index.html	17
+app/frontend/index.html	18
+app/frontend/index.html	19
+app/frontend/index.html	21
+app/frontend/index.html	22
+app/frontend/index.html	23
+app/frontend/index.html	24
+app/frontend/index.html	25
+app/frontend/index.html	26
+app/frontend/index.html	27
+app/frontend/index.html	28
+app/frontend/index.html	29
+app/frontend/index.html	30
+app/frontend/index.html	cardio_distance_km_part
+app/frontend/index.html	100
+app/frontend/index.html	200
+app/frontend/index.html	300
+app/frontend/index.html	500
+app/frontend/index.html	600
+app/frontend/index.html	700
+app/frontend/index.html	800
+app/frontend/index.html	900
+app/frontend/index.html	cardio_duration_min
+app/frontend/index.html	35
+app/frontend/index.html	40
+app/frontend/index.html	45
+app/frontend/index.html	55
+app/frontend/index.html	60
+app/frontend/index.html	75
+app/frontend/index.html	90
+app/frontend/index.html	105
+app/frontend/index.html	120
+app/frontend/index.html	cardio_duration_sec
+app/frontend/index.html	cardioPacePreview
+app/frontend/index.html	margin-top:6px
+app/frontend/index.html	sessionResultStatus
+app/frontend/index.html	checkinSection
+app/frontend/index.html	checkinIntro
+app/frontend/index.html	recoveryForm
+app/frontend/index.html	recovery_date
+app/frontend/index.html	sleep_score
+app/frontend/index.html	energy_score
+app/frontend/index.html	soreness_score
+app/frontend/index.html	time_budget_min
+app/frontend/index.html	recovery_notes
+app/frontend/index.html	Fx sov fint, lidt træt i ben, 45 min tid i dag
+app/frontend/index.html	recoveryFormStatus
+app/frontend/index.html	two-col
+app/frontend/index.html	historyTopSection
+app/frontend/index.html	listMeta
+app/frontend/index.html	workoutsList
+app/frontend/index.html	exerciseLibrary
+app/frontend/index.html	exerciseMeta
+app/frontend/index.html	exercisesList
+app/frontend/index.html	historyBottomSection
+app/frontend/index.html	recoveryMeta
+app/frontend/index.html	recoveryList
+app/frontend/index.html	programMeta
+app/frontend/index.html	programsRoot
+app/frontend/index.html	margin-top:16px
+app/frontend/index.html	justify-content:space-between;align-items:center
+app/frontend/index.html	toggleSystemInfo
+app/frontend/index.html	width:auto;padding:6px 10px
+app/frontend/index.html	systemInfoContent
+app/frontend/index.html	status
+app/frontend/index.html	debug
+app/frontend/index.html	white-space:pre-wrap;margin-top:8px
+app/frontend/index.html	exerciseViewerModal
+app/frontend/index.html	modal
+app/frontend/index.html	display:none
+app/frontend/index.html	modal-backdrop
+app/frontend/index.html	exerciseViewerBackdrop
+app/frontend/index.html	modal-panel
+app/frontend/index.html	dialog
+app/frontend/index.html	exerciseViewerTitle
+app/frontend/index.html	align-items:center; margin-bottom:12px
+app/frontend/index.html	closeExerciseViewerBtn
+app/frontend/index.html	exerciseViewerMeta
+app/frontend/index.html	exerciseViewerImages

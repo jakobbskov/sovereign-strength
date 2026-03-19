@@ -135,6 +135,7 @@
   "wizard.history": "Historik",
   "review.finish_today_plan": "Afslut dagens plan",
   "wizard.after_training": "Efter træning",
+<<<<<<< HEAD
   "workout.new": "Ny træning",
   "workout.date": "Dato",
   "workout.type": "Type",
@@ -186,4 +187,13 @@
   "plan.mobility_note": "Let bevægelse og mobilitet",
   "common.type": "Type",
   "plan.light_movement_today": "Let bevægelse anbefales i dag."
+=======
+  "overview.expected_today": "Forventet i dag",
+  "overview.status_right_now": "Status lige nu",
+  "overview.see_today_plan": "Se dagens plan",
+  "overview.latest_checkin": "Seneste check-in",
+  "overview.logged_sessions": "Registrerede sessioner",
+  "plan.recovery_summary": "Restitution · rolig bevægelse og mobilitet",
+  "common.type": "Type"
+>>>>>>> bebfeb4 (checkpoint before i18n restart)
 }

@@ -1,0 +1,656 @@
+#111111
+#1b1b1b
+#closeExerciseViewerBtn
+#exerciseViewerBackdrop
+',
+(Ingen valgt)
+(Intet program)
+(Tom = kropsvægt)
+(Vælg belastning)
+) !==
+) :
+)) ?
+))].join(
+),
+).includes(
+).localeCompare(String(b.name ||
+).trim() ||
+).trim() || String(x.load ||
+).trim().toLowerCase() ===
+).trim().toLowerCase().startsWith(
+)}
+/api/checkin
+/api/checkin/latest
+/api/checkins
+/api/session-result
+/api/session-results
+/api/today-plan
+/api/user-settings
+/api/workouts
+0 elementer
+0 kg
+1 / -1
+10
+10-12
+100
+105
+11
+12
+12 kg
+120
+12px
+12px 14px
+13
+14
+14px
+15
+15 kg
+16
+16px
+17
+18
+19
+1px solid #2c2c2c
+20
+20 sek
+200
+21
+22
+23
+24
+25
+250
+26
+27
+28
+29
+3 kg
+30
+30 sek
+300
+35
+40
+40 sek
+400
+45
+45 sek
+4px
+50
+500
+55
+6 kg
+6-8
+60
+60 sek
+600
+700
+75
+8-10
+800
+9 kg
+90
+900
+: ""}
+:scope > section.card
+<br>
+[data-exercise-viewer]
+[data-remove-entry]
+[data-step]
+\n
+active
+addEntryBtn
+Adgangskode, login og kontooplysninger åbnes via den centrale auth-side.
+afterend
+align-items:center; margin-bottom:10px
+align-items:center; margin-bottom:12px
+align-items:flex-start;gap:12px
+andet
+Angiv belastning i standardiserede spring.
+application/json
+authBar
+Autoplan
+autoplan_cardio_v0_1
+autoplan_v0_1
+avg_rpe
+base
+Base
+base_run_3x
+base_strength_a
+Basepas
+Basepas · roligt løb i snakketempo
+Belastning er valgfri. Tomt felt tolkes som kropsvægt.
+Belastning: Kropsvægt.
+Belastning: Kropsvægt. Vælg tid i en fast liste for ensartet data.
+Belastningsflag aktivt
+benchmark
+block
+bodyweight
+bodyweight_reps
+Brug startvægt i dag
+btn-row
+button
+button[data-rpe]
+cancelEquipmentSettingsBtn
+card
+Cardio
+cardio
+cardio_distance_km_part
+cardio_distance_km_whole
+cardio_duration_min
+cardio_duration_sec
+cardio_kind
+cardio_time
+cardioPacePreview
+Cardiopas
+cardioReviewFields
+center
+change
+Check-in gemt. Dagens plan opdateret.
+checkbox
+checkin
+checkin-score-help
+checkin-score-hidden
+checkin-score-row
+checkin-score-title
+checkin-score-value
+checkin-score-wrap
+checkinIntro
+checkinScoreStyles
+checkinSection
+clearEntriesBtn
+click
+closeExerciseViewerBtn
+color:#b9b9b9;font-size:.95rem
+color:#f3f3f3
+completed_today
+completed_today_v0_1
+Content-Type
+da
+Dag
+Dagens forslag: almindeligt pas med normal volumen.
+Dagens forslag: tung styrke eller kvalitetsløb.
+Dagens træning registreret
+data-exercise-viewer
+data-remove-entry
+data-step
+date
+day_fri
+day_mon
+day_sat
+day_sun
+day_thu
+day_tue
+day_wed
+debug
+DEBUG: klik på Gem udstyr
+default
+dialog
+display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap
+display:none
+display:none; margin-top:14px
+div
+Du kan sandsynligvis progressere næste gang.
+duration_min
+Dårlig
+early
+en
+Energi
+energy_score
+entry-box
+entry_achieved_reps
+entry_exercise_id
+entry_load
+entry_notes
+entry_reps
+entry_sets
+entryInputModeHint
+entryStatus
+eq_barbell_enabled
+eq_barbell_increment
+eq_bodyweight_enabled
+eq_dumbbell_enabled
+eq_dumbbell_increment
+equipment save error
+equipment_constraint
+equipmentEditorWrap
+equipmentSettingsForm
+equipmentSettingsModal
+equipmentSettingsStatus
+exercise
+exerciseLibrary
+exerciseMeta
+exercisesCount
+exercisesList
+exerciseViewerBackdrop
+exerciseViewerFix
+exerciseViewerImages
+exerciseViewerMeta
+exerciseViewerMetaFix
+exerciseViewerModal
+exerciseViewerTitle
+false
+Fast plan
+Fejl før opstart:
+Fejl ved sprogskift:
+Fejl:
+flex
+flex:1
+font-weight:700
+font-weight:700; margin-bottom:8px
+forecastCard
+forecastDate
+forecastHero
+forecastPrimaryBtn
+forecastReason
+forecastSummary
+forecastType
+Forenkle
+formStatus
+Forsigtig
+fre
+Fre
+fri
+Frontend + API OK
+fuld
+full
+fx 45 sek
+fx 8
+fx 82
+Fx helkrop, roligt pas, tung dag, interval osv.
+fx rolig teknik
+fx rolig tur, gode ben
+Fx sov fint, lidt træt i ben, 45 min tid i dag
+Fx tung men god, sprang sidste øvelse over, fin energi
+fx tung sidste sæt
+Følg planen i dag
+Første gang i SovereignStrength.
+Gemmer session-resultat...
+Gemmer udstyr...
+GET
+God
+grid
+grid-column:1/-1
+Gå til check-in
+Helt flad
+hidden
+high
+history
+historyBottomSection
+historyTopSection
+hold
+Hold
+Hold i dag
+Hold nuværende belastning i dag
+Hold progressionen rolig næste gang.
+href
+Hvile
+Høj
+I dag er planlagt som hviledag i ugeplanen.
+Ikke planlagt træningsdag
+include
+increase
+increase_reps
+Ingen
+Ingen anbefaling
+Ingen auto-progression
+Ingen automatisk progression
+Ingen cardio-data
+Ingen check-in endnu.
+Ingen dagens plan at gemme endnu.
+Ingen data endnu
+Ingen historik endnu.
+Ingen historik endnu. Du bygger første datapunkt nu.
+Ingen højde eller kropsvægt registreret endnu.
+Ingen plan
+Ingen plan endnu.
+Ingen plan endnu. Første plan bliver genereret efter dit check-in.
+Ingen progress flags
+Ingen progression tilgængelig for denne øvelse.
+Ingen tidsvurdering endnu.
+Ingen timing endnu.
+Ingen vægtspring registreret endnu.
+Ingen øvelser tilføjet endnu.
+input
+interval
+Intervaller
+Intervaller · kort, hårdt pas med pauser
+intervals
+Intet belastningsflag
+Intet load-forslag endnu.
+Intet program indlæst endnu.
+Intet udstyr registreret endnu.
+is-active
+is-today
+justify-content:space-between;align-items:center
+kg
+kind-mobility
+kind-recovery
+kind-rest
+kind-run
+kind-strength
+klar
+Klar
+kort (20 min)
+kort (30 min)
+kropsvægt
+Kropsvægtsøvelse: ingen load-forslag.
+Kunne ikke hente progression.
+label
+languageToggleBtn
+late
+Lav
+lazy
+Let
+Let bevægelse anbefales i dag.
+Let bevægelse og mobilitet
+light
+listMeta
+load
+loadMeta
+loadMetrics
+loadMetricsBody
+loadMetricsCard
+loadMetricsMeta
+loadMetricsRoot
+loadProgramDayBtn
+logoutBtn
+løb
+Løb
+Løb · planlagt cardiopas
+lør
+Lør
+Maksimal indsats
+man
+Man
+manifest
+manual
+manual_override_v0_1
+manualWorkoutSection
+Manuel overstyring
+margin-bottom:10px
+margin-bottom:12px
+margin-bottom:6px
+margin-bottom:8px
+margin-top:10px
+margin-top:10px; gap:10px
+margin-top:10px; padding:12px
+margin-top:10px;padding:14px
+margin-top:12px
+margin-top:12px; background:#141414
+margin-top:14px
+margin-top:16px
+margin-top:18px
+margin-top:6px
+margin-top:6px; font-size:1.35rem; font-weight:700
+margin-top:6px; font-weight:600
+margin-top:8px
+margin:0
+margin:0 0 10px
+margin:0 0 8px 0
+margin:12px 0 6px; font-weight:700
+margin:16px 0 6px; font-weight:700
+Meget dårlig
+Meget god
+Meget høj
+meget klar
+metric
+Middel
+Mindre støtte
+mindre støtte
+mobilitet
+Mobilitet
+mobility
+mobility_basic
+modal
+modal-backdrop
+modal-backdrop wizard-step-hidden
+modal-card
+modal-panel
+moderat
+moderate
+mon
+Mulige træningsdage: ingen valgt endnu.
+Mærkbar
+no-store
+no_progression
+none
+notes
+number
+Næste variation
+object
+ok
+Okay
+on_time
+ons
+Ons
+openAccountSettingsBtn
+openAccountSettingsSecondaryBtn
+openEquipmentSettingsBtn
+overview
+overview-metric-hidden
+overview-status
+overviewLatestCheckinLine
+overviewReadinessValue
+overviewSection
+overviewStatusCard
+overviewTimeLine
+overviewWorkoutLine
+pendingEntriesList
+pill
+placeholder=
+plan
+Planlagt løbedag
+Planlagt styrkedag
+POST
+pref_bodyweight
+pref_mobility
+pref_running
+pref_strength_weights
+primary-cta
+profile_bodyweight_kg
+profile_height_cm
+profileAccountHelpLine
+profileAccountLine
+profileBodyLine
+profileDisplayName
+profileEquipmentCard
+profileEquipmentLine
+profileIncrementLine
+profileTrainingDaysLine
+profileTrainingTypesLine
+Program
+program-day
+program_day_idx
+program_id
+programLoadStatus
+programMeta
+programsCount
+programsRoot
+progressionHint
+readinessAction
+readinessLabel
+readinessScore
+readinessSuggestion
+recovery
+Recovery
+Recovery dag
+Recovery-baseret fallback
+recovery_date
+recovery_notes
+recoveryCount
+recoveryForm
+recoveryFormStatus
+recoveryList
+recoveryMeta
+Redigér profil og udstyr, og gem når du er klar.
+Reducer belastning eller volumen næste gang.
+reps
+rest
+restitution
+Restitution
+restitution anbefales
+Restitution anbefales
+Restitution · rolig bevægelse og lav belastning
+review
+reviewPlanSummary
+Rolig cardio
+Rolig gang
+row
+rpe-grid
+RPE-vælger
+rpeHelp
+rpePicker
+run
+running
+sat
+saveEquipmentSettingsBtn
+score-green
+score-lightgreen
+score-orange
+score-red
+score-yellow
+secondary
+section
+SELECT
+selected
+sent
+Session-resultat gemt.
+session_completed
+session_notes
+sessionResultForm
+sessionResultsList
+sessionResultsMeta
+sessionResultStatus
+sessionReviewHeading
+sessionReviewList
+short_20
+short_30
+Skjul
+sleep_score
+small
+soreness_score
+space-between
+ss_lang
+Stabil
+standard
+Start med et check-in for at beregne dagens træning.
+starter_run_2x
+starter_strength_2x
+Startvægt
+stat-line
+status
+step=
+strength
+style
+styrke
+Styrke
+Styrkepas
+Styrkepas · planlagt træning
+submit
+sun
+systemInfoContent
+systemInfoHidden
+søn
+Søn
+Søvn
+tag det roligt
+tempo
+Tempo
+Tempopas
+Tempopas · kontrolleret hård løbebelastning
+test
+Test
+text
+theme-color
+thu
+tid
+Tid styres via faste valg.
+tidligt
+til tiden
+time
+time_budget_min
+tir
+Tir
+todayPlanHeading
+todayPlanList
+todayPlanMeta
+todayPlanSection
+todayPlanSummary
+todayPlanTiming
+toggleSystemInfo
+tor
+Tor
+training-option
+true
+træning
+Træningstyper: ingen valgt endnu.
+Træt
+tue
+two-col
+type
+Udstyr gemt.
+Ugemål-bremse
+Ugeplan: ingen faste træningsdage valgt · recovery og fleksibel plan anbefales.
+ukendt
+Ukendt
+Ukendt øvelse
+unknown
+use_start_weight
+utf-8
+value=
+variation
+viewport
+Vis
+vægte
+Vælg en dag fra programmet.
+Vælg en øvelse først.
+Vælg et program først.
+Vælg hvor god din søvn har været i nat.
+Vælg hvor hårdt passet føltes.
+Vælg hvor meget energi du føler du har lige nu.
+Vælg hvor øm kroppen føles lige nu.
+warn
+wed
+weekly_goal_cap_v0_1
+weekly_target_sessions
+weekplan-day-label
+weekplan-day-note
+weekplan-grid
+weekPlanCard
+weekPlanGrid
+weekPlanIntro
+weekPlanMeta
+weekPlanPreviewStyles
+white-space:pre-line
+white-space:pre-wrap;margin-top:8px
+width:100%;height:auto;border-radius:18px;display:block;background:#111;border:1px solid rgba(255,255,255,0.08)
+width:auto;padding:6px 10px
+width:auto;padding:8px 12px
+width:auto;padding:8px 12px;white-space:nowrap
+width=device-width,initial-scale=1
+wizard-nav
+wizard-step-hidden
+wizardNav
+Workout gemt.
+workoutForm
+workoutsCount
+workoutsList
+wrap
+}` :
+· beslutning: hold
+· beslutning: ingen progression
+· beslutning: startvægt
+· beslutning: stig
+· i dag
+· kropsvægt
+· udstyr: næste mulige spring er højere end anbefalet
+Øg belastning
+Øg belastningen i dag
+Øg næste gang
+Øg reps
+Øg reps næste gang
+Øg tid
+Ømhed
+Øvelse
+🇩🇰 Dansk
+🇬🇧 English
