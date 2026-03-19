@@ -1,16 +1,13 @@
 {
   "app.title": "SovereignStrength",
   "app.tagline": "Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.",
-
   "overview.forecast_today": "Forventet i dag",
   "overview.no_plan_yet": "Ingen plan endnu.",
   "overview.go_to_checkin": "Gå til check-in",
-
   "overview.status_now": "Status lige nu",
   "overview.no_checkin_yet": "Ingen check-in endnu.",
   "overview.no_time_estimate_yet": "Ingen tidsvurdering endnu.",
   "overview.no_workout_data_yet": "Ingen workout-data endnu.",
-
   "profile.title": "Profil og udstyr",
   "profile.loading": "Profil indlæses...",
   "profile.training_types_loading": "Træningstyper indlæses...",
@@ -19,7 +16,6 @@
   "profile.increment_loading": "Vægtspring indlæses...",
   "profile.account_loading": "Konto indlæses...",
   "profile.account_help": "Profil og adgangskode håndteres centralt via auth.",
-
   "button.edit_profile_equipment": "Redigér profil og udstyr",
   "button.account_password": "Konto og adgangskode",
   "button.close": "Luk",
@@ -27,7 +23,6 @@
   "button.save_workout": "Gem workout",
   "button.save_session_result": "Gem session-resultat",
   "button.calculate_today_plan": "Beregn dagens plan",
-
   "settings.title": "Profil og udstyr",
   "settings.help": "Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.",
   "settings.height_cm": "Højde (cm)",
@@ -55,14 +50,12 @@
   "settings.barbell_increment": "Vægtspring for stang (kg)",
   "settings.dumbbell_increment": "Vægtspring for håndvægte (kg)",
   "settings.not_changed_yet": "Ikke ændret endnu.",
-
   "workouts.title": "Workouts",
   "exercises.title": "Øvelser",
   "programs.title": "Programmer",
   "recovery.title": "Recovery",
   "readiness.title": "Readiness",
   "common.no_data_yet": "Ingen data endnu",
-
   "new_workout.title": "Nyt workout",
   "session_type.strength": "Styrke",
   "session_type.run": "Løb",
@@ -76,11 +69,9 @@
   "button.clear_exercises": "Ryd øvelser",
   "entry.none_added_yet": "Ingen øvelser tilføjet endnu.",
   "status.ready": "Klar.",
-
   "today_plan.title": "Dagens plan",
   "today_plan.no_timing_yet": "Ingen timing endnu.",
   "today_plan.no_plan_yet": "Ingen plan endnu.",
-
   "review.session_review": "Review af træning",
   "review.exercise_review": "Øvelsesreview",
   "review.cardio_type": "Cardio-type",
@@ -96,22 +87,18 @@
   "review.duration_min": "Tid - minutter",
   "review.duration_sec": "Tid - sekunder",
   "review.no_session_saved_yet": "Ingen session gemt endnu.",
-
   "checkin.title": "Check-in",
   "checkin.intro": "Start her. Vurder søvn, energi, ømhed og tid, så beregner SovereignStrength dagens træning ud fra dit aktuelle niveau.",
-
   "system.status": "Status",
   "system.info": "System info",
   "button.hide": "Skjul",
   "exercise.viewer_title": "Øvelse",
-
   "equipment.barbell": "Vægtstang",
   "equipment.dumbbell": "Håndvægte",
   "equipment.bodyweight": "Kropsvægt",
   "equipment.kettlebell": "Kettlebell",
   "equipment.machine": "Maskine",
   "equipment.bands": "Elastikker",
-
   "hint.bodyweight_time": "Belastning: Kropsvægt. Vælg tid i en fast liste for ensartet data.",
   "hint.bodyweight": "Belastning: Kropsvægt.",
   "hint.load_optional": "Belastning er valgfri. Tomt felt tolkes som kropsvægt.",
@@ -120,24 +107,19 @@
   "placeholder.example_reps": "fx 8",
   "placeholder.empty_is_bodyweight": "(Tom = kropsvægt)",
   "placeholder.choose_load": "(Vælg belastning)",
-
   "entry.none_added": "Ingen øvelser tilføjet endnu.",
   "entry.ready_count": "{count} øvelse(r) klar til dette pas",
   "button.remove": "Fjern",
   "common.unknown": "ukendt",
   "list.no_workouts_yet": "Ingen workouts endnu.",
   "list.item_count": "{count} elementer",
-
   "cardio.recovery_day": "Recovery dag",
   "cardio.default": "Cardio",
-
   "progression.can_progress": "Du kan sandsynligvis progressere næste gang.",
   "progression.reduce_load": "Reducer belastning eller volumen næste gang.",
   "progression.keep_calm": "Hold progressionen rolig næste gang.",
   "session.none_yet": "Ingen sessions endnu.",
-  "session.no_cardio_data": "Ingen cardio-data"
-
-,
+  "session.no_cardio_data": "Ingen cardio-data",
   "auth.logged_in_as": "Logget ind som",
   "auth.logout": "Log ud",
   "auth.checking_login": "Tjekker login...",
@@ -152,5 +134,36 @@
   "wizard.manual": "Manuel workout",
   "wizard.history": "Historik",
   "review.finish_today_plan": "Afslut dagens plan",
-  "wizard.after_training": "Efter træning"
+  "wizard.after_training": "Efter træning",
+  "workout.new": "Ny træning",
+  "workout.date": "Dato",
+  "workout.type": "Type",
+  "workout.program": "Program (valgfrit)",
+  "workout.day_from_program": "Dag fra program",
+  "workout.no_day_selected": "(Ingen dag valgt)",
+  "workout.load_day": "Indlæs dag",
+  "workout.no_program_loaded": "Intet program indlæst endnu",
+  "workout.duration": "Varighed (min)",
+  "workout.add_exercise_section": "Tilføj øvelse til træning",
+  "workout.exercise": "Øvelse",
+  "workout.no_exercise_selected": "(Ingen valgt)",
+  "workout.sets": "Sæt",
+  "workout.target": "Mål",
+  "workout.reps_achieved": "Reps / tid (opnået)",
+  "workout.load_label": "Belastning",
+  "workout.load_placeholder": "(Vælg belastning)",
+  "workout.load_hint": "Angiv belastning i standardiserede spring.",
+  "workout.no_load_suggestion": "Ingen belastningsforslag endnu.",
+  "workout.exercise_notes": "Noter til øvelse",
+  "workout.exercise_notes_placeholder": "fx rolig teknik",
+  "workout.add_exercise": "Tilføj øvelse",
+  "workout.clear_exercises": "Ryd øvelser",
+  "workout.no_exercises": "Ingen øvelser tilføjet endnu.",
+  "workout.notes": "Noter",
+  "workout.notes_placeholder": "Fx helkrop, roligt pas, tung dag, interval osv.",
+  "workout.save": "Gem træning",
+  "workout.ready": "Klar.",
+  "status.title": "Status",
+  "status.system_info": "Systeminfo",
+  "common.show": "Vis"
 }
