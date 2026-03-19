@@ -202,5 +202,13 @@
   "workout.ready": "Ready.",
   "status.title": "Status",
   "status.system_info": "System info",
-  "common.show": "Show"
+  "common.show": "Show",
+  "workout.type.strength": "Strength",
+  "plan.strength_planned": "Strength session · planned training",
+  "session_type.strength_session": "Strength session",
+  "checkin.training_types_none": "Training types: none selected yet.",
+  "checkin.possible_days_none": "Possible training days: none selected yet.",
+  "plan.today_suggestion_strength_or_run": "Today's suggestion: heavy strength or quality run.",
+  "plan.planned_strength_day": "Planned strength day",
+  "session_type.unknown": "unknown"
 }

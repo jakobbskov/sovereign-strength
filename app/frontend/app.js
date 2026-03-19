@@ -229,7 +229,7 @@ function applyEntryInputMode(exerciseId){
 
   if (loadEl.tagName === "SELECT"){
     const loadOptions = Array.isArray(meta.load_options) && meta.load_options.length ? meta.load_options : [];
-    const placeholder = loadOptional ? "(Tom = kropsvægt)" : "(Vælg belastning)";
+    const placeholder = loadOptional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder");
     fillSimpleSelect(loadEl, loadOptions, loadEl.value, placeholder);
   }
 
@@ -241,7 +241,7 @@ function applyEntryInputMode(exerciseId){
     const repHint = String(meta.rep_display_hint || "").trim();
     const baseHint = loadOptional && supportsBodyweight
       ? "Belastning er valgfri. Tomt felt tolkes som kropsvægt."
-      : "Angiv belastning i standardiserede spring.";
+      : tr("workout.load_hint");
 
     hintEl.textContent = repHint ? `${repHint} ${baseHint}` : baseHint;
   }
@@ -324,7 +324,7 @@ function renderPendingEntries(){
 
   if (!Array.isArray(STATE.pendingEntries) || STATE.pendingEntries.length === 0){
     root.innerHTML = "";
-    setText("entryStatus", "Ingen øvelser tilføjet endnu.");
+    setText("entryStatus", tr("workout.no_exercises"));
     return;
   }
 
@@ -844,7 +844,7 @@ function renderRecovery(items){
 
 function formatSessionType(value){
   const x = String(value || "").trim();
-  if (x === "styrke") return "Styrke";
+  if (x === "styrke") return tr("workout.type.strength");
   if (x === "cardio") return "Cardio";
   if (x === "restitution") return "Recovery dag";
   if (x === "løb") return "Løb";
@@ -905,10 +905,10 @@ function buildForecastLeadText(planItem){
     if (entries.length){
       const bits = entries.slice(0, 3).map(entry => formatExerciseName(entry.exercise_id)).filter(Boolean);
       return bits.length
-        ? `Styrkepas · ${bits.join(" + ")}`
-        : "Styrkepas · planlagt træning";
+        ? `${tr("session_type.strength_session")} · ${bits.join(" + ")}`
+        : tr("plan.strength_planned");
     }
-    return "Styrkepas · planlagt træning";
+    return tr("plan.strength_planned");
   }
 
   return formatSessionType(planItem.session_type || "ukendt");
@@ -938,7 +938,7 @@ function getForecastTypeLabel(planItem){
   }
 
   if (sessionType === "styrke" || sessionType === "strength"){
-    return "Styrkepas";
+    return tr("session_type.strength_session");
   }
 
   return formatSessionType(planItem.session_type || "ukendt");
@@ -1136,7 +1136,7 @@ function renderProfileEquipmentCard(){
   if (trainingDaysLineEl){
     const dayText = selectedDays.length
       ? `Mulige træningsdage: ${selectedDays.join(", ")}`
-      : "Mulige træningsdage: ingen valgt endnu.";
+      : tr("checkin.possible_days_none");
     trainingDaysLineEl.textContent = `${dayText} · Ugemål: ${weeklyTargetSessions} pas`;
   }
 
@@ -1561,7 +1561,7 @@ function buildReviewSetFields(entry, idx, setIdx){
 
       <label>
         Belastning
-        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : "(Vælg belastning)")}
+        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder"))}
       </label>
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">Tom belastning tolkes som kropsvægt.</div>` : ""}
@@ -2461,7 +2461,7 @@ async function refreshAll(){
       programSelectEl.value = preferredProgramId;
     }
   }
-  fillSelect("entry_exercise_id", STATE.exercises, x => x.id, x => x.name, "(Ingen valgt)");
+  fillSelect("entry_exercise_id", STATE.exercises, x => x.id, x => x.name, tr("workout.no_exercise_selected"));
   refreshProgramDaySelect();
   applyEntryInputMode(document.getElementById("entry_exercise_id")?.value || "");
 
@@ -3608,7 +3608,7 @@ function getWeekPlanTypeSequence(trainingTypes){
 
 function getWeekPlanKindMeta(kind){
   if (kind === "strength"){
-    return { label: "Styrke", note: "Planlagt styrkedag", className: "kind-strength" };
+    return { label: tr("workout.type.strength"), note: tr("plan.planned_strength_day"), className: "kind-strength" };
   }
   if (kind === "running"){
     return { label: "Løb", note: "Planlagt løbedag", className: "kind-run" };

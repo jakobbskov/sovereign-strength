@@ -165,5 +165,13 @@
   "workout.ready": "Klar.",
   "status.title": "Status",
   "status.system_info": "Systeminfo",
-  "common.show": "Vis"
+  "common.show": "Vis",
+  "workout.type.strength": "Styrke",
+  "plan.strength_planned": "Styrkepas · planlagt træning",
+  "session_type.strength_session": "Styrkepas",
+  "checkin.training_types_none": "Træningstyper: ingen valg endnu.",
+  "checkin.possible_days_none": "Mulige træningsdage: ingen valgt endnu.",
+  "plan.today_suggestion_strength_or_run": "Dagens forslag: tungstyrke eller kvalitetsløb.",
+  "plan.planned_strength_day": "Planlagt styrkedag",
+  "session_type.unknown": "ukendt"
 }

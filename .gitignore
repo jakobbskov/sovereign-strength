@@ -55,3 +55,4 @@ app/backend/app.py.bak.*
 app/frontend/app.js.bak.*
 *.bak.*
 *.broken.*
+.backup-i18n/
