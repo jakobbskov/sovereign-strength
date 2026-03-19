@@ -307,7 +307,7 @@
 <body>
   <div class="wrap">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="margin:0">SovereignStrength</h1><button type="button" id="languageToggleBtn" class="secondary" style="width:auto;padding:8px 12px">DA / EN</button></div>
-    <p>Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
+    <p data-i18n="app.tagline">Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
     <div id="wizardNav" class="wizard-nav"></div>
 
     <div class="grid" id="overviewSection">
@@ -376,10 +376,10 @@
 
             <div style="margin:12px 0 6px; font-weight:700">Jeg vil gerne træne</div>
 
-            <label class="training-option"><input id="pref_running" type="checkbox"><span>Løb</span></label>
-            <label class="training-option"><input id="pref_strength_weights" type="checkbox"><span>Styrke med vægte</span></label>
+            <label class="training-option"><input id="pref_running" type="checkbox"><span data-i18n="session_type.run">Løb</span></label>
+            <label class="training-option"><input id="pref_strength_weights" type="checkbox"><span data-i18n="settings.strength_weights">Styrke med vægte</span></label>
             <label class="training-option"><input id="pref_bodyweight" type="checkbox"><span>Kropsvægtøvelser</span></label>
-            <label class="training-option"><input id="pref_mobility" type="checkbox"><span>Mobilitet og restitution</span></label>
+            <label class="training-option"><input id="pref_mobility" type="checkbox"><span data-i18n="settings.mobility_recovery">Mobility and recovery</span></label>
 
             <div style="margin:16px 0 6px; font-weight:700">Jeg kan typisk træne på</div>
             <div class="small" style="margin-bottom:8px">Dage du ikke vælger her, bliver altid hviledage.</div>
@@ -449,7 +449,7 @@
       <section class="card">
         <h2>Workouts</h2>
         <div class="metric" id="workoutsCount">-</div>
-        <div class="small">Antal registrerede styrkepas</div>
+        <div class="small" data-i18n="stats.logged_strength_sessions">Logged strength sessions</div>
       </section>
 
       <section class="card">
@@ -490,9 +490,9 @@
         <label>
           Type
           <select id="type" name="type" required>
-            <option value="styrke">Styrke</option>
-            <option value="løb">Løb</option>
-            <option value="mobilitet">Mobilitet</option>
+            <option value="styrke" data-i18n="session_type.strength">Styrke</option>
+            <option value="løb" data-i18n="session_type.run">Løb</option>
+            <option value="mobilitet" data-i18n="session_type.mobility">Mobilitet</option>
             <option value="andet">Andet</option>
           </select>
         </label>
@@ -622,7 +622,7 @@
           <label for="cardio_kind">Cardio-type</label>
           <select id="cardio_kind" name="cardio_kind">
             <option value="">(Vælg type)</option>
-            <option value="restitution">Restitution</option>
+            <option value="restitution" data-i18n="session_type.recovery">Restitution</option>
             <option value="base">Base</option>
             <option value="tempo">Tempo</option>
             <option value="interval">Intervaller</option>

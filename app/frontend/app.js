@@ -262,12 +262,12 @@ function refreshProgramDaySelect(){
   if (!daySelect) return;
 
   if (!program || !Array.isArray(program.days) || program.days.length === 0){
-    daySelect.innerHTML = `<option value="">(Ingen dag valgt)</option>`;
+    daySelect.innerHTML = `<option value="">${tr("workout.no_day_selected")}</option>`;
     return;
   }
 
   daySelect.innerHTML =
-    `<option value="">(Ingen dag valgt)</option>` +
+    `<option value="">${tr("workout.no_day_selected")}</option>` +
     program.days.map((day, idx) =>
       `<option value="${idx}">${esc(day.label || `Dag ${idx+1}`)}</option>`
     ).join("");
@@ -338,7 +338,7 @@ function renderPendingEntries(){
     return `
     <li>
       <div class="row">
-        <strong>${esc(exerciseMap.get(entry.exercise_id) || entry.exercise_id || "ukendt")}</strong>
+        <strong>${esc(exerciseMap.get(entry.exercise_id) || entry.exercise_id || tr("common.unknown_lower"))}</strong>
         <button type="button" data-remove-entry="${idx}" style="width:auto;padding:8px 12px">Fjern</button>
       </div>
       <div class="small">
@@ -420,7 +420,7 @@ function renderWorkouts(items){
     return `
       <li>
         <div class="row">
-          <strong>${esc(formatSessionType(item.session_type || "ukendt"))}</strong>
+          <strong>${esc(formatSessionType(item.session_type || tr("common.unknown_lower")))}</strong>
           <span class="small">${esc(item.date || "")}</span>
         </div>
         <div class="small">
@@ -661,7 +661,7 @@ function renderSessionHistory(items){
       ? item.summary
       : buildSessionSummaryFromResults(item);
 
-    const fatigue = String(summary.fatigue || "").trim() || "ukendt";
+    const fatigue = String(summary.fatigue || "").trim() || tr("common.unknown_lower");
     const totalSets = Number(summary.total_sets || 0);
     const totalReps = Number(summary.total_reps || 0);
     const totalTUT = Number(summary.total_time_under_tension_sec || 0);
@@ -677,7 +677,7 @@ function renderSessionHistory(items){
     return `
       <li>
         <div class="row">
-          <strong>${esc(dateLabel)} · ${esc(typeLabel || "ukendt")}</strong>
+          <strong>${esc(dateLabel)} · ${esc(typeLabel || tr("common.unknown_lower"))}</strong>
           <span class="small">fatigue ${esc(fatigue)}</span>
         </div>
         <div class="small" style="margin-top:6px">
@@ -764,7 +764,7 @@ function renderLoadMetrics(loadMetrics, recoveryState){
   const acute = Number(lm.acute_7d_load || 0);
   const chronic = Number(lm.chronic_28d_load || 0);
   const ratio = Number(lm.load_ratio || 0);
-  const status = String(lm.load_status || "").trim() || "ukendt";
+  const status = String(lm.load_status || "").trim() || tr("common.unknown_lower");
 
   const dailyMap = lm.daily_load_map && typeof lm.daily_load_map === "object" ? lm.daily_load_map : {};
   const dailyRows = Object.entries(dailyMap)
@@ -800,10 +800,10 @@ function renderExercises(items){
   root.innerHTML = sorted.map(item => `
     <li>
       <div class="row">
-        <strong>${esc(item.name || "ukendt")}</strong>
+        <strong>${esc(item.name || tr("common.unknown_lower"))}</strong>
         <span class="small">${esc(item.default_unit || "")}</span>
       </div>
-      <div class="pill">${esc(item.category || "ukendt")}</div>
+      <div class="pill">${esc(item.category || tr("common.unknown_lower"))}</div>
       ${item.notes ? `<div class="small" style="margin-top:8px">${esc(item.notes)}</div>` : ""}
     </li>
   `).join("");
@@ -830,7 +830,7 @@ function renderRecovery(items){
         <span class="small">Søvn ${esc(item.sleep_score)} · Energi ${esc(item.energy_score)} · Ømhed ${esc(item.soreness_score)}</span>
       </div>
       <div class="pill">Readiness ${esc(item.readiness_score ?? "-")}</div>
-      <div class="pill">${esc(item.readiness_label || "ukendt")}</div>
+      <div class="pill">${esc(item.readiness_label || tr("common.unknown_lower"))}</div>
       ${item.suggestion ? `<div class="small" style="margin-top:8px">${esc(item.suggestion)}</div>` : ""}
       ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
     </li>
@@ -847,8 +847,8 @@ function formatSessionType(value){
   if (x === "styrke") return tr("workout.type.strength");
   if (x === "cardio") return "Cardio";
   if (x === "restitution") return "Recovery dag";
-  if (x === "løb") return "Løb";
-  if (x === "mobilitet") return "Mobilitet";
+  if (x === "løb") return tr("session_type.run");
+  if (x === "mobilitet") return tr("session_type.mobility");
   return x || "Ingen plan";
 }
 
@@ -911,7 +911,7 @@ function buildForecastLeadText(planItem){
     return tr("plan.strength_planned");
   }
 
-  return formatSessionType(planItem.session_type || "ukendt");
+  return formatSessionType(planItem.session_type || tr("common.unknown_lower"));
 }
 
 
@@ -926,22 +926,22 @@ function getForecastTypeLabel(planItem){
   const firstExercise = String(firstEntry?.exercise_id || "").trim().toLowerCase();
 
   if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
-    if (firstExercise.includes("restitution")) return "Restitution";
+    if (firstExercise.includes("restitution")) return tr("session_type.recovery");
     if (firstExercise.includes("interval")) return "Intervaller";
     if (firstExercise.includes("tempo")) return "Tempopas";
     if (firstExercise.includes("base")) return "Basepas";
-    return "Løb";
+    return tr("session_type.run");
   }
 
   if (sessionType === "restitution"){
-    return "Restitution";
+    return tr("session_type.recovery");
   }
 
   if (sessionType === "styrke" || sessionType === "strength"){
     return tr("session_type.strength_session");
   }
 
-  return formatSessionType(planItem.session_type || "ukendt");
+  return formatSessionType(planItem.session_type || tr("common.unknown_lower"));
 }
 
 function renderForecastHero(planItem, latestCheckin){
@@ -986,7 +986,7 @@ function renderForecastHero(planItem, latestCheckin){
 
 function formatOverviewReadinessLabel(value){
   const n = Number(value);
-  if (!Number.isFinite(n)) return "ukendt";
+  if (!Number.isFinite(n)) return tr("common.unknown_lower");
   if (n >= 4.5) return "meget klar";
   if (n >= 3.5) return "klar";
   if (n >= 2.5) return "moderat";
@@ -1384,16 +1384,16 @@ function renderReadiness(item){
   }
 
   setText("readinessScore", item.readiness_score ?? "-");
-  setText("readinessLabel", `Status: ${item.readiness_label || "ukendt"}`);
+  setText("readinessLabel", `Status: ${item.readiness_label || tr("common.unknown_lower")}`);
   setText("readinessSuggestion", item.suggestion || "");
 
   let action = "";
   if ((item.readiness_score ?? 0) >= 7){
-    action = "Dagens forslag: tung styrke eller kvalitetsløb.";
+    action = tr("plan.suggestion_heavy_or_quality");
   } else if ((item.readiness_score ?? 0) >= 5){
-    action = "Dagens forslag: almindeligt pas med normal volumen.";
+    action = tr("plan.suggestion_normal");
   } else {
-    action = "Dagens forslag: let træning, mobilitet eller restitution.";
+    action = tr("plan.suggestion_light");
   }
 
   setText("readinessAction", action);
@@ -1404,15 +1404,15 @@ function renderReadiness(item){
 
 function formatExerciseName(exerciseId){
   const mapped = {
-    restitution_walk: "Rolig gang",
-    mobility: "Mobilitet",
+    restitution_walk: tr("exercise.recovery_walk"),
+    mobility: tr("session_type.mobility"),
     cardio_easy: "Rolig cardio",
     cardio_intervals: "Intervaller"
   };
   if (mapped[exerciseId]) return mapped[exerciseId];
 
   const exerciseMap = new Map((STATE.exercises || []).map(x => [x.id, x.name]));
-  return exerciseMap.get(exerciseId) || exerciseId || "ukendt";
+  return exerciseMap.get(exerciseId) || exerciseId || tr("common.unknown_lower");
 }
 
 function formatProgressionDecision(value){
@@ -1749,7 +1749,7 @@ function renderSessionReview(item){
         </div>
 
         <div class="small" style="margin-bottom:10px">
-          Type: ${esc(inputKind || "ukendt")}
+          Type: ${esc(inputKind || tr("common.unknown_lower"))}
         </div>
 
         ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px">Belastning: Kropsvægt</div>` : ""}
@@ -1812,8 +1812,8 @@ function renderSessionResultSummary(summary){
     return;
   }
 
-  const sessionType = summary.session_type ? formatSessionType(summary.session_type) : "Ukendt";
-  const fatigue = String(summary.fatigue || "").trim() || "ukendt";
+  const sessionType = summary.session_type ? formatSessionType(summary.session_type) : tr("common.unknown_title");
+  const fatigue = String(summary.fatigue || "").trim() || tr("common.unknown_lower");
   const completedExercises = Number(summary.completed_exercises || 0);
   const totalExercises = Number(summary.total_exercises || 0);
   const totalSets = Number(summary.total_sets || 0);
@@ -1893,7 +1893,7 @@ function formatRecoveryState(value){
     caution: "Forsigtig",
     recover: "Restitution"
   };
-  return map[v] || (v || "Ukendt");
+  return map[v] || (v || tr("common.unknown_title"));
 }
 
 
@@ -1904,9 +1904,9 @@ function formatFamilyState(value){
     fatigued: "Træt",
     stable: "Stabil",
     ready: "Klar",
-    unknown: "Ukendt"
+    unknown: tr("common.unknown_title")
   };
-  return map[v] || (v || "Ukendt");
+  return map[v] || (v || tr("common.unknown_title"));
 }
 
 
@@ -1922,7 +1922,7 @@ function formatLearnedRecommendation(value){
     hold: "Hold",
     simplify: "Forenkle"
   };
-  return map[v] || (v || "Ukendt");
+  return map[v] || (v || tr("common.unknown_title"));
 }
 
 function formatVariationName(value){
@@ -2050,7 +2050,7 @@ function formatFamiliesSelected(items){
     const family = String(item?.family_key || "").trim();
     const exId = String(item?.exercise_id || "").trim();
     const exMeta = getExerciseMeta(exId);
-    const exName = exMeta?.name || exId || "ukendt";
+    const exName = exMeta?.name || exId || tr("common.unknown_lower");
     return `${family} → ${exName}`;
   }).join(" · ");
 }
@@ -2210,9 +2210,9 @@ function renderTodayPlan(item){
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
-  const baseSummary = `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
+  const baseSummary = `Type: ${item.session_type || tr("common.unknown_lower")} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
   const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
-    ? "Let bevægelse anbefales i dag."
+    ? tr("plan.light_movement_today")
     : "";
   const motorSummary = `Planmotor: ${planMotorLabel}`;
   const familiesSummary = familiesSelectedText ? `Valgte familier: ${familiesSelectedText}` : "";
@@ -2365,7 +2365,7 @@ function renderPrograms(programs, exercises){
           <ul style="margin-top:10px">
             ${(day.exercises || []).map(ex => {
               const found = exerciseMap.get(ex.exercise_id) || {};
-              const name = found.name || ex.exercise_id || "ukendt";
+              const name = found.name || ex.exercise_id || tr("common.unknown_lower");
               return `
                 <li>
                   <div class="row">
@@ -3614,7 +3614,7 @@ function getWeekPlanKindMeta(kind){
     return { label: "Løb", note: "Planlagt løbedag", className: "kind-run" };
   }
   if (kind === "mobility"){
-    return { label: "Mobilitet", note: "Let bevægelse og mobilitet", className: "kind-mobility" };
+    return { label: tr("session_type.mobility"), note: tr("plan.mobility_note"), className: "kind-mobility" };
   }
   if (kind === "recovery"){
     return { label: "Recovery", note: "Restitution anbefales", className: "kind-recovery" };

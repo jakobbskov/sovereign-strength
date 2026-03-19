@@ -173,5 +173,17 @@
   "checkin.possible_days_none": "Mulige træningsdage: ingen valgt endnu.",
   "plan.today_suggestion_strength_or_run": "Dagens forslag: tungstyrke eller kvalitetsløb.",
   "plan.planned_strength_day": "Planlagt styrkedag",
-  "session_type.unknown": "ukendt"
+  "session_type.unknown": "ukendt",
+  "settings.mobility_recovery": "Mobilitet og restitution",
+  "stats.logged_strength_sessions": "Antal registrerede styrkepas",
+  "session_type.recovery": "Restitution",
+  "common.unknown_lower": "ukendt",
+  "common.unknown_title": "Ukendt",
+  "plan.suggestion_heavy_or_quality": "Dagens forslag: tung styrke eller kvalitetsløb.",
+  "plan.suggestion_normal": "Dagens forslag: almindeligt pas med normal volumen.",
+  "plan.suggestion_light": "Dagens forslag: let træning, mobilitet eller restitution.",
+  "exercise.recovery_walk": "Rolig gang",
+  "plan.mobility_note": "Let bevægelse og mobilitet",
+  "common.type": "Type",
+  "plan.light_movement_today": "Let bevægelse anbefales i dag."
 }
