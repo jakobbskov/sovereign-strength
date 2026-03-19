@@ -16,6 +16,71 @@ let STATE = {
   lastAutoLoad: ""
 };
 
+function tr(key, vars = {}){
+  try{
+    if (window.t) return window.t(key, vars);
+  }catch(err){}
+  let text = key;
+  for (const [name, value] of Object.entries(vars || {})){
+    text = text.replaceAll(`{${name}}`, String(value));
+  }
+  return text;
+}
+
+function getCurrentLang(){
+  try{
+    return window.I18N?.lang || localStorage.getItem("ss_lang") || "da";
+  }catch(err){
+    return "da";
+  }
+}
+
+function getNextLang(){
+  return getCurrentLang() === "da" ? "en" : "da";
+}
+
+function updateLanguageToggleLabel(){
+  const btn = document.getElementById("languageToggleBtn");
+  if (!btn) return;
+  const lang = getCurrentLang();
+  btn.textContent = lang === "da" ? "DA / EN" : "EN / DA";
+}
+
+async function initLanguageToggle(){
+  const btn = document.getElementById("languageToggleBtn");
+  if (!btn) return;
+  updateLanguageToggleLabel();
+  btn.addEventListener("click", async () => {
+    try{
+      const next = getNextLang();
+      await window.I18N.load(next);
+      updateLanguageToggleLabel();
+      applyStaticTranslations();
+      renderWizardNav();
+      renderAuthBar();
+      await refreshAll();
+      showWizardStep(CURRENT_STEP || "overview");
+    }catch(err){
+      setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
+    }
+  });
+}
+
+function applyStaticTranslations(){
+  document.title = tr("app.title");
+
+  const forecastBtn = document.getElementById("forecastPrimaryBtn");
+  if (forecastBtn) forecastBtn.textContent = tr("overview.go_to_checkin");
+
+  const checkinIntro = document.getElementById("checkinIntro");
+  if (checkinIntro) checkinIntro.textContent = tr("checkin.intro");
+
+  const toggleSystemInfo = document.getElementById("toggleSystemInfo");
+  if (toggleSystemInfo && toggleSystemInfo.textContent.trim() === "Skjul"){
+    toggleSystemInfo.textContent = tr("button.hide");
+  }
+}
+
 function setText(id, text){
   const el = document.getElementById(id);
   if (el) el.textContent = String(text);
@@ -28,6 +93,34 @@ function esc(value){
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 }
+// --- Equipment labels (DA) ---
+function getEquipmentLabels(){
+  return {
+    barbell: tr("equipment.barbell"),
+    dumbbell: tr("equipment.dumbbell"),
+    bodyweight: tr("equipment.bodyweight"),
+    kettlebell: tr("equipment.kettlebell"),
+    machine: tr("equipment.machine"),
+    bands: tr("equipment.bands")
+  };
+}
+
+function formatEquipmentList(list){
+  if (!Array.isArray(list)) return "";
+  return list
+    .slice()
+    .sort()
+    .map(k => getEquipmentLabels()[k] || k)
+    .join(", ");
+}
+
+function formatLoadIncrements(obj){
+  if (!obj || typeof obj !== "object") return "";
+  return Object.entries(obj)
+    .map(([k, v]) => `${getEquipmentLabels()[k] || k}: ${v}`)
+    .join(" · ");
+}
+
 
 function fillSelect(id, items, getValue, getLabel, firstLabel){
   const el = document.getElementById(id);
@@ -348,7 +441,7 @@ function renderWorkouts(items){
 
 function formatCardioKindLabel(value){
   const x = String(value || "").trim().toLowerCase();
-  if (x === "restitution") return "Restitution";
+  if (x === "restitution") return "Recovery dag";
   if (x === "base") return "Base";
   if (x === "tempo") return "Tempo";
   if (x === "interval" || x === "intervals") return "Intervaller";
@@ -533,7 +626,6 @@ function ensureSessionHistoryMount(){
 
   const card = document.createElement("div");
   card.className = "card";
-  card.style.marginTop = "16px";
   card.innerHTML = `
     <div class="row">
       <h2>Sessionhistorik</h2>
@@ -754,7 +846,7 @@ function formatSessionType(value){
   const x = String(value || "").trim();
   if (x === "styrke") return "Styrke";
   if (x === "cardio") return "Cardio";
-  if (x === "restitution") return "Restitution";
+  if (x === "restitution") return "Recovery dag";
   if (x === "løb") return "Løb";
   if (x === "mobilitet") return "Mobilitet";
   return x || "Ingen plan";
@@ -873,11 +965,14 @@ function renderForecastHero(planItem, latestCheckin){
   if (planItem.readiness_score != null) bits.push(`Parathed: ${planItem.readiness_score}`);
   if (planItem.time_budget_min) bits.push(`Tid: ${planItem.time_budget_min} min`);
   if (planItem.timing_state) bits.push(`Timing: ${formatTimingState(planItem.timing_state)}`);
-  if (planItem.plan_variant) bits.push(`Plan: ${formatPlanVariant(planItem.plan_variant)}`);
+  const planVariantLabel = formatPlanVariant(planItem.plan_variant || "");
+  if (planVariantLabel) bits.push(`Plan: ${planVariantLabel}`);
   if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(`Recovery: ${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}`);
 
+  const reasonParts = [bits.join(" · "), planItem.reason || ""].filter(Boolean);
+
   setText("forecastSummary", leadText);
-  setText("forecastReason", [bits.join(" · "), planItem.reason || ""].filter(Boolean).join(" · "));
+  setText("forecastReason", reasonParts.join(" · "));
 
   const btn = document.getElementById("forecastPrimaryBtn");
   if (btn){
@@ -957,6 +1052,9 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
 
 function renderProfileEquipmentCard(){
   const displayNameEl = document.getElementById("profileDisplayName");
+  const bodyLineEl = document.getElementById("profileBodyLine");
+  const trainingTypesLineEl = document.getElementById("profileTrainingTypesLine");
+  const trainingDaysLineEl = document.getElementById("profileTrainingDaysLine");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
@@ -967,7 +1065,7 @@ function renderProfileEquipmentCard(){
   const cancelEquipmentBtn = document.getElementById("cancelEquipmentSettingsBtn");
   const saveEquipmentBtn = document.getElementById("saveEquipmentSettingsBtn");
 
-  const username = AUTH_USER?.username || "ukendt";
+  const username = AUTH_USER?.username || tr("common.unknown");
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
   const profile = settings.profile && typeof settings.profile === "object"
     ? settings.profile
@@ -978,6 +1076,10 @@ function renderProfileEquipmentCard(){
   const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
     ? preferences.training_types
     : {};
+  const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
+    ? preferences.training_days
+    : {};
+  const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
 
   const available = settings.available_equipment && typeof settings.available_equipment === "object"
     ? settings.available_equipment
@@ -998,31 +1100,55 @@ function renderProfileEquipmentCard(){
     displayNameEl.textContent = username;
   }
 
+  const profileBits = [];
+  if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(`Højde: ${profile.height_cm} cm`);
+  if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(`Kropsvægt: ${profile.bodyweight_kg} kg`);
+
+  const selectedTraining = [
+    trainingTypes.running ? "løb" : "",
+    trainingTypes.strength_weights ? "vægte" : "",
+    trainingTypes.bodyweight ? "kropsvægt" : "",
+    trainingTypes.mobility ? "mobilitet" : ""
+  ].filter(Boolean);
+
+  const selectedDays = [
+    trainingDays.mon ? "man" : "",
+    trainingDays.tue ? "tir" : "",
+    trainingDays.wed ? "ons" : "",
+    trainingDays.thu ? "tor" : "",
+    trainingDays.fri ? "fre" : "",
+    trainingDays.sat ? "lør" : "",
+    trainingDays.sun ? "søn" : ""
+  ].filter(Boolean);
+
+  if (bodyLineEl){
+    bodyLineEl.textContent = profileBits.length
+      ? profileBits.join(" · ")
+      : "Ingen højde eller kropsvægt registreret endnu.";
+  }
+
+  if (trainingTypesLineEl){
+    trainingTypesLineEl.textContent = selectedTraining.length
+      ? `Træningstyper: ${selectedTraining.join(", ")}`
+      : "Træningstyper: ingen valgt endnu.";
+  }
+
+  if (trainingDaysLineEl){
+    const dayText = selectedDays.length
+      ? `Mulige træningsdage: ${selectedDays.join(", ")}`
+      : "Mulige træningsdage: ingen valgt endnu.";
+    trainingDaysLineEl.textContent = `${dayText} · Ugemål: ${weeklyTargetSessions} pas`;
+  }
+
   if (equipmentLineEl){
-    const profileBits = [];
-    if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(`Højde: ${profile.height_cm} cm`);
-    if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(`Kropsvægt: ${profile.bodyweight_kg} kg`);
-
-    const selectedTraining = [
-      trainingTypes.running ? "løb" : "",
-      trainingTypes.strength_weights ? "vægte" : "",
-      trainingTypes.bodyweight ? "kropsvægt" : "",
-      trainingTypes.mobility ? "mobilitet" : ""
-    ].filter(Boolean);
-
-    if (selectedTraining.length){
-      profileBits.push(`Træningstyper: ${selectedTraining.join(", ")}`);
-    }
-
-    const equipmentText = enabledEquipment.length
-      ? `Tilgængeligt udstyr: ${enabledEquipment.join(", ")}`
+    equipmentLineEl.textContent = enabledEquipment.length
+      ? `Tilgængeligt udstyr: ${formatEquipmentList(enabledEquipment)}`
       : "Intet udstyr registreret endnu.";
-    equipmentLineEl.textContent = [...profileBits, equipmentText].join(" · ");
   }
 
   if (incrementLineEl){
     incrementLineEl.textContent = incrementEntries.length
-      ? `Vægtspring: ${incrementEntries.map(([k, v]) => `${k}: ${v}`).join(" · ")}`
+      ? `Vægtspring: ${formatLoadIncrements(Object.fromEntries(incrementEntries))}`
       : "Ingen vægtspring registreret endnu.";
   }
 
@@ -1075,6 +1201,10 @@ function populateEquipmentEditor(){
   const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
     ? preferences.training_types
     : {};
+  const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
+    ? preferences.training_days
+    : {};
+  const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
   const available = settings.available_equipment && typeof settings.available_equipment === "object"
     ? settings.available_equipment
     : {};
@@ -1099,6 +1229,15 @@ function populateEquipmentEditor(){
   setChecked("pref_strength_weights", trainingTypes.strength_weights !== false);
   setChecked("pref_bodyweight", trainingTypes.bodyweight !== false);
   setChecked("pref_mobility", trainingTypes.mobility !== false);
+
+  setChecked("day_mon", trainingDays.mon !== false);
+  setChecked("day_tue", trainingDays.tue !== false);
+  setChecked("day_wed", trainingDays.wed !== false);
+  setChecked("day_thu", trainingDays.thu !== false);
+  setChecked("day_fri", trainingDays.fri !== false);
+  setChecked("day_sat", trainingDays.sat !== false);
+  setChecked("day_sun", trainingDays.sun !== false);
+  setVal("weekly_target_sessions", weeklyTargetSessions);
 
   setVal("eq_barbell_enabled", available.barbell === false ? "false" : "true");
   setVal("eq_dumbbell_enabled", available.dumbbell === false ? "false" : "true");
@@ -1151,7 +1290,17 @@ async function handleEquipmentSettingsSubmit(ev){
         strength_weights: readChecked("pref_strength_weights"),
         bodyweight: readChecked("pref_bodyweight"),
         mobility: readChecked("pref_mobility"),
-      }
+      },
+      training_days: {
+        mon: readChecked("day_mon"),
+        tue: readChecked("day_tue"),
+        wed: readChecked("day_wed"),
+        thu: readChecked("day_thu"),
+        fri: readChecked("day_fri"),
+        sat: readChecked("day_sat"),
+        sun: readChecked("day_sun"),
+      },
+      weekly_target_sessions: Number(document.getElementById("weekly_target_sessions")?.value || 3)
     },
     available_equipment: {
       barbell: readBool("eq_barbell_enabled"),
@@ -1214,7 +1363,8 @@ function updateOverviewLayoutForStep(stepId){
     const keepVisible =
       card.id === "forecastHero" ||
       card.id === "overviewStatusCard" ||
-      card.id === "profileEquipmentCard";
+      card.id === "profileEquipmentCard" ||
+      card.id === "weekPlanCard";
 
     card.classList.toggle(
       "overview-metric-hidden",
@@ -1291,6 +1441,7 @@ function formatPlanVariant(value){
   if (x === "short_30") return "kort (30 min)";
   if (x === "full") return "fuld";
   if (x === "default") return "standard";
+  if (x === "completed_today") return "";
   return x || "";
 }
 
@@ -1323,9 +1474,33 @@ function getReviewExerciseMeta(exerciseId){
 }
 
 function getReviewRepOptions(meta){
-  return Array.isArray(meta?.rep_options) && meta.rep_options.length
-    ? meta.rep_options
-    : ["6-8", "8-10", "10-12"];
+  const explicit = Array.isArray(meta?.review_rep_options) && meta.review_rep_options.length
+    ? meta.review_rep_options
+    : null;
+  if (explicit) return explicit;
+
+  const repHint = String(meta?.rep_display_hint || "").trim();
+  const repOptions = Array.isArray(meta?.rep_options) ? meta.rep_options : [];
+
+  let minRep = 1;
+  let maxRep = 20;
+
+  const candidates = [repHint, ...repOptions.map(x => String(x || ""))].join(" ");
+  const nums = [...candidates.matchAll(/\d+/g)].map(m => Number(m[0])).filter(Number.isFinite);
+
+  if (nums.length >= 2){
+    minRep = Math.max(1, Math.min(...nums) - 2);
+    maxRep = Math.min(30, Math.max(...nums) + 2);
+  } else if (nums.length === 1){
+    minRep = Math.max(1, nums[0] - 2);
+    maxRep = Math.min(30, nums[0] + 4);
+  }
+
+  const out = [];
+  for (let i = minRep; i <= maxRep; i += 1){
+    out.push(String(i));
+  }
+  return out;
 }
 
 function getReviewTimeOptions(meta){
@@ -1956,6 +2131,22 @@ function renderExerciseLibrary(){
   bindExerciseViewer();
 }
 
+function formatWeeklyStatusText(weeklyStatus){
+  const ws = weeklyStatus && typeof weeklyStatus === "object" ? weeklyStatus : {};
+  const completed = Number(ws.completed_sessions || 0);
+  const target = Number(ws.weekly_target_sessions || 0);
+  const remainingCalendarDays = Number(ws.allowed_days_remaining || 0);
+  const remainingToGoal = Math.max(target - completed, 0);
+
+  if (!target) return "";
+
+  if (completed >= target){
+    return `Ugestatus: ${completed}/${target} pas · Pas tilbage til mål: 0`;
+  }
+
+  return `Ugestatus: ${completed}/${target} pas · Pas tilbage til mål: ${remainingToGoal} · Mulige træningsdage tilbage: ${remainingCalendarDays}`;
+}
+
 function renderTodayPlan(item){
   STATE.currentTodayPlan = item || null;
   const root = document.getElementById("todayPlanList");
@@ -1991,19 +2182,54 @@ function renderTodayPlan(item){
   const planMotorLabel =
     templateMode === "autoplan_v0_1" || templateMode === "autoplan_cardio_v0_1"
       ? "Autoplan"
-      : "Fast plan";
+      : templateMode === "weekly_goal_cap_v0_1"
+        ? "Ugemål-bremse"
+        : templateMode === "manual_override_v0_1"
+          ? "Manuel overstyring"
+          : templateMode === "completed_today_v0_1"
+            ? "Dagens træning registreret"
+            : "Fast plan";
   const familiesSelectedText = formatFamiliesSelected(item?.families_selected || []);
   const trainingCtx = item?.training_day_context && typeof item.training_day_context === "object" ? item.training_day_context : {};
   const trainingDaysText = formatTrainingDays(trainingCtx.training_days || []);
   const trainingDaySummary = trainingDaysText ? `Træningsdage: ${trainingDaysText}` : "";
-  const trainingAllowedSummary = trainingCtx.is_training_day === false ? "I dag er ikke en planlagt træningsdag" : "";
+  const todayWeekPlanItem = getTodayWeekPlanItem(item);
+  const todayWeekKind = String(todayWeekPlanItem?.kind || "").trim().toLowerCase();
+  const actualKind = String(item?.session_type || "").trim().toLowerCase();
+
+  let trainingAllowedSummary = "";
+  if (todayWeekKind === "rest"){
+    trainingAllowedSummary = "I dag er planlagt som hviledag i ugeplanen.";
+  } else if (todayWeekKind && todayWeekKind !== actualKind){
+    const plannedLabel = String(todayWeekPlanItem?.kindLabel || "").trim().toLowerCase();
+    trainingAllowedSummary = `Planlagt i ugeplanen: ${plannedLabel} · justeret i dag.`;
+  } else if (todayWeekKind){
+    const plannedLabel = String(todayWeekPlanItem?.kindLabel || "").trim().toLowerCase();
+    trainingAllowedSummary = `Planlagt i ugeplanen: ${plannedLabel}.`;
+  }
+
+  const ws = item?.weekly_status || {};
+  const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
   const baseSummary = `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
+  const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
+    ? "Let bevægelse anbefales i dag."
+    : "";
   const motorSummary = `Planmotor: ${planMotorLabel}`;
   const familiesSummary = familiesSelectedText ? `Valgte familier: ${familiesSelectedText}` : "";
 
   setText(
     "todayPlanSummary",
-    [baseSummary, motorSummary, familiesSummary, trainingDaySummary, trainingAllowedSummary].filter(Boolean).join("\n")
+    [
+      baseSummary,
+      recoveryDaySummary,
+      motorSummary,
+      familiesSummary,
+      trainingDaySummary,
+      trainingAllowedSummary,
+      weeklyStatusSummary
+    ]
+      .filter(Boolean)
+      .join("\n")
   );
 
   if (!Array.isArray(item.entries) || item.entries.length === 0){
@@ -2181,7 +2407,60 @@ async function refreshAll(){
     : {};
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
 
-  fillSelect("program_id", STATE.programs, x => x.id, x => x.name, "(Intet program)");
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
+    ? preferences.training_types
+    : {};
+  const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
+
+  const wantsStrength = trainingTypes.strength_weights !== false || trainingTypes.bodyweight !== false;
+  const wantsRunning = trainingTypes.running === true;
+  const wantsMobility = trainingTypes.mobility === true;
+
+  const filteredPrograms = (STATE.programs || []).filter(p => {
+    const kind = String(p?.kind || "").trim().toLowerCase();
+    if (wantsStrength && kind === "styrke") return true;
+    if (wantsRunning && kind === "løb") return true;
+    if (wantsMobility && (kind === "mobilitet" || kind === "restitution")) return true;
+    return false;
+  });
+
+  const visiblePrograms = filteredPrograms.length ? filteredPrograms : (STATE.programs || []);
+  fillSelect("program_id", visiblePrograms, x => x.id, x => x.name, "(Intet program)");
+
+  const programSelectEl = document.getElementById("program_id");
+  if (programSelectEl && !programSelectEl.value){
+    const ids = new Set(visiblePrograms.map(x => x && x.id).filter(Boolean));
+    let preferredProgramId = "";
+
+    const wantsMobilityOnly =
+      wantsMobility &&
+      !wantsRunning &&
+      !wantsStrength;
+
+    if (wantsMobilityOnly && ids.has("mobility_basic")){
+      preferredProgramId = "mobility_basic";
+    } else if (wantsRunning && !wantsStrength){
+      if (weeklyTargetSessions >= 3 && ids.has("base_run_3x")){
+        preferredProgramId = "base_run_3x";
+      } else if (ids.has("starter_run_2x")){
+        preferredProgramId = "starter_run_2x";
+      }
+    } else if (wantsStrength){
+      if (ids.has("starter_strength_2x")){
+        preferredProgramId = "starter_strength_2x";
+      } else if (ids.has("base_strength_a")){
+        preferredProgramId = "base_strength_a";
+      }
+    } else if (ids.has("starter_strength_2x")){
+      preferredProgramId = "starter_strength_2x";
+    }
+
+    if (preferredProgramId){
+      programSelectEl.value = preferredProgramId;
+    }
+  }
   fillSelect("entry_exercise_id", STATE.exercises, x => x.id, x => x.name, "(Ingen valgt)");
   refreshProgramDaySelect();
   applyEntryInputMode(document.getElementById("entry_exercise_id")?.value || "");
@@ -2199,6 +2478,7 @@ async function refreshAll(){
   renderRecovery(recoveryApi.items || []);
   renderReadiness(latestRecoveryApi.item || null);
   renderForecastHero(todayPlanApi.item || null, latestRecoveryApi.item || null);
+  renderWeekPlanPreview(todayPlanApi.item || null);
     renderOverviewStatus(todayPlanApi.item || null, latestRecoveryApi.item || null, workoutsApi.items || []);
   renderProfileEquipmentCard();
     renderTodayPlan(todayPlanApi.item || null);
@@ -2605,12 +2885,12 @@ function renderAuthBar(){
     wrap.prepend(bar);
   }
 
-  const username = AUTH_USER?.username || "ukendt";
+  const username = AUTH_USER?.username || tr("common.unknown");
   bar.innerHTML = `
     <div style="color:#b9b9b9;font-size:.95rem">
-      Logget ind som <strong style="color:#f3f3f3">${esc(username)}</strong>
+      ${esc(tr("auth.logged_in_as"))} <strong style="color:#f3f3f3">${esc(username)}</strong>
     </div>
-    <button id="logoutBtn" type="button" style="width:auto;padding:8px 12px">Log ud</button>
+    <button id="logoutBtn" type="button" style="width:auto;padding:8px 12px">${esc(tr("auth.logout"))}</button>
   `;
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
@@ -2626,7 +2906,7 @@ function renderAuthBar(){
 
 
 async function ensureAuthOrRedirect(){
-  showAuthMessage("Tjekker login...");
+  showAuthMessage(tr("auth.checking_login"));
 
   let res;
   try{
@@ -2636,7 +2916,7 @@ async function ensureAuthOrRedirect(){
       cache: "no-store"
     });
   }catch(err){
-    showAuthMessage("Kunne ikke kontakte auth-service.");
+    showAuthMessage(tr("auth.could_not_contact"));
     const debugEl = document.getElementById("debug");
     if (debugEl) debugEl.textContent = String(err?.stack || err);
     throw err;
@@ -2652,11 +2932,11 @@ async function ensureAuthOrRedirect(){
 
   AUTH_USER = data.user || null;
   if (data.user?.must_change_password){
-    showAuthMessage("Du skal skifte password, før appen kan bruges.");
+    showAuthMessage(tr("auth.must_change_password"));
     location.href = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
     return null;
   }
-  showAuthMessage(`Logget ind som ${data.user?.username || "bruger"}. Indlæser app...`);
+  showAuthMessage(`${tr("auth.logged_in_as")} ${data.user?.username || tr("auth.user")}. ${tr("auth.loading_app")}`);
   return data.user || null;
 }
 
@@ -2664,12 +2944,12 @@ async function ensureAuthOrRedirect(){
 
 
 const WIZARD_STEPS = [
-  { id: "overview", label: "Overblik" },
-  { id: "checkin", label: "Check-in" },
-  { id: "plan", label: "Dagens plan" },
-  { id: "review", label: "Efter træning" },
-  { id: "manual", label: "Manuel workout" },
-  { id: "history", label: "Historik" },
+  { id: "overview", labelKey: "wizard.overview" },
+  { id: "checkin", labelKey: "wizard.checkin" },
+  { id: "plan", labelKey: "wizard.plan" },
+  { id: "review", labelKey: "wizard.review" },
+  { id: "manual", labelKey: "wizard.manual" },
+  { id: "history", labelKey: "wizard.history" },
 ];
 
 let CURRENT_STEP = "overview";
@@ -2709,7 +2989,7 @@ function renderWizardNav(){
       data-step="${esc(step.id)}"
       class="${step.id === CURRENT_STEP ? "is-active" : ""}"
     >
-      ${esc(step.label)}
+      ${esc(tr(step.labelKey || step.label || ""))}
     </button>
   `).join("");
 
@@ -2727,7 +3007,7 @@ function renderWizardNav(){
 function updateReviewHeadingForStep(stepId){
   const heading = document.getElementById("sessionReviewHeading");
   if (!heading) return;
-  heading.textContent = stepId === "review" ? "Review af træning" : "Afslut dagens plan";
+  heading.textContent = stepId === "review" ? tr("review.session_review") : tr("review.finish_today_plan");
 }
 
 
@@ -2735,7 +3015,7 @@ function updatePlanHeadingForStep(stepId){
   const heading = document.getElementById("todayPlanHeading");
   const meta = document.getElementById("todayPlanMeta");
   if (heading){
-    heading.textContent = stepId === "review" ? "Efter træning" : "Dagens plan";
+    heading.textContent = stepId === "review" ? tr("wizard.after_training") : tr("today_plan.title");
   }
   if (meta){
     meta.classList.toggle("wizard-step-hidden", stepId === "review");
@@ -2800,6 +3080,13 @@ function advanceWizardAfterCheckin(){
 
 async function boot(){
   try{
+    if (window.I18N){
+      await window.I18N.load(localStorage.getItem("ss_lang") || "da");
+    }
+    applyStaticTranslations();
+    renderAuthBar();
+    await initLanguageToggle();
+
     const dateEl = document.getElementById("date");
     if (dateEl && !dateEl.value){
       dateEl.value = new Date().toISOString().slice(0,10);
@@ -2841,6 +3128,8 @@ async function boot(){
     await refreshAll();
     renderWizardNav();
     showWizardStep("overview");
+    initSystemInfoToggle();
+    initCheckinScoreButtons();
   }catch(err){
     setText("status", "Fejl: " + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
@@ -2850,10 +3139,601 @@ async function boot(){
 (async () => {
   try{
     await ensureAuthOrRedirect();
-    renderAuthBar();
     await boot();
   }catch(err){
     setText("status", "Fejl før opstart: " + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
   }
 })();
+
+
+function initSystemInfoToggle(){
+  const btn = document.getElementById("toggleSystemInfo");
+  const content = document.getElementById("systemInfoContent");
+  if (!btn || !content) return;
+
+  const saved = localStorage.getItem("systemInfoHidden");
+  const hidden = saved === null ? true : saved === "true";
+
+  if (hidden){
+    content.style.display = "none";
+    btn.textContent = "Vis";
+  } else {
+    content.style.display = "";
+    btn.textContent = "Skjul";
+  }
+
+  if (!btn.dataset.bound){
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      const isHidden = content.style.display === "none";
+      if (isHidden){
+        content.style.display = "";
+        btn.textContent = "Skjul";
+        localStorage.setItem("systemInfoHidden", "false");
+      } else {
+        content.style.display = "none";
+        btn.textContent = "Vis";
+        localStorage.setItem("systemInfoHidden", "true");
+      }
+    });
+  }
+}
+
+
+
+
+const CHECKIN_SCORE_META = {
+  sleep_score: {
+    title: "Søvn",
+    help: "Vælg hvor god din søvn har været i nat.",
+    options: {
+      1: "Meget dårlig",
+      2: "Dårlig",
+      3: "Okay",
+      4: "God",
+      5: "Meget god"
+    }
+  },
+  energy_score: {
+    title: "Energi",
+    help: "Vælg hvor meget energi du føler du har lige nu.",
+    options: {
+      1: "Helt flad",
+      2: "Lav",
+      3: "Middel",
+      4: "God",
+      5: "Høj"
+    }
+  },
+  soreness_score: {
+    title: "Ømhed",
+    help: "Vælg hvor øm kroppen føles lige nu.",
+    options: {
+      1: "Ingen",
+      2: "Let",
+      3: "Mærkbar",
+      4: "Høj",
+      5: "Meget høj"
+    }
+  }
+};
+
+function ensureCheckinScoreStyles(){
+  if (document.getElementById("checkinScoreStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "checkinScoreStyles";
+  style.textContent = `
+    .checkin-score-wrap {
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+    .checkin-score-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .checkin-score-help {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin-bottom: 8px;
+    }
+    .checkin-score-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .checkin-score-btn {
+      min-width: 44px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+    .checkin-score-btn:hover {
+      transform: translateY(-1px);
+    }
+    .checkin-score-btn.score-red {
+      background: rgba(220, 70, 70, 0.14);
+      border-color: rgba(220, 70, 70, 0.35);
+    }
+    .checkin-score-btn.score-orange {
+      background: rgba(230, 140, 60, 0.14);
+      border-color: rgba(230, 140, 60, 0.35);
+    }
+    .checkin-score-btn.score-yellow {
+      background: rgba(220, 185, 70, 0.14);
+      border-color: rgba(220, 185, 70, 0.35);
+    }
+    .checkin-score-btn.score-lightgreen {
+      background: rgba(110, 185, 95, 0.14);
+      border-color: rgba(110, 185, 95, 0.35);
+    }
+    .checkin-score-btn.score-green {
+      background: rgba(70, 170, 110, 0.16);
+      border-color: rgba(70, 170, 110, 0.35);
+    }
+    .checkin-score-btn.is-active {
+      font-weight: 700;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.16) inset;
+      border-color: rgba(255,255,255,0.45);
+    }
+    .checkin-score-value {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      min-height: 1.2em;
+    }
+    .checkin-score-hidden {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function enhanceCheckinScoreField(fieldId){
+  const meta = CHECKIN_SCORE_META[fieldId];
+  const field = document.getElementById(fieldId);
+  if (!meta || !field) return;
+
+  if (document.getElementById(`checkin_wrap_${fieldId}`)) return;
+
+  const label = field.closest("label");
+  if (!label) return;
+
+  label.classList.add("checkin-score-hidden");
+
+  const wrap = document.createElement("div");
+  wrap.className = "checkin-score-wrap";
+  wrap.id = `checkin_wrap_${fieldId}`;
+
+  const title = document.createElement("div");
+  title.className = "checkin-score-title";
+  title.textContent = meta.title;
+
+  const help = document.createElement("div");
+  help.className = "checkin-score-help";
+  help.textContent = meta.help;
+
+  const row = document.createElement("div");
+  row.className = "checkin-score-row";
+
+  const valueLine = document.createElement("div");
+  valueLine.className = "checkin-score-value";
+  valueLine.id = `checkin_value_${fieldId}`;
+
+  function syncButtons(){
+    const current = String(field.value || "").trim();
+    row.querySelectorAll("button").forEach(btn => {
+      const isActive = btn.dataset.value === current;
+      btn.classList.toggle("is-active", isActive);
+    });
+
+    const text = meta.options[current] || "";
+    valueLine.textContent = current && text ? `Valgt: ${current} · ${text}` : "";
+  }
+
+  const getScoreClass = (fieldId, value) => {
+    const n = Number(value);
+    const normal = {
+      1: "score-red",
+      2: "score-orange",
+      3: "score-yellow",
+      4: "score-lightgreen",
+      5: "score-green"
+    };
+    const reversed = {
+      1: "score-green",
+      2: "score-lightgreen",
+      3: "score-yellow",
+      4: "score-orange",
+      5: "score-red"
+    };
+    const palette = fieldId === "soreness_score" ? reversed : normal;
+    return palette[n] || "score-yellow";
+  };
+
+  Object.entries(meta.options).forEach(([value, text]) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `checkin-score-btn ${getScoreClass(fieldId, value)}`;
+    btn.dataset.value = String(value);
+    btn.textContent = String(value);
+    btn.title = text;
+
+    btn.addEventListener("click", () => {
+      field.value = String(value);
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      field.dispatchEvent(new Event("change", { bubbles: true }));
+      syncButtons();
+    });
+
+    row.appendChild(btn);
+  });
+
+  field.addEventListener("change", syncButtons);
+
+  wrap.appendChild(title);
+  wrap.appendChild(help);
+  wrap.appendChild(row);
+  wrap.appendChild(valueLine);
+
+  label.insertAdjacentElement("afterend", wrap);
+  syncButtons();
+}
+
+function initCheckinScoreButtons(){
+  ensureCheckinScoreStyles();
+  enhanceCheckinScoreField("sleep_score");
+  enhanceCheckinScoreField("energy_score");
+  enhanceCheckinScoreField("soreness_score");
+}
+
+
+
+
+function buildWeeklyPlanPreview(){
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
+    ? preferences.training_types
+    : {};
+  const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
+    ? preferences.training_days
+    : {};
+
+  const dayOrder = [
+    ["mon", "man"],
+    ["tue", "tir"],
+    ["wed", "ons"],
+    ["thu", "tor"],
+    ["fri", "fre"],
+    ["sat", "lør"],
+    ["sun", "søn"]
+  ];
+
+  const activeDays = dayOrder
+    .filter(([key]) => trainingDays[key] !== false)
+    .map(([, label]) => label);
+
+  const selectedTypes = [
+    trainingTypes.strength_weights !== false || trainingTypes.bodyweight !== false ? "styrke" : "",
+    trainingTypes.running === true ? "løb" : "",
+    trainingTypes.mobility === true ? "mobilitet" : ""
+  ].filter(Boolean);
+
+  let typeLabel = "træning";
+  if (selectedTypes.length === 1){
+    typeLabel = selectedTypes[0];
+  } else if (selectedTypes.length > 1){
+    typeLabel = selectedTypes.join("/");
+  }
+
+  if (!activeDays.length){
+    return "Ugeplan: ingen faste træningsdage valgt · recovery og fleksibel plan anbefales.";
+  }
+
+  return `Ugeplan: ${activeDays.join(", ")} = ${typeLabel} · øvrige dage = hvile eller recovery`;
+}
+
+
+
+
+function ensureWeekPlanPreviewStyles(){
+  if (document.getElementById("weekPlanPreviewStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "weekPlanPreviewStyles";
+  style.textContent = `
+    .weekplan-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .weekplan-day {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 118px;
+    }
+    .weekplan-day.is-today {
+      border-color: rgba(255,255,255,0.34);
+      background: rgba(255,255,255,0.08);
+    }
+    .weekplan-day.kind-strength { background: rgba(243, 201, 105, 0.08); }
+    .weekplan-day.kind-run { background: rgba(127, 209, 255, 0.08); }
+    .weekplan-day.kind-mobility { background: rgba(158, 230, 160, 0.08); }
+    .weekplan-day.kind-recovery { background: rgba(199, 184, 255, 0.08); }
+    .weekplan-day.kind-rest { background: rgba(255, 255, 255, 0.03); }
+    .weekplan-day-label {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin-bottom: 8px;
+    }
+    .weekplan-day-kind {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .weekplan-day-note {
+      font-size: 0.88rem;
+      opacity: 0.88;
+      line-height: 1.35;
+    }
+    .weekplan-day-kind.kind-strength { color: #f3c969; }
+    .weekplan-day-kind.kind-run { color: #7fd1ff; }
+    .weekplan-day-kind.kind-mobility { color: #9ee6a0; }
+    .weekplan-day-kind.kind-recovery { color: #c7b8ff; }
+    .weekplan-day-kind.kind-rest { color: #b8b8b8; }
+
+    @media (max-width: 900px){
+      .weekplan-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function ensureWeekPlanCardMount(){
+  let card = document.getElementById("weekPlanCard");
+  if (card) return card;
+
+  const anchor = document.getElementById("overviewStatusCard") || document.getElementById("forecastCard");
+  if (!anchor || !anchor.parentNode) return null;
+
+  card = document.createElement("section");
+  card.className = "card";
+  card.id = "weekPlanCard";
+  card.style.gridColumn = "1 / -1";
+  card.innerHTML = `
+    <div class="row">
+      <h2>Ugeplan</h2>
+      <div class="small" id="weekPlanMeta"></div>
+    </div>
+    <div class="small" id="weekPlanIntro"></div>
+    <div class="weekplan-grid" id="weekPlanGrid"></div>
+  `;
+
+  anchor.parentNode.insertBefore(card, anchor.nextSibling);
+  return card;
+}
+
+function chooseCombinations(arr, k){
+  const out = [];
+  const n = Array.isArray(arr) ? arr.length : 0;
+  if (!n || k <= 0 || k > n) return out;
+
+  function walk(startIdx, acc){
+    if (acc.length === k){
+      out.push(acc.slice());
+      return;
+    }
+    for (let i = startIdx; i < n; i += 1){
+      acc.push(arr[i]);
+      walk(i + 1, acc);
+      acc.pop();
+    }
+  }
+
+  walk(0, []);
+  return out;
+}
+
+function scoreTrainingSlotCombo(indices, totalDays){
+  const days = Math.max(1, Number(totalDays || 7));
+  const sorted = [...indices].sort((a, b) => a - b);
+  if (!sorted.length) return -Infinity;
+  if (sorted.length === 1) return 1000;
+
+  const gaps = [];
+  for (let i = 0; i < sorted.length; i += 1){
+    const current = sorted[i];
+    const next = sorted[(i + 1) % sorted.length];
+    const gap = i === sorted.length - 1
+      ? (next + days) - current
+      : next - current;
+    gaps.push(gap);
+  }
+
+  const minGap = Math.min(...gaps);
+  const maxGap = Math.max(...gaps);
+  const adjacentCount = gaps.filter(g => g <= 1).length;
+  const tightCount = gaps.filter(g => g <= 2).length;
+  const spreadPenalty = maxGap - minGap;
+
+  return (minGap * 100) - (adjacentCount * 1000) - (tightCount * 25) - (spreadPenalty * 10);
+}
+
+function pickDistributedIndices(availableIndices, target, totalDays = 7){
+  const arr = Array.isArray(availableIndices) ? availableIndices.slice() : [];
+  const t = Math.max(0, Math.min(Number(target || 0), arr.length));
+
+  if (!arr.length || !t) return [];
+  if (t >= arr.length) return arr.slice().sort((a, b) => a - b);
+
+  const combos = chooseCombinations(arr, t);
+  if (!combos.length) return [];
+
+  let best = combos[0];
+  let bestScore = scoreTrainingSlotCombo(best, totalDays);
+
+  for (const combo of combos.slice(1)){
+    const score = scoreTrainingSlotCombo(combo, totalDays);
+    if (score > bestScore){
+      best = combo;
+      bestScore = score;
+    }
+  }
+
+  return best.slice().sort((a, b) => a - b);
+}
+
+function getWeekPlanTypeSequence(trainingTypes){
+  const wantsStrength = trainingTypes.strength_weights !== false || trainingTypes.bodyweight !== false;
+  const wantsRunning = trainingTypes.running === true;
+  const wantsMobility = trainingTypes.mobility === true;
+
+  if (wantsStrength && wantsRunning) return ["strength", "running"];
+  if (wantsStrength) return ["strength"];
+  if (wantsRunning) return ["running"];
+  if (wantsMobility) return ["mobility"];
+  return ["recovery"];
+}
+
+function getWeekPlanKindMeta(kind){
+  if (kind === "strength"){
+    return { label: "Styrke", note: "Planlagt styrkedag", className: "kind-strength" };
+  }
+  if (kind === "running"){
+    return { label: "Løb", note: "Planlagt løbedag", className: "kind-run" };
+  }
+  if (kind === "mobility"){
+    return { label: "Mobilitet", note: "Let bevægelse og mobilitet", className: "kind-mobility" };
+  }
+  if (kind === "recovery"){
+    return { label: "Recovery", note: "Restitution anbefales", className: "kind-recovery" };
+  }
+  return { label: "Hvile", note: "Ikke planlagt træningsdag", className: "kind-rest" };
+}
+
+function buildWeekPlanItems(planItem){
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
+    ? preferences.training_types
+    : {};
+  const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
+    ? preferences.training_days
+    : {};
+  const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
+
+  const dayOrder = [
+    { key: "mon", label: "Man" },
+    { key: "tue", label: "Tir" },
+    { key: "wed", label: "Ons" },
+    { key: "thu", label: "Tor" },
+    { key: "fri", label: "Fre" },
+    { key: "sat", label: "Lør" },
+    { key: "sun", label: "Søn" }
+  ];
+
+  const availableIndices = dayOrder
+    .map((day, idx) => ({ idx, allowed: trainingDays[day.key] !== false }))
+    .filter(x => x.allowed)
+    .map(x => x.idx);
+
+  const trainingSlots = pickDistributedIndices(availableIndices, weeklyTargetSessions, 7);
+
+  const trainingSlotSet = new Set(trainingSlots);
+  const sequence = getWeekPlanTypeSequence(trainingTypes);
+
+  let seqIdx = 0;
+  const items = dayOrder.map((day, idx) => {
+    let kind = "rest";
+
+    if (trainingSlotSet.has(idx)){
+      kind = sequence[seqIdx % sequence.length] || "recovery";
+      seqIdx += 1;
+    } else {
+      const prevWasTraining = trainingSlotSet.has(idx - 1);
+      const nextIsTraining = trainingSlotSet.has(idx + 1);
+      const allowedDay = trainingDays[day.key] !== false;
+
+      if (prevWasTraining && allowedDay){
+        kind = trainingTypes.mobility === true ? "mobility" : "recovery";
+      } else if (nextIsTraining && allowedDay && trainingTypes.mobility === true){
+        kind = "mobility";
+      } else {
+        kind = "rest";
+      }
+    }
+
+    const meta = getWeekPlanKindMeta(kind);
+    return {
+      key: day.key,
+      label: day.label,
+      kind,
+      kindLabel: meta.label,
+      note: meta.note,
+      className: meta.className
+    };
+  });
+
+  const todayKey = String(planItem?.training_day_context?.weekday_key || "").trim().toLowerCase();
+  if (todayKey){
+    items.forEach(item => {
+      item.isToday = item.key === todayKey;
+    });
+  }
+
+  return items;
+}
+
+function getTodayWeekPlanItem(planItem){
+  const items = buildWeekPlanItems(planItem);
+  if (!Array.isArray(items) || !items.length) return null;
+
+  const todayKey = String(planItem?.training_day_context?.weekday_key || "").trim().toLowerCase();
+  if (todayKey){
+    return items.find(item => item && item.key === todayKey) || null;
+  }
+
+  const jsDay = new Date().getDay(); // 0=sun, 1=mon, ...
+  const keyMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const fallbackKey = keyMap[jsDay] || "";
+  return items.find(item => item && item.key === fallbackKey) || null;
+}
+
+function renderWeekPlanPreview(planItem){
+  ensureWeekPlanPreviewStyles();
+  const card = ensureWeekPlanCardMount();
+  if (!card) return;
+
+  const grid = document.getElementById("weekPlanGrid");
+  const intro = document.getElementById("weekPlanIntro");
+  const meta = document.getElementById("weekPlanMeta");
+  if (!grid || !intro || !meta) return;
+
+  const items = buildWeekPlanItems(planItem);
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
+
+  intro.textContent = "Systemets baseline for ugen ud fra træningstyper, ugemål og valgte træningsdage. Daglige check-ins kan stadig justere dagens endelige plan.";
+  meta.textContent = `${weeklyTargetSessions} planlagte pas`;
+
+  grid.innerHTML = items.map(item => `
+    <div class="weekplan-day ${esc(item.className)}${item.isToday ? ' is-today' : ''}">
+      <div class="weekplan-day-label">${esc(item.label)}${item.isToday ? ' · i dag' : ''}</div>
+      <div class="weekplan-day-kind ${esc(item.className)}">${esc(item.kindLabel)}</div>
+      <div class="weekplan-day-note">${esc(item.note)}</div>
+    </div>
+  `).join("");
+}
+
