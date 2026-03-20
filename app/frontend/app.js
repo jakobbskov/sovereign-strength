@@ -118,14 +118,14 @@ async function initLanguageToggle(){
 function applyStaticTranslations(){
   document.title = tr("app.title");
 
-  const forecastBtn = document.getElementById("forecastPrimaryBtn");
-  if (forecastBtn) forecastBtn.textContent = tr("overview.go_to_checkin");
-
-  const checkinIntro = document.getElementById("checkinIntro");
-  if (checkinIntro) checkinIntro.textContent = tr("checkin.intro");
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (!key) return;
+    el.textContent = tr(key);
+  });
 
   const toggleSystemInfo = document.getElementById("toggleSystemInfo");
-  if (toggleSystemInfo && toggleSystemInfo.textContent.trim() === "Skjul"){
+  if (toggleSystemInfo){
     toggleSystemInfo.textContent = tr("button.hide");
   }
 }
@@ -738,7 +738,7 @@ function renderSessionHistory(items){
           Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
         </div>
         <div class="small" style="margin-top:6px">
-          ${progressFlags.length ? esc(progressFlags.join(", ")) : "Ingen progress flags"}
+          ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : "Ingen progress flags"}
         </div>
         ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
       </li>
@@ -917,8 +917,8 @@ function buildForecastLeadText(planItem){
   if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
     if (firstExercise.includes("restitution")){
       return targetReps
-        ? `Restitution · ${targetReps}`
-        : "Restitution · rolig bevægelse og lav belastning";
+        ? tr("forecast.recovery_with_target", { value: targetReps })
+        : tr("forecast.recovery_low_load");
     }
     if (firstExercise.includes("interval")){
       return targetReps
@@ -944,10 +944,10 @@ function buildForecastLeadText(planItem){
     if (entries.length){
       const bits = entries.slice(0, 2).map(entry => formatExerciseName(entry.exercise_id)).filter(Boolean);
       return bits.length
-        ? `Restitution · ${bits.join(" + ")}`
-        : "Restitution · rolig bevægelse og mobilitet";
+        ? tr("forecast.recovery_with_exercises", { value: bits.join(" + ") })
+        : tr("forecast.recovery_mobility");
     }
-    return "Restitution · rolig bevægelse og mobilitet";
+    return tr("forecast.recovery_mobility");
   }
 
   if (sessionType === "styrke" || sessionType === "strength"){
@@ -998,11 +998,11 @@ function renderForecastHero(planItem, latestCheckin){
   setText("forecastType", getForecastTypeLabel(planItem));
 
   if (!planItem){
-    setText("forecastSummary", "Velkommen. Du starter uden historik, så første skridt er et check-in. Derefter beregner SovereignStrength dagens træning.");
-    setText("forecastReason", latestCheckin ? `Seneste readiness: ${latestCheckin.readiness_score ?? "-"}` : "Ingen readiness-data endnu. Start med søvn, energi, ømhed og tid.");
+    setText("forecastSummary", tr("forecast.welcome_no_history"));
+    setText("forecastReason", latestCheckin ? tr("forecast.latest_readiness", { value: latestCheckin.readiness_score ?? "-" }) : tr("forecast.no_readiness_data"));
     const btn = document.getElementById("forecastPrimaryBtn");
     if (btn){
-      btn.textContent = "Gå til check-in";
+      btn.textContent = tr("overview.go_to_checkin");
       btn.onclick = () => showWizardStep("checkin");
     }
     return;
@@ -1011,12 +1011,12 @@ function renderForecastHero(planItem, latestCheckin){
   const leadText = buildForecastLeadText(planItem);
 
   const bits = [];
-  if (planItem.readiness_score != null) bits.push(`Parathed: ${planItem.readiness_score}`);
-  if (planItem.time_budget_min) bits.push(`Tid: ${planItem.time_budget_min} min`);
-  if (planItem.timing_state) bits.push(`Timing: ${formatTimingState(planItem.timing_state)}`);
+  if (planItem.readiness_score != null) bits.push(tr("forecast.readiness_label", { value: planItem.readiness_score }));
+  if (planItem.time_budget_min) bits.push(tr("forecast.time_label", { minutes: planItem.time_budget_min }));
+  if (planItem.timing_state) bits.push(tr("forecast.timing_label", { value: formatTimingState(planItem.timing_state) }));
   const planVariantLabel = formatPlanVariant(planItem.plan_variant || "");
-  if (planVariantLabel) bits.push(`Plan: ${planVariantLabel}`);
-  if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(`Recovery: ${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}`);
+  if (planVariantLabel) bits.push(tr("forecast.plan_label", { value: planVariantLabel }));
+  if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
 
   const reasonParts = [bits.join(" · "), planItem.reason || ""].filter(Boolean);
 
@@ -1025,7 +1025,7 @@ function renderForecastHero(planItem, latestCheckin){
 
   const btn = document.getElementById("forecastPrimaryBtn");
   if (btn){
-    btn.textContent = "Se dagens plan";
+    btn.textContent = tr("button.view_today_plan");
     btn.onclick = () => showWizardStep("plan");
   }
 }
@@ -1077,23 +1077,23 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
 
   if (overviewTimeLine){
     if (isFirstTime){
-      overviewTimeLine.textContent = "Start med et check-in for at beregne dagens træning.";
+      overviewTimeLine.textContent = tr("overview.start_with_checkin");
     } else if (planItem?.time_budget_min){
-      overviewTimeLine.textContent = `Tid i dag: ${planItem.time_budget_min} min`;
+      overviewTimeLine.textContent = tr("overview.time_today", { minutes: planItem.time_budget_min });
     } else if (latestCheckin?.time_budget_min){
-      overviewTimeLine.textContent = `Senest angivet tid: ${latestCheckin.time_budget_min} min`;
+      overviewTimeLine.textContent = tr("overview.latest_time_budget", { minutes: latestCheckin.time_budget_min });
     } else {
-      overviewTimeLine.textContent = "Ingen tidsvurdering endnu.";
+      overviewTimeLine.textContent = tr("overview.no_time_estimate_yet");
     }
   }
 
   if (overviewWorkoutLine){
     if (isFirstTime){
-      overviewWorkoutLine.textContent = "Ingen historik endnu. Du bygger første datapunkt nu.";
+      overviewWorkoutLine.textContent = tr("overview.no_history_first_point");
     } else if (sessionCount > 0){
-      overviewWorkoutLine.textContent = `Registrerede sessioner: ${sessionCount}`;
+      overviewWorkoutLine.textContent = tr("overview.logged_sessions_count", { count: sessionCount });
     } else {
-      overviewWorkoutLine.textContent = "Ingen historik endnu.";
+      overviewWorkoutLine.textContent = tr("overview.no_history_yet");
     }
   }
 }
@@ -1150,63 +1150,63 @@ function renderProfileEquipmentCard(){
   }
 
   const profileBits = [];
-  if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(`Højde: ${profile.height_cm} cm`);
-  if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(`Kropsvægt: ${profile.bodyweight_kg} kg`);
+  if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(tr("profile.height_value", { value: `${profile.height_cm} cm` }));
+  if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(tr("profile.bodyweight_value", { value: `${profile.bodyweight_kg} kg` }));
 
   const selectedTraining = [
-    trainingTypes.running ? "løb" : "",
-    trainingTypes.strength_weights ? "vægte" : "",
-    trainingTypes.bodyweight ? "kropsvægt" : "",
-    trainingTypes.mobility ? "mobilitet" : ""
+    trainingTypes.running ? tr("training_type.run") : "",
+    trainingTypes.strength_weights ? tr("training_type.strength") : "",
+    trainingTypes.bodyweight ? tr("training_type.bodyweight") : "",
+    trainingTypes.mobility ? tr("training_type.mobility") : ""
   ].filter(Boolean);
 
   const selectedDays = [
-    trainingDays.mon ? "man" : "",
-    trainingDays.tue ? "tir" : "",
-    trainingDays.wed ? "ons" : "",
-    trainingDays.thu ? "tor" : "",
-    trainingDays.fri ? "fre" : "",
-    trainingDays.sat ? "lør" : "",
-    trainingDays.sun ? "søn" : ""
+    trainingDays.mon ? tr("day.mon") : "",
+    trainingDays.tue ? tr("day.tue") : "",
+    trainingDays.wed ? tr("day.wed") : "",
+    trainingDays.thu ? tr("day.thu") : "",
+    trainingDays.fri ? tr("day.fri") : "",
+    trainingDays.sat ? tr("day.sat") : "",
+    trainingDays.sun ? tr("day.sun") : ""
   ].filter(Boolean);
 
   if (bodyLineEl){
     bodyLineEl.textContent = profileBits.length
       ? profileBits.join(" · ")
-      : "Ingen højde eller kropsvægt registreret endnu.";
+      : tr("profile.no_body_metrics_yet");
   }
 
   if (trainingTypesLineEl){
     trainingTypesLineEl.textContent = selectedTraining.length
-      ? `Træningstyper: ${selectedTraining.join(", ")}`
-      : "Træningstyper: ingen valgt endnu.";
+      ? tr("profile.training_types_value", { value: selectedTraining.join(", ") })
+      : tr("profile.training_types_none");
   }
 
   if (trainingDaysLineEl){
     const dayText = selectedDays.length
       ? `Mulige træningsdage: ${selectedDays.join(", ")}`
       : tr("checkin.possible_days_none");
-    trainingDaysLineEl.textContent = `${dayText} · Ugemål: ${weeklyTargetSessions} pas`;
+    trainingDaysLineEl.textContent = `${dayText} · ${tr("profile.week_goal_value", { count: weeklyTargetSessions })}`;
   }
 
   if (equipmentLineEl){
     equipmentLineEl.textContent = enabledEquipment.length
-      ? `Tilgængeligt udstyr: ${formatEquipmentList(enabledEquipment)}`
-      : "Intet udstyr registreret endnu.";
+      ? tr("profile.available_equipment_value", { value: formatEquipmentList(enabledEquipment) })
+      : tr("profile.no_equipment_yet");
   }
 
   if (incrementLineEl){
     incrementLineEl.textContent = incrementEntries.length
-      ? `Vægtspring: ${formatLoadIncrements(Object.fromEntries(incrementEntries))}`
-      : "Ingen vægtspring registreret endnu.";
+      ? tr("profile.weight_increment_value", { value: formatLoadIncrements(Object.fromEntries(incrementEntries)) })
+      : tr("profile.no_weight_increment_yet");
   }
 
   if (accountLineEl){
-    accountLineEl.textContent = `Konto: ${username}`;
+    accountLineEl.textContent = tr("profile.account_value", { value: username });
   }
 
   if (accountHelpLineEl){
-    accountHelpLineEl.textContent = "Adgangskode, login og kontooplysninger åbnes via den centrale auth-side.";
+    accountHelpLineEl.textContent = tr("profile.account_help_extended");
   }
 
   const authHref = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
@@ -1456,12 +1456,38 @@ function formatExerciseName(exerciseId){
     restitution_walk: tr("exercise.recovery_walk"),
     mobility: tr("session_type.mobility"),
     cardio_easy: "Rolig cardio",
-    cardio_intervals: "Intervaller"
+    cardio_intervals: "Intervaller",
+    cardio_session: "Cardio"
   };
   if (mapped[exerciseId]) return mapped[exerciseId];
 
   const exerciseMap = new Map((STATE.exercises || []).map(x => [x.id, x.name]));
   return exerciseMap.get(exerciseId) || exerciseId || tr("common.unknown_lower");
+}
+
+function formatInputKindLabel(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (x === "bodyweight_reps") return "Kropsvægt / reps";
+  if (x === "time" || x === "cardio_time") return "Tid";
+  if (x === "load_reps") return "Belastning / reps";
+  return x || tr("common.unknown_lower");
+}
+
+function formatProgressFlag(flag){
+  const raw = String(flag || "").trim();
+  if (!raw) return "";
+
+  if (raw.endsWith("_done")){
+    const exerciseId = raw.slice(0, -5);
+    return `${formatExerciseName(exerciseId)} gennemført`;
+  }
+
+  if (raw.endsWith("_failure")){
+    const exerciseId = raw.slice(0, -8);
+    return `${formatExerciseName(exerciseId)} failure`;
+  }
+
+  return raw.replaceAll("_", " ");
 }
 
 function formatProgressionDecision(value){
@@ -1479,7 +1505,7 @@ function formatProgressionDecision(value){
 function formatTimingState(value){
   const x = String(value || "").trim();
   if (x === "early") return "tidligt";
-  if (x === "on_time") return "til tiden";
+  if (x === "on_time") return tr("timing.on_time");
   if (x === "late") return "sent";
   return x || "";
 }
@@ -1489,7 +1515,7 @@ function formatPlanVariant(value){
   if (x === "short_20") return "kort (20 min)";
   if (x === "short_30") return "kort (30 min)";
   if (x === "full") return "fuld";
-  if (x === "default") return "standard";
+  if (x === "default") return tr("plan_variant.standard");
   if (x === "completed_today") return "";
   return x || "";
 }
@@ -1798,7 +1824,7 @@ function renderSessionReview(item){
         </div>
 
         <div class="small" style="margin-bottom:10px">
-          Type: ${esc(inputKind || tr("common.unknown_lower"))}
+          Type: ${esc(formatInputKindLabel(inputKind))}
         </div>
 
         ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px">Belastning: Kropsvægt</div>` : ""}
@@ -1888,7 +1914,7 @@ function renderSessionResultSummary(summary){
       Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
     </div>
     <div class="small">
-      ${progressFlags.length ? esc(progressFlags.join(", ")) : "Ingen progress flags"}
+      ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : "Ingen progress flags"}
     </div>
   `;
 }
@@ -1940,7 +1966,7 @@ function formatRecoveryState(value){
   const map = {
     ready: "Klar",
     caution: "Forsigtig",
-    recover: "Restitution"
+    recover: tr("session_type.recovery")
   };
   return map[v] || (v || tr("common.unknown_title"));
 }
@@ -2193,7 +2219,7 @@ function formatWeeklyStatusText(weeklyStatus){
     return `Ugestatus: ${completed}/${target} pas · Pas tilbage til mål: 0`;
   }
 
-  return `Ugestatus: ${completed}/${target} pas · Pas tilbage til mål: ${remainingToGoal} · Mulige træningsdage tilbage: ${remainingCalendarDays}`;
+  return tr("weekplan.status_summary", { completed, target, remaining: remainingToGoal, days: remainingCalendarDays });
 }
 
 function renderTodayPlan(item){
@@ -2215,12 +2241,12 @@ function renderTodayPlan(item){
   const variantLabel = formatPlanVariant(item.plan_variant || "");
   const timingLabel = formatTimingState(item.timing_state || "");
   const timingExplanation = formatTimingExplanation(item.timing_state || "");
-  const timeLabel = item.time_budget_min ? ` · Tid i dag: ${item.time_budget_min} min` : "";
-  const variantText = variantLabel ? ` · Plan: ${variantLabel}` : "";
+  const timeLabel = item.time_budget_min ? ` · ${tr("overview.time_today_short", { minutes: item.time_budget_min })}` : "";
+  const variantText = variantLabel ? ` · ${tr("plan.variant_label", { value: variantLabel })}` : "";
 
   setText(
     "todayPlanTiming",
-    timingLabel ? `Timing: ${timingLabel}${timingExplanation ? ` · ${timingExplanation}` : ""}` : "Ingen timing endnu."
+    timingLabel ? tr("plan.timing_label", { value: `${timingLabel}${timingExplanation ? ` · ${timingExplanation}` : ""}` }) : tr("today_plan.no_timing_yet")
   );
 
   const recovery = item && item.recovery_state && typeof item.recovery_state === "object" ? item.recovery_state : null;
@@ -2230,49 +2256,41 @@ function renderTodayPlan(item){
   const templateMode = String(item?.template_mode || "").trim();
   const planMotorLabel =
     templateMode === "autoplan_v0_1" || templateMode === "autoplan_cardio_v0_1"
-      ? "Autoplan"
+      ? tr("plan.motor.autoplan")
       : templateMode === "weekly_goal_cap_v0_1"
-        ? "Ugemål-bremse"
+        ? tr("plan.motor.weekly_goal_cap")
         : templateMode === "manual_override_v0_1"
-          ? "Manuel overstyring"
+          ? tr("plan.motor.manual_override")
           : templateMode === "completed_today_v0_1"
-            ? "Dagens træning registreret"
-            : "Fast plan";
+            ? tr("plan.motor.completed_today")
+            : tr("plan.motor.fixed_plan");
   const familiesSelectedText = formatFamiliesSelected(item?.families_selected || []);
   const trainingCtx = item?.training_day_context && typeof item.training_day_context === "object" ? item.training_day_context : {};
   const trainingDaysText = formatTrainingDays(trainingCtx.training_days || []);
-  const trainingDaySummary = trainingDaysText ? `Træningsdage: ${trainingDaysText}` : "";
+  const trainingDaySummary = trainingDaysText ? tr("plan.training_days_summary", { value: trainingDaysText }) : "";
   const todayWeekPlanItem = getTodayWeekPlanItem(item);
   const todayWeekKind = String(todayWeekPlanItem?.kind || "").trim().toLowerCase();
   const actualKind = String(item?.session_type || "").trim().toLowerCase();
 
   let trainingAllowedSummary = "";
   if (todayWeekKind === "rest"){
-    trainingAllowedSummary = "I dag er planlagt som hviledag i ugeplanen.";
+    trainingAllowedSummary = tr("plan.weekplan_rest_today");
   } else if (todayWeekKind && todayWeekKind !== actualKind){
     const plannedLabel = String(todayWeekPlanItem?.kindLabel || "").trim().toLowerCase();
-    trainingAllowedSummary = `Planlagt i ugeplanen: ${plannedLabel} · justeret i dag.`;
+    trainingAllowedSummary = tr("plan.weekplan_adjusted_today", { value: plannedLabel });
   } else if (todayWeekKind){
     const plannedLabel = String(todayWeekPlanItem?.kindLabel || "").trim().toLowerCase();
-    trainingAllowedSummary = `Planlagt i ugeplanen: ${plannedLabel}.`;
+    trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
   }
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const baseSummary = `Type: ${item.session_type || tr("common.unknown_lower")} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
-=======
   const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
->>>>>>> bebfeb4 (checkpoint before i18n restart)
-=======
-  const baseSummary = `Type: ${item.session_type || "ukendt"} · Parathed: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
->>>>>>> 38c49e1 (Add betatest v1.1 roadmap (context, soft recovery, fallback))
   const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
     ? tr("plan.light_movement_today")
     : "";
-  const motorSummary = `Planmotor: ${planMotorLabel}`;
-  const familiesSummary = familiesSelectedText ? `Valgte familier: ${familiesSelectedText}` : "";
+  const motorSummary = tr("plan.motor_summary", { value: planMotorLabel });
+  const familiesSummary = familiesSelectedText ? tr("plan.selected_families", { value: familiesSelectedText }) : "";
 
   setText(
     "todayPlanSummary",
@@ -2290,7 +2308,7 @@ function renderTodayPlan(item){
   );
 
   if (!Array.isArray(item.entries) || item.entries.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen konkrete øvelser i planen.</div></li>`;
+    root.innerHTML = `<li><div class="small">${esc(tr("plan.no_concrete_exercises"))}</div></li>`;
       renderReviewSummary(item);
       renderSessionReview(item);
       return;
@@ -3009,6 +3027,34 @@ const WIZARD_STEPS = [
   { id: "history", labelKey: "wizard.history" },
 ];
 
+function getWizardStepLabel(step){
+  const key = String(step?.labelKey || step?.label || "").trim();
+  const translated = key ? tr(key) : "";
+  if (translated && translated !== key) return translated;
+
+  const lang = getCurrentLang();
+  const fallback = {
+    da: {
+      "wizard.overview": "Overblik",
+      "wizard.checkin": "Check-in",
+      "wizard.plan": "Dagens plan",
+      "wizard.review": "Efter træning",
+      "wizard.manual": "Manuel træning",
+      "wizard.history": "Historik"
+    },
+    en: {
+      "wizard.overview": "Overview",
+      "wizard.checkin": "Check-in",
+      "wizard.plan": "Today's plan",
+      "wizard.review": "After training",
+      "wizard.manual": "Manual workout",
+      "wizard.history": "History"
+    }
+  };
+
+  return fallback[lang]?.[key] || fallback.da[key] || key;
+}
+
 let CURRENT_STEP = "overview";
 
 function getWizardSections(){
@@ -3046,7 +3092,7 @@ function renderWizardNav(){
       data-step="${esc(step.id)}"
       class="${step.id === CURRENT_STEP ? "is-active" : ""}"
     >
-      ${esc(tr(step.labelKey || step.label || ""))}
+      ${esc(getWizardStepLabel(step))}
     </button>
   `).join("");
 
@@ -3214,7 +3260,7 @@ function initSystemInfoToggle(){
 
   if (hidden){
     content.style.display = "none";
-    btn.textContent = "Vis";
+    btn.textContent = tr("button.show");
   } else {
     content.style.display = "";
     btn.textContent = "Skjul";
@@ -3570,7 +3616,7 @@ function ensureWeekPlanCardMount(){
   card.style.gridColumn = "1 / -1";
   card.innerHTML = `
     <div class="row">
-      <h2>Ugeplan</h2>
+      <h2>${esc(tr("weekplan.title"))}</h2>
       <div class="small" id="weekPlanMeta"></div>
     </div>
     <div class="small" id="weekPlanIntro"></div>
@@ -3668,15 +3714,15 @@ function getWeekPlanKindMeta(kind){
     return { label: tr("workout.type.strength"), note: tr("plan.planned_strength_day"), className: "kind-strength" };
   }
   if (kind === "running"){
-    return { label: "Løb", note: "Planlagt løbedag", className: "kind-run" };
+    return { label: tr("session_type.run"), note: tr("weekplan.note.run"), className: "kind-run" };
   }
   if (kind === "mobility"){
     return { label: tr("session_type.mobility"), note: tr("plan.mobility_note"), className: "kind-mobility" };
   }
   if (kind === "recovery"){
-    return { label: "Recovery", note: "Restitution anbefales", className: "kind-recovery" };
+    return { label: tr("session_type.recovery"), note: tr("weekplan.note.recovery"), className: "kind-recovery" };
   }
-  return { label: "Hvile", note: "Ikke planlagt træningsdag", className: "kind-rest" };
+  return { label: tr("weekplan.label.rest"), note: tr("weekplan.note.rest"), className: "kind-rest" };
 }
 
 function buildWeekPlanItems(planItem){
@@ -3691,13 +3737,13 @@ function buildWeekPlanItems(planItem){
   const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
 
   const dayOrder = [
-    { key: "mon", label: "Man" },
-    { key: "tue", label: "Tir" },
-    { key: "wed", label: "Ons" },
-    { key: "thu", label: "Tor" },
-    { key: "fri", label: "Fre" },
-    { key: "sat", label: "Lør" },
-    { key: "sun", label: "Søn" }
+    { key: "mon", label: tr("day.mon") },
+    { key: "tue", label: tr("day.tue") },
+    { key: "wed", label: tr("day.wed") },
+    { key: "thu", label: tr("day.thu") },
+    { key: "fri", label: tr("day.fri") },
+    { key: "sat", label: tr("day.sat") },
+    { key: "sun", label: tr("day.sun") }
   ];
 
   const availableIndices = dayOrder
@@ -3782,12 +3828,12 @@ function renderWeekPlanPreview(planItem){
   const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
   const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
 
-  intro.textContent = "Systemets baseline for ugen ud fra træningstyper, ugemål og valgte træningsdage. Daglige check-ins kan stadig justere dagens endelige plan.";
-  meta.textContent = `${weeklyTargetSessions} planlagte pas`;
+  intro.textContent = tr("weekplan.description");
+  meta.textContent = tr("weekplan.sessions", { value: weeklyTargetSessions });
 
   grid.innerHTML = items.map(item => `
     <div class="weekplan-day ${esc(item.className)}${item.isToday ? ' is-today' : ''}">
-      <div class="weekplan-day-label">${esc(item.label)}${item.isToday ? ' · i dag' : ''}</div>
+      <div class="weekplan-day-label">${esc(item.label)}${item.isToday ? ` · ${esc(tr("common.today"))}` : ''}</div>
       <div class="weekplan-day-kind ${esc(item.className)}">${esc(item.kindLabel)}</div>
       <div class="weekplan-day-note">${esc(item.note)}</div>
     </div>

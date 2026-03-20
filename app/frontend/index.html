@@ -326,19 +326,19 @@
           <div class="small" id="forecastDate"></div>
         </div>
         <div class="metric" id="forecastType">-</div>
-        <div class="small" id="forecastSummary" style="margin-top:8px">Ingen plan endnu.</div>
+        <div class="small" id="forecastSummary" style="margin-top:8px" data-i18n="overview.no_plan_yet">Ingen plan endnu.</div>
         <div class="small" id="forecastReason" style="margin-top:8px"></div>
         <div class="btn-row" style="margin-top:12px">
-          <button type="button" id="forecastPrimaryBtn" class="primary-cta">Gå til check-in</button>
+          <button type="button" id="forecastPrimaryBtn" class="primary-cta" data-i18n="overview.go_to_checkin">Gå til check-in</button>
         </div>
       </section>
       <section class="card" id="overviewStatusCard" style="grid-column:1/-1">
         <h2 data-i18n="overview.status_right_now">Status lige nu</h2>
         <div class="overview-status">
           <div class="stat-line"><strong id="overviewReadinessValue">-</strong> · readiness</div>
-          <div class="stat-line" id="overviewLatestCheckinLine">Ingen check-in endnu.</div>
-          <div class="stat-line" id="overviewTimeLine">Ingen tidsvurdering endnu.</div>
-          <div class="stat-line" id="overviewWorkoutLine">Ingen workout-data endnu.</div>
+          <div class="stat-line" id="overviewLatestCheckinLine" data-i18n="overview.no_checkin_yet">Ingen check-in endnu.</div>
+          <div class="stat-line" id="overviewTimeLine" data-i18n="overview.no_time_estimate_yet">Ingen tidsvurdering endnu.</div>
+          <div class="stat-line" id="overviewWorkoutLine" data-i18n="overview.no_workout_data_yet">Ingen workout-data endnu.</div>
         </div>
       </section>
 
@@ -348,13 +348,13 @@
           <div class="small" id="profileDisplayName">-</div>
         </div>
         <div class="overview-status">
-          <div class="stat-line" id="profileBodyLine">Profil indlæses...</div>
-        <div class="stat-line" id="profileTrainingTypesLine">Træningstyper indlæses...</div>
-        <div class="stat-line" id="profileTrainingDaysLine">Træningsdage indlæses...</div>
-        <div class="stat-line" id="profileEquipmentLine">Udstyr indlæses...</div>
-          <div class="stat-line" id="profileIncrementLine">Vægtspring indlæses...</div>
-          <div class="stat-line" id="profileAccountLine">Konto indlæses...</div>
-          <div class="stat-line" id="profileAccountHelpLine">Profil og adgangskode håndteres centralt via auth.</div>
+          <div class="stat-line" id="profileBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
+        <div class="stat-line" id="profileTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
+        <div class="stat-line" id="profileTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
+        <div class="stat-line" id="profileEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
+          <div class="stat-line" id="profileIncrementLine" data-i18n="profile.increment_loading">Vægtspring indlæses...</div>
+          <div class="stat-line" id="profileAccountLine" data-i18n="profile.account_loading">Konto indlæses...</div>
+          <div class="stat-line" id="profileAccountHelpLine" data-i18n="profile.account_help">Profil og adgangskode håndteres centralt via auth.</div>
         </div>
         <div class="btn-row" style="margin-top:12px">
           <button type="button" id="openEquipmentSettingsBtn" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
@@ -367,10 +367,10 @@
         <div class="modal-card">
           <div class="row" style="align-items:center; margin-bottom:10px">
             <h3 style="margin:0" data-i18n="overview.profile_equipment">Profil og udstyr</h3>
-            <button type="button" id="cancelEquipmentSettingsBtn" class="small">Luk</button>
+            <button type="button" id="cancelEquipmentSettingsBtn" class="small" data-i18n="button.close">Luk</button>
           </div>
 
-          <p class="small">Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.</p>
+          <p class="small" data-i18n="settings.help">Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.</p>
 
           <form id="equipmentSettingsForm">
             <label>
@@ -456,155 +456,155 @@
       </div>
       </section>
       <section class="card">
-        <h2>Workouts</h2>
+        <h2 data-i18n="workouts.title">Workouts</h2>
         <div class="metric" id="workoutsCount">-</div>
         <div class="small" data-i18n="stats.logged_strength_sessions">Logged strength sessions</div>
       </section>
 
       <section class="card">
-        <h2>Øvelser</h2>
+        <h2 data-i18n="exercises.title">Øvelser</h2>
         <div class="metric" id="exercisesCount">-</div>
-        <div class="small">Antal øvelser i biblioteket</div>
+        <div class="small" data-i18n="exercises.count_label">Antal øvelser i biblioteket</div>
       </section>
 
       <section class="card">
-        <h2>Programmer</h2>
+        <h2 data-i18n="programs.title">Programmer</h2>
         <div class="metric" id="programsCount">-</div>
-        <div class="small">Antal aktive programmer</div>
+        <div class="small" data-i18n="programs.count_label">Antal aktive programmer</div>
       </section>
 
       <section class="card">
-        <h2>Recovery</h2>
+        <h2 data-i18n="recovery.title">Recovery</h2>
         <div class="metric" id="recoveryCount">-</div>
-        <div class="small">Antal recovery-logs</div>
+        <div class="small" data-i18n="recovery.count_label">Antal recovery-logs</div>
       </section>
 
       <section class="card">
-        <h2>Readiness</h2>
+        <h2 data-i18n="readiness.title">Readiness</h2>
         <div class="metric" id="readinessScore">-</div>
-        <div class="small" id="readinessLabel">Ingen data endnu</div>
+        <div class="small" id="readinessLabel" data-i18n="common.no_data_yet">Ingen data endnu</div>
         <div class="small" id="readinessSuggestion" style="margin-top:8px"></div>
         <div class="small" id="readinessAction" style="margin-top:8px"></div>
       </section>
     </div>
 
     <section class="card" id="manualWorkoutSection" style="margin-top:18px">
-      <h2>Nyt workout</h2>
+      <h2 data-i18n="new_workout.title">Nyt workout</h2>
       <form id="workoutForm">
         <label>
-          Dato
+          <span data-i18n="workout.date">Dato</span>
           <input id="date" name="date" type="date" required>
         </label>
 
         <label>
-          Type
+          <span data-i18n="workout.type">Type</span>
           <select id="type" name="type" required>
             <option value="styrke" data-i18n="session_type.strength">Styrke</option>
             <option value="løb" data-i18n="session_type.run">Løb</option>
             <option value="mobilitet" data-i18n="session_type.mobility">Mobilitet</option>
-            <option value="andet">Andet</option>
+            <option value="andet" data-i18n="session_type.other">Andet</option>
           </select>
         </label>
 
         <label>
-          Program (valgfrit)
+          <span data-i18n="workout.program">Program (valgfrit)</span>
           <select id="program_id" name="program_id">
             <option value="">(Intet program)</option>
           </select>
         </label>
 
         <label>
-          Dag fra program
+          <span data-i18n="workout.day_from_program">Dag fra program</span>
           <select id="program_day_idx" name="program_day_idx">
             <option value="">(Ingen dag valgt)</option>
           </select>
         </label>
 
         <div class="btn-row">
-          <button type="button" id="loadProgramDayBtn">Indlæs dag</button>
+          <button type="button" id="loadProgramDayBtn" data-i18n="button.load_day">Indlæs dag</button>
         </div>
 
-        <p id="programLoadStatus" class="small">Intet program indlæst endnu.</p>
+        <p id="programLoadStatus" class="small" data-i18n="program.nothing_loaded_yet">Intet program indlæst endnu.</p>
 
         <label>
-          Varighed (min)
+          <span data-i18n="workout.duration">Varighed (min)</span>
           <input id="duration_min" name="duration_min" type="number" min="0" step="1" value="45" required>
         </label>
 
         <div class="entry-box">
-          <h3>Tilføj øvelse til passet</h3>
+          <h3 data-i18n="entry.add_exercise_to_session">Tilføj øvelse til passet</h3>
 
           <label>
-            Øvelse
+            <span data-i18n="workout.exercise">Øvelse</span>
             <select id="entry_exercise_id" name="entry_exercise_id">
               <option value="">(Ingen valgt)</option>
             </select>
           </label>
 
           <label>
-            Sæt
+            <span data-i18n="workout.sets">Sæt</span>
             <select id="entry_sets" name="entry_sets">
               <option value="">(Vælg sæt)</option>
             </select>
           </label>
 
           <label>
-            Mål
+            <span data-i18n="workout.target">Mål</span>
             <select id="entry_reps" name="entry_reps">
               <option value="">(Vælg mål)</option>
             </select>
           </label>
 
           <label>
-            Reps / tid (opnået)
+            <span data-i18n="workout.reps_achieved">Reps / tid (opnået)</span>
             <input id="entry_achieved_reps" name="entry_achieved_reps" type="text" placeholder="fx 8">
           </label>
 
           <label>
-            Belastning
+            <span data-i18n="workout.load_label">Belastning</span>
             <select id="entry_load" name="entry_load">
               <option value="">(Vælg belastning)</option>
             </select>
           </label>
 
-          <p id="progressionHint" class="small">Intet load-forslag endnu.</p>
+          <p id="progressionHint" class="small" data-i18n="entry.no_load_hint_yet">Intet load-forslag endnu.</p>
 
           <label>
-            Øvelsesnoter
+            <span data-i18n="workout.exercise_notes">Øvelsesnoter</span>
             <input id="entry_notes" name="entry_notes" type="text" placeholder="fx rolig teknik">
           </label>
 
           <div class="btn-row">
-            <button type="button" id="addEntryBtn">Tilføj øvelse</button>
-            <button type="button" id="clearEntriesBtn">Ryd øvelser</button>
+            <button type="button" id="addEntryBtn" data-i18n="button.add_exercise">Tilføj øvelse</button>
+            <button type="button" id="clearEntriesBtn" data-i18n="button.clear_exercises">Ryd øvelser</button>
           </div>
 
-          <p id="entryStatus" class="small">Ingen øvelser tilføjet endnu.</p>
+          <p id="entryStatus" class="small" data-i18n="entry.none_added_yet">Ingen øvelser tilføjet endnu.</p>
           <ul id="pendingEntriesList"></ul>
         </div>
 
         <label>
-          Noter
+          <span data-i18n="workout.notes">Noter</span>
           <textarea id="notes" name="notes" placeholder="Fx helkrop, roligt pas, tung dag, interval osv."></textarea>
         </label>
 
-        <button type="submit">Gem workout</button>
+        <button type="submit" data-i18n="button.save_workout">Gem workout</button>
       </form>
 
-      <p id="formStatus" class="small" style="margin-top:12px">Klar.</p>
+      <p id="formStatus" class="small" style="margin-top:12px" data-i18n="status.ready">Klar.</p>
     </section>
 
     <section class="card" id="todayPlanSection" style="margin-top:18px">
       <div class="row">
-        <h2 id="todayPlanHeading">Dagens plan</h2>
+        <h2 id="todayPlanHeading" data-i18n="today_plan.title">Dagens plan</h2>
         <div class="small" id="todayPlanMeta"></div>
       </div>
-      <p id="todayPlanTiming" class="small">Ingen timing endnu.</p>
-      <p id="todayPlanSummary" class="small" style="white-space:pre-line">Ingen plan endnu.</p>
+      <p id="todayPlanTiming" class="small" data-i18n="today_plan.no_timing_yet">Ingen timing endnu.</p>
+      <p id="todayPlanSummary" class="small" style="white-space:pre-line" data-i18n="today_plan.no_plan_yet">Ingen plan endnu.</p>
       <ul id="todayPlanList"></ul>
 
       <div class="card" style="margin-top:14px">
-        <h3 id="sessionReviewHeading">Review af træning</h3>
+        <h3 id="sessionReviewHeading" data-i18n="review.session_review">Review af træning</h3>
         <div id="reviewPlanSummary" class="small" style="margin-bottom:12px"></div>
           <form id="sessionResultForm">
           <label>
@@ -621,7 +621,7 @@
           </label>
 
           <div>
-            <h4 style="margin:0 0 10px">Øvelsesreview</h4>
+            <h4 style="margin:0 0 10px" data-i18n="review.exercise_review">Øvelsesreview</h4>
             <ul id="sessionReviewList"></ul>
           </div>
 
@@ -783,14 +783,14 @@
         </div>
 
 
-          <button type="submit">Gem session-resultat</button>
-        </form><p id="sessionResultStatus" class="small" style="margin-top:12px">Ingen session gemt endnu.</p>
+          <button type="submit" data-i18n="button.save_session_result">Gem session-resultat</button>
+        </form><p id="sessionResultStatus" class="small" style="margin-top:12px" data-i18n="review.no_session_saved_yet">Ingen session gemt endnu.</p>
       </div>
     </section>
 
     <section class="card" id="checkinSection" style="margin-top:18px">
-      <h2>Check-in</h2>
-      <p id="checkinIntro" class="small">Start her. Vurder søvn, energi, ømhed og tid, så beregner SovereignStrength dagens træning ud fra dit aktuelle niveau.</p>
+      <h2 data-i18n="checkin.title">Check-in</h2>
+      <p id="checkinIntro" class="small" data-i18n="checkin.intro">Start her. Vurder søvn, energi, ømhed og tid, så beregner SovereignStrength dagens træning ud fra dit aktuelle niveau.</p>
       <form id="recoveryForm">
         <label>
           Dato
@@ -845,16 +845,16 @@
           <textarea id="recovery_notes" name="recovery_notes" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
         </label>
 
-        <button type="submit">Beregn dagens plan</button>
+        <button type="submit" data-i18n="button.calculate_today_plan">Beregn dagens plan</button>
       </form>
 
-      <p id="recoveryFormStatus" class="small" style="margin-top:12px">Klar.</p>
+      <p id="recoveryFormStatus" class="small" style="margin-top:12px" data-i18n="status.ready">Klar.</p>
     </section>
 
     <div class="two-col" id="historyTopSection">
       <section class="card">
         <div class="row">
-          <h2>Seneste workouts</h2>
+          <h2 data-i18n="history.latest_workouts">Seneste workouts</h2>
           <div class="small" id="listMeta"></div>
         </div>
         <ul id="workoutsList"></ul>
@@ -862,7 +862,7 @@
 
       <section class="card">
         <div class="row">
-          <h2>Øvelsesbibliotek</h2>
+          <h2 data-i18n="history.exercise_library">Øvelsesbibliotek</h2>
           <div id="exerciseLibrary"></div>
           <div class="small" id="exerciseMeta"></div>
         </div>
@@ -873,7 +873,7 @@
     <div class="two-col" id="historyBottomSection">
       <section class="card">
         <div class="row">
-          <h2>Seneste recovery</h2>
+          <h2 data-i18n="history.latest_recovery">Seneste recovery</h2>
           <div class="small" id="recoveryMeta"></div>
         </div>
         <ul id="recoveryList"></ul>
@@ -881,7 +881,7 @@
 
       <section class="card">
         <div class="row">
-          <h2>Programmer</h2>
+          <h2 data-i18n="programs.title">Programmer</h2>
           <div class="small" id="programMeta"></div>
         </div>
         <div id="programsRoot"></div>
@@ -889,11 +889,11 @@
     </div>
 
     <section class="card" style="margin-top:18px">
-      <h2>Status</h2>
+      <h2 data-i18n="system.status">Status</h2>
       <div class="card" style="margin-top:16px">
   <div class="row" style="justify-content:space-between;align-items:center">
     <strong data-i18n="status.system_info">System info</strong>
-    <button type="button" id="toggleSystemInfo" class="secondary" style="width:auto;padding:6px 10px">Skjul</button>
+    <button type="button" id="toggleSystemInfo" class="secondary" style="width:auto;padding:6px 10px" data-i18n="button.hide">Skjul</button>
   </div>
   <div id="systemInfoContent" style="margin-top:10px">
     <div id="status"></div>
@@ -911,8 +911,8 @@
     <div class="modal-backdrop" id="exerciseViewerBackdrop"></div>
     <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="exerciseViewerTitle">
       <div class="row" style="align-items:center; margin-bottom:12px">
-        <h2 id="exerciseViewerTitle" style="margin:0">Øvelse</h2>
-        <button type="button" id="closeExerciseViewerBtn" style="width:auto;padding:8px 12px">Luk</button>
+        <h2 id="exerciseViewerTitle" style="margin:0" data-i18n="exercise.viewer_title">Øvelse</h2>
+        <button type="button" id="closeExerciseViewerBtn" style="width:auto;padding:8px 12px" data-i18n="button.close">Luk</button>
       </div>
       <div id="exerciseViewerMeta" class="small" style="margin-bottom:12px"></div>
       <div id="exerciseViewerImages"></div>
