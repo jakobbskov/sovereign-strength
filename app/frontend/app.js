@@ -1404,10 +1404,27 @@ async function handleEquipmentSettingsSubmit(ev){
   }
 }
 
+async function handleResetCatalogFromSeed(){
+  const statusEl = document.getElementById("equipmentSettingsStatus");
+  const btn = document.getElementById("resetCatalogFromSeedBtn");
+  try{
+    if (btn) btn.disabled = true;
+    if (statusEl) statusEl.textContent = tr("status.resetting_catalog");
+    await apiPost("/api/admin/reset-catalog", {});
+    await refreshAll();
+    if (statusEl) statusEl.textContent = tr("status.catalog_reset_done");
+  }catch(err){
+    if (statusEl) statusEl.textContent = tr("status.error_prefix") + ": " + (err?.message || String(err));
+  }finally{
+    if (btn) btn.disabled = false;
+  }
+}
+
 function bindEquipmentEditor(){
   const form = document.getElementById("equipmentSettingsForm");
   const saveBtn = document.getElementById("saveEquipmentSettingsBtn");
   const cancelBtn = document.getElementById("cancelEquipmentSettingsBtn");
+  const resetBtn = document.getElementById("resetCatalogFromSeedBtn");
   const statusEl = document.getElementById("equipmentSettingsStatus");
 
   if (form){
@@ -1428,6 +1445,11 @@ function bindEquipmentEditor(){
 
   if (cancelBtn){
     cancelBtn.onclick = () => setEquipmentEditorOpen(false);
+  }
+
+  if (resetBtn && !resetBtn.dataset.bound){
+    resetBtn.dataset.bound = "1";
+    resetBtn.onclick = () => handleResetCatalogFromSeed();
   }
 }
 
