@@ -374,24 +374,24 @@
 
           <form id="equipmentSettingsForm">
             <label>
-              <span>Højde (cm)</span>
-              <input id="profile_height_cm" name="profile_height_cm" type="number" min="50" max="250" step="1" placeholder="fx 183">
+              <span data-i18n="profile.height">Højde (cm)</span>
+              <input id="profile_height_cm" name="profile_height_cm" type="number" min="50" max="250" step="1" placeholder="e.g. 183" data-i18n-placeholder="profile.height_placeholder">
             </label>
 
             <label>
-              <span>Kropsvægt (kg)</span>
-              <input id="profile_bodyweight_kg" name="profile_bodyweight_kg" type="number" min="20" max="400" step="0.1" placeholder="fx 82">
+              <span data-i18n="profile.weight">Kropsvægt (kg)</span>
+              <input id="profile_bodyweight_kg" name="profile_bodyweight_kg" type="number" min="20" max="400" step="0.1" placeholder="e.g. 82" data-i18n-placeholder="profile.weight_placeholder">
             </label>
 
-            <div style="margin:12px 0 6px; font-weight:700">Jeg vil gerne træne</div>
+            <div style="margin:12px 0 6px; font-weight:700" data-i18n="profile.training_preferences_title">Jeg vil gerne træne</div>
 
             <label class="training-option"><input id="pref_running" type="checkbox"><span data-i18n="session_type.run">Løb</span></label>
             <label class="training-option"><input id="pref_strength_weights" type="checkbox"><span data-i18n="settings.strength_weights">Styrke med vægte</span></label>
-            <label class="training-option"><input id="pref_bodyweight" type="checkbox"><span>Kropsvægtøvelser</span></label>
+            <label class="training-option"><input id="pref_bodyweight" type="checkbox"><span data-i18n="training_type.bodyweight">Kropsvægtøvelser</span></label>
             <label class="training-option"><input id="pref_mobility" type="checkbox"><span data-i18n="settings.mobility_recovery">Mobility and recovery</span></label>
 
-            <div style="margin:16px 0 6px; font-weight:700">Jeg kan typisk træne på</div>
-            <div class="small" style="margin-bottom:8px">Dage du ikke vælger her, bliver altid hviledage.</div>
+            <div style="margin:16px 0 6px; font-weight:700" data-i18n="profile.training_days_title">Jeg kan typisk træne på</div>
+            <div class="small" style="margin-bottom:8px" data-i18n="profile.training_days_help">Dage du ikke vælger her, bliver altid hviledage.</div>
 
             <label class="training-option"><input id="day_mon" type="checkbox"><span data-i18n="weekday.mon">Mandag</span></label>
             <label class="training-option"><input id="day_tue" type="checkbox"><span data-i18n="weekday.tue">Tirsdag</span></label>
@@ -402,52 +402,52 @@
             <label class="training-option"><input id="day_sun" type="checkbox"><span data-i18n="weekday.sun">Søndag</span></label>
 
             <label>
-              <span>Jeg sigter mod (pas pr. uge)</span>
+              <span data-i18n="profile.weekly_target_title">Jeg sigter mod (pas pr. uge)</span>
               <select id="weekly_target_sessions" name="weekly_target_sessions">
-                <option value="2">2 pas</option>
-                <option value="3" selected>3 pas</option>
-                <option value="4">4 pas</option>
-                <option value="5">5 pas</option>
-                <option value="6">6 pas</option>
+                <option value="2" data-i18n="profile.weekly_target_2">2 pas</option>
+                <option value="3" selected data-i18n="profile.weekly_target_3">3 pas</option>
+                <option value="4" data-i18n="profile.weekly_target_4">4 pas</option>
+                <option value="5" data-i18n="profile.weekly_target_5">5 pas</option>
+                <option value="6" data-i18n="profile.weekly_target_6">6 pas</option>
               </select>
             </label>
 
             <label>
-              <span>Stang / vægtstang til rådighed</span>
+              <span data-i18n="profile.barbell_available">Stang / vægtstang til rådighed</span>
               <select id="eq_barbell_enabled" name="eq_barbell_enabled">
-                <option value="true"><span data-i18n="common.yes">Ja</span></option>
-                <option value="false">Nej</option>
+                <option value="true" data-i18n="common.yes">Ja</option>
+                <option value="false" data-i18n="common.no">Nej</option>
               </select>
             </label>
 
             <label>
-              <span>Håndvægte til rådighed</span>
+              <span data-i18n="profile.dumbbell_available">Håndvægte til rådighed</span>
               <select id="eq_dumbbell_enabled" name="eq_dumbbell_enabled">
-                <option value="true"><span data-i18n="common.yes">Ja</span></option>
-                <option value="false">Nej</option>
+                <option value="true" data-i18n="common.yes">Ja</option>
+                <option value="false" data-i18n="common.no">Nej</option>
               </select>
             </label>
 
             <label>
-              <span>Kropsvægtøvelser til rådighed</span>
+              <span data-i18n="profile.bodyweight_available">Kropsvægtøvelser til rådighed</span>
               <select id="eq_bodyweight_enabled" name="eq_bodyweight_enabled">
-                <option value="true"><span data-i18n="common.yes">Ja</span></option>
-                <option value="false">Nej</option>
+                <option value="true" data-i18n="common.yes">Ja</option>
+                <option value="false" data-i18n="common.no">Nej</option>
               </select>
             </label>
 
             <label>
-              <span>Vægtspring for stang (kg)</span>
+              <span data-i18n="profile.barbell_increment">Vægtspring for stang (kg)</span>
               <input id="eq_barbell_increment" name="eq_barbell_increment" type="number" min="0" step="0.5" value="10">
             </label>
 
             <label>
-              <span>Vægtspring for håndvægte (kg)</span>
+              <span data-i18n="profile.dumbbell_increment">Vægtspring for håndvægte (kg)</span>
               <input id="eq_dumbbell_increment" name="eq_dumbbell_increment" type="number" min="0" step="0.5" value="5">
             </label>
 
             <div class="btn-row">
-              <button type="submit" id="saveEquipmentSettingsBtn" class="primary-cta">Gem profil og udstyr</button>
+              <button type="submit" id="saveEquipmentSettingsBtn" class="primary-cta" data-i18n="button.save_profile_equipment">Gem profil og udstyr</button>
             </div>
           </form>
 
@@ -610,8 +610,8 @@
           <label>
             <span data-i18n="after_training.completed_label">Gennemført?</span>
             <select id="session_completed" name="session_completed">
-              <option value="true" selected><span data-i18n="common.yes">Ja</span></option>
-              <option value="false">Nej</option>
+              <option value="true" selected data-i18n="common.yes">Ja</option>
+              <option value="false" data-i18n="common.no">Nej</option>
             </select>
           </label>
 
