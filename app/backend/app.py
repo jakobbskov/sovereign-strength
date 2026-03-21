@@ -57,8 +57,8 @@ def filter_items_for_user(items, user_id):
     for item in (items or []):
         if not isinstance(item, dict):
             continue
-        item_user_id = item.get("user_id", 1)
-        if item_user_id == user_id:
+        item_user_id = str(item.get("user_id", "")).strip()
+        if item_user_id == str(user_id).strip():
             out.append(item)
     return out
 
