@@ -2930,6 +2930,42 @@ def get_today_plan():
 
 
 
+
+@app.post("/api/admin/reset-catalog")
+def post_reset_catalog():
+    auth_user = require_auth_user()
+    user_id = auth_user.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False, "error": "missing_user"}), 401
+
+    repo_root = Path(__file__).resolve().parents[2]
+    seed_dir = repo_root / "app" / "data" / "seed"
+
+    seed_exercises = seed_dir / "exercises.json"
+    seed_programs = seed_dir / "programs.json"
+
+    if not seed_exercises.exists() or not seed_programs.exists():
+        return jsonify({
+            "ok": False,
+            "error": "missing_seed_files",
+            "seed_dir": str(seed_dir),
+        }), 500
+
+    exercises = read_json_file(seed_exercises)
+    programs = read_json_file(seed_programs)
+
+    write_json_file(FILES["exercises"], exercises)
+    write_json_file(FILES["programs"], programs)
+
+    return jsonify({
+        "ok": True,
+        "message": "Catalog data reset from seed.",
+        "counts": {
+            "exercises": len(exercises) if isinstance(exercises, list) else 0,
+            "programs": len(programs) if isinstance(programs, list) else 0,
+        }
+    })
+
 @app.get("/api/user-settings")
 def get_user_settings():
     auth_user, auth_err = require_auth_user()
