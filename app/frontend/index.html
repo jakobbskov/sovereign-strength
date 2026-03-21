@@ -415,7 +415,7 @@
             <label>
               <span>Stang / vægtstang til rådighed</span>
               <select id="eq_barbell_enabled" name="eq_barbell_enabled">
-                <option value="true">Ja</option>
+                <option value="true"><span data-i18n="common.yes">Ja</span></option>
                 <option value="false">Nej</option>
               </select>
             </label>
@@ -423,7 +423,7 @@
             <label>
               <span>Håndvægte til rådighed</span>
               <select id="eq_dumbbell_enabled" name="eq_dumbbell_enabled">
-                <option value="true">Ja</option>
+                <option value="true"><span data-i18n="common.yes">Ja</span></option>
                 <option value="false">Nej</option>
               </select>
             </label>
@@ -431,7 +431,7 @@
             <label>
               <span>Kropsvægtøvelser til rådighed</span>
               <select id="eq_bodyweight_enabled" name="eq_bodyweight_enabled">
-                <option value="true">Ja</option>
+                <option value="true"><span data-i18n="common.yes">Ja</span></option>
                 <option value="false">Nej</option>
               </select>
             </label>
@@ -557,7 +557,7 @@
 
           <label>
             <span data-i18n="workout.reps_achieved">Reps / tid (opnået)</span>
-            <input id="entry_achieved_reps" name="entry_achieved_reps" type="text" placeholder="fx 8">
+            <input id="entry_achieved_reps" name="entry_achieved_reps" type="text" placeholder="e.g. 8" data-i18n-placeholder="workout.achieved_placeholder">
           </label>
 
           <label>
@@ -571,7 +571,7 @@
 
           <label>
             <span data-i18n="workout.exercise_notes">Øvelsesnoter</span>
-            <input id="entry_notes" name="entry_notes" type="text" placeholder="fx rolig teknik">
+            <input id="entry_notes" name="entry_notes" type="text" placeholder="e.g. controlled technique" data-i18n-placeholder="workout.exercise_notes_placeholder">
           </label>
 
           <div class="btn-row">
@@ -585,7 +585,7 @@
 
         <label>
           <span data-i18n="workout.notes">Noter</span>
-          <textarea id="notes" name="notes" placeholder="Fx helkrop, roligt pas, tung dag, interval osv."></textarea>
+          <textarea id="notes" name="notes" placeholder="E.g. full body, easy session, heavy day, intervals, etc." data-i18n-placeholder="workout.notes_placeholder"></textarea>
         </label>
 
         <button type="submit" data-i18n="button.save_workout">Gem workout</button>
@@ -608,16 +608,16 @@
         <div id="reviewPlanSummary" class="small" style="margin-bottom:12px"></div>
           <form id="sessionResultForm">
           <label>
-            Gennemført?
+            <span data-i18n="after_training.completed_label">Gennemført?</span>
             <select id="session_completed" name="session_completed">
-              <option value="true" selected>Ja</option>
+              <option value="true" selected><span data-i18n="common.yes">Ja</span></option>
               <option value="false">Nej</option>
             </select>
           </label>
 
           <label>
-            Kort note
-            <textarea id="session_notes" name="session_notes" placeholder="Fx tung men god, sprang sidste øvelse over, fin energi"></textarea>
+            <span data-i18n="after_training.short_note_label">Kort note</span>
+            <textarea id="session_notes" name="session_notes" placeholder="e.g. heavy but good, skipped last exercise, good energy" data-i18n-placeholder="after_training.short_note_placeholder_general"></textarea>
           </label>
 
           <div>
@@ -904,7 +904,7 @@
   </div>
 
   <script src="/i18n.js?v=0.2.20"></script>
-  <script src="/app.js?v=0.2.23"></script>
+  <script src="/app.js?v=0.2.24"></script>
 
 
   <div id="exerciseViewerModal" class="modal" style="display:none">

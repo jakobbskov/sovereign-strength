@@ -272,7 +272,7 @@ function applyEntryInputMode(exerciseId){
       achievedEl.placeholder = "fx 45 sek";
     }
     if (hintEl){
-      hintEl.textContent = "Belastning: Kropsvægt. Vælg tid i en fast liste for ensartet data.";
+      hintEl.textContent = tr("after_training.bodyweight_time_hint");
     }
     return;
   }
@@ -284,10 +284,10 @@ function applyEntryInputMode(exerciseId){
     setFieldVisibility("entry_load", false);
     loadEl.value = "";
     if (achievedEl){
-      achievedEl.placeholder = "fx 8";
+      achievedEl.placeholder = tr("workout.achieved_placeholder");
     }
     if (hintEl){
-      hintEl.textContent = "Belastning: Kropsvægt.";
+      hintEl.textContent = tr("after_training.bodyweight_load_hint");
     }
     return;
   }
@@ -301,13 +301,13 @@ function applyEntryInputMode(exerciseId){
   }
 
   if (achievedEl){
-    achievedEl.placeholder = "fx 8";
+    achievedEl.placeholder = tr("workout.achieved_placeholder");
   }
 
   if (hintEl){
     const repHint = String(meta.rep_display_hint || "").trim();
     const baseHint = loadOptional && supportsBodyweight
-      ? "Belastning er valgfri. Tomt felt tolkes som kropsvægt."
+      ? tr("manual_workout.load_optional_hint")
       : tr("workout.load_hint");
 
     hintEl.textContent = repHint ? `${repHint} ${baseHint}` : baseHint;
@@ -406,12 +406,12 @@ function renderPendingEntries(){
     <li>
       <div class="row">
         <strong>${esc(exerciseMap.get(entry.exercise_id) || entry.exercise_id || tr("common.unknown_lower"))}</strong>
-        <button type="button" data-remove-entry="${idx}" style="width:auto;padding:8px 12px">Fjern</button>
+        <button type="button" data-remove-entry="${idx}" style="width:auto;padding:8px 12px">${esc(tr("button.remove"))}</button>
       </div>
       <div class="small">
-        ${entry.sets ? `${esc(entry.sets)} sæt` : "?"}
-        ${entry.reps ? ` · mål ${esc(entry.reps)}` : ""}
-        ${entry.achieved_reps ? ` · opnået ${esc(entry.achieved_reps)}` : ""}
+        ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : "?"}
+        ${entry.reps ? ` · ${tr("exercise.target_label", { value: esc(entry.reps) })}` : ""}
+        ${entry.achieved_reps ? ` · ${tr("exercise.achieved_label", { value: esc(entry.achieved_reps) })}` : ""}
         ${loadText}
       </div>
       ${entry.notes ? `<div class="small" style="margin-top:6px">${esc(entry.notes)}</div>` : ""}
@@ -464,16 +464,16 @@ function renderWorkouts(items){
             const estimatedLoadLabel = formatEstimatedLoadLabel(result.exercise_id, result.load || "");
             const loadText = estimatedLoadLabel ? ` · load ${esc(String(estimatedLoadLabel))}` : "";
             const achievedText = String(result.achieved_reps || "").trim()
-              ? ` · opnået ${esc(String(result.achieved_reps || "").trim())}`
+              ? ` · ${tr("exercise.achieved_label", { value: esc(String(result.achieved_reps || "").trim()) })}`
               : "";
             const targetText = String(result.target_reps || "").trim()
-              ? ` · mål ${esc(String(result.target_reps || "").trim())}`
+              ? ` · ${tr("exercise.target_label", { value: formatTarget(String(result.target_reps || "").trim()) })}`
               : "";
 
             return `
             <div class="small">
               • ${esc(formatExerciseName(result.exercise_id))}
-              ${setCount ? ` · ${esc(String(setCount))} sæt` : ""}
+              ${setCount ? ` · ${tr("exercise.sets_count", { count: esc(String(setCount)) })}` : ""}
               ${targetText}
               ${achievedText}
               ${loadText}
@@ -493,7 +493,7 @@ function renderWorkouts(items){
         <div class="small">
           ${isCardio
             ? esc(cardioMeta || "")
-            : `${summary.total_sets != null ? `${esc(String(summary.total_sets))} sæt` : ""}${summary.total_reps != null ? ` · ${esc(String(summary.total_reps))} reps` : ""}${summary.estimated_volume != null ? ` · volumen ${esc(String(summary.estimated_volume))}` : ""}`}
+            : `${summary.total_sets != null ? tr("exercise.sets_count", { count: esc(String(summary.total_sets)) }) : ""}${summary.total_reps != null ? ` · ${tr("exercise.reps_count", { count: esc(String(summary.total_reps)) })}` : ""}${summary.estimated_volume != null ? ` · ${tr("exercise.volume_label", { value: esc(String(summary.estimated_volume)) })}` : ""}`}
         </div>
         ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
         ${entriesHtml}
@@ -508,7 +508,7 @@ function renderWorkouts(items){
 
 function formatCardioKindLabel(value){
   const x = String(value || "").trim().toLowerCase();
-  if (x === "restitution") return "Recovery dag";
+  if (x === "restitution") return tr("session_type.recovery");
   if (x === "base") return "Base";
   if (x === "tempo") return "Tempo";
   if (x === "interval" || x === "intervals") return "Intervaller";
@@ -667,11 +667,11 @@ function buildSessionSummaryFromResults(item){
     fatigue = "moderate";
   }
 
-  let nextStepHint = "Du kan sandsynligvis progressere næste gang.";
+  let nextStepHint = tr("progression.next_step_likely_progress");
   if (fatigue === "high"){
-    nextStepHint = "Reducer belastning eller volumen næste gang.";
+    nextStepHint = tr("progression.next_step_reduce_load_or_volume");
   } else if (fatigue === "moderate"){
-    nextStepHint = "Hold progressionen rolig næste gang.";
+    nextStepHint = tr("progression.next_step_keep_progression_easy");
   }
 
   return {
@@ -783,7 +783,7 @@ function ensureLoadMetricsMount(){
   card.style.marginTop = "16px";
   card.innerHTML = `
     <div class="row">
-      <h2>Belastning</h2>
+      <h2>${esc(tr("load.title"))}</h2>
       <div class="small" id="loadMetricsMeta"></div>
     </div>
     <div id="loadMetricsBody" class="small"></div>
@@ -819,11 +819,11 @@ function renderLoadMetrics(loadMetrics, recoveryState){
     }
 
     root.innerHTML = `
-      <div class="small"><strong>Status:</strong> ${esc(loadStatus)}</div>
-      ${rs.strain_flag ? `<div class="small" style="margin-top:6px"><strong>Belastningsflag:</strong> aktivt</div>` : `<div class="small" style="margin-top:6px"><strong>Belastningsflag:</strong> ikke aktivt</div>`}
+      <div class="small"><strong>${tr("common.status_label")}:</strong> ${esc(loadStatus)}</div>
+      ${rs.strain_flag ? `<div class="small" style="margin-top:6px"><strong>${tr("recovery.strain_flag_label")}:</strong> ${tr("common.active")}</div>` : `<div class="small" style="margin-top:6px"><strong>${tr("recovery.strain_flag_label")}:</strong> ${tr("common.inactive")}</div>`}
       ${Array.isArray(rs.explanation) && rs.explanation.length ? `<div class="small" style="margin-top:6px">${esc(rs.explanation.join(" · "))}</div>` : ""}
     `;
-    if (meta) meta.textContent = "Recovery-baseret fallback";
+    if (meta) meta.textContent = tr("recovery.fallback_label");
     return;
   }
 
@@ -841,11 +841,11 @@ function renderLoadMetrics(loadMetrics, recoveryState){
     .join("");
 
   root.innerHTML = `
-    <div class="small"><strong>I dag:</strong> ${esc(String(today))}</div>
-    <div class="small"><strong>7 dage:</strong> ${esc(String(acute))}</div>
-    <div class="small"><strong>28 dage:</strong> ${esc(String(chronic))}</div>
-    <div class="small"><strong>Ratio:</strong> ${esc(String(ratio))}</div>
-    <div class="small"><strong>Status:</strong> ${esc(status)}</div>
+    <div class="small"><strong>${tr("load.today_label")}:</strong> ${esc(String(today))}</div>
+    <div class="small"><strong>${tr("load.days_7_label")}:</strong> ${esc(String(acute))}</div>
+    <div class="small"><strong>${tr("load.days_28_label")}:</strong> ${esc(String(chronic))}</div>
+    <div class="small"><strong>${tr("load.ratio_label")}:</strong> ${esc(String(ratio))}</div>
+    <div class="small"><strong>${tr("common.status_label")}:</strong> ${esc(status)}</div>
     ${dailyRows ? `<div style="margin-top:10px">${dailyRows}</div>` : ""}
   `;
   if (meta) meta.textContent = "";
@@ -913,7 +913,7 @@ function formatSessionType(value){
   const x = String(value || "").trim();
   if (x === "styrke") return tr("workout.type.strength");
   if (x === "cardio") return "Cardio";
-  if (x === "restitution") return "Recovery dag";
+  if (x === "restitution") return tr("session_type.recovery");
   if (x === "løb") return tr("session_type.run");
   if (x === "mobilitet") return tr("session_type.mobility");
   return x || "Ingen plan";
@@ -923,7 +923,7 @@ function formatSessionType(value){
 
 function buildForecastLeadText(planItem){
   if (!planItem || typeof planItem !== "object"){
-    return "Ingen plan endnu.";
+    return tr("today_plan.no_plan_yet_short");
   }
 
   const sessionType = String(planItem.session_type || "").trim().toLowerCase();
@@ -1031,12 +1031,13 @@ function renderForecastHero(planItem, latestCheckin){
   const bits = [];
   if (planItem.readiness_score != null) bits.push(tr("forecast.readiness_label", { value: planItem.readiness_score }));
   if (planItem.time_budget_min) bits.push(tr("forecast.time_label", { minutes: planItem.time_budget_min }));
-  if (planItem.timing_state) bits.push(tr("forecast.timing_label", { value: formatTimingState(planItem.timing_state) }));
+  const timingLabel = formatTimingState(planItem.timing_state);
+  if (timingLabel) bits.push(tr("forecast.timing_label", { value: timingLabel }));
   const planVariantLabel = formatPlanVariant(planItem.plan_variant || "");
-  if (planVariantLabel) bits.push(tr("forecast.plan_label", { value: planVariantLabel }));
+  if (planVariantLabel) bits.push(tr("forecast.plan_label", { value: formatPlanMotor(planVariantLabel) }));
   if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
 
-  const reasonParts = [bits.join(" · "), planItem.reason || ""].filter(Boolean);
+  const reasonParts = [bits.join(" · "), formatPlanReason(planItem.reason || "")].filter(Boolean);
 
   setText("forecastSummary", leadText);
   setText("forecastReason", reasonParts.join(" · "));
@@ -1451,7 +1452,7 @@ function renderReadiness(item){
   }
 
   setText("readinessScore", item.readiness_score ?? "-");
-  setText("readinessLabel", `Status: ${item.readiness_label || tr("common.unknown_lower")}`);
+  setText("readinessLabel", `${tr("common.status_label")}: ${item.readiness_label || tr("common.unknown_lower")}`);
   setText("readinessSuggestion", item.suggestion || "");
 
   let action = "";
@@ -1485,9 +1486,9 @@ function formatExerciseName(exerciseId){
 
 function formatInputKindLabel(value){
   const x = String(value || "").trim().toLowerCase();
-  if (x === "bodyweight_reps") return "Kropsvægt / reps";
+  if (x === "bodyweight_reps") return tr("input_kind.bodyweight_reps");
   if (x === "time" || x === "cardio_time") return "Tid";
-  if (x === "load_reps") return "Belastning / reps";
+  if (x === "load_reps") return tr("input_kind.load_reps");
   return x || tr("common.unknown_lower");
 }
 
@@ -1497,7 +1498,7 @@ function formatProgressFlag(flag){
 
   if (raw.endsWith("_done")){
     const exerciseId = raw.slice(0, -5);
-    return `${formatExerciseName(exerciseId)} gennemført`;
+    return tr("after_training.exercise_completed_label", { value: formatExerciseName(exerciseId) });
   }
 
   if (raw.endsWith("_failure")){
@@ -1510,40 +1511,83 @@ function formatProgressFlag(flag){
 
 function formatProgressionDecision(value){
   const x = String(value || "").trim();
-  if (x === "increase") return "Øg næste gang";
-  if (x === "increase_reps") return "Øg næste gang";
-  if (x === "hold") return "Hold i dag";
-  if (x === "use_start_weight") return "Startvægt";
-  if (x === "no_progression") return "Ingen auto-progression";
+  if (x === "increase") return tr("progression.increase_next_time");
+  if (x === "increase_reps") return tr("progression.increase_next_time");
+  if (x === "hold") return tr("progression.hold_today");
+  if (x === "use_start_weight") return tr("progression.start_weight");
+  if (x === "no_progression") return tr("progression.no_auto_progression");
+  if (x === "manual_override") return tr("plan.motor.manual_override");
   return x || "";
 }
 
 
 
+function formatProgressionReason(value){
+  const x = String(value || "").trim();
+  if (!x) return "";
+  if (x === "Manuel plan valgt som dagens træning") return tr("plan.reason.manual_plan_selected_today");
+  if (x === "Manual plan selected as today's training") return tr("plan.reason.manual_plan_selected_today");
+  return x;
+}
+
+function formatPlanReason(value){
+  const x = String(value || "").trim();
+  if (!x) return "";
+  if (x === "Manuel plan overstyrer dagens autoplan.") return tr("plan.reason.manual_override_today");
+  if (x === "Manual plan overrides today's autoplan.") return tr("plan.reason.manual_override_today");
+  return x;
+}
+
 function formatTimingState(value){
   const x = String(value || "").trim();
-  if (x === "early") return "tidligt";
-  if (x === "on_time") return tr("timing.on_time");
-  if (x === "late") return "sent";
+  if (x === "early") return tr("timing.too_early");
+  if (x === "on_time") return "";
+  if (x === "late") return tr("timing.too_late");
   return x || "";
 }
 
 function formatPlanVariant(value){
   const x = String(value || "").trim();
-  if (x === "short_20") return "kort (20 min)";
-  if (x === "short_30") return "kort (30 min)";
-  if (x === "full") return "fuld";
+  if (x === "short_20") return tr("plan_variant.short_20");
+  if (x === "short_30") return tr("plan_variant.short_30");
+  if (x === "full") return tr("plan_variant.full");
   if (x === "default") return tr("plan_variant.standard");
+  if (x === "weekly_goal_cap") return tr("plan.motor.weekly_goal_cap");
+  if (x === "manual_override") return tr("plan.motor.manual_override");
   if (x === "completed_today") return "";
+  return x || "";
+}
+
+
+function formatTarget(value){
+  const v = String(value || "").trim();
+  if (!v) return "";
+
+  if (v.endsWith("sek")){
+    const num = v.replace(/\s*sek\s*$/, "").trim();
+    return `${num} ${tr("unit.seconds")}`;
+  }
+
+  if (v.includes("/side")){
+    const num = v.split("/")[0].trim();
+    return `${num}/${tr("unit.per_side")}`;
+  }
+
+  return v;
+}
+
+function formatPlanMotor(value){
+  const x = String(value || "").trim();
+  if (x === "weekly_goal_cap") return tr("plan.motor.weekly_goal_cap");
   return x || "";
 }
 
 
 function formatTimingExplanation(value){
   const x = String(value || "").trim();
-  if (x === "early") return "Du checker ind før anbefalet dag.";
-  if (x === "on_time") return "Du checker ind på anbefalet dag.";
-  if (x === "late") return "Du checker ind efter anbefalet dag.";
+  if (x === "early") return tr("timing.explanation_early");
+  if (x === "on_time") return "";
+  if (x === "late") return tr("timing.explanation_late");
   return "";
 }
 
@@ -1616,14 +1660,14 @@ function buildReviewSetFields(entry, idx, setIdx){
   if (inputKind === "time" || inputKind === "cardio_time"){
     return `
       <div class="card" style="margin-top:10px; padding:12px">
-        <div class="small" style="margin-bottom:8px">Sæt ${setIdx + 1}</div>
+        <div class="small" style="margin-bottom:8px">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
 
         <label>
           Tid
           ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), "", "(Vælg tid)")}
         </label>
 
-        <div class="small" style="margin-top:6px">Belastning: Kropsvægt</div>
+        <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
       </div>
     `;
   }
@@ -1631,29 +1675,29 @@ function buildReviewSetFields(entry, idx, setIdx){
   if (inputKind === "bodyweight_reps"){
     return `
       <div class="card" style="margin-top:10px; padding:12px">
-        <div class="small" style="margin-bottom:8px">Sæt ${setIdx + 1}</div>
+        <div class="small" style="margin-bottom:8px">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
 
         <label>
           Reps
-          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), "", "(Vælg reps)")}
+          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), "", tr("after_training.select_reps"))}
         </label>
 
-        <div class="small" style="margin-top:6px">Belastning: Kropsvægt</div>
+        <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
       </div>
     `;
   }
 
   return `
     <div class="card" style="margin-top:10px; padding:12px">
-      <div class="small" style="margin-bottom:8px">Sæt ${setIdx + 1}</div>
+      <div class="small" style="margin-bottom:8px">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
 
       <label>
         Reps
-        ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), "", "(Vælg reps)")}
+        ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), "", tr("after_training.select_reps"))}
       </label>
 
       <label>
-        Belastning
+        ${esc(tr("load.title"))}
         ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder"))}
       </label>
 
@@ -1796,7 +1840,7 @@ function renderSessionReview(item){
   if (!root) return;
 
   if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen øvelser at reviewe endnu.</div></li>`;
+    root.innerHTML = `<li><div class="small">${esc(tr("after_training.no_exercises_to_review"))}</div></li>`;
     toggleCardioReviewFields(null);
     return;
   }
@@ -1817,14 +1861,14 @@ function renderSessionReview(item){
         <li>
           <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
           <div class="small" style="margin-bottom:10px">
-            Mål: ${entry.target_reps ? esc(entry.target_reps) : "Cardiopas"}
+            ${tr("exercise.target_colon")} ${entry.target_reps ? esc(entry.target_reps) : tr("session_type.cardio")}
           </div>
           <div class="small" style="margin-bottom:10px">
-            Type: løb
+            ${tr("common.type_label")}: ${tr("session_type.run")}
           </div>
           <label>
-            Session-note
-            <input type="text" name="review_notes_${idx}" placeholder="fx rolig tur, gode ben">
+            ${esc(tr("after_training.session_note_label"))}
+            <input type="text" name="review_notes_${idx}" placeholder="${esc(tr("after_training.short_note_placeholder_cardio"))}">
           </label>
         </li>
       `;
@@ -1838,29 +1882,29 @@ function renderSessionReview(item){
       <li>
         <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
         <div class="small" style="margin-bottom:10px">
-          Mål: ${entry.sets ? `${esc(entry.sets)} sæt` : ""}${entry.target_reps ? ` · ${esc(entry.target_reps)}` : ""}${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
+          ${tr("exercise.target_colon")} ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}${entry.target_reps ? ` · ${esc(entry.target_reps)}` : ""}${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
         </div>
 
         <div class="small" style="margin-bottom:10px">
-          Type: ${esc(formatInputKindLabel(inputKind))}
+          ${tr("common.type_label")}: ${esc(formatInputKindLabel(inputKind))}
         </div>
 
-        ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px">Belastning: Kropsvægt</div>` : ""}
+        ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px">${tr("exercise.load_bodyweight")}</div>` : ""}
         ${meta?.rep_display_hint ? `<div class="small" style="margin-bottom:10px">${esc(meta.rep_display_hint)}</div>` : ""}
 
         ${setFields}
 
         <label>
-          Fail?
+          ${esc(tr("after_training.fail_label"))}
           <select name="review_hit_failure_${idx}">
-            <option value="false" selected>Nej</option>
-            <option value="true">Ja</option>
+            <option value="false" selected>${esc(tr("common.no"))}</option>
+            <option value="true">${esc(tr("common.yes"))}</option>
           </select>
         </label>
 
         <label>
-          Øvelsesnote
-          <input type="text" name="review_notes_${idx}" placeholder="fx tung sidste sæt">
+          ${esc(tr("exercise.note_label"))}
+          <input type="text" name="review_notes_${idx}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
         </label>
       </li>
     `;
@@ -1874,7 +1918,7 @@ function renderReviewSummary(item){
   if (!root) return;
 
   if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
-    root.innerHTML = `<div class="small">Ingen plan at reviewe endnu.</div>`;
+    root.innerHTML = `<div class="small">${esc(tr("after_training.no_plan_to_review"))}</div>`;
     return;
   }
 
@@ -1885,8 +1929,8 @@ function renderReviewSummary(item){
     <div class="small">
       ${item.entries.map(entry => {
         const bits = [];
-        if (entry.sets) bits.push(`${esc(entry.sets)} sæt`);
-        if (entry.target_reps) bits.push(`mål ${esc(entry.target_reps)}`);
+        if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
+        if (entry.target_reps) bits.push(tr("exercise.target_label", { value: formatTarget(entry.target_reps) }));
         if (entry.target_load) bits.push(esc(entry.target_load));
         return `${esc(formatExerciseName(entry.exercise_id))}${bits.length ? ` · ${bits.join(" · ")}` : ""}`;
       }).join("<br>")}
@@ -1917,12 +1961,12 @@ function renderSessionResultSummary(summary){
   const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
   root.innerHTML = `
-    <div style="font-weight:700; margin-bottom:8px">Session summary</div>
+    <div style="font-weight:700; margin-bottom:8px">${esc(tr("after_training.session_summary_title"))}</div>
     <div class="small" style="margin-bottom:8px">
-      ${esc(sessionType)} · fatigue ${esc(fatigue)}
+      ${esc(sessionType)} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigue)}
     </div>
     <div class="small" style="margin-bottom:8px">
-      Fuldførte øvelser: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
+      ${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
       Sæt: ${esc(String(totalSets))}<br>
       Reps: ${esc(String(totalReps))}<br>
       Estimeret volumen: ${esc(String(estimatedVolume))}<br>
@@ -1944,7 +1988,7 @@ function formatPlanActionText(entry){
   const nextTarget = String(entry?.next_target_reps || "").trim();
 
   if (decision === "increase"){
-    return load ? `Brug ${load} i dag` : "Øg belastningen i dag";
+    return load ? tr("plan.action.use_load_today", { load }) : tr("plan.action.increase_load_today");
   }
   if (decision === "increase_reps"){
     return nextTarget ? `Næste mål: ${nextTarget}` : "Øg reps næste gang";
@@ -1953,25 +1997,25 @@ function formatPlanActionText(entry){
     return load ? `Hold ${load} i dag` : "Hold nuværende belastning i dag";
   }
   if (decision === "use_start_weight"){
-    return load ? `Brug startvægt: ${load}` : "Brug startvægt i dag";
+    return load ? tr("plan.action.use_start_weight_with_load", { load }) : tr("plan.action.use_start_weight_today");
   }
   if (decision === "no_progression"){
-    return "Ingen automatisk progression";
+    return tr("progression.no_automatic_progression");
   }
-  return load ? `Brug ${load} i dag` : "Følg planen i dag";
+  return load ? tr("plan.action.use_load_today", { load }) : tr("plan.action.follow_plan_today");
 }
 
 function formatPlanProgressionExtra(entry){
   const bits = [];
 
   if (entry?.substituted_from){
-    bits.push(`Erstattet fra: ${formatExerciseName(entry.substituted_from)}`);
+    bits.push(`${tr("exercise.substituted_from")}: ${formatExerciseName(entry.substituted_from)}`);
   }
   if (entry?.recommended_next_load != null){
-    bits.push(`Ideelt næste load: ${entry.recommended_next_load} kg`);
+    bits.push(`${tr("exercise.ideal_next_load")}: ${entry.recommended_next_load} kg`);
   }
   if (entry?.actual_possible_next_load != null){
-    bits.push(`Næste mulige med udstyr: ${entry.actual_possible_next_load} kg`);
+    bits.push(`${tr("exercise.next_possible_with_equipment")}: ${entry.actual_possible_next_load} kg`);
   }
 
   return bits;
@@ -1982,8 +2026,8 @@ function formatPlanProgressionExtra(entry){
 function formatRecoveryState(value){
   const v = String(value || "").trim();
   const map = {
-    ready: "Klar",
-    caution: "Forsigtig",
+    ready: tr("recovery_state.ready"),
+    caution: tr("recovery_state.caution"),
     recover: tr("session_type.recovery")
   };
   return map[v] || (v || tr("common.unknown_title"));
@@ -1996,7 +2040,7 @@ function formatFamilyState(value){
   const map = {
     fatigued: "Træt",
     stable: "Stabil",
-    ready: "Klar",
+    ready: tr("recovery_state.ready"),
     unknown: tr("common.unknown_title")
   };
   return map[v] || (v || tr("common.unknown_title"));
@@ -2207,7 +2251,7 @@ function renderExerciseLibrary(){
                 class="secondary"
                 data-exercise-viewer="${esc(exId)}"
                 style="width:auto;padding:8px 12px;white-space:nowrap"
-              >Se øvelse</button>
+              >${esc(tr("button.view_exercise"))}</button>
             </div>
           </div>
         `;
@@ -2234,7 +2278,7 @@ function formatWeeklyStatusText(weeklyStatus){
   if (!target) return "";
 
   if (completed >= target){
-    return `Ugestatus: ${completed}/${target} pas · Pas tilbage til mål: 0`;
+    return tr("today_plan.week_status_goal_reached", { completed, target });
   }
 
   return tr("weekplan.status_summary", { completed, target, remaining: remainingToGoal, days: remainingCalendarDays });
@@ -2247,9 +2291,9 @@ function renderTodayPlan(item){
 
   if (!item){
     setText("todayPlanMeta", "");
-    setText("todayPlanTiming", "Ingen timing endnu.");
-    setText("todayPlanSummary", "Ingen plan endnu. Første plan bliver genereret efter dit check-in.");
-    root.innerHTML = `<li><div class="small">Du har ingen plan endnu. Lav et check-in, så opretter systemet dit første datapunkt og dagens træning.</div></li>`;
+    setText("todayPlanTiming", tr("today_plan.no_timing_yet"));
+    setText("todayPlanSummary", tr("today_plan.no_plan_yet_after_checkin"));
+    root.innerHTML = `<li><div class="small">${esc(tr("today_plan.no_plan_yet_help"))}</div></li>`;
       renderReviewSummary(null);
       renderSessionReview(null);
       return;
@@ -2269,14 +2313,14 @@ function renderTodayPlan(item){
 
   const recovery = item && item.recovery_state && typeof item.recovery_state === "object" ? item.recovery_state : null;
   const recoveryLabel = recovery ? formatRecoveryState(recovery.recovery_state || "") : "";
-  const recoveryText = recoveryLabel ? ` · Recovery: ${recoveryLabel}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` : "";
+  const recoveryText = recoveryLabel ? ` · ${tr("today_plan.recovery_label", { value: `${recoveryLabel}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}` : "";
 
   const templateMode = String(item?.template_mode || "").trim();
   const planMotorLabel =
     templateMode === "autoplan_v0_1" || templateMode === "autoplan_cardio_v0_1"
       ? tr("plan.motor.autoplan")
       : templateMode === "weekly_goal_cap_v0_1"
-        ? tr("plan.motor.weekly_goal_cap")
+        ? formatPlanMotor("weekly_goal_cap")
         : templateMode === "manual_override_v0_1"
           ? tr("plan.motor.manual_override")
           : templateMode === "completed_today_v0_1"
@@ -2294,16 +2338,16 @@ function renderTodayPlan(item){
   if (todayWeekKind === "rest"){
     trainingAllowedSummary = tr("plan.weekplan_rest_today");
   } else if (todayWeekKind && todayWeekKind !== actualKind){
-    const plannedLabel = String(todayWeekPlanItem?.kindLabel || "").trim().toLowerCase();
+    const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
     trainingAllowedSummary = tr("plan.weekplan_adjusted_today", { value: plannedLabel });
   } else if (todayWeekKind){
-    const plannedLabel = String(todayWeekPlanItem?.kindLabel || "").trim().toLowerCase();
+    const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
     trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
   }
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
-  const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${item.reason || ""}`;
+  const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${formatPlanReason(item.reason || "")}`;
   const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
     ? tr("plan.light_movement_today")
     : "";
@@ -2336,9 +2380,9 @@ function renderTodayPlan(item){
     <li>
       <div style="font-weight:700">Recovery</div>
       <div style="margin-top:6px; font-size:1.35rem; font-weight:700">${esc(String(recovery.recovery_score ?? "-"))}</div>
-      <div class="small" style="margin-top:6px">Status: ${esc(formatRecoveryState(recovery.recovery_state || ""))}</div>
-      <div class="small" style="margin-top:6px">${recovery.strain_flag ? "Belastningsflag aktivt" : "Intet belastningsflag"}</div>
-      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px">Hvorfor: ${esc(recovery.explanation.join(" · "))}</div>` : ""}
+      <div class="small" style="margin-top:6px">${tr("common.status_label")}: ${esc(formatRecoveryState(recovery.recovery_state || ""))}</div>
+      <div class="small" style="margin-top:6px">${recovery.strain_flag ? tr("recovery.strain_flag_active") : tr("recovery.strain_flag_inactive")}</div>
+      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px">${tr("common.why_label")}: ${esc(recovery.explanation.join(" · "))}</div>` : ""}
     </li>
   ` : "";
 
@@ -2352,23 +2396,23 @@ function renderTodayPlan(item){
         </div>
         <div style="margin-top:6px; font-weight:600">${esc(formatPlanActionText(entry))}</div>
         <div class="small">
-          ${entry.sets ? `${esc(entry.sets)} sæt` : ""}
-          ${entry.target_reps ? ` · mål ${esc(entry.target_reps)}` : ""}
+          ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
+          ${entry.target_reps ? ` · ${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
         </div>
-        ${entry.progression_reason ? `<div class="small" style="margin-top:6px">Årsag: ${esc(entry.progression_reason)}</div>` : ""}
+        ${entry.progression_reason ? `<div class="small" style="margin-top:6px">${tr("common.reason_label")}: ${esc(formatProgressionReason(entry.progression_reason))}</div>` : ""}
         ${
           entry.decision && typeof entry.decision === "object" && formatDecisionLabel(entry.decision)
-            ? `<div class="small" style="margin-top:6px"><strong>Beslutning:</strong> ${esc(formatDecisionLabel(entry.decision))}</div>`
+            ? `<div class="small" style="margin-top:6px"><strong>${tr("common.decision_label")}:</strong> ${esc(formatDecisionLabel(entry.decision))}</div>`
             : ""
         }
         ${
           entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.explanation) && entry.decision.explanation.length
-            ? `<div class="small" style="margin-top:6px"><strong>Hvorfor:</strong> ${esc(entry.decision.explanation.join(" · "))}</div>`
+            ? `<div class="small" style="margin-top:6px"><strong>${tr("common.why_label")}:</strong> ${esc(entry.decision.explanation.join(" · "))}</div>`
             : ""
         }
         ${
           entry.decision && typeof entry.decision === "object" && entry.decision.family_key
-            ? `<div class="small" style="margin-top:6px"><strong>Familie:</strong> ${esc(String(entry.decision.family_key))}</div>`
+            ? `<div class="small" style="margin-top:6px"><strong>${tr("common.family_label")}:</strong> ${esc(String(entry.decision.family_key))}</div>`
             : ""
         }
         ${
@@ -2423,7 +2467,7 @@ function renderTodayPlan(item){
         }
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
         <div style="margin-top:10px">
-          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">Se øvelse</button>
+          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
         </div>
         ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">Udstyr: næste mulige spring er højere end anbefalet.</div>` : ""}
       </li>
@@ -2463,7 +2507,7 @@ function renderPrograms(programs, exercises){
                 <li>
                   <div class="row">
                     <strong>${esc(name)}</strong>
-                    <span class="small">${esc(ex.sets ?? "")} sæt × ${esc(ex.reps ?? "")}</span>
+                    <span class="small">${tr("exercise.sets_by_reps", { sets: esc(ex.sets ?? ""), reps: esc(ex.reps ?? "") })}</span>
                   </div>
                 </li>
               `;
@@ -2620,7 +2664,7 @@ async function handleExerciseChange(){
       if (String(meta.input_kind || "") !== "load_reps"){
         setText("progressionHint", meta.input_kind === "time"
           ? "Tid styres via faste valg."
-          : "Kropsvægtsøvelse: ingen load-forslag.");
+          : tr("manual_workout.bodyweight_no_load_suggestion"));
         return;
       }
 
