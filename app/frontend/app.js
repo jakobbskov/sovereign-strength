@@ -60,11 +60,7 @@ async function initLanguageToggle(){
         const next = getNextLang();
         await window.I18N.load(next);
         updateLanguageToggleLabel();
-        applyStaticTranslations();
-        renderWizardNav();
-        renderAuthBar();
-        await refreshAll();
-        showWizardStep(CURRENT_STEP || "overview");
+        await rerenderUiAfterLanguageChange();
       }catch(err){
         setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
       }
@@ -95,11 +91,7 @@ async function initLanguageToggle(){
       try{
         await window.I18N.load(chosen);
         updateLanguageToggleLabel();
-        applyStaticTranslations();
-        renderWizardNav();
-        renderAuthBar();
-        await refreshAll();
-        showWizardStep(CURRENT_STEP || "overview");
+        await rerenderUiAfterLanguageChange();
       }catch(err){
         setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
       }
@@ -124,10 +116,36 @@ function applyStaticTranslations(){
     el.textContent = tr(key);
   });
 
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (!key) return;
+    el.setAttribute("placeholder", tr(key));
+  });
+
   const toggleSystemInfo = document.getElementById("toggleSystemInfo");
   if (toggleSystemInfo){
     toggleSystemInfo.textContent = tr("button.hide");
   }
+}
+
+function resetEnhancedCheckinUi(){
+  document.querySelectorAll(".checkin-score-wrap").forEach((el) => el.remove());
+  document.querySelectorAll(".checkin-score-hidden").forEach((el) => el.classList.remove("checkin-score-hidden"));
+
+  ["sleep_score", "energy_score", "soreness_score"].forEach((fieldId) => {
+    const valueEl = document.getElementById(`checkin_value_${fieldId}`);
+    if (valueEl) valueEl.remove();
+  });
+}
+
+async function rerenderUiAfterLanguageChange(){
+  applyStaticTranslations();
+  resetEnhancedCheckinUi();
+  if (typeof initCheckinScoreButtons === "function") initCheckinScoreButtons();
+  renderWizardNav();
+  renderAuthBar();
+  await refreshAll();
+  showWizardStep(CURRENT_STEP || "overview");
 }
 
 function setText(id, text){
@@ -976,9 +994,9 @@ function getForecastTypeLabel(planItem){
 
   if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
     if (firstExercise.includes("restitution")) return tr("session_type.recovery");
-    if (firstExercise.includes("interval")) return "Intervaller";
-    if (firstExercise.includes("tempo")) return "Tempopas";
-    if (firstExercise.includes("base")) return "Basepas";
+    if (firstExercise.includes("interval")) return tr("forecast.type.intervals");
+    if (firstExercise.includes("tempo")) return tr("forecast.type.tempo");
+    if (firstExercise.includes("base")) return tr("forecast.type.base");
     return tr("session_type.run");
   }
 
@@ -1036,11 +1054,11 @@ function renderForecastHero(planItem, latestCheckin){
 function formatOverviewReadinessLabel(value){
   const n = Number(value);
   if (!Number.isFinite(n)) return tr("common.unknown_lower");
-  if (n >= 4.5) return "meget klar";
-  if (n >= 3.5) return "klar";
-  if (n >= 2.5) return "moderat";
-  if (n >= 1.5) return "tag det roligt";
-  return "restitution anbefales";
+  if (n >= 4.5) return tr("overview.readiness_state.very_ready");
+  if (n >= 3.5) return tr("overview.readiness_state.ready");
+  if (n >= 2.5) return tr("overview.readiness_state.moderate");
+  if (n >= 1.5) return tr("overview.readiness_state.take_it_easy");
+  return tr("overview.readiness_state.recovery_recommended");
 }
 
 function renderOverviewStatus(planItem, latestCheckin, workouts){
@@ -1054,7 +1072,7 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
 
   if (readinessValue){
     if (isFirstTime){
-      readinessValue.textContent = "Klar";
+      readinessValue.textContent = tr("status.ready");
     } else {
       const readiness = planItem?.readiness_score ?? latestCheckin?.readiness_score ?? null;
       if (readiness == null || readiness === ""){
@@ -1067,11 +1085,11 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
 
   if (latestCheckinLine){
     if (isFirstTime){
-      latestCheckinLine.textContent = "Første gang i SovereignStrength.";
+      latestCheckinLine.textContent = tr("overview.first_time");
     } else if (latestCheckin?.date){
-      latestCheckinLine.textContent = `Seneste check-in: ${latestCheckin.date}`;
+      latestCheckinLine.textContent = tr("overview.latest_checkin", { value: latestCheckin.date });
     } else {
-      latestCheckinLine.textContent = "Ingen check-in endnu.";
+      latestCheckinLine.textContent = tr("overview.no_checkin_yet");
     }
   }
 
@@ -1676,8 +1694,8 @@ function setRpePickerValue(value){
 
   if (help){
     help.textContent = normalized
-      ? `Valgt: RPE ${normalized} – ${RPE_HELP[normalized] || ""}`
-      : "Vælg hvor hårdt passet føltes.";
+      ? tr("review.rpe_selected", { value: normalized, text: RPE_HELP[normalized] || "" })
+      : tr("review.rpe_help");
   }
 }
 
@@ -2810,10 +2828,10 @@ async function handleRecoverySubmit(ev){
   };
 
   try{
-    setText("recoveryFormStatus", "Beregner...");
+    setText("recoveryFormStatus", tr("status.calculating"));
     statusEl?.classList.remove("warn");
     await apiPost("/api/checkin", payload);
-    setText("recoveryFormStatus", "Check-in gemt. Dagens plan opdateret.");
+    setText("recoveryFormStatus", tr("status.checkin_saved_updated"));
     statusEl?.classList.add("ok");
     form.reset();
     form.recovery_date.value = new Date().toISOString().slice(0,10);
@@ -2823,7 +2841,7 @@ async function handleRecoverySubmit(ev){
     form.time_budget_min.value = "45";
     await refreshAll();
   }catch(err){
-    setText("recoveryFormStatus", "Fejl: " + (err?.message || String(err)));
+    setText("recoveryFormStatus", tr("status.error_prefix") + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
     statusEl?.classList.add("warn");
   }
@@ -3263,7 +3281,7 @@ function initSystemInfoToggle(){
     btn.textContent = tr("button.show");
   } else {
     content.style.display = "";
-    btn.textContent = "Skjul";
+    btn.textContent = tr("button.hide");
   }
 
   if (!btn.dataset.bound){
@@ -3272,11 +3290,11 @@ function initSystemInfoToggle(){
       const isHidden = content.style.display === "none";
       if (isHidden){
         content.style.display = "";
-        btn.textContent = "Skjul";
+        btn.textContent = tr("button.hide");
         localStorage.setItem("systemInfoHidden", "false");
       } else {
         content.style.display = "none";
-        btn.textContent = "Vis";
+        btn.textContent = tr("button.show");
         localStorage.setItem("systemInfoHidden", "true");
       }
     });
@@ -3288,36 +3306,36 @@ function initSystemInfoToggle(){
 
 const CHECKIN_SCORE_META = {
   sleep_score: {
-    title: "Søvn",
-    help: "Vælg hvor god din søvn har været i nat.",
+    title: "checkin.sleep",
+    help: "checkin.sleep_desc",
     options: {
-      1: "Meget dårlig",
-      2: "Dårlig",
-      3: "Okay",
-      4: "God",
-      5: "Meget god"
+      1: "checkin.scale.very_bad",
+      2: "checkin.scale.bad",
+      3: "checkin.scale.okay",
+      4: "checkin.scale.good",
+      5: "checkin.scale.very_good"
     }
   },
   energy_score: {
-    title: "Energi",
-    help: "Vælg hvor meget energi du føler du har lige nu.",
+    title: "checkin.energy",
+    help: "checkin.energy_desc",
     options: {
-      1: "Helt flad",
-      2: "Lav",
-      3: "Middel",
-      4: "God",
-      5: "Høj"
+      1: "checkin.energy_scale.empty",
+      2: "checkin.energy_scale.low",
+      3: "checkin.energy_scale.noticeable",
+      4: "checkin.energy_scale.high",
+      5: "checkin.energy_scale.very_high"
     }
   },
   soreness_score: {
-    title: "Ømhed",
-    help: "Vælg hvor øm kroppen føles lige nu.",
+    title: "checkin.soreness",
+    help: "checkin.soreness_desc",
     options: {
-      1: "Ingen",
-      2: "Let",
-      3: "Mærkbar",
-      4: "Høj",
-      5: "Meget høj"
+      1: "checkin.soreness_scale.none",
+      2: "checkin.soreness_scale.light",
+      3: "checkin.energy_scale.noticeable",
+      4: "checkin.soreness_scale.high",
+      5: "checkin.soreness_scale.very_high"
     }
   }
 };
@@ -3416,11 +3434,11 @@ function enhanceCheckinScoreField(fieldId){
 
   const title = document.createElement("div");
   title.className = "checkin-score-title";
-  title.textContent = meta.title;
+  title.textContent = tr(meta.title);
 
   const help = document.createElement("div");
   help.className = "checkin-score-help";
-  help.textContent = meta.help;
+  help.textContent = tr(meta.help);
 
   const row = document.createElement("div");
   row.className = "checkin-score-row";
@@ -3436,8 +3454,8 @@ function enhanceCheckinScoreField(fieldId){
       btn.classList.toggle("is-active", isActive);
     });
 
-    const text = meta.options[current] || "";
-    valueLine.textContent = current && text ? `Valgt: ${current} · ${text}` : "";
+    const text = meta.options[current] ? tr(meta.options[current]) : "";
+    valueLine.textContent = current && text ? tr("checkin.selected_value", { value: current, text }) : "";
   }
 
   const getScoreClass = (fieldId, value) => {
@@ -3466,7 +3484,7 @@ function enhanceCheckinScoreField(fieldId){
     btn.className = `checkin-score-btn ${getScoreClass(fieldId, value)}`;
     btn.dataset.value = String(value);
     btn.textContent = String(value);
-    btn.title = text;
+    btn.title = tr(text);
 
     btn.addEventListener("click", () => {
       field.value = String(value);
@@ -3616,7 +3634,7 @@ function ensureWeekPlanCardMount(){
   card.style.gridColumn = "1 / -1";
   card.innerHTML = `
     <div class="row">
-      <h2>${esc(tr("weekplan.title"))}</h2>
+      <h2 id="weekPlanTitle">${esc(tr("weekplan.title"))}</h2>
       <div class="small" id="weekPlanMeta"></div>
     </div>
     <div class="small" id="weekPlanIntro"></div>
@@ -3821,7 +3839,10 @@ function renderWeekPlanPreview(planItem){
   const grid = document.getElementById("weekPlanGrid");
   const intro = document.getElementById("weekPlanIntro");
   const meta = document.getElementById("weekPlanMeta");
+  const title = document.getElementById("weekPlanTitle");
   if (!grid || !intro || !meta) return;
+
+  if (title) title.textContent = tr("weekplan.title");
 
   const items = buildWeekPlanItems(planItem);
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};

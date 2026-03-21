@@ -793,12 +793,12 @@
       <p id="checkinIntro" class="small" data-i18n="checkin.intro">Start her. Vurder søvn, energi, ømhed og tid, så beregner SovereignStrength dagens træning ud fra dit aktuelle niveau.</p>
       <form id="recoveryForm">
         <label>
-          Dato
+          <span data-i18n="common.date">Dato</span>
           <input id="recovery_date" name="recovery_date" type="date" required>
         </label>
 
         <label>
-          Søvn (1-5)
+          <span data-i18n="checkin.sleep_score_label">Søvn (1-5)</span>
           <select id="sleep_score" name="sleep_score" required>
             <option value="1">1</option>
             <option value="2">2</option>
@@ -809,7 +809,7 @@
         </label>
 
         <label>
-          Energi (1-5)
+          <span data-i18n="checkin.energy_score_label">Energi (1-5)</span>
           <select id="energy_score" name="energy_score" required>
             <option value="1">1</option>
             <option value="2">2</option>
@@ -820,7 +820,7 @@
         </label>
 
         <label>
-          Ømhed (1-5)
+          <span data-i18n="checkin.soreness_score_label">Ømhed (1-5)</span>
           <select id="soreness_score" name="soreness_score" required>
             <option value="1">1</option>
             <option value="2" selected>2</option>
@@ -831,7 +831,7 @@
         </label>
 
         <label>
-          Tid i dag
+          <span data-i18n="checkin.time_today">Tid i dag</span>
           <select id="time_budget_min" name="time_budget_min" required>
             <option value="20">20 min</option>
             <option value="30">30 min</option>
@@ -841,8 +841,8 @@
         </label>
 
         <label>
-          Noter
-          <textarea id="recovery_notes" name="recovery_notes" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
+          <span data-i18n="checkin.notes">Noter</span>
+          <textarea id="recovery_notes" name="recovery_notes" data-i18n-placeholder="checkin.notes_placeholder" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
         </label>
 
         <button type="submit" data-i18n="button.calculate_today_plan">Beregn dagens plan</button>
