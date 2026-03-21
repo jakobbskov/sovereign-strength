@@ -1063,7 +1063,7 @@ def build_restitution_plan(time_budget_min):
             "target_reps": duration,
             "target_load": None,
             "progression_decision": "no_progression",
-            "progression_reason": "restitution prioriteres",
+            "progression_reason": "recovery prioritized",
             "recommended_next_load": None,
             "actual_possible_next_load": None,
             "equipment_constraint": False,
@@ -1077,7 +1077,7 @@ def build_restitution_plan(time_budget_min):
             "target_reps": "8/side",
             "target_load": None,
             "progression_decision": "no_progression",
-            "progression_reason": "restitution prioriteres",
+            "progression_reason": "recovery prioritized",
             "recommended_next_load": None,
             "actual_possible_next_load": None,
             "equipment_constraint": False,
@@ -1091,7 +1091,7 @@ def build_restitution_plan(time_budget_min):
             "target_reps": duration,
             "target_load": None,
             "progression_decision": "no_progression",
-            "progression_reason": "restitution prioriteres",
+            "progression_reason": "recovery prioritized",
             "recommended_next_load": None,
             "actual_possible_next_load": None,
             "equipment_constraint": False,
@@ -1388,9 +1388,9 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         readiness_val = 0
 
     if readiness_val <= 2:
-        explanation.append("lav readiness rapporteret")
+        explanation.append("low readiness reported")
     elif readiness_val >= 4:
-        explanation.append("høj readiness rapporteret")
+        explanation.append("high readiness reported")
 
     try:
         time_val = int(time_available or 0)
@@ -1408,7 +1408,7 @@ def build_training_decision(user_id, plan_item, readiness, time_available):
         explanation.append(f"{exercise_id} er stabil")
 
     if family_state == "fatigued" and family_key:
-        explanation.append(f"{family_key}-familien viser træthed")
+        explanation.append(f"{family_key} family shows fatigue")
     elif family_state == "ready" and family_key:
         explanation.append(f"{family_key}-familien er klar")
     elif family_state == "stable" and family_key:
@@ -1648,49 +1648,49 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
     if recovery_key == "recover":
         kind = "restitution"
         duration = min(time_val, 20) if time_val > 0 else 20
-        reason.extend(["recovery kræver restitution", "lav belastning prioriteres"])
+        reason.extend(["recovery requires restitution", "low load prioritized"])
     elif is_training_day is False:
         if readiness_val >= 4 and load_status in ("underloaded", "balanced"):
             kind = "base"
             duration = min(max(20, time_val), 35)
-            reason.extend(["ikke planlagt træningsdag", "valgt som frivilligt let pas"])
+            reason.extend(["not a planned training day", "chosen as an optional light session"])
         else:
             kind = "restitution"
             duration = min(time_val, 20) if time_val > 0 else 20
-            reason.extend(["ikke planlagt træningsdag", "restitution prioriteres"])
+            reason.extend(["not a planned training day", "recovery prioritized"])
     else:
         # planned training day
         if readiness_val <= 2:
             kind = "restitution"
             duration = min(time_val, 20) if time_val > 0 else 20
-            reason.extend(["lav readiness", "let cardio prioriteres"])
+            reason.extend(["low readiness", "light cardio prioritized"])
         elif time_val <= 20:
             if (last_hard_days is None or last_hard_days >= 4) and load_status in ("underloaded", "balanced") and readiness_val >= 4:
                 kind = "interval"
                 duration = 20
-                reason.extend(["kort tid", "ingen hård cardio for nylig", "høj readiness"])
+                reason.extend(["limited time", "no hard cardio recently", "high readiness"])
             else:
                 kind = "base"
                 duration = 20
-                reason.extend(["kort tid", "rolig base er mest robust"])
+                reason.extend(["limited time", "easy base is the most robust choice"])
         else:
             if (last_hard_days is None or last_hard_days >= 4) and readiness_val >= 4 and load_status in ("underloaded", "balanced"):
                 if weekly_cardio_load < 45:
                     kind = "tempo"
                     duration = min(max(25, time_val), 40)
-                    reason.extend(["høj readiness", "lav/moderat cardio-belastning", "tempo prioriteres"])
+                    reason.extend(["high readiness", "low/moderate cardio load", "tempo prioritized"])
                 else:
                     kind = "base"
                     duration = min(max(25, time_val), 40)
-                    reason.extend(["cardio-belastning er allerede moderat", "rolig base prioriteres"])
+                    reason.extend(["cardio load is already moderate", "easy base prioritized"])
             elif load_status == "spiking":
                 kind = "restitution"
                 duration = min(time_val, 25)
-                reason.extend(["cardio-belastning er høj", "restitution prioriteres"])
+                reason.extend(["cardio load is high", "recovery prioritized"])
             else:
                 kind = "base"
                 duration = min(max(25, time_val), 40)
-                reason.extend(["moderat readiness", "basepas prioriteres"])
+                reason.extend(["moderate readiness", "base session prioritized"])
 
     # avoid repeating hard sessions too close together
     if kind in ("interval", "tempo") and last_cardio_kind in ("interval", "tempo", "threshold", "test", "benchmark"):
@@ -1739,7 +1739,7 @@ def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recover
         "target_reps": target_reps,
         "target_load": None,
         "progression_decision": "autoplan_cardio_initial",
-        "progression_reason": "autoplan valgte cardiopas ud fra readiness, recovery og nylig cardio-belastning",
+        "progression_reason": "autoplan selected a cardio session based on readiness, recovery, and recent cardio load",
         "recommended_next_load": None,
         "actual_possible_next_load": None,
         "equipment_constraint": False,
@@ -2537,9 +2537,9 @@ def get_today_plan():
         plan_variant = "default"
         autoplan_meta = None
         if recovery_state.get("recovery_state") == "recover":
-            reason = "recovery-state kræver restitution"
+            reason = "recovery state requires restitution"
         else:
-            reason = "lav readiness"
+            reason = "low readiness"
         plan_variant = "default"
 
 
@@ -2560,21 +2560,21 @@ def get_today_plan():
     if readiness_score <= 3:
         session_type = "restitution"
         template_id = "restitution_easy"
-        reason = "lav readiness"
+        reason = "low readiness"
         plan_variant = "default"
 
         plan_entries = build_restitution_plan(time_budget_min)
     elif timing_state == "early":
         session_type = "cardio"
         template_id = "cardio_easy"
-        reason = "tidligt check-in, derfor vælges cardio frem for styrke"
+        reason = "early check-in, so cardio is chosen instead of strength"
         plan_variant = "default"
 
         plan_entries = build_cardio_plan(time_budget_min)
     elif fatigue_score >= 6:
         session_type = "restitution"
         template_id = "restitution_easy"
-        reason = "høj fatigue, restitution prioriteres"
+        reason = "high fatigue, recovery prioritized"
         plan_variant = "default"
 
         if time_budget_min <= 20:
@@ -2625,7 +2625,7 @@ def get_today_plan():
     elif fatigue_score >= 4:
         session_type = "cardio"
         template_id = "cardio_easy"
-        reason = "høj fatigue, cardio prioriteres"
+        reason = "high fatigue, cardio prioritized"
         plan_variant = "default"
 
         if time_budget_min <= 20:
@@ -2713,7 +2713,7 @@ def get_today_plan():
             template_id = "weekly_goal_reached_restitution"
             plan_entries = build_restitution_plan(time_budget_min)
             plan_variant = "weekly_goal_cap"
-            reason = "ugemål nået · ikke planlagt træningsdag · restitution prioriteres"
+            reason = "weekly goal reached · not a planned training day · recovery prioritized"
             autoplan_meta = {
                 "template_mode": "weekly_goal_cap_v0_1",
                 "families_selected": [],
@@ -2885,7 +2885,7 @@ def get_today_plan():
                 "readiness_score": readiness_score,
                 "time_budget_min": time_budget_min,
                 "timing_state": "",
-                "reason": "Dagens træning er allerede registreret.",
+                "reason": "Today's training is already logged.",
                 "recovery_state": None,
                 "weekly_status": None,
                 "training_day_context": {},
@@ -4207,21 +4207,21 @@ def build_family_priority_map(user_id, readiness=None, time_budget_min=None):
             reasons.append("familien er stabil")
         elif family_state == "fatigued":
             priority -= 1.0
-            reasons.append("familien viser træthed")
+            reasons.append("family shows fatigue")
 
         # readiness
         if readiness_val >= 4:
             priority += 0.3
-            reasons.append("høj readiness")
+            reasons.append("high readiness")
         elif readiness_val <= 2:
             priority -= 0.4
-            reasons.append("lav readiness")
+            reasons.append("low readiness")
 
         # time budget
         if time_val and time_val <= 20:
             if family_key in ("squat", "hinge", "horizontal_push", "horizontal_pull", "single_leg_squat"):
                 priority += 0.15
-                reasons.append("kort tid favoriserer store/simple bevægelser")
+                reasons.append("limited time favors large/simple movements")
             elif family_key in ("core_bracing", "core_control"):
                 priority -= 0.1
         elif time_val >= 40 and family_key in ("core_bracing", "core_control", "steady_cardio"):
