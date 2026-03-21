@@ -4,7 +4,9 @@ const FILES = {
   recovery: "/data/recovery.json",
   programs: "/data/programs.json",
   exercises: "/data/exercises.json",
-  user_settings: "/data/user_settings.json"
+  user_settings: "/data/user_settings.json",
+  seed_programs: "/app/data/seed/programs.json",
+  seed_exercises: "/app/data/seed/exercises.json"
 };
 
 let STATE = {
@@ -344,6 +346,13 @@ async function getJson(url){
   const res = await fetch(url, {cache:"no-store"});
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return await res.json();
+}
+
+async function getJsonOrSeed(primaryPath, seedPath){
+  const primary = await getJson(primaryPath);
+  if (Array.isArray(primary) && primary.length) return primary;
+  const seed = await getJson(seedPath);
+  return Array.isArray(seed) ? seed : [];
 }
 
 async function apiGet(url){
@@ -2552,8 +2561,8 @@ async function refreshAll(){
     getJson(FILES.workouts),
     getJson(FILES.runs),
     getJson(FILES.recovery),
-    getJson(FILES.programs),
-    getJson(FILES.exercises),
+    getJsonOrSeed(FILES.programs, FILES.seed_programs),
+    getJsonOrSeed(FILES.exercises, FILES.seed_exercises),
     apiGet("/api/user-settings"),
     apiGet("/api/workouts"),
     apiGet("/api/checkins"),
