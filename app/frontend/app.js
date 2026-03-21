@@ -265,11 +265,11 @@ function applyEntryInputMode(exerciseId){
   fillSimpleSelect(setsEl.tagName === "SELECT" ? setsEl : null, setOptions, setsEl.value || "3", "");
 
   if (inputKind === "time" || inputKind === "cardio_time"){
-    const timeOptions = Array.isArray(meta.time_options) && meta.time_options.length ? meta.time_options : ["20 sek","30 sek","40 sek","45 sek","60 sek"];
+    const timeOptions = Array.isArray(meta.time_options) && meta.time_options.length ? meta.time_options : [`20 ${tr("unit.seconds")}`,`30 ${tr("unit.seconds")}`,`40 ${tr("unit.seconds")}`,`45 ${tr("unit.seconds")}`,`60 ${tr("unit.seconds")}`];
     fillSimpleSelect(repsEl.tagName === "SELECT" ? repsEl : null, timeOptions, repsEl.value || timeOptions[0], "");
     setFieldVisibility("entry_load", false);
     if (achievedEl){
-      achievedEl.placeholder = "fx 45 sek";
+      achievedEl.placeholder = tr("workout.achieved_time_placeholder");
     }
     if (hintEl){
       hintEl.textContent = tr("after_training.bodyweight_time_hint");
@@ -436,7 +436,7 @@ function renderWorkouts(items){
 
   if (!Array.isArray(items) || items.length === 0){
     root.innerHTML = `<li><div class="small">Ingen workouts endnu.</div></li>`;
-    setText("listMeta", "0 elementer");
+    setText("listMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
@@ -501,7 +501,7 @@ function renderWorkouts(items){
     `;
   }).join("");
 
-  setText("listMeta", `${sorted.length} elementer`);
+  setText("listMeta", tr("common.items_count", { count: sorted.length }));
 }
 
 
@@ -695,7 +695,7 @@ function ensureSessionHistoryMount(){
   card.className = "card";
   card.innerHTML = `
     <div class="row">
-      <h2>Sessionhistorik</h2>
+      <h2>${tr("history.session_history")}</h2>
       <div class="small" id="sessionResultsMeta"></div>
     </div>
     <ul id="sessionResultsList"></ul>
@@ -717,7 +717,7 @@ function renderSessionHistory(items){
 
   if (!Array.isArray(items) || items.length === 0){
     root.innerHTML = `<li><div class="small">Ingen sessions endnu.</div></li>`;
-    setText("sessionResultsMeta", "0 elementer");
+    setText("sessionResultsMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
@@ -745,15 +745,15 @@ function renderSessionHistory(items){
       <li>
         <div class="row">
           <strong>${esc(dateLabel)} · ${esc(typeLabel || tr("common.unknown_lower"))}</strong>
-          <span class="small">fatigue ${esc(fatigue)}</span>
+          <span class="small">${tr("history.fatigue_label", { value: formatFatigueText(fatigue) })}</span>
         </div>
         <div class="small" style="margin-top:6px">
           ${isCardio
             ? esc(cardioMeta || "Ingen cardio-data")
-            : `Sæt: ${esc(String(totalSets))} · Reps: ${esc(String(totalReps))}${totalTUT ? ` · TUT: ${esc(String(totalTUT))} sek` : ""} · Volumen: ${esc(String(estimatedVolume))}`}
+            : `${tr("history.session_totals", { sets: esc(String(totalSets)), reps: esc(String(totalReps)), tut_part: totalTUT ? ` · TUT: ${esc(String(totalTUT))} ${tr("unit.seconds")}` : "", volume: esc(String(estimatedVolume)) })}`}
         </div>
         <div class="small" style="margin-top:6px">
-          Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
+          ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
         </div>
         <div class="small" style="margin-top:6px">
           ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : "Ingen progress flags"}
@@ -763,7 +763,7 @@ function renderSessionHistory(items){
     `;
   }).join("");
 
-  setText("sessionResultsMeta", `${sorted.length} elementer`);
+  setText("sessionResultsMeta", tr("common.items_count", { count: sorted.length }));
 }
 
 
@@ -858,7 +858,7 @@ function renderExercises(items){
 
   if (!Array.isArray(items) || items.length === 0){
     root.innerHTML = `<li><div class="small">Ingen øvelser endnu.</div></li>`;
-    setText("exerciseMeta", "0 elementer");
+    setText("exerciseMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
@@ -870,12 +870,12 @@ function renderExercises(items){
         <strong>${esc(item.name || tr("common.unknown_lower"))}</strong>
         <span class="small">${esc(item.default_unit || "")}</span>
       </div>
-      <div class="pill">${esc(item.category || tr("common.unknown_lower"))}</div>
+      <div class="pill">${esc(formatExerciseCategory(item.category || tr("common.unknown_lower")))}</div>
       ${item.notes ? `<div class="small" style="margin-top:8px">${esc(item.notes)}</div>` : ""}
     </li>
   `).join("");
 
-  setText("exerciseMeta", `${sorted.length} elementer`);
+  setText("exerciseMeta", tr("common.items_count", { count: sorted.length }));
 }
 
 function renderRecovery(items){
@@ -884,7 +884,7 @@ function renderRecovery(items){
 
   if (!Array.isArray(items) || items.length === 0){
     root.innerHTML = `<li><div class="small">Ingen recovery-logs endnu.</div></li>`;
-    setText("recoveryMeta", "0 elementer");
+    setText("recoveryMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
@@ -894,16 +894,16 @@ function renderRecovery(items){
     <li>
       <div class="row">
         <strong>${esc(item.date || "")}</strong>
-        <span class="small">Søvn ${esc(item.sleep_score)} · Energi ${esc(item.energy_score)} · Ømhed ${esc(item.soreness_score)}</span>
+        <span class="small">${tr("history.recovery_scores", { sleep: esc(item.sleep_score), energy: esc(item.energy_score), soreness: esc(item.soreness_score) })}</span>
       </div>
       <div class="pill">Readiness ${esc(item.readiness_score ?? "-")}</div>
-      <div class="pill">${esc(item.readiness_label || tr("common.unknown_lower"))}</div>
+      <div class="pill">${esc(formatOverviewReadinessLabel(item.readiness_score))}</div>
       ${item.suggestion ? `<div class="small" style="margin-top:8px">${esc(item.suggestion)}</div>` : ""}
       ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
     </li>
   `).join("");
 
-  setText("recoveryMeta", `${sorted.length} elementer`);
+  setText("recoveryMeta", tr("common.items_count", { count: sorted.length }));
 }
 
 
@@ -1322,7 +1322,7 @@ function setEquipmentEditorOpen(isOpen){
   if (isOpen){
     populateEquipmentEditor();
     const status = document.getElementById("equipmentSettingsStatus");
-    if (status) status.textContent = "Redigér profil og udstyr, og gem når du er klar.";
+    if (status) status.textContent = tr("profile.edit_and_save_when_ready");
   }
 }
 
@@ -1470,6 +1470,22 @@ function renderReadiness(item){
 
 
 
+function formatExerciseCategory(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return tr("common.unknown_lower");
+  const map = {
+    posterior_chain: tr("category.posterior_chain"),
+    legs: tr("category.legs"),
+    run: tr("session_type.run"),
+    mobility: tr("session_type.mobility"),
+    push: tr("category.push"),
+    pull: tr("category.pull"),
+    core: tr("category.core"),
+    cardio: tr("session_type.cardio")
+  };
+  return map[x] || x;
+}
+
 function formatExerciseName(exerciseId){
   const mapped = {
     restitution_walk: tr("exercise.recovery_walk"),
@@ -1536,6 +1552,15 @@ function formatPlanReason(value){
   if (x === "Manuel plan overstyrer dagens autoplan.") return tr("plan.reason.manual_override_today");
   if (x === "Manual plan overrides today's autoplan.") return tr("plan.reason.manual_override_today");
   return x;
+}
+
+function formatFatigueText(value){
+  const v = String(value || "").trim().toLowerCase();
+  if (!v) return tr("common.unknown_lower");
+  if (v === "light") return tr("fatigue.light");
+  if (v === "moderate") return tr("fatigue.moderate");
+  if (v === "high") return tr("fatigue.high");
+  return v;
 }
 
 function formatTimingState(value){
@@ -1973,7 +1998,7 @@ function renderSessionResultSummary(summary){
       Failure-markører: ${esc(String(hitFailureCount))}
     </div>
     <div class="small" style="margin-bottom:8px">
-      Næste skridt: ${esc(nextStepHint || "Ingen anbefaling")}
+      ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
     </div>
     <div class="small">
       ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : "Ingen progress flags"}
@@ -2110,7 +2135,7 @@ function openExerciseViewer(exerciseId){
     metaEl.textContent = metaParts.join(" · ");
 
     if (!images.length){
-      imagesEl.innerHTML = `<div class="small">Ingen billeder tilgængelige endnu.</div>`;
+      imagesEl.innerHTML = `<div class="small">${tr("exercise.no_images")}</div>`;
     } else {
       imagesEl.innerHTML = images.map((src, idx) => `
         <div style="margin-top:${idx === 0 ? 0 : 12}px">
@@ -2486,7 +2511,7 @@ function renderPrograms(programs, exercises){
 
   if (!Array.isArray(programs) || programs.length === 0){
     root.innerHTML = `<div class="small">Ingen programmer endnu.</div>`;
-    setText("programMeta", "0 elementer");
+    setText("programMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
@@ -2502,7 +2527,7 @@ function renderPrograms(programs, exercises){
           <ul style="margin-top:10px">
             ${(day.exercises || []).map(ex => {
               const found = exerciseMap.get(ex.exercise_id) || {};
-              const name = found.name || ex.exercise_id || tr("common.unknown_lower");
+              const name = found.name || formatExerciseName(ex.exercise_id || "") || ex.exercise_id || tr("common.unknown_lower");
               return `
                 <li>
                   <div class="row">
@@ -2518,7 +2543,7 @@ function renderPrograms(programs, exercises){
     </div>
   `).join("");
 
-  setText("programMeta", `${programs.length} elementer`);
+  setText("programMeta", tr("common.items_count", { count: programs.length }));
 }
 
 async function refreshAll(){
