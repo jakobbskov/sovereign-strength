@@ -1139,13 +1139,6 @@ def get_live_adaptation_state_for(user_id):
         return state if isinstance(state, dict) else {}
     except Exception:
         return {}
-        users = raw.get("users", {})
-        if not isinstance(users, dict):
-            return {}
-        state = users.get(user_id, {})
-        return state if isinstance(state, dict) else {}
-    except Exception:
-        return {}
 
 def _decision_label(decision):
     decision = str(decision or "").strip()
@@ -2935,8 +2928,8 @@ def get_today_plan():
         "fatigue_score": fatigue_score,
         "recovery_state": recovery_state,
         "template_id": template_id,
-        "template_mode": autoplan_meta.get("template_mode") if isinstance(locals().get("autoplan_meta"), dict) else None,
-        "families_selected": autoplan_meta.get("families_selected", []) if isinstance(locals().get("autoplan_meta"), dict) else [],
+        "template_mode": autoplan_meta.get("template_mode") if isinstance(autoplan_meta, dict) else None,
+        "families_selected": autoplan_meta.get("families_selected", []) if isinstance(autoplan_meta, dict) else [],
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": days_since_last_strength,
