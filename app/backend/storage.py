@@ -90,6 +90,31 @@ class JSONStorage:
 
         return deleted
 
+    
+    def consume_manual_override_workout(self, user_id, date):
+        items = self._read_list("workouts")
+        changed = False
+
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("user_id")) != str(user_id):
+                continue
+            if str(item.get("date", "")).strip() != str(date).strip():
+                continue
+            if not bool(item.get("is_manual_override", False)):
+                continue
+            if bool(item.get("is_consumed", False)):
+                continue
+
+            item["is_consumed"] = True
+            changed = True
+
+        if changed:
+            self._write_list("workouts", items)
+
+        return changed
+
     def get_user_settings_for(self, user_id):
         raw = self._read_object("user_settings")
         if not isinstance(raw, dict):
@@ -292,6 +317,27 @@ class SQLiteStorage:
             conn.commit()
 
         return deleted
+
+    
+
+    
+    def consume_manual_override_workout(self, user_id, date):
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM workouts WHERE user_id = ? AND date = ? AND is_manual_override = 1 AND is_consumed = 0 LIMIT 1",
+                (str(user_id), str(date).strip())
+            ).fetchone()
+
+            if not row:
+                return False
+
+            conn.execute(
+                "UPDATE workouts SET is_consumed = 1 WHERE user_id = ? AND date = ? AND is_manual_override = 1 AND is_consumed = 0",
+                (str(user_id), str(date).strip())
+            )
+            conn.commit()
+
+        return True
 
     def get_user_settings_for(self, user_id):
         with self._conn() as conn:
