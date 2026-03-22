@@ -3052,11 +3052,7 @@ def build_weekly_training_status(user_id, checkin_date, training_day_prefs, week
     status["allowed_days_total"] = allowed_days_total
     status["allowed_days_remaining"] = allowed_days_remaining
 
-    try:
-        session_results = read_json_file(FILES["session_results"])
-    except Exception:
-        session_results = []
-
+    session_results = list_session_results_for_user(user_id)
     if not isinstance(session_results, list):
         session_results = []
 
