@@ -1237,7 +1237,7 @@ function renderProfileEquipmentCard(){
     accountHelpLineEl.textContent = tr("profile.account_help_extended");
   }
 
-  const authHref = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
+  const authHref = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}&lang=${encodeURIComponent(getCurrentLang())}`;
 
   [accountBtn, accountBtn2].forEach(btn => {
     if (!btn) return;
@@ -3126,7 +3126,7 @@ async function ensureAuthOrRedirect(){
   AUTH_USER = data.user || null;
   if (data.user?.must_change_password){
     showAuthMessage(tr("auth.must_change_password"));
-    location.href = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}`;
+    location.href = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}&lang=${encodeURIComponent(getCurrentLang())}`;
     return null;
   }
   showAuthMessage(`${tr("auth.logged_in_as")} ${data.user?.username || tr("auth.user")}. ${tr("auth.loading_app")}`);
