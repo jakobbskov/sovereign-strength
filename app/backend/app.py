@@ -3225,61 +3225,6 @@ def build_weekly_training_status(user_id, checkin_date, training_day_prefs, week
 
     return status
 
-    week_start = dt - timedelta(days=dt.weekday())
-    week_end = week_start + timedelta(days=6)
-
-    status["week_start"] = week_start.date().isoformat()
-    status["week_end"] = week_end.date().isoformat()
-
-    allowed_days_total = 0
-    allowed_days_remaining = 0
-    day_keys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-
-    for i in range(7):
-        current = week_start + timedelta(days=i)
-        key = day_keys[current.weekday()]
-        allowed = bool(training_day_prefs.get(key, True))
-        if allowed:
-            allowed_days_total += 1
-            if current.date() >= dt.date():
-                allowed_days_remaining += 1
-
-    status["allowed_days_total"] = allowed_days_total
-    status["allowed_days_remaining"] = allowed_days_remaining
-
-    try:
-        session_results = read_json_file(FILES["session_results"])
-    except Exception:
-        session_results = []
-
-    if not isinstance(session_results, list):
-        session_results = []
-
-    for item in session_results:
-        if not isinstance(item, dict):
-            continue
-        if str(item.get("user_id", "")) != str(user_id):
-            continue
-
-        raw_date = str(item.get("date", "")).strip()
-        try:
-            item_dt = datetime.fromisoformat(raw_date)
-        except Exception:
-            continue
-
-        if item_dt.date() < week_start.date() or item_dt.date() > week_end.date():
-            continue
-
-        status["completed_sessions"] += 1
-        session_type = str(item.get("session_type", "")).strip().lower()
-        if session_type in ("styrke", "strength"):
-            status["completed_strength_sessions"] += 1
-        elif session_type in ("løb", "run", "cardio"):
-            status["completed_running_sessions"] += 1
-        elif session_type in ("restitution", "mobility", "recovery"):
-            status["completed_restitution_sessions"] += 1
-
-    return status
 
 def _get_bodyweight_kg_for_session(session_item):
     if isinstance(session_item, dict):
