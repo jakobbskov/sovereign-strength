@@ -2373,8 +2373,7 @@ def get_today_plan():
         return auth_err
     checkins = read_json_file(FILES["checkins"])
     checkins = filter_items_for_user(checkins, auth_user.get("user_id"))
-    workouts = read_json_file(FILES["workouts"])
-    workouts = filter_items_for_user(workouts, auth_user.get("user_id"))
+    workouts = list_workouts_for_user(auth_user.get("user_id"))
     programs = read_json_file(FILES["programs"])
     exercises = read_json_file(FILES["exercises"])
 
