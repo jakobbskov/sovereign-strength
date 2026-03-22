@@ -2477,8 +2477,7 @@ def get_today_plan():
     if latest_strength:
         days_since_last_strength = days_between_iso_dates(checkin_date, latest_strength.get("date", ""))
 
-    session_results = read_json_file(FILES["session_results"])
-    session_results = filter_items_for_user(session_results, auth_user.get("user_id"))
+    session_results = list_session_results_for_user(auth_user.get("user_id"))
     recommendations = read_json_file(FILES["recommendations"])
     previous_recommendation = recommendations[-1] if recommendations else None
 
