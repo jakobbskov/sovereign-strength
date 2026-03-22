@@ -3346,11 +3346,8 @@ async function boot(){
     bindEquipmentEditor();
     bindRpePicker();
 
-    await refreshAll();
-    renderWizardNav();
-    showWizardStep("overview");
+    await rerenderUiAfterLanguageChange();
     initSystemInfoToggle();
-    initCheckinScoreButtons();
   }catch(err){
     setText("status", "Fejl: " + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
