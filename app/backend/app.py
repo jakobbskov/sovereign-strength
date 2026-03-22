@@ -3,14 +3,16 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 import json
 import re
+import logging
 import uuid
 import os
 from storage import get_storage_backend
 import urllib.request
 import urllib.error
-import json
 
 app = Flask(__name__)
+
+logger = logging.getLogger(__name__)
 
 AUTH_VALIDATE_URL = os.getenv("AUTH_VALIDATE_URL", "https://auth.innosocia.dk/api/auth/validate")
 AUTH_COOKIE_NAME = os.getenv("AUTH_COOKIE_NAME", "sovereign_session")
@@ -31,14 +33,16 @@ def get_current_auth_user():
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=2) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         if e.code == 401:
             return None
-        raise
-    except Exception:
-        raise
+        logger.exception("Auth HTTP error from %s: %s", AUTH_VALIDATE_URL, e)
+        return None
+    except Exception as e:
+        logger.exception("Auth validation failed against %s: %s", AUTH_VALIDATE_URL, e)
+        return None
 
     if not payload or not payload.get("ok") or not payload.get("authenticated"):
         return None
@@ -92,25 +96,35 @@ def read_json_file(path: Path):
         return []
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, list) else []
-    except Exception:
+        if not isinstance(data, list):
+            logger.warning("Expected list in %s but got %s", path, type(data).__name__)
+            return []
+        return data
+    except Exception as e:
+        logger.exception("Failed to read list JSON from %s: %s", path, e)
         return []
 
 def write_json_file(path: Path, data):
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    payload = json.dumps(data, ensure_ascii=False, indent=2)
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        f.write(payload)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
 
 def read_json_object_file(path: Path):
     if not path.exists():
         return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except Exception:
+        if not isinstance(data, dict):
+            logger.warning("Expected dict in %s but got %s", path, type(data).__name__)
+            return {}
+        return data
+    except Exception as e:
+        logger.exception("Failed to read object JSON from %s: %s", path, e)
         return {}
-
-
-
 
 def _sort_user_items_desc(items, *keys):
     def _key(x):
@@ -197,6 +211,32 @@ def save_user_settings_for(user_id, settings):
 def list_workouts_for_user(user_id):
     return list_user_items("workouts", user_id)
 
+def _parse_non_negative_int(value, field_name):
+    try:
+        parsed = int(value)
+    except Exception:
+        return None, {"ok": False, "error": f"{field_name} skal være et tal"}, 400
+    if parsed < 0:
+        return None, {"ok": False, "error": f"{field_name} må ikke være negativ"}, 400
+    return parsed, None, None
+
+def _parse_int_in_range(value, field_name, min_value, max_value):
+    try:
+        parsed = int(value)
+    except Exception:
+        return None, {"ok": False, "error": f"{field_name} skal være et tal"}, 400
+    if parsed < min_value or parsed > max_value:
+        return None, {"ok": False, "error": f"{field_name} skal være mellem {min_value} og {max_value}"}, 400
+    return parsed, None, None
+
+def _parse_optional_int(value, default=None):
+    if value in (None, "", "null"):
+        return default
+    try:
+        return int(value)
+    except Exception:
+        return default
+
 def create_workout(user_id, payload):
     date = str(payload.get("date", "")).strip()
     session_type = str(payload.get("type", "")).strip()
@@ -212,13 +252,9 @@ def create_workout(user_id, payload):
     if session_type not in ("styrke", "løb", "mobilitet", "andet"):
         return None, {"ok": False, "error": "ugyldig type"}, 400
 
-    try:
-        duration_min = int(duration_min)
-    except Exception:
-        return None, {"ok": False, "error": "duration_min skal være et tal"}, 400
-
-    if duration_min < 0:
-        return None, {"ok": False, "error": "duration_min må ikke være negativ"}, 400
+    duration_min, err, status = _parse_non_negative_int(duration_min, "duration_min")
+    if err:
+        return None, err, status
 
     if not isinstance(entries, list):
         return None, {"ok": False, "error": "entries skal være en liste"}, 400
@@ -265,28 +301,24 @@ def create_checkin(user_id, payload):
     notes = str(payload.get("notes", "")).strip()
     time_budget_min = payload.get("time_budget_min", 0)
 
-    def parse_score(name):
-        value = payload.get(name, "")
-        try:
-            value = int(value)
-        except Exception:
-            raise ValueError(f"{name} skal være et tal")
-        if value < 1 or value > 5:
-            raise ValueError(f"{name} skal være mellem 1 og 5")
-        return value
-
     if not date:
         return None, {"ok": False, "error": "date mangler"}, 400
 
-    try:
-        sleep_score = parse_score("sleep_score")
-        energy_score = parse_score("energy_score")
-        soreness_score = parse_score("soreness_score")
-        time_budget_min = int(time_budget_min)
-    except ValueError as e:
-        return None, {"ok": False, "error": str(e)}, 400
-    except Exception:
-        return None, {"ok": False, "error": "ugyldige inputværdier"}, 400
+    sleep_score, err, status = _parse_int_in_range(payload.get("sleep_score", ""), "sleep_score", 1, 5)
+    if err:
+        return None, err, status
+
+    energy_score, err, status = _parse_int_in_range(payload.get("energy_score", ""), "energy_score", 1, 5)
+    if err:
+        return None, err, status
+
+    soreness_score, err, status = _parse_int_in_range(payload.get("soreness_score", ""), "soreness_score", 1, 5)
+    if err:
+        return None, err, status
+
+    time_budget_min, err, status = _parse_non_negative_int(time_budget_min, "time_budget_min")
+    if err:
+        return None, err, status
 
     readiness_score = round((sleep_score + energy_score + (6 - soreness_score)) / 3)
     readiness_score = max(1, min(5, readiness_score))
@@ -441,25 +473,15 @@ def create_session_result(user_id, payload):
     duration_min = payload.get("duration_min", None)
     duration_sec = payload.get("duration_sec", None)
 
-    try:
-        avg_rpe = int(avg_rpe) if avg_rpe not in (None, "", "null") else None
-    except Exception:
-        avg_rpe = None
+    avg_rpe = _parse_optional_int(avg_rpe, None)
 
     try:
         distance_km = float(distance_km) if distance_km not in (None, "", "null") else None
     except Exception:
         distance_km = None
 
-    try:
-        duration_min = int(duration_min) if duration_min not in (None, "", "null") else 0
-    except Exception:
-        duration_min = 0
-
-    try:
-        duration_sec = int(duration_sec) if duration_sec not in (None, "", "null") else 0
-    except Exception:
-        duration_sec = 0
+    duration_min = _parse_optional_int(duration_min, 0)
+    duration_sec = _parse_optional_int(duration_sec, 0)
 
     if duration_min < 0:
         duration_min = 0
@@ -3618,9 +3640,6 @@ def _safe_div(num, den):
 
 def _normalize_rep_text(value):
     return str(value or "").strip().lower()
-
-def _extract_target_top_value(value):
-    return _parse_numeric_token(value)
 
 def _did_hit_top_range(result_item):
     if not isinstance(result_item, dict):
