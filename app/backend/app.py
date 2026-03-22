@@ -157,6 +157,10 @@ def delete_user_item(file_key, user_id, item_id):
     return get_storage().delete_user_item(file_key, user_id, item_id)
 
 
+
+def consume_manual_override_workout_storage(user_id, date):
+    return get_storage().consume_manual_override_workout(user_id, date)
+
 def get_iso_weekday_key(date_str):
     date_str = str(date_str or "").strip()
     if not date_str:
@@ -343,26 +347,8 @@ def create_checkin(user_id, payload):
 
 
 def consume_manual_override_workout(user_id, date):
-    items = read_json_file(FILES["workouts"])
-    changed = False
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        if str(item.get("user_id")) != str(user_id):
-            continue
-        if str(item.get("date", "")).strip() != str(date).strip():
-            continue
-        if not bool(item.get("is_manual_override", False)):
-            continue
-        if bool(item.get("is_consumed", False)):
-            continue
-        item["is_consumed"] = True
-        changed = True
+    return consume_manual_override_workout_storage(user_id, date)
 
-    if changed:
-        write_json_file(FILES["workouts"], items)
-
-    return changed
 
 
 def delete_session_result_for_user(user_id, session_result_id):
