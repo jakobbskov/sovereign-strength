@@ -66,6 +66,30 @@ class JSONStorage:
         items = self.list_user_items(file_key, user_id, sort_keys=sort_keys)
         return items[0] if items else None
 
+    def delete_user_item(self, file_key, user_id, item_id):
+        items = self._read_list(file_key)
+        out = []
+        deleted = None
+
+        for item in items:
+            if not isinstance(item, dict):
+                out.append(item)
+                continue
+
+            same_user = str(item.get("user_id")) == str(user_id)
+            same_id = str(item.get("id", "")).strip() == str(item_id).strip()
+
+            if same_user and same_id and deleted is None:
+                deleted = item
+                continue
+
+            out.append(item)
+
+        if deleted is not None:
+            self._write_list(file_key, out)
+
+        return deleted
+
     def get_user_settings_for(self, user_id):
         raw = self._read_object("user_settings")
         if not isinstance(raw, dict):
@@ -242,6 +266,32 @@ class SQLiteStorage:
     def get_latest_user_item(self, file_key, user_id, sort_keys=("created_at", "date")):
         items = self.list_user_items(file_key, user_id, sort_keys=sort_keys)
         return items[0] if items else None
+
+    def delete_user_item(self, file_key, user_id, item_id):
+        table_map = {
+            "workouts": "workouts",
+            "checkins": "checkins",
+            "session_results": "session_results",
+        }
+        table = table_map[file_key]
+
+        with self._conn() as conn:
+            row = conn.execute(
+                f"SELECT * FROM {table} WHERE user_id = ? AND id = ?",
+                (str(user_id), str(item_id))
+            ).fetchone()
+
+            if not row:
+                return None
+
+            deleted = self._normalize_row(file_key, row)
+            conn.execute(
+                f"DELETE FROM {table} WHERE user_id = ? AND id = ?",
+                (str(user_id), str(item_id))
+            )
+            conn.commit()
+
+        return deleted
 
     def get_user_settings_for(self, user_id):
         with self._conn() as conn:

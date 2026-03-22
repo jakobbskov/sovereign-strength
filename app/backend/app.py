@@ -153,6 +153,8 @@ def append_user_item(file_key, item):
 def get_latest_user_item(file_key, user_id, sort_keys=("created_at", "date")):
     return get_storage().get_latest_user_item(file_key, user_id, sort_keys=sort_keys)
 
+def delete_user_item(file_key, user_id, item_id):
+    return get_storage().delete_user_item(file_key, user_id, item_id)
 
 
 def get_iso_weekday_key(date_str):
@@ -364,28 +366,7 @@ def consume_manual_override_workout(user_id, date):
 
 
 def delete_session_result_for_user(user_id, session_result_id):
-    items = read_json_file(FILES["session_results"])
-    out = []
-    deleted = None
-
-    for item in items:
-        if not isinstance(item, dict):
-            out.append(item)
-            continue
-
-        same_user = str(item.get("user_id")) == str(user_id)
-        same_id = str(item.get("id", "")).strip() == str(session_result_id).strip()
-
-        if same_user and same_id and deleted is None:
-            deleted = item
-            continue
-
-        out.append(item)
-
-    if deleted is not None:
-        write_json_file(FILES["session_results"], out)
-
-    return deleted
+    return delete_user_item("session_results", user_id, session_result_id)
 
 def list_session_results_for_user(user_id):
     return list_user_items("session_results", user_id)
