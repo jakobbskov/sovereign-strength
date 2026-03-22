@@ -2934,6 +2934,8 @@ def get_today_plan():
 @app.post("/api/admin/reset-catalog")
 def post_reset_catalog():
     auth_user = require_auth_user()
+    if isinstance(auth_user, tuple):
+        return auth_user
     user_id = auth_user.get("user_id")
     if not user_id:
         return jsonify({"ok": False, "error": "missing_user"}), 401
