@@ -2435,6 +2435,31 @@ def build_manual_override_today_plan_response(latest_checkin, checkin_date, read
     })
 
 
+def build_today_plan_context(auth_user, latest_checkin):
+    readiness_score = int(latest_checkin.get("readiness_score", 0))
+    checkin_date = str(latest_checkin.get("date", "")).strip()
+    time_budget_min = int(latest_checkin.get("time_budget_min", 45) or 45)
+    user_settings = get_user_settings_for(auth_user.get("user_id"))
+    training_day_ctx = get_training_day_context(user_settings, checkin_date)
+    weekly_target_sessions = get_weekly_target_sessions(user_settings)
+    weekly_status = build_weekly_training_status(
+        user_id=auth_user.get("user_id"),
+        checkin_date=checkin_date,
+        training_day_prefs=get_training_day_preferences(user_settings),
+        weekly_target_sessions=weekly_target_sessions,
+    )
+
+    return {
+        "readiness_score": readiness_score,
+        "checkin_date": checkin_date,
+        "time_budget_min": time_budget_min,
+        "user_settings": user_settings,
+        "training_day_ctx": training_day_ctx,
+        "weekly_target_sessions": weekly_target_sessions,
+        "weekly_status": weekly_status,
+    }
+
+
 @app.get("/api/debug/exercise-config/<exercise_id>")
 def debug_exercise_config(exercise_id):
     auth_user, auth_err = require_auth_user()
@@ -2483,19 +2508,14 @@ def get_today_plan():
         })
 
     latest_checkin = sorted(checkins, key=lambda x: str(x.get("created_at", x.get("date", ""))), reverse=True)[0]
-    readiness_score = int(latest_checkin.get("readiness_score", 0))
-
-    checkin_date = str(latest_checkin.get("date", "")).strip()
-    time_budget_min = int(latest_checkin.get("time_budget_min", 45) or 45)
-    user_settings = get_user_settings_for(auth_user.get("user_id"))
-    training_day_ctx = get_training_day_context(user_settings, checkin_date)
-    weekly_target_sessions = get_weekly_target_sessions(user_settings)
-    weekly_status = build_weekly_training_status(
-        user_id=auth_user.get("user_id"),
-        checkin_date=checkin_date,
-        training_day_prefs=get_training_day_preferences(user_settings),
-        weekly_target_sessions=weekly_target_sessions,
-    )
+    today_ctx = build_today_plan_context(auth_user, latest_checkin)
+    readiness_score = today_ctx["readiness_score"]
+    checkin_date = today_ctx["checkin_date"]
+    time_budget_min = today_ctx["time_budget_min"]
+    user_settings = today_ctx["user_settings"]
+    training_day_ctx = today_ctx["training_day_ctx"]
+    weekly_target_sessions = today_ctx["weekly_target_sessions"]
+    weekly_status = today_ctx["weekly_status"]
 
     checkin_date = str(latest_checkin.get("date", "")).strip()
     manual_override = None
