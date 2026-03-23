@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class JSONStorage:
     def __init__(self, data_dir):
         self.data_dir = Path(data_dir)
+        self._last_error = None
 
     def _path(self, file_key):
         return self.data_dir / f"{file_key}.json"
@@ -32,18 +33,35 @@ class JSONStorage:
         finally:
             lock_file.close()
 
+    def _set_last_error(self, file_key, operation, message):
+        self._last_error = {
+            "file_key": file_key,
+            "operation": operation,
+            "message": message,
+        }
+
+    def _clear_last_error(self):
+        self._last_error = None
+
+    def get_last_error(self):
+        return dict(self._last_error) if isinstance(self._last_error, dict) else None
+
     def _read_list(self, file_key):
         path = self._path(file_key)
         if not path.exists():
+            self._clear_last_error()
             return []
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data, list):
+                self._clear_last_error()
                 return data
             logger.error("JSONStorage expected list in %s but got %s", path, type(data).__name__)
+            self._set_last_error(file_key, "read_list", f"expected list but got {type(data).__name__}")
             return []
         except Exception:
             logger.exception("JSONStorage failed to read list from %s", path)
+            self._set_last_error(file_key, "read_list", "exception while reading list")
             return []
 
     def _write_list(self, file_key, data):
@@ -53,15 +71,19 @@ class JSONStorage:
     def _read_object(self, file_key):
         path = self._path(file_key)
         if not path.exists():
+            self._clear_last_error()
             return {}
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
+                self._clear_last_error()
                 return data
             logger.error("JSONStorage expected dict in %s but got %s", path, type(data).__name__)
+            self._set_last_error(file_key, "read_object", f"expected dict but got {type(data).__name__}")
             return {}
         except Exception:
             logger.exception("JSONStorage failed to read object from %s", path)
+            self._set_last_error(file_key, "read_object", "exception while reading object")
             return {}
 
     def _write_object(self, file_key, data):
