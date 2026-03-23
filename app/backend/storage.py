@@ -56,11 +56,20 @@ class JSONStorage:
             if isinstance(data, list):
                 self._clear_last_error()
                 return data
-            logger.error("JSONStorage expected list in %s but got %s", path, type(data).__name__)
+            logger.error(
+                "storage_failure operation=read_list file_key=%s path=%s error=expected_list actual_type=%s",
+                file_key,
+                path,
+                type(data).__name__,
+            )
             self._set_last_error(file_key, "read_list", f"expected list but got {type(data).__name__}")
             return []
         except Exception:
-            logger.exception("JSONStorage failed to read list from %s", path)
+            logger.exception(
+                "storage_failure operation=read_list file_key=%s path=%s error=exception_while_reading_list",
+                file_key,
+                path,
+            )
             self._set_last_error(file_key, "read_list", "exception while reading list")
             return []
 
@@ -78,11 +87,20 @@ class JSONStorage:
             if isinstance(data, dict):
                 self._clear_last_error()
                 return data
-            logger.error("JSONStorage expected dict in %s but got %s", path, type(data).__name__)
+            logger.error(
+                "storage_failure operation=read_object file_key=%s path=%s error=expected_dict actual_type=%s",
+                file_key,
+                path,
+                type(data).__name__,
+            )
             self._set_last_error(file_key, "read_object", f"expected dict but got {type(data).__name__}")
             return {}
         except Exception:
-            logger.exception("JSONStorage failed to read object from %s", path)
+            logger.exception(
+                "storage_failure operation=read_object file_key=%s path=%s error=exception_while_reading_object",
+                file_key,
+                path,
+            )
             self._set_last_error(file_key, "read_object", "exception while reading object")
             return {}
 
