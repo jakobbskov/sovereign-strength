@@ -16,12 +16,52 @@ logger = logging.getLogger(__name__)
 
 AUTH_VALIDATE_URL = os.getenv("AUTH_VALIDATE_URL", "https://auth.innosocia.dk/api/auth/validate")
 AUTH_COOKIE_NAME = os.getenv("AUTH_COOKIE_NAME", "sovereign_session")
+AUTH_CACHE_TTL_SECONDS = int(os.getenv("AUTH_CACHE_TTL_SECONDS", "300") or "300")
+
+_AUTH_CACHE = {}
+
+
+def _prune_auth_cache(now_ts):
+    expired = [key for key, value in _AUTH_CACHE.items() if not isinstance(value, dict) or value.get("expires_at", 0) <= now_ts]
+    for key in expired:
+        _AUTH_CACHE.pop(key, None)
+
+
+def _get_cached_auth_user(raw_cookie):
+    now_ts = datetime.now(timezone.utc).timestamp()
+    cached = _AUTH_CACHE.get(raw_cookie)
+    if not isinstance(cached, dict):
+        logger.info("Auth cache miss")
+        return None, False
+
+    if cached.get("expires_at", 0) <= now_ts:
+        _AUTH_CACHE.pop(raw_cookie, None)
+        logger.info("Auth cache miss")
+        return None, False
+
+    logger.info("Auth cache hit")
+    return cached.get("user"), True
+
+
+def _set_cached_auth_user(raw_cookie, user):
+    now_ts = datetime.now(timezone.utc).timestamp()
+    if len(_AUTH_CACHE) > 1024:
+        _prune_auth_cache(now_ts)
+
+    _AUTH_CACHE[raw_cookie] = {
+        "user": user,
+        "expires_at": now_ts + AUTH_CACHE_TTL_SECONDS,
+    }
 
 
 def get_current_auth_user():
     raw_cookie = request.headers.get("Cookie", "").strip()
     if not raw_cookie:
         return None
+
+    cached_user, cache_hit = _get_cached_auth_user(raw_cookie)
+    if cache_hit:
+        return cached_user
 
     req = urllib.request.Request(
         AUTH_VALIDATE_URL,
@@ -37,6 +77,7 @@ def get_current_auth_user():
             payload = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         if e.code == 401:
+            _set_cached_auth_user(raw_cookie, None)
             return None
         logger.exception("Auth HTTP error from %s: %s", AUTH_VALIDATE_URL, e)
         return None
@@ -45,13 +86,16 @@ def get_current_auth_user():
         return None
 
     if not payload or not payload.get("ok") or not payload.get("authenticated"):
+        _set_cached_auth_user(raw_cookie, None)
         return None
 
-    return {
+    user = {
         "user_id": payload.get("user_id"),
         "username": payload.get("username"),
         "role": payload.get("role"),
     }
+    _set_cached_auth_user(raw_cookie, user)
+    return user
 
 
 
