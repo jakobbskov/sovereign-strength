@@ -5,49 +5,24 @@ from unittest.mock import patch
 sys.path.append(str(Path(__file__).resolve().parents[1] / "app" / "backend"))
 
 import app as backend_app
+from helpers import make_test_client, mock_auth, mock_today_plan_context, mock_fatigue_context
 
 
 def test_today_plan_snapshot_stable():
-    client = backend_app.app.test_client()
+    client = make_test_client()
 
-    auth_user = {"user_id": "1"}
-
-    today_ctx = {
-        "readiness_score": 5,
-        "checkin_date": "2026-03-23",
-        "time_budget_min": 45,
-        "user_settings": {},
-        "training_day_ctx": {},
-        "weekly_target_sessions": 3,
-        "weekly_status": {},
-    }
-
-    fatigue_ctx = {
-        "latest_strength": None,
-        "days_since_last_strength": None,
-        "session_results": [],
-        "previous_recommendation": None,
-        "latest_strength_session": None,
-        "latest_strength_failed": False,
-        "latest_strength_load_drop_count": 0,
-        "latest_strength_completed": None,
-        "fatigue_score": 0,
-        "recovery_state": {},
-        "fatigue_session_override": None,
-    }
-
-    with patch.object(backend_app, "require_auth_user", return_value=(auth_user, None)), \
+    with mock_auth(), \
+         mock_today_plan_context(), \
+         mock_fatigue_context(), \
          patch.object(backend_app, "list_user_items", return_value=[{"id": "c1", "date": "2026-03-23"}]), \
          patch.object(backend_app, "list_workouts_for_user", return_value=[]), \
-         patch.object(backend_app, "build_today_plan_context", return_value=today_ctx), \
-         patch.object(backend_app, "build_today_plan_fatigue_context", return_value=fatigue_ctx), \
          patch.object(backend_app, "build_today_plan_timing_state", return_value="on_time"):
 
         response = client.get("/api/today-plan")
 
+    assert response.status_code == 200, response.data
     item = response.get_json()["item"]
 
-    # Snapshot (bevidst simpelt)
     snapshot = {
         "session_type": item["session_type"],
         "template_id": item["template_id"],
