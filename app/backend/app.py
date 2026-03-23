@@ -194,6 +194,13 @@ def list_user_items(file_key, user_id, sort_keys=("created_at", "date")):
 def append_user_item(file_key, item):
     return get_storage().append_item(file_key, item)
 
+def get_storage_last_error():
+    storage = get_storage()
+    getter = getattr(storage, "get_last_error", None)
+    if callable(getter):
+        return getter()
+    return None
+
 def get_latest_user_item(file_key, user_id, sort_keys=("created_at", "date")):
     return get_storage().get_latest_user_item(file_key, user_id, sort_keys=sort_keys)
 
@@ -2566,6 +2573,14 @@ def get_today_plan():
     if auth_err:
         return auth_err
     checkins = list_user_items("checkins", auth_user.get("user_id"))
+    checkins_error = get_storage_last_error()
+    if checkins_error and checkins_error.get("file_key") == "checkins":
+        return jsonify({
+            "ok": False,
+            "error": "storage_error",
+            "source": "checkins",
+        })
+
     workouts = list_workouts_for_user(auth_user.get("user_id"))
     programs = read_json_file(FILES["programs"])
     exercises = read_json_file(FILES["exercises"])
