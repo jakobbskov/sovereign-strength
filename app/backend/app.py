@@ -1804,6 +1804,20 @@ def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recover
     }
 
 
+
+def build_cardio_plan(time_budget_min, user_id=None, readiness=None, recovery_state=None, training_day_context=None):
+    cardio_plan = build_autoplan_cardio(
+        user_id=user_id,
+        readiness=readiness,
+        time_budget_min=time_budget_min,
+        recovery_state=recovery_state,
+        training_day_context=training_day_context,
+    )
+    if isinstance(cardio_plan, dict):
+        entries = cardio_plan.get("entries", [])
+        return entries if isinstance(entries, list) else []
+    return []
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
     program = None
 
@@ -2665,6 +2679,8 @@ def get_today_plan():
         checkin_date=checkin_date,
     )
 
+    autoplan_meta = None
+
     # meget enkel første beslutningsmotor
     if readiness_score <= 3:
         session_type = "restitution"
@@ -2679,7 +2695,13 @@ def get_today_plan():
         reason = "early check-in, so cardio is chosen instead of strength"
         plan_variant = "default"
 
-        plan_entries = build_cardio_plan(time_budget_min)
+        plan_entries = build_cardio_plan(
+            time_budget_min,
+            user_id=auth_user.get("user_id"),
+            readiness=readiness_score,
+            recovery_state=recovery_state,
+            training_day_context=training_day_ctx,
+        )
     elif fatigue_score >= 6:
         session_type = "restitution"
         template_id = "restitution_easy"
