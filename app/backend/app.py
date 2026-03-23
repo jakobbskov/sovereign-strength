@@ -2460,7 +2460,22 @@ def build_today_plan_context(auth_user, latest_checkin):
     }
 
 
+def build_today_plan_timing_state(previous_recommendation, checkin_date):
+    timing_state = "on_time"
 
+    if previous_recommendation:
+        previous_for = str(previous_recommendation.get("recommended_for", "")).strip()
+        if previous_for and checkin_date:
+            day_diff = days_between_iso_dates(checkin_date, previous_for)
+            if day_diff is not None:
+                if day_diff < 0:
+                    timing_state = "early"
+                elif day_diff > 1:
+                    timing_state = "late"
+                else:
+                    timing_state = "on_time"
+
+    return timing_state
 
 def build_today_plan_fatigue_context(auth_user, latest_checkin, workouts, checkin_date):
     latest_strength = find_latest_strength_workout(workouts)
@@ -2625,18 +2640,10 @@ def get_today_plan():
         plan_variant = "default"
 
 
-    timing_state = "on_time"
-    if previous_recommendation:
-        previous_for = str(previous_recommendation.get("recommended_for", "")).strip()
-        if previous_for and checkin_date:
-            day_diff = days_between_iso_dates(checkin_date, previous_for)
-            if day_diff is not None:
-                if day_diff < 0:
-                    timing_state = "early"
-                elif day_diff > 1:
-                    timing_state = "late"
-                else:
-                    timing_state = "on_time"
+    timing_state = build_today_plan_timing_state(
+        previous_recommendation=previous_recommendation,
+        checkin_date=checkin_date,
+    )
 
     # meget enkel første beslutningsmotor
     if readiness_score <= 3:
