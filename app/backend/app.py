@@ -2460,6 +2460,60 @@ def build_today_plan_context(auth_user, latest_checkin):
     }
 
 
+
+
+def build_today_plan_fatigue_context(auth_user, latest_checkin, workouts, checkin_date):
+    latest_strength = find_latest_strength_workout(workouts)
+    days_since_last_strength = None
+    if latest_strength:
+        days_since_last_strength = days_between_iso_dates(checkin_date, latest_strength.get("date", ""))
+
+    session_results = list_session_results_for_user(auth_user.get("user_id"))
+    recommendations = read_json_file(FILES["recommendations"])
+    previous_recommendation = recommendations[-1] if recommendations else None
+
+    latest_strength_session = find_latest_session_by_type(session_results, "styrke")
+    latest_strength_failed = session_has_failure(latest_strength_session)
+    latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
+    latest_strength_completed = None if latest_strength_session is None else bool(latest_strength_session.get("completed", False))
+
+    fatigue_score = (
+        (3 if latest_strength_failed else 0)
+        + (2 * latest_strength_load_drop_count)
+        + (1 if latest_strength_completed is False else 0)
+        + (1 if days_since_last_strength is not None and days_since_last_strength < 2 else 0)
+    )
+
+    recovery_state = build_recovery_state(
+        user_id=auth_user.get("user_id"),
+        latest_checkin=latest_checkin,
+        days_since_last_strength=days_since_last_strength
+    )
+
+    if recovery_state.get("recovery_state") == "recover":
+        fatigue_session_override = "restitution"
+    elif fatigue_score >= 6:
+        fatigue_session_override = "restitution"
+    elif fatigue_score >= 2:
+        fatigue_session_override = "light_strength"
+    else:
+        fatigue_session_override = None
+
+    return {
+        "latest_strength": latest_strength,
+        "days_since_last_strength": days_since_last_strength,
+        "session_results": session_results,
+        "previous_recommendation": previous_recommendation,
+        "latest_strength_session": latest_strength_session,
+        "latest_strength_failed": latest_strength_failed,
+        "latest_strength_load_drop_count": latest_strength_load_drop_count,
+        "latest_strength_completed": latest_strength_completed,
+        "fatigue_score": fatigue_score,
+        "recovery_state": recovery_state,
+        "fatigue_session_override": fatigue_session_override,
+    }
+
+
 @app.get("/api/debug/exercise-config/<exercise_id>")
 def debug_exercise_config(exercise_id):
     auth_user, auth_err = require_auth_user()
@@ -2539,44 +2593,24 @@ def get_today_plan():
             manual_override=manual_override,
         )
 
-    latest_strength = find_latest_strength_workout(workouts)
-    days_since_last_strength = None
-    if latest_strength:
-        days_since_last_strength = days_between_iso_dates(checkin_date, latest_strength.get("date", ""))
-
-    session_results = list_session_results_for_user(auth_user.get("user_id"))
-    recommendations = read_json_file(FILES["recommendations"])
-    previous_recommendation = recommendations[-1] if recommendations else None
-
-    latest_strength_session = find_latest_session_by_type(session_results, "styrke")
-    latest_strength_failed = session_has_failure(latest_strength_session)
-    latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
-    latest_strength_completed = None if latest_strength_session is None else bool(latest_strength_session.get("completed", False))
-    fatigue_score = (
-        (3 if latest_strength_failed else 0)
-        + (2 * latest_strength_load_drop_count)
-        + (1 if latest_strength_completed is False else 0)
-        + (1 if days_since_last_strength is not None and days_since_last_strength < 2 else 0)
-    )
-
-
-    
-
-    # recovery-based session override
-    recovery_state = build_recovery_state(
-        user_id=auth_user.get("user_id"),
+    fatigue_ctx = build_today_plan_fatigue_context(
+        auth_user=auth_user,
         latest_checkin=latest_checkin,
-        days_since_last_strength=days_since_last_strength
+        workouts=workouts,
+        checkin_date=checkin_date,
     )
 
-    if recovery_state.get("recovery_state") == "recover":
-        fatigue_session_override = "restitution"
-    elif fatigue_score >= 6:
-        fatigue_session_override = "restitution"
-    elif fatigue_score >= 2:
-        fatigue_session_override = "light_strength"
-    else:
-        fatigue_session_override = None
+    latest_strength = fatigue_ctx["latest_strength"]
+    days_since_last_strength = fatigue_ctx["days_since_last_strength"]
+    session_results = fatigue_ctx["session_results"]
+    previous_recommendation = fatigue_ctx["previous_recommendation"]
+    latest_strength_session = fatigue_ctx["latest_strength_session"]
+    latest_strength_failed = fatigue_ctx["latest_strength_failed"]
+    latest_strength_load_drop_count = fatigue_ctx["latest_strength_load_drop_count"]
+    latest_strength_completed = fatigue_ctx["latest_strength_completed"]
+    fatigue_score = fatigue_ctx["fatigue_score"]
+    recovery_state = fatigue_ctx["recovery_state"]
+    fatigue_session_override = fatigue_ctx["fatigue_session_override"]
 
     if fatigue_session_override == "restitution":
         session_type = "restitution"
