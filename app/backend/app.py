@@ -2653,6 +2653,63 @@ def log_today_plan_decision(auth_user, checkin_date, session_type, template_id, 
     )
 
 
+def validate_today_plan_item(item):
+    if not isinstance(item, dict):
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "template_mode": "consistency_fallback_v0_1",
+            "plan_variant": "consistency_fallback",
+            "reason": "invalid plan item structure",
+            "entries": build_restitution_plan(30),
+        }
+
+    session_type = str(item.get("session_type", "")).strip().lower()
+    entries = item.get("entries", [])
+    if not isinstance(entries, list):
+        entries = []
+
+    has_entries = bool(entries)
+    has_exercise_entries = any(
+        isinstance(e, dict) and str(e.get("exercise_id", "")).strip()
+        for e in entries
+    )
+
+    invalid = False
+    invalid_reason = None
+
+    if session_type == "styrke" and not has_entries:
+        invalid = True
+        invalid_reason = "strength plan missing entries"
+    elif session_type == "restitution" and has_exercise_entries:
+        invalid = True
+        invalid_reason = "restitution plan should not contain exercise entries"
+    elif session_type in ("cardio", "løb") and not has_entries:
+        invalid = True
+        invalid_reason = "cardio plan missing entries"
+    elif session_type not in ("styrke", "restitution", "cardio", "løb"):
+        invalid = True
+        invalid_reason = "unknown session_type"
+
+    if not invalid:
+        return item
+
+    logger.warning(
+        "today_plan_consistency_fallback session_type=%s reason=%s",
+        session_type,
+        invalid_reason,
+    )
+
+    fixed = dict(item)
+    fixed["session_type"] = "restitution"
+    fixed["template_id"] = "restitution_easy"
+    fixed["template_mode"] = "consistency_fallback_v0_1"
+    fixed["plan_variant"] = "consistency_fallback"
+    fixed["reason"] = f"consistency fallback: {invalid_reason}"
+    fixed["entries"] = build_restitution_plan(int(item.get("time_budget_min", 30) or 30))
+    return fixed
+
+
 @app.get("/api/today-plan")
 def get_today_plan():
     auth_user, auth_err = require_auth_user()
@@ -3151,6 +3208,8 @@ def get_today_plan():
         "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
         "entries": plan_entries
     }
+
+    item = validate_today_plan_item(item)
 
     return jsonify({
         "ok": True,
