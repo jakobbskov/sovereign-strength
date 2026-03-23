@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+import fcntl
 from pathlib import Path
 from db import init_db
 
@@ -11,6 +12,22 @@ class JSONStorage:
 
     def _path(self, file_key):
         return self.data_dir / f"{file_key}.json"
+
+    def _lock_path(self, file_key):
+        return self.data_dir / f"{file_key}.json.lock"
+
+    def _acquire_lock(self, file_key):
+        lock_path = self._lock_path(file_key)
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        lock_file = open(lock_path, "a+", encoding="utf-8")
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        return lock_file
+
+    def _release_lock(self, lock_file):
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        finally:
+            lock_file.close()
 
     def _read_list(self, file_key):
         path = self._path(file_key)
@@ -57,63 +74,75 @@ class JSONStorage:
         return self._sort_desc(items, *sort_keys)
 
     def append_item(self, file_key, item):
-        items = self._read_list(file_key)
-        items.append(item)
-        self._write_list(file_key, items)
-        return item, len(items)
+        lock_file = self._acquire_lock(file_key)
+        try:
+            items = self._read_list(file_key)
+            items.append(item)
+            self._write_list(file_key, items)
+            return item, len(items)
+        finally:
+            self._release_lock(lock_file)
 
     def get_latest_user_item(self, file_key, user_id, sort_keys=("created_at", "date")):
         items = self.list_user_items(file_key, user_id, sort_keys=sort_keys)
         return items[0] if items else None
 
     def delete_user_item(self, file_key, user_id, item_id):
-        items = self._read_list(file_key)
-        out = []
-        deleted = None
+        lock_file = self._acquire_lock(file_key)
+        try:
+            items = self._read_list(file_key)
+            out = []
+            deleted = None
 
-        for item in items:
-            if not isinstance(item, dict):
+            for item in items:
+                if not isinstance(item, dict):
+                    out.append(item)
+                    continue
+
+                same_user = str(item.get("user_id")) == str(user_id)
+                same_id = str(item.get("id", "")).strip() == str(item_id).strip()
+
+                if same_user and same_id and deleted is None:
+                    deleted = item
+                    continue
+
                 out.append(item)
-                continue
 
-            same_user = str(item.get("user_id")) == str(user_id)
-            same_id = str(item.get("id", "")).strip() == str(item_id).strip()
+            if deleted is not None:
+                self._write_list(file_key, out)
 
-            if same_user and same_id and deleted is None:
-                deleted = item
-                continue
-
-            out.append(item)
-
-        if deleted is not None:
-            self._write_list(file_key, out)
-
-        return deleted
+            return deleted
+        finally:
+            self._release_lock(lock_file)
 
     
     def consume_manual_override_workout(self, user_id, date):
-        items = self._read_list("workouts")
-        changed = False
+        lock_file = self._acquire_lock("workouts")
+        try:
+            items = self._read_list("workouts")
+            changed = False
 
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            if str(item.get("user_id")) != str(user_id):
-                continue
-            if str(item.get("date", "")).strip() != str(date).strip():
-                continue
-            if not bool(item.get("is_manual_override", False)):
-                continue
-            if bool(item.get("is_consumed", False)):
-                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                if str(item.get("user_id")) != str(user_id):
+                    continue
+                if str(item.get("date", "")).strip() != str(date).strip():
+                    continue
+                if not bool(item.get("is_manual_override", False)):
+                    continue
+                if bool(item.get("is_consumed", False)):
+                    continue
 
-            item["is_consumed"] = True
-            changed = True
+                item["is_consumed"] = True
+                changed = True
 
-        if changed:
-            self._write_list("workouts", items)
+            if changed:
+                self._write_list("workouts", items)
 
-        return changed
+            return changed
+        finally:
+            self._release_lock(lock_file)
 
     def get_user_settings_for(self, user_id):
         raw = self._read_object("user_settings")
@@ -145,26 +174,30 @@ class JSONStorage:
         return {}
 
     def save_user_settings_for(self, user_id, settings):
-        raw = self._read_object("user_settings")
-        if not isinstance(raw, dict):
-            raw = {}
+        lock_file = self._acquire_lock("user_settings")
+        try:
+            raw = self._read_object("user_settings")
+            if not isinstance(raw, dict):
+                raw = {}
 
-        if "users" not in raw or not isinstance(raw.get("users"), dict):
-            legacy = {}
-            if raw and ("equipment_increments" in raw or "available_equipment" in raw or "profile" in raw or "preferences" in raw):
-                legacy_user_id = raw.get("user_id", 1)
-                legacy[str(legacy_user_id)] = dict(raw)
-            raw = {"users": legacy}
+            if "users" not in raw or not isinstance(raw.get("users"), dict):
+                legacy = {}
+                if raw and ("equipment_increments" in raw or "available_equipment" in raw or "profile" in raw or "preferences" in raw):
+                    legacy_user_id = raw.get("user_id", 1)
+                    legacy[str(legacy_user_id)] = dict(raw)
+                raw = {"users": legacy}
 
-        clean = dict(settings or {})
-        clean["user_id"] = user_id
-        if not isinstance(clean.get("profile"), dict):
-            clean["profile"] = {}
-        if not isinstance(clean.get("preferences"), dict):
-            clean["preferences"] = {}
-        raw["users"][str(user_id)] = clean
-        self._write_object("user_settings", raw)
-        return clean
+            clean = dict(settings or {})
+            clean["user_id"] = user_id
+            if not isinstance(clean.get("profile"), dict):
+                clean["profile"] = {}
+            if not isinstance(clean.get("preferences"), dict):
+                clean["preferences"] = {}
+            raw["users"][str(user_id)] = clean
+            self._write_object("user_settings", raw)
+            return clean
+        finally:
+            self._release_lock(lock_file)
 
 
 class SQLiteStorage:
