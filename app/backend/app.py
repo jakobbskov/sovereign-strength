@@ -2477,6 +2477,7 @@ def build_today_plan_timing_state(previous_recommendation, checkin_date):
 
     return timing_state
 
+
 def build_today_plan_fatigue_context(auth_user, latest_checkin, workouts, checkin_date):
     latest_strength = find_latest_strength_workout(workouts)
     days_since_last_strength = None
