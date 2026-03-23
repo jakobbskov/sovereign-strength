@@ -2482,6 +2482,8 @@ def build_manual_override_today_plan_response(latest_checkin, checkin_date, read
             "substituted_from": None
         })
 
+
+
     return jsonify({
         "ok": True,
         "item": {
@@ -2638,6 +2640,19 @@ def progression(exercise_id):
 
 
 
+def log_today_plan_decision(auth_user, checkin_date, session_type, template_id, plan_variant, reason, plan_entries):
+    logger.info(
+        "today_plan_decision user_id=%s date=%s session_type=%s template_id=%s plan_variant=%s reason=%s entries=%s",
+        auth_user.get("user_id") if isinstance(auth_user, dict) else None,
+        checkin_date,
+        session_type,
+        template_id,
+        plan_variant,
+        reason,
+        len(plan_entries) if isinstance(plan_entries, list) else 0,
+    )
+
+
 @app.get("/api/today-plan")
 def get_today_plan():
     auth_user, auth_err = require_auth_user()
@@ -2733,6 +2748,18 @@ def get_today_plan():
     )
 
     autoplan_meta = None
+
+    logger.info(
+        "today_plan_inputs user_id=%s date=%s readiness=%s fatigue=%s timing=%s recovery=%s manual_override=%s time_budget_min=%s",
+        auth_user.get("user_id"),
+        checkin_date,
+        readiness_score,
+        fatigue_score,
+        timing_state,
+        recovery_state.get("recovery_state") if isinstance(recovery_state, dict) else None,
+        bool(manual_override),
+        time_budget_min,
+    )
 
     # meget enkel første beslutningsmotor
     if readiness_score <= 3:
@@ -3057,6 +3084,15 @@ def get_today_plan():
                 break
 
     if already_logged_today:
+        log_today_plan_decision(
+            auth_user=auth_user,
+            checkin_date=checkin_date,
+            session_type=session_type,
+            template_id=template_id,
+            plan_variant=plan_variant,
+            reason=reason,
+            plan_entries=plan_entries,
+        )
         return jsonify({
             "ok": True,
             "item": {
@@ -3079,6 +3115,16 @@ def get_today_plan():
         })
 
 
+
+    log_today_plan_decision(
+        auth_user=auth_user,
+        checkin_date=checkin_date,
+        session_type=session_type,
+        template_id=template_id,
+        plan_variant=plan_variant,
+        reason=reason,
+        plan_entries=plan_entries,
+    )
 
     item = {
         "checkin_id": latest_checkin.get("id"),
