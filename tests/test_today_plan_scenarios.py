@@ -88,8 +88,27 @@ def test_high_fatigue():
     assert item["template_id"] == "restitution_easy", item
 
 
+def test_auth_unavailable():
+    client = backend_app.app.test_client()
+
+    with backend_app.app.app_context():
+        auth_error = (backend_app.jsonify({"ok": False, "error": "auth_unavailable"}), 503)
+
+    with patch.object(
+        backend_app,
+        "require_auth_user",
+        return_value=(None, auth_error),
+    ):
+        response = client.get("/api/today-plan")
+
+    assert response.status_code == 503, response.data.decode("utf-8")
+    payload = response.get_json()
+    assert payload == {"ok": False, "error": "auth_unavailable"}, payload
+
+
 if __name__ == "__main__":
     test_low_readiness()
     test_early_timing()
     test_high_fatigue()
+    test_auth_unavailable()
     print("All today-plan scenario tests passed")
