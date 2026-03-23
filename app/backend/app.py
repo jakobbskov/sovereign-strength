@@ -2538,10 +2538,6 @@ def get_today_plan():
             readiness_score=readiness_score,
             manual_override=manual_override,
         )
-    time_budget_min = int(latest_checkin.get("time_budget_min", 45) or 45)
-    checkin_date = latest_checkin.get("date", "")
-    user_settings = get_user_settings_for(auth_user.get("user_id"))
-    training_day_ctx = get_training_day_context(user_settings, checkin_date)
 
     latest_strength = find_latest_strength_workout(workouts)
     days_since_last_strength = None
