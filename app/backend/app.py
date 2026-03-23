@@ -2380,6 +2380,61 @@ def auth_whoami():
 
 
 
+def build_manual_override_today_plan_response(latest_checkin, checkin_date, readiness_score, manual_override):
+    override_entries = []
+    raw_entries = manual_override.get("entries", [])
+    if not isinstance(raw_entries, list):
+        raw_entries = []
+
+    for e in raw_entries:
+        if not isinstance(e, dict):
+            continue
+        override_entries.append({
+            "exercise_id": str(e.get("exercise_id", "")).strip(),
+            "sets": e.get("sets", ""),
+            "target_reps": str(e.get("reps", "")).strip(),
+            "target_load": str(e.get("load", "")).strip() or None,
+            "progression_decision": "manual_override",
+            "progression_reason": "Manuel plan valgt som dagens træning",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None
+        })
+
+    return jsonify({
+        "ok": True,
+        "item": {
+            "checkin_id": latest_checkin.get("id"),
+            "date": checkin_date,
+            "recommended_for": checkin_date,
+            "decision_mode": "manual_override_v0_1",
+            "timing_state": "on_time",
+            "previous_recommended_for": None,
+            "readiness_score": readiness_score,
+            "weekly_status": None,
+            "time_budget_min": latest_checkin.get("time_budget_min"),
+            "session_type": str(manual_override.get("session_type", "")).strip() or "styrke",
+            "latest_strength_failed": None,
+            "latest_strength_load_drop_count": 0,
+            "latest_strength_completed": None,
+            "fatigue_score": 0,
+            "recovery_state": None,
+            "template_id": str(manual_override.get("program_id", "")).strip() or "manual_override",
+            "template_mode": "manual_override_v0_1",
+            "plan_variant": "manual_override",
+            "reason": "Manuel plan overstyrer dagens autoplan.",
+            "families_selected": [],
+            "training_day_context": {},
+            "entries": override_entries,
+            "source": "manual_override",
+            "manual_override_workout_id": manual_override.get("id")
+        }
+    })
+
+
 @app.get("/api/debug/exercise-config/<exercise_id>")
 def debug_exercise_config(exercise_id):
     auth_user, auth_err = require_auth_user()
@@ -2457,58 +2512,12 @@ def get_today_plan():
         break
 
     if manual_override:
-        override_entries = []
-        raw_entries = manual_override.get("entries", [])
-        if not isinstance(raw_entries, list):
-            raw_entries = []
-
-        for e in raw_entries:
-            if not isinstance(e, dict):
-                continue
-            override_entries.append({
-                "exercise_id": str(e.get("exercise_id", "")).strip(),
-                "sets": e.get("sets", ""),
-                "target_reps": str(e.get("reps", "")).strip(),
-                "target_load": str(e.get("load", "")).strip() or None,
-                "progression_decision": "manual_override",
-                "progression_reason": "Manuel plan valgt som dagens træning",
-                "recommended_next_load": None,
-                "actual_possible_next_load": None,
-                "equipment_constraint": False,
-                "secondary_constraints": [],
-                "next_target_reps": None,
-                "substituted_from": None
-            })
-
-        return jsonify({
-            "ok": True,
-            "item": {
-                "checkin_id": latest_checkin.get("id"),
-                "date": checkin_date,
-                "recommended_for": checkin_date,
-                "decision_mode": "manual_override_v0_1",
-                "timing_state": "on_time",
-                "previous_recommended_for": None,
-                "readiness_score": readiness_score,
-                "weekly_status": None,
-                "time_budget_min": latest_checkin.get("time_budget_min"),
-                "session_type": str(manual_override.get("session_type", "")).strip() or "styrke",
-                "latest_strength_failed": None,
-                "latest_strength_load_drop_count": 0,
-                "latest_strength_completed": None,
-                "fatigue_score": 0,
-                "recovery_state": None,
-                "template_id": str(manual_override.get("program_id", "")).strip() or "manual_override",
-                "template_mode": "manual_override_v0_1",
-                "plan_variant": "manual_override",
-                "reason": "Manuel plan overstyrer dagens autoplan.",
-                "families_selected": [],
-                "training_day_context": {},
-                "entries": override_entries,
-                "source": "manual_override",
-                "manual_override_workout_id": manual_override.get("id")
-            }
-        })
+        return build_manual_override_today_plan_response(
+            latest_checkin=latest_checkin,
+            checkin_date=checkin_date,
+            readiness_score=readiness_score,
+            manual_override=manual_override,
+        )
     time_budget_min = int(latest_checkin.get("time_budget_min", 45) or 45)
     checkin_date = latest_checkin.get("date", "")
     user_settings = get_user_settings_for(auth_user.get("user_id"))
