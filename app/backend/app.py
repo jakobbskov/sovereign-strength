@@ -57,11 +57,13 @@ def _set_cached_auth_user(raw_cookie, user):
 def get_current_auth_user():
     raw_cookie = request.headers.get("Cookie", "").strip()
     if not raw_cookie:
-        return None
+        return "unauthorized", None
 
     cached_user, cache_hit = _get_cached_auth_user(raw_cookie)
     if cache_hit:
-        return cached_user
+        if cached_user and cached_user.get("user_id"):
+            return "ok", cached_user
+        return "unauthorized", None
 
     req = urllib.request.Request(
         AUTH_VALIDATE_URL,
@@ -78,16 +80,16 @@ def get_current_auth_user():
     except urllib.error.HTTPError as e:
         if e.code == 401:
             _set_cached_auth_user(raw_cookie, None)
-            return None
+            return "unauthorized", None
         logger.exception("Auth HTTP error from %s: %s", AUTH_VALIDATE_URL, e)
-        return None
+        return "unavailable", None
     except Exception as e:
         logger.exception("Auth validation failed against %s: %s", AUTH_VALIDATE_URL, e)
-        return None
+        return "unavailable", None
 
     if not payload or not payload.get("ok") or not payload.get("authenticated"):
         _set_cached_auth_user(raw_cookie, None)
-        return None
+        return "unauthorized", None
 
     user = {
         "user_id": payload.get("user_id"),
@@ -95,7 +97,7 @@ def get_current_auth_user():
         "role": payload.get("role"),
     }
     _set_cached_auth_user(raw_cookie, user)
-    return user
+    return "ok", user
 
 
 
@@ -112,8 +114,10 @@ def filter_items_for_user(items, user_id):
 
 
 def require_auth_user():
-    auth_user = get_current_auth_user()
-    if not auth_user or not auth_user.get("user_id"):
+    auth_status, auth_user = get_current_auth_user()
+    if auth_status == "unavailable":
+        return None, (jsonify({"ok": False, "error": "auth_unavailable"}), 503)
+    if auth_status != "ok" or not auth_user or not auth_user.get("user_id"):
         return None, (jsonify({"ok": False, "error": "unauthorized"}), 401)
     return auth_user, None
 
