@@ -2371,8 +2371,7 @@ def get_today_plan():
     auth_user, auth_err = require_auth_user()
     if auth_err:
         return auth_err
-    checkins = read_json_file(FILES["checkins"])
-    checkins = filter_items_for_user(checkins, auth_user.get("user_id"))
+    checkins = list_user_items("checkins", auth_user.get("user_id"))
     workouts = list_workouts_for_user(auth_user.get("user_id"))
     programs = read_json_file(FILES["programs"])
     exercises = read_json_file(FILES["exercises"])
