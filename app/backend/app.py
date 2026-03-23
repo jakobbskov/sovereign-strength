@@ -299,6 +299,9 @@ def _parse_optional_int(value, default=None):
         return default
 
 def create_workout(user_id, payload):
+    if not isinstance(payload, dict):
+        return None, {"ok": False, "error": "ugyldig payload"}, 400
+
     date = str(payload.get("date", "")).strip()
     session_type = str(payload.get("type", "")).strip()
     duration_min = payload.get("duration_min", 0)
@@ -309,6 +312,9 @@ def create_workout(user_id, payload):
 
     if not date:
         return None, {"ok": False, "error": "date mangler"}, 400
+
+    if session_type == "cardio":
+        session_type = "løb"
 
     if session_type not in ("styrke", "løb", "mobilitet", "andet"):
         return None, {"ok": False, "error": "ugyldig type"}, 400
@@ -323,15 +329,37 @@ def create_workout(user_id, payload):
     clean_entries = []
     for e in entries:
         if not isinstance(e, dict):
-            continue
-        clean_entries.append({
+            return None, {"ok": False, "error": "hver entry skal være et objekt"}, 400
+
+        sets_raw = str(e.get("sets", "")).strip()
+        if sets_raw:
+            try:
+                int(float(sets_raw))
+            except Exception:
+                return None, {"ok": False, "error": "sets skal være et tal eller tom"}, 400
+
+        clean_entry = {
             "exercise_id": str(e.get("exercise_id", "")).strip(),
-            "sets": str(e.get("sets", "")).strip(),
+            "sets": sets_raw,
             "reps": str(e.get("reps", "")).strip(),
             "achieved_reps": str(e.get("achieved_reps", "")).strip(),
             "load": str(e.get("load", "")).strip(),
             "notes": str(e.get("notes", "")).strip(),
-        })
+        }
+
+        has_meaningful_data = bool(
+            clean_entry["exercise_id"]
+            or clean_entry["sets"]
+            or clean_entry["reps"]
+            or clean_entry["achieved_reps"]
+            or clean_entry["load"]
+        )
+
+        if has_meaningful_data:
+            clean_entries.append(clean_entry)
+
+    if session_type == "styrke" and not clean_entries:
+        return None, {"ok": False, "error": "ingen træningsdata at gemme"}, 400
 
     item = {
         "id": str(uuid.uuid4()),
