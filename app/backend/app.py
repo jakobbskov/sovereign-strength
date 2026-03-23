@@ -14,6 +14,21 @@ app = Flask(__name__)
 
 logger = logging.getLogger(__name__)
 
+def log_auth_failure(context, error):
+    logger.warning(
+        "auth_failure context=%s error=%s",
+        context,
+        error,
+    )
+
+def log_storage_failure(operation, error, extra=None):
+    logger.error(
+        "storage_failure operation=%s error=%s extra=%s",
+        operation,
+        error,
+        extra,
+    )
+
 AUTH_VALIDATE_URL = os.getenv("AUTH_VALIDATE_URL", "https://auth.innosocia.dk/api/auth/validate")
 AUTH_COOKIE_NAME = os.getenv("AUTH_COOKIE_NAME", "sovereign_session")
 AUTH_CACHE_TTL_SECONDS = int(os.getenv("AUTH_CACHE_TTL_SECONDS", "300") or "300")
@@ -2714,6 +2729,7 @@ def validate_today_plan_item(item):
 def get_today_plan():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("today-plan", auth_err)
         return auth_err
     checkins = list_user_items("checkins", auth_user.get("user_id"))
     checkins_error = get_storage_last_error()
@@ -5052,6 +5068,7 @@ def get_session_results():
 def post_session_result():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("session-result", auth_err)
         return auth_err
 
     item, err_payload, third = create_session_result(
@@ -5078,6 +5095,7 @@ def post_session_result():
 def get_workouts():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("workouts:get", auth_err)
         return auth_err
     items = list_workouts_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
@@ -5086,6 +5104,7 @@ def get_workouts():
 def post_workouts():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("workouts:post", auth_err)
         return auth_err
 
     item, err_payload, third = create_workout(auth_user.get("user_id"), request.get_json(silent=True) or {})
@@ -5098,6 +5117,7 @@ def post_workouts():
 def get_checkins():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("checkin", auth_err)
         return auth_err
     items = list_checkins_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
@@ -5106,6 +5126,7 @@ def get_checkins():
 def get_latest_checkin():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("checkin", auth_err)
         return auth_err
     item = get_latest_checkin_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "item": item})
@@ -5114,6 +5135,7 @@ def get_latest_checkin():
 def post_checkin():
     auth_user, auth_err = require_auth_user()
     if auth_err:
+        log_auth_failure("checkin", auth_err)
         return auth_err
 
     item, err_payload, third = create_checkin(auth_user.get("user_id"), request.get_json(silent=True) or {})
