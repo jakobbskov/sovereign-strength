@@ -21,12 +21,17 @@ def test_today_plan_contract_shape():
         response = client.get("/api/today-plan")
 
     assert response.status_code == 200, response.data
-
     payload = response.get_json()
+
+    assert isinstance(payload, dict), payload
+    assert payload.get("ok") is True, payload
+
     item = payload.get("item")
+    assert isinstance(item, dict), item
 
     required_keys = [
         "date",
+        "recommended_for",
         "session_type",
         "template_id",
         "plan_variant",
@@ -39,10 +44,22 @@ def test_today_plan_contract_shape():
     for key in required_keys:
         assert key in item, f"Missing key: {key}"
 
-    assert isinstance(item["entries"], list)
-    assert isinstance(item["session_type"], str)
-    assert isinstance(item["template_id"], str)
-    assert isinstance(item["plan_variant"], str)
+    assert isinstance(item["date"], str), item
+    assert isinstance(item["recommended_for"], str), item
+    assert isinstance(item["session_type"], str), item
+    assert isinstance(item["template_id"], str), item
+    assert isinstance(item["plan_variant"], str), item
+    assert isinstance(item["readiness_score"], int), item
+    assert isinstance(item["time_budget_min"], int), item
+    assert isinstance(item["entries"], list), item
+    assert isinstance(item["reason"], str), item
+
+    assert item["session_type"] in ("styrke", "løb", "cardio", "restitution"), item
+    assert item["template_id"].strip() != "", item
+    assert item["reason"].strip() != "", item
+
+    for entry in item["entries"]:
+        assert isinstance(entry, dict), entry
 
 
 if __name__ == "__main__":
