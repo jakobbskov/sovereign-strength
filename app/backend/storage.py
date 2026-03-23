@@ -2,8 +2,11 @@ import json
 import os
 import sqlite3
 import fcntl
+import logging
 from pathlib import Path
 from db import init_db
+
+logger = logging.getLogger(__name__)
 
 
 class JSONStorage:
@@ -35,8 +38,12 @@ class JSONStorage:
             return []
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            return data if isinstance(data, list) else []
+            if isinstance(data, list):
+                return data
+            logger.error("JSONStorage expected list in %s but got %s", path, type(data).__name__)
+            return []
         except Exception:
+            logger.exception("JSONStorage failed to read list from %s", path)
             return []
 
     def _write_list(self, file_key, data):
@@ -49,8 +56,12 @@ class JSONStorage:
             return {}
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else {}
+            if isinstance(data, dict):
+                return data
+            logger.error("JSONStorage expected dict in %s but got %s", path, type(data).__name__)
+            return {}
         except Exception:
+            logger.exception("JSONStorage failed to read object from %s", path)
             return {}
 
     def _write_object(self, file_key, data):
