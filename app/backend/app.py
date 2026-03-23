@@ -413,13 +413,34 @@ def list_session_results_for_user(user_id):
     return list_user_items("session_results", user_id)
 
 def create_session_result(user_id, payload):
+    if not isinstance(payload, dict):
+        return None, {"ok": False, "error": "ugyldig payload"}, 400
+
     date = str(payload.get("date", "")).strip()
     session_type = str(payload.get("session_type", "")).strip()
     timing_state = str(payload.get("timing_state", "")).strip()
     notes = str(payload.get("notes", "")).strip()
-    completed = bool(payload.get("completed", False))
+
+    completed_raw = payload.get("completed", False)
+    if not isinstance(completed_raw, bool):
+        return None, {"ok": False, "error": "completed skal være true/false"}, 400
+    completed = completed_raw
+
     readiness_score = payload.get("readiness_score", None)
+    if readiness_score not in (None, ""):
+        try:
+            readiness_score = int(readiness_score)
+        except Exception:
+            return None, {"ok": False, "error": "readiness_score skal være et heltal"}, 400
+        if readiness_score < 1 or readiness_score > 5:
+            return None, {"ok": False, "error": "readiness_score skal være mellem 1 og 5"}, 400
+    else:
+        readiness_score = None
+
     source = str(payload.get("source", "autoplan")).strip() or "autoplan"
+    if source not in ("autoplan", "manual_override", "manual", "import"):
+        return None, {"ok": False, "error": "ugyldig source"}, 400
+
     results = payload.get("results", [])
 
     if not date:
@@ -496,11 +517,15 @@ def create_session_result(user_id, payload):
     duration_sec = payload.get("duration_sec", None)
 
     avg_rpe = _parse_optional_int(avg_rpe, None)
+    if avg_rpe is not None and (avg_rpe < 0 or avg_rpe > 10):
+        return None, {"ok": False, "error": "avg_rpe skal være mellem 0 og 10"}, 400
 
     try:
         distance_km = float(distance_km) if distance_km not in (None, "", "null") else None
     except Exception:
         distance_km = None
+    if distance_km is not None and distance_km < 0:
+        return None, {"ok": False, "error": "distance_km må ikke være negativ"}, 400
 
     duration_min = _parse_optional_int(duration_min, 0)
     duration_sec = _parse_optional_int(duration_sec, 0)
