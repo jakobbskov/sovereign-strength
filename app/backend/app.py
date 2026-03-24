@@ -2797,6 +2797,17 @@ def get_autoplan_meta_value(autoplan_meta, key, default=None):
     return default
 
 
+def normalize_session_type(raw):
+    x = str(raw or "").strip().lower()
+    if x in ("styrke", "strength"):
+        return "strength"
+    if x in ("løb", "run", "cardio"):
+        return "cardio"
+    if x in ("restitution", "mobility", "recovery", "mobilitet", "rest"):
+        return "restitution"
+    return x or "unknown"
+
+
 def build_decision_trace(
     readiness_score,
     fatigue_score,
@@ -2815,6 +2826,8 @@ def build_decision_trace(
     else:
         fatigue_bucket = "low"
 
+    normalized = normalize_session_type(session_type)
+
     rule_applied = "strength_default"
     override_label = None
 
@@ -2829,9 +2842,9 @@ def build_decision_trace(
         rule_applied = "high_fatigue_restitution"
     elif fatigue_score >= 4:
         rule_applied = "fatigue_cardio"
-    elif str(session_type).strip() in ("løb", "cardio"):
+    elif normalized == "cardio":
         rule_applied = "cardio_default"
-    elif str(session_type).strip() == "restitution":
+    elif normalized == "restitution":
         rule_applied = "restitution_default"
 
     return {
@@ -3576,16 +3589,6 @@ def build_weekly_training_status(user_id, checkin_date, training_day_prefs, week
         session_results = []
 
     seen_sessions = set()
-
-    def normalize_session_type(raw):
-        x = str(raw or "").strip().lower()
-        if x in ("styrke", "strength"):
-            return "strength"
-        if x in ("løb", "run", "cardio"):
-            return "running"
-        if x in ("restitution", "mobility", "recovery", "mobilitet"):
-            return "restitution"
-        return x or "unknown"
 
     for item in session_results:
         if not isinstance(item, dict):
