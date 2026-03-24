@@ -428,7 +428,7 @@ function renderPendingEntries(){
     `;
   }).join("");
 
-  setText("entryStatus", `${STATE.pendingEntries.length} øvelse(r) klar til dette pas`);
+  setText("entryStatus", tr("workout.pending_entries_ready", { count: STATE.pendingEntries.length }));
 
   root.querySelectorAll("[data-remove-entry]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -444,7 +444,7 @@ function renderWorkouts(items){
   if (!root) return;
 
   if (!Array.isArray(items) || items.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen workouts endnu.</div></li>`;
+    root.innerHTML = `<li><div class="small">${esc(tr("workouts.none_yet"))}</div></li>`;
     setText("listMeta", tr("common.items_count", { count: 0 }));
     return;
   }
@@ -518,11 +518,11 @@ function renderWorkouts(items){
 function formatCardioKindLabel(value){
   const x = String(value || "").trim().toLowerCase();
   if (x === "restitution") return tr("session_type.recovery");
-  if (x === "base") return "Base";
-  if (x === "tempo") return "Tempo";
-  if (x === "interval" || x === "intervals") return "Intervaller";
-  if (x === "test" || x === "benchmark") return "Test";
-  return x || "Cardio";
+  if (x === "base") return tr("cardio.kind.base");
+  if (x === "tempo") return tr("cardio.kind.tempo");
+  if (x === "interval" || x === "intervals") return tr("cardio.kind.intervals");
+  if (x === "test" || x === "benchmark") return tr("cardio.kind.test");
+  return x || tr("cardio.kind.generic");
 }
 
 function formatDurationFromSeconds(totalSec){
@@ -725,7 +725,7 @@ function renderSessionHistory(items){
   if (!root) return;
 
   if (!Array.isArray(items) || items.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen sessions endnu.</div></li>`;
+    root.innerHTML = `<li><div class="small">${esc(tr("history.sessions_none"))}</div></li>`;
     setText("sessionResultsMeta", tr("common.items_count", { count: 0 }));
     return;
   }
@@ -758,14 +758,14 @@ function renderSessionHistory(items){
         </div>
         <div class="small" style="margin-top:6px">
           ${isCardio
-            ? esc(cardioMeta || "Ingen cardio-data")
+            ? esc(cardioMeta || tr("history.cardio_none"))
             : `${tr("history.session_totals", { sets: esc(String(totalSets)), reps: esc(String(totalReps)), tut_part: totalTUT ? ` · TUT: ${esc(String(totalTUT))} ${tr("unit.seconds")}` : "", volume: esc(String(estimatedVolume)) })}`}
         </div>
         <div class="small" style="margin-top:6px">
           ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
         </div>
         <div class="small" style="margin-top:6px">
-          ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : "Ingen progress flags"}
+          ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
         </div>
         ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
       </li>
@@ -822,7 +822,7 @@ function renderLoadMetrics(loadMetrics, recoveryState){
   if (!hasStructured){
     const loadStatus = String(rs.load_status || "").trim();
     if (!loadStatus){
-      root.innerHTML = `<div class="small">Ingen belastningsdata endnu.</div>`;
+      root.innerHTML = `<div class="small">${esc(tr("load.none_yet"))}</div>`;
       if (meta) meta.textContent = "";
       return;
     }
@@ -2032,7 +2032,7 @@ function renderSessionResultSummary(summary){
       ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
     </div>
     <div class="small">
-      ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : "Ingen progress flags"}
+      ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
     </div>
   `;
 }
