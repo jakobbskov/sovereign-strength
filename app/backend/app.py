@@ -2731,6 +2731,230 @@ def append_today_plan_trace(user_id, trace):
         logger.exception("today_plan_trace_write_failed")
 
 
+def build_today_plan_training_decision(
+    auth_user,
+    checkin_date,
+    readiness_score,
+    fatigue_score,
+    recovery_state,
+    time_budget_min,
+    user_settings,
+    training_day_ctx,
+    programs,
+    exercises,
+    latest_strength,
+):
+    strength_ctx = build_strength_plan(
+        programs=programs,
+        exercises=exercises,
+        latest_strength=latest_strength,
+        time_budget_min=time_budget_min,
+        fatigue_score=fatigue_score,
+        user_settings=user_settings,
+        user_id=auth_user.get("user_id"),
+    )
+
+    prefs = get_training_type_preferences(user_settings)
+    training_day_prefs = get_training_day_preferences(user_settings)
+    weekly_target_sessions = get_weekly_target_sessions(user_settings)
+    weekly_status = build_weekly_training_status(
+        user_id=auth_user.get("user_id"),
+        checkin_date=checkin_date,
+        training_day_prefs=training_day_prefs,
+        weekly_target_sessions=weekly_target_sessions,
+    )
+
+    completed_sessions_this_week = int((weekly_status or {}).get("completed_sessions", 0) or 0)
+    weekly_goal_reached = completed_sessions_this_week >= int(weekly_target_sessions or 3)
+
+    planning_mode = "fixed"
+    if isinstance(user_settings, dict):
+        planning_mode = str(user_settings.get("planning_mode", "fixed")).strip() or "fixed"
+
+    autoplan_meta = None
+
+    weekday_key = None
+    try:
+        weekday_idx = datetime.fromisoformat(str(checkin_date)).weekday()
+        weekday_key = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][weekday_idx]
+    except Exception:
+        weekday_key = None
+
+    if weekday_key and not training_day_prefs.get(weekday_key, True):
+        session_type = "restitution"
+        template_id = "restitution_easy"
+        plan_entries = build_restitution_plan(time_budget_min)
+        plan_variant = "calendar_rest"
+        reason = "dagen er ikke valgt som mulig træningsdag"
+        autoplan_meta = {
+            "template_mode": "calendar_rest",
+            "families_selected": [],
+            "blocked_by_training_day_preferences": True,
+            "weekday": weekday_key,
+        }
+
+    elif weekly_goal_reached and isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
+        session_type = "restitution"
+        template_id = "weekly_goal_reached_restitution"
+        plan_entries = build_restitution_plan(time_budget_min)
+        plan_variant = "weekly_goal_cap"
+        reason = "weekly goal reached · not a planned training day · recovery prioritized"
+        autoplan_meta = {
+            "template_mode": "weekly_goal_cap_v0_1",
+            "families_selected": [],
+            "weekly_goal_reached": True,
+        }
+
+    elif isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
+        if prefs.get("running", True):
+            cardio_plan = build_autoplan_cardio(
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                time_budget_min=time_budget_min,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            )
+
+            session_type = "løb"
+            template_id = "autoplan_cardio"
+            plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+            plan_variant = "autoplan_cardio"
+            reason = "ikke planlagt styrkedag · cardio-autoplan aktiv"
+
+            if isinstance(cardio_plan, dict):
+                autoplan_meta = {
+                    "template_mode": cardio_plan.get("template_mode"),
+                    "families_selected": []
+                }
+
+            if not plan_entries:
+                if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                    session_type = "styrke"
+                    template_id = strength_ctx.get("template_id")
+                    plan_entries = strength_ctx.get("plan_entries", [])
+                    plan_variant = strength_ctx.get("plan_variant", "default")
+                    reason = "ikke planlagt styrkedag · cardio tom, fallback til styrkeplan"
+                    autoplan_meta = None
+                else:
+                    session_type = "restitution"
+                    template_id = "restitution_easy"
+                    plan_entries = build_restitution_plan(time_budget_min)
+                    plan_variant = "default"
+                    reason = "løb fravalgt og ingen styrkevalg · restitution vælges"
+                    autoplan_meta = None
+        elif prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+            session_type = "styrke"
+            template_id = strength_ctx.get("template_id")
+            plan_entries = strength_ctx.get("plan_entries", [])
+            plan_variant = strength_ctx.get("plan_variant", "default")
+            reason = "løb fravalgt · styrke vælges på ikke-planlagt styrkedag"
+            autoplan_meta = None
+        else:
+            session_type = "restitution"
+            template_id = "restitution_easy"
+            plan_entries = build_restitution_plan(time_budget_min)
+            plan_variant = "default"
+            reason = "løb og styrke fravalgt · restitution vælges"
+            autoplan_meta = None
+
+    elif planning_mode == "autoplan":
+        if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+            autoplan = build_autoplan_strength(
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                time_budget_min=time_budget_min,
+                user_settings=user_settings,
+                limit=3 if int(time_budget_min or 0) >= 20 else 2
+            )
+
+            session_type = "styrke"
+            template_id = "autoplan_strength"
+            plan_entries = autoplan.get("entries", []) if isinstance(autoplan, dict) else []
+            plan_variant = "autoplan"
+            reason = "styrke prioriteres · autoplan aktiv"
+
+            if isinstance(autoplan, dict):
+                autoplan_meta = {
+                    "template_mode": autoplan.get("template_mode"),
+                    "families_selected": autoplan.get("families_selected", [])
+                }
+
+            if not plan_entries:
+                session_type = "styrke"
+                template_id = strength_ctx.get("template_id")
+                plan_entries = strength_ctx.get("plan_entries", [])
+                plan_variant = strength_ctx.get("plan_variant", "default")
+                reason = "styrke prioriteres · autoplan tom, fallback til fast plan"
+                autoplan_meta = None
+
+        elif prefs.get("running", True):
+            cardio_plan = build_autoplan_cardio(
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                time_budget_min=time_budget_min,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            )
+            session_type = "løb"
+            template_id = "autoplan_cardio"
+            plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+            plan_variant = "autoplan_cardio"
+            reason = "styrke fravalgt · cardio vælges"
+            autoplan_meta = {
+                "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
+                "families_selected": []
+            }
+        else:
+            session_type = "restitution"
+            template_id = "restitution_easy"
+            plan_entries = build_restitution_plan(time_budget_min)
+            plan_variant = "default"
+            reason = "løb og styrke fravalgt · restitution vælges"
+            autoplan_meta = None
+    else:
+        if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+            session_type = "styrke"
+            template_id = strength_ctx.get("template_id")
+            plan_entries = strength_ctx.get("plan_entries", [])
+            plan_variant = strength_ctx.get("plan_variant", "default")
+            reason = strength_ctx.get("reason", "styrke prioriteres")
+            autoplan_meta = None
+        elif prefs.get("running", True):
+            cardio_plan = build_autoplan_cardio(
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                time_budget_min=time_budget_min,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            )
+            session_type = "løb"
+            template_id = "autoplan_cardio"
+            plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+            plan_variant = "autoplan_cardio"
+            reason = "styrke fravalgt · cardio vælges"
+            autoplan_meta = {
+                "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
+                "families_selected": []
+            }
+        else:
+            session_type = "restitution"
+            template_id = "restitution_easy"
+            plan_entries = build_restitution_plan(time_budget_min)
+            plan_variant = "default"
+            reason = "løb og styrke fravalgt · restitution vælges"
+            autoplan_meta = None
+
+    return {
+        "session_type": session_type,
+        "template_id": template_id,
+        "plan_entries": plan_entries,
+        "plan_variant": plan_variant,
+        "reason": reason,
+        "autoplan_meta": autoplan_meta,
+        "weekly_status": weekly_status,
+    }
+
+
 def validate_today_plan_item(item):
     if not isinstance(item, dict):
         return {
@@ -3006,205 +3230,26 @@ def get_today_plan():
                 }
             ]
     else:
-        strength_ctx = build_strength_plan(
+        decision_ctx = build_today_plan_training_decision(
+            auth_user=auth_user,
+            checkin_date=checkin_date,
+            readiness_score=readiness_score,
+            fatigue_score=fatigue_score,
+            recovery_state=recovery_state,
+            time_budget_min=time_budget_min,
+            user_settings=user_settings,
+            training_day_ctx=training_day_ctx,
             programs=programs,
             exercises=exercises,
             latest_strength=latest_strength,
-            time_budget_min=time_budget_min,
-            fatigue_score=fatigue_score,
-            user_settings=user_settings,
-            user_id=auth_user.get("user_id"),
         )
-
-        prefs = get_training_type_preferences(user_settings)
-        training_day_prefs = get_training_day_preferences(user_settings)
-        weekly_target_sessions = get_weekly_target_sessions(user_settings)
-        weekly_status = build_weekly_training_status(
-            user_id=auth_user.get("user_id"),
-            checkin_date=checkin_date,
-            training_day_prefs=training_day_prefs,
-            weekly_target_sessions=weekly_target_sessions,
-        )
-
-        completed_sessions_this_week = int((weekly_status or {}).get("completed_sessions", 0) or 0)
-        weekly_goal_reached = completed_sessions_this_week >= int(weekly_target_sessions or 3)
-
-        planning_mode = "fixed"
-        if isinstance(user_settings, dict):
-            planning_mode = str(user_settings.get("planning_mode", "fixed")).strip() or "fixed"
-
-        autoplan_meta = None
-
-        weekday_key = None
-        try:
-            weekday_idx = datetime.fromisoformat(str(checkin_date)).weekday()
-            weekday_key = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][weekday_idx]
-        except Exception:
-            weekday_key = None
-
-        if weekday_key and not training_day_prefs.get(weekday_key, True):
-            session_type = "restitution"
-            template_id = "restitution_easy"
-            plan_entries = build_restitution_plan(time_budget_min)
-            plan_variant = "calendar_rest"
-            reason = "dagen er ikke valgt som mulig træningsdag"
-            autoplan_meta = {
-                "template_mode": "calendar_rest",
-                "families_selected": [],
-                "blocked_by_training_day_preferences": True,
-                "weekday": weekday_key,
-            }
-
-        elif weekly_goal_reached and isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
-            session_type = "restitution"
-            template_id = "weekly_goal_reached_restitution"
-            plan_entries = build_restitution_plan(time_budget_min)
-            plan_variant = "weekly_goal_cap"
-            reason = "weekly goal reached · not a planned training day · recovery prioritized"
-            autoplan_meta = {
-                "template_mode": "weekly_goal_cap_v0_1",
-                "families_selected": [],
-                "weekly_goal_reached": True,
-            }
-
-        elif isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
-            if prefs.get("running", True):
-                cardio_plan = build_autoplan_cardio(
-                    user_id=auth_user.get("user_id"),
-                    readiness=readiness_score,
-                    time_budget_min=time_budget_min,
-                    recovery_state=recovery_state,
-                    training_day_context=training_day_ctx,
-                )
-
-                session_type = "løb"
-                template_id = "autoplan_cardio"
-                plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
-                plan_variant = "autoplan_cardio"
-                reason = "ikke planlagt styrkedag · cardio-autoplan aktiv"
-
-                if isinstance(cardio_plan, dict):
-                    autoplan_meta = {
-                        "template_mode": cardio_plan.get("template_mode"),
-                        "families_selected": []
-                    }
-
-                if not plan_entries:
-                    if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
-                        session_type = "styrke"
-                        template_id = strength_ctx.get("template_id")
-                        plan_entries = strength_ctx.get("plan_entries", [])
-                        plan_variant = strength_ctx.get("plan_variant", "default")
-                        reason = "ikke planlagt styrkedag · cardio tom, fallback til styrkeplan"
-                        autoplan_meta = None
-                    else:
-                        session_type = "restitution"
-                        template_id = "restitution_easy"
-                        plan_entries = build_restitution_plan(time_budget_min)
-                        plan_variant = "default"
-                        reason = "løb fravalgt og ingen styrkevalg · restitution vælges"
-                        autoplan_meta = None
-            elif prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
-                session_type = "styrke"
-                template_id = strength_ctx.get("template_id")
-                plan_entries = strength_ctx.get("plan_entries", [])
-                plan_variant = strength_ctx.get("plan_variant", "default")
-                reason = "løb fravalgt · styrke vælges på ikke-planlagt styrkedag"
-                autoplan_meta = None
-            else:
-                session_type = "restitution"
-                template_id = "restitution_easy"
-                plan_entries = build_restitution_plan(time_budget_min)
-                plan_variant = "default"
-                reason = "løb og styrke fravalgt · restitution vælges"
-                autoplan_meta = None
-
-        elif planning_mode == "autoplan":
-            if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
-                autoplan = build_autoplan_strength(
-                    user_id=auth_user.get("user_id"),
-                    readiness=readiness_score,
-                    time_budget_min=time_budget_min,
-                    user_settings=user_settings,
-                    limit=3 if int(time_budget_min or 0) >= 20 else 2
-                )
-
-                session_type = "styrke"
-                template_id = "autoplan_strength"
-                plan_entries = autoplan.get("entries", []) if isinstance(autoplan, dict) else []
-                plan_variant = "autoplan"
-                reason = "styrke prioriteres · autoplan aktiv"
-
-                if isinstance(autoplan, dict):
-                    autoplan_meta = {
-                        "template_mode": autoplan.get("template_mode"),
-                        "families_selected": autoplan.get("families_selected", [])
-                    }
-
-                if not plan_entries:
-                    session_type = "styrke"
-                    template_id = strength_ctx.get("template_id")
-                    plan_entries = strength_ctx.get("plan_entries", [])
-                    plan_variant = strength_ctx.get("plan_variant", "default")
-                    reason = "styrke prioriteres · autoplan tom, fallback til fast plan"
-                    autoplan_meta = None
-            elif prefs.get("running", True):
-                cardio_plan = build_autoplan_cardio(
-                    user_id=auth_user.get("user_id"),
-                    readiness=readiness_score,
-                    time_budget_min=time_budget_min,
-                    recovery_state=recovery_state,
-                    training_day_context=training_day_ctx,
-                )
-                session_type = "løb"
-                template_id = "autoplan_cardio"
-                plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
-                plan_variant = "autoplan_cardio"
-                reason = "styrke fravalgt · cardio vælges"
-                autoplan_meta = {
-                    "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
-                    "families_selected": []
-                }
-            else:
-                session_type = "restitution"
-                template_id = "restitution_easy"
-                plan_entries = build_restitution_plan(time_budget_min)
-                plan_variant = "default"
-                reason = "løb og styrke fravalgt · restitution vælges"
-                autoplan_meta = None
-        else:
-            if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
-                session_type = "styrke"
-                template_id = strength_ctx.get("template_id")
-                plan_entries = strength_ctx.get("plan_entries", [])
-                plan_variant = strength_ctx.get("plan_variant", "default")
-                reason = strength_ctx.get("reason", "styrke prioriteres")
-                autoplan_meta = None
-            elif prefs.get("running", True):
-                cardio_plan = build_autoplan_cardio(
-                    user_id=auth_user.get("user_id"),
-                    readiness=readiness_score,
-                    time_budget_min=time_budget_min,
-                    recovery_state=recovery_state,
-                    training_day_context=training_day_ctx,
-                )
-                session_type = "løb"
-                template_id = "autoplan_cardio"
-                plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
-                plan_variant = "autoplan_cardio"
-                reason = "styrke fravalgt · cardio vælges"
-                autoplan_meta = {
-                    "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
-                    "families_selected": []
-                }
-            else:
-                session_type = "restitution"
-                template_id = "restitution_easy"
-                plan_entries = build_restitution_plan(time_budget_min)
-                plan_variant = "default"
-                reason = "løb og styrke fravalgt · restitution vælges"
-                autoplan_meta = None
-
+        session_type = decision_ctx.get("session_type")
+        template_id = decision_ctx.get("template_id")
+        plan_entries = decision_ctx.get("plan_entries", [])
+        plan_variant = decision_ctx.get("plan_variant", "default")
+        reason = decision_ctx.get("reason")
+        autoplan_meta = decision_ctx.get("autoplan_meta")
+        weekly_status = decision_ctx.get("weekly_status")
     recommended_for = checkin_date
 
     todays_results = list_session_results_for_user(auth_user.get("user_id"))
