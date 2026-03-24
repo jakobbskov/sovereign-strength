@@ -2584,6 +2584,75 @@ def append_today_plan_trace(user_id, trace):
         logger.exception("today_plan_trace_write_failed")
 
 
+def build_today_plan_priority_decision(
+    auth_user,
+    readiness_score,
+    fatigue_score,
+    timing_state,
+    recovery_state,
+    time_budget_min,
+    training_day_ctx,
+    weekly_status,
+):
+    if readiness_score <= 3:
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_variant": "default",
+            "reason": "low readiness",
+            "autoplan_meta": None,
+            "weekly_status": weekly_status,
+        }
+
+    if timing_state == "early":
+        return {
+            "session_type": "cardio",
+            "template_id": "cardio_easy",
+            "plan_entries": build_cardio_plan(
+                time_budget_min,
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            ),
+            "plan_variant": "default",
+            "reason": "early check-in, so cardio is chosen instead of strength",
+            "autoplan_meta": None,
+            "weekly_status": weekly_status,
+        }
+
+    if fatigue_score >= 6:
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_variant": "default",
+            "reason": "high fatigue, recovery prioritized",
+            "autoplan_meta": None,
+            "weekly_status": weekly_status,
+        }
+
+    if fatigue_score >= 4:
+        return {
+            "session_type": "cardio",
+            "template_id": "cardio_easy",
+            "plan_entries": build_cardio_plan(
+                time_budget_min,
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            ),
+            "plan_variant": "default",
+            "reason": "high fatigue, cardio prioritized",
+            "autoplan_meta": None,
+            "weekly_status": weekly_status,
+        }
+
+    return None
+
+
 def build_today_plan_training_decision(
     auth_user,
     checkin_date,
@@ -3049,114 +3118,25 @@ def get_today_plan():
         time_budget_min,
     )
 
-    # meget enkel første beslutningsmotor
-    if readiness_score <= 3:
-        session_type = "restitution"
-        template_id = "restitution_easy"
-        reason = "low readiness"
-        plan_variant = "default"
+    priority_decision_ctx = build_today_plan_priority_decision(
+        auth_user=auth_user,
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        timing_state=timing_state,
+        recovery_state=recovery_state,
+        time_budget_min=time_budget_min,
+        training_day_ctx=training_day_ctx,
+        weekly_status=weekly_status,
+    )
 
-        plan_entries = build_restitution_plan(time_budget_min)
-    elif timing_state == "early":
-        session_type = "cardio"
-        template_id = "cardio_easy"
-        reason = "early check-in, so cardio is chosen instead of strength"
-        plan_variant = "default"
-
-        plan_entries = build_cardio_plan(
-            time_budget_min,
-            user_id=auth_user.get("user_id"),
-            readiness=readiness_score,
-            recovery_state=recovery_state,
-            training_day_context=training_day_ctx,
-        )
-    elif fatigue_score >= 6:
-        session_type = "restitution"
-        template_id = "restitution_easy"
-        reason = "high fatigue, recovery prioritized"
-        plan_variant = "default"
-
-        if time_budget_min <= 20:
-            plan_entries = [
-                {
-                    "exercise_id": "restitution_walk",
-                    "sets": 1,
-                    "target_reps": "20 min rolig gang",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                }
-            ]
-        elif time_budget_min <= 30:
-            plan_entries = [
-                {
-                    "exercise_id": "restitution_walk",
-                    "sets": 1,
-                    "target_reps": "20-30 min rolig gang",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                },
-                {
-                    "exercise_id": "mobility",
-                    "sets": 1,
-                    "target_reps": "10 min mobilitet",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                }
-            ]
-        else:
-            plan_entries = [
-                {
-                    "exercise_id": "restitution_walk",
-                    "sets": 1,
-                    "target_reps": "30 min rolig gang",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                },
-                {
-                    "exercise_id": "mobility",
-                    "sets": 1,
-                    "target_reps": "10-15 min mobilitet",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                }
-            ]
-
-    elif fatigue_score >= 4:
-        session_type = "cardio"
-        template_id = "cardio_easy"
-        reason = "high fatigue, cardio prioritized"
-        plan_variant = "default"
-
-        if time_budget_min <= 20:
-            plan_entries = [
-                {
-                    "exercise_id": "cardio_easy",
-                    "sets": 1,
-                    "target_reps": "20 min rolig gang/løb",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                }
-            ]
-        elif time_budget_min <= 30:
-            plan_entries = [
-                {
-                    "exercise_id": "cardio_easy",
-                    "sets": 1,
-                    "target_reps": "30 min rolig cardio",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                }
-            ]
-        else:
-            plan_entries = [
-                {
-                    "exercise_id": "cardio_intervals",
-                    "sets": 1,
-                    "target_reps": "5 min gang + 10x(1 min rask + 1 min rolig) + 5 min nedkøling",
-                    "target_load": None,
-                    "progression_decision": "no_progression"
-                }
-            ]
+    if isinstance(priority_decision_ctx, dict):
+        session_type = priority_decision_ctx.get("session_type")
+        template_id = priority_decision_ctx.get("template_id")
+        plan_entries = priority_decision_ctx.get("plan_entries", [])
+        plan_variant = priority_decision_ctx.get("plan_variant", "default")
+        reason = priority_decision_ctx.get("reason")
+        autoplan_meta = priority_decision_ctx.get("autoplan_meta")
+        weekly_status = priority_decision_ctx.get("weekly_status")
     else:
         decision_ctx = build_today_plan_training_decision(
             auth_user=auth_user,
@@ -3178,6 +3158,7 @@ def get_today_plan():
         reason = decision_ctx.get("reason")
         autoplan_meta = decision_ctx.get("autoplan_meta")
         weekly_status = decision_ctx.get("weekly_status")
+
     recommended_for = checkin_date
 
     todays_results = list_session_results_for_user(auth_user.get("user_id"))
