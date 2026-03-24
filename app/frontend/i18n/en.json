@@ -409,5 +409,16 @@
   "decision_trace.readiness_bucket": "Readiness: {value}",
   "decision_trace.fatigue_bucket": "Fatigue: {value}",
   "decision_trace.timing": "Timing: {value}",
-  "decision_trace.override": "Override: {value}"
+  "decision_trace.override": "Override: {value}",
+  "workout.pending_entries_ready": "{count} exercise(s) ready for this session",
+  "workouts.none_yet": "No workouts yet.",
+  "cardio.kind.base": "Base",
+  "cardio.kind.tempo": "Tempo",
+  "cardio.kind.intervals": "Intervals",
+  "cardio.kind.test": "Test",
+  "cardio.kind.generic": "Cardio",
+  "history.sessions_none": "No sessions yet.",
+  "history.cardio_none": "No cardio data",
+  "history.no_progress_flags": "No progress flags",
+  "load.none_yet": "No load data yet."
 }
