@@ -3303,6 +3303,172 @@ def post_reset_catalog():
         }
     })
 
+@app.get("/api/admin/today-plan-debug")
+def get_today_plan_debug():
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("admin:today-plan-debug", auth_err)
+        return auth_err
+
+    checkins = list_user_items("checkins", auth_user.get("user_id"))
+    checkins_error = get_storage_last_error()
+    if checkins_error and checkins_error.get("file_key") == "checkins":
+        log_storage_failure("admin:today-plan-debug:checkins", checkins_error)
+        return jsonify({
+            "ok": False,
+            "error": "storage_error",
+            "source": "checkins",
+            "message": "Kunne ikke læse checkins",
+        }), 500
+
+    workouts = list_workouts_for_user(auth_user.get("user_id"))
+    programs = read_json_file(FILES["programs"])
+    exercises = read_json_file(FILES["exercises"])
+
+    if not checkins:
+        return jsonify({
+            "ok": True,
+            "item": None,
+            "reason": "no_checkin",
+            "debug": {
+                "latest_checkin": None,
+                "today_ctx": None,
+                "fatigue_ctx": None,
+                "decision": None,
+            }
+        })
+
+    latest_checkin = sorted(
+        checkins,
+        key=lambda x: str(x.get("created_at", x.get("date", ""))),
+        reverse=True,
+    )[0]
+
+    today_ctx = build_today_plan_context(auth_user, latest_checkin)
+    readiness_score = today_ctx["readiness_score"]
+    checkin_date = str(latest_checkin.get("date", "")).strip()
+    time_budget_min = today_ctx["time_budget_min"]
+    training_day_ctx = today_ctx["training_day_ctx"]
+    weekly_status = today_ctx["weekly_status"]
+
+    fatigue_ctx = build_today_plan_fatigue_context(
+        auth_user=auth_user,
+        latest_checkin=latest_checkin,
+        workouts=workouts,
+        checkin_date=checkin_date,
+    )
+
+    previous_recommendation = fatigue_ctx["previous_recommendation"]
+    fatigue_score = fatigue_ctx["fatigue_score"]
+    recovery_state = fatigue_ctx["recovery_state"]
+    timing_state = build_today_plan_timing_state(
+        previous_recommendation=previous_recommendation,
+        checkin_date=checkin_date,
+    )
+
+    strength_ctx = build_strength_plan(
+        programs=programs,
+        exercises=exercises,
+        latest_strength=fatigue_ctx["latest_strength"],
+        time_budget_min=time_budget_min,
+        fatigue_score=fatigue_score,
+        user_settings=today_ctx["user_settings"],
+        user_id=auth_user.get("user_id"),
+    )
+
+    autoplan_meta = None
+
+    if readiness_score <= 3:
+        session_type = "restitution"
+        template_id = "restitution_easy"
+        reason = "low readiness"
+        plan_variant = "default"
+        plan_entries = build_restitution_plan(time_budget_min)
+    elif timing_state == "early":
+        session_type = "cardio"
+        template_id = "cardio_easy"
+        reason = "early check-in, so cardio is chosen instead of strength"
+        plan_variant = "default"
+        plan_entries = build_cardio_plan(
+            time_budget_min,
+            user_id=auth_user.get("user_id"),
+            readiness=readiness_score,
+            recovery_state=recovery_state,
+            training_day_context=training_day_ctx,
+        )
+    elif fatigue_score >= 6:
+        session_type = "restitution"
+        template_id = "restitution_easy"
+        reason = "high fatigue, recovery prioritized"
+        plan_variant = "default"
+        plan_entries = build_restitution_plan(time_budget_min)
+    elif fatigue_score >= 4:
+        session_type = "cardio"
+        template_id = "cardio_easy"
+        reason = "high fatigue, cardio prioritized"
+        plan_variant = "default"
+        plan_entries = build_cardio_plan(
+            time_budget_min,
+            user_id=auth_user.get("user_id"),
+            readiness=readiness_score,
+            recovery_state=recovery_state,
+            training_day_context=training_day_ctx,
+        )
+    else:
+        session_type = "styrke"
+        template_id = strength_ctx.get("template_id")
+        plan_entries = strength_ctx.get("plan_entries", [])
+        plan_variant = strength_ctx.get("plan_variant", "default")
+        reason = strength_ctx.get("reason", "styrke prioriteres")
+
+    item = {
+        "checkin_id": latest_checkin.get("id"),
+        "date": checkin_date,
+        "recommended_for": checkin_date,
+        "decision_mode": "today_plan_debug_v0_1",
+        "timing_state": timing_state,
+        "previous_recommended_for": previous_recommendation.get("recommended_for") if previous_recommendation else None,
+        "readiness_score": readiness_score,
+        "weekly_status": weekly_status,
+        "time_budget_min": time_budget_min,
+        "session_type": session_type,
+        "latest_strength_failed": fatigue_ctx["latest_strength_failed"],
+        "latest_strength_load_drop_count": fatigue_ctx["latest_strength_load_drop_count"],
+        "latest_strength_completed": fatigue_ctx["latest_strength_completed"],
+        "fatigue_score": fatigue_score,
+        "recovery_state": recovery_state,
+        "template_id": template_id,
+        "template_mode": autoplan_meta.get("template_mode") if isinstance(autoplan_meta, dict) else None,
+        "families_selected": autoplan_meta.get("families_selected", []) if isinstance(autoplan_meta, dict) else [],
+        "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
+        "reason": reason,
+        "days_since_last_strength": fatigue_ctx["days_since_last_strength"],
+        "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
+        "entries": plan_entries,
+    }
+
+    item = validate_today_plan_item(item)
+
+    return jsonify({
+        "ok": True,
+        "item": item,
+        "debug": {
+            "latest_checkin": latest_checkin,
+            "today_ctx": today_ctx,
+            "fatigue_ctx": fatigue_ctx,
+            "decision": {
+                "readiness_score": readiness_score,
+                "fatigue_score": fatigue_score,
+                "timing_state": timing_state,
+                "session_type": session_type,
+                "template_id": template_id,
+                "plan_variant": plan_variant,
+                "reason": reason,
+            }
+        }
+    })
+
+
 @app.get("/api/user-settings")
 def get_user_settings():
     auth_user, auth_err = require_auth_user()
