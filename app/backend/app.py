@@ -1020,6 +1020,18 @@ def compute_fatigue_score_from_latest_strength(session_results, workouts, user_i
 
 
 
+def decide_fatigue_session_override(fatigue_score, recovery_state):
+    recovery = recovery_state if isinstance(recovery_state, dict) else {}
+
+    if recovery.get("recovery_state") == "recover":
+        return "restitution"
+    if fatigue_score >= 6:
+        return "restitution"
+    if fatigue_score >= 2:
+        return "light_strength"
+    return None
+
+
 def build_restitution_plan(time_budget_min):
     try:
         time_budget_min = int(time_budget_min or 0)
@@ -2472,14 +2484,10 @@ def build_today_plan_fatigue_context(auth_user, latest_checkin, workouts, checki
         days_since_last_strength=days_since_last_strength
     )
 
-    if recovery_state.get("recovery_state") == "recover":
-        fatigue_session_override = "restitution"
-    elif fatigue_score >= 6:
-        fatigue_session_override = "restitution"
-    elif fatigue_score >= 2:
-        fatigue_session_override = "light_strength"
-    else:
-        fatigue_session_override = None
+    fatigue_session_override = decide_fatigue_session_override(
+        fatigue_score=fatigue_score,
+        recovery_state=recovery_state,
+    )
 
     return {
         "latest_strength": latest_strength,
