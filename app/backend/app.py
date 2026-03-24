@@ -287,22 +287,49 @@ def save_user_settings_for(user_id, settings):
 def list_workouts_for_user(user_id):
     return list_user_items("workouts", user_id)
 
+def make_error_payload(error, message, **extra):
+    payload = {
+        "ok": False,
+        "error": error,
+        "message": message,
+    }
+    payload.update(extra)
+    return payload
+
 def _parse_non_negative_int(value, field_name):
     try:
         parsed = int(value)
     except Exception:
-        return None, {"ok": False, "error": f"{field_name} skal være et tal"}, 400
+        return None, make_error_payload(
+            "invalid_number",
+            f"{field_name} skal være et tal",
+            field=field_name,
+        ), 400
     if parsed < 0:
-        return None, {"ok": False, "error": f"{field_name} må ikke være negativ"}, 400
+        return None, make_error_payload(
+            "negative_value",
+            f"{field_name} må ikke være negativ",
+            field=field_name,
+        ), 400
     return parsed, None, None
 
 def _parse_int_in_range(value, field_name, min_value, max_value):
     try:
         parsed = int(value)
     except Exception:
-        return None, {"ok": False, "error": f"{field_name} skal være et tal"}, 400
+        return None, make_error_payload(
+            "invalid_number",
+            f"{field_name} skal være et tal",
+            field=field_name,
+        ), 400
     if parsed < min_value or parsed > max_value:
-        return None, {"ok": False, "error": f"{field_name} skal være mellem {min_value} og {max_value}"}, 400
+        return None, make_error_payload(
+            "out_of_range",
+            f"{field_name} skal være mellem {min_value} og {max_value}",
+            field=field_name,
+            min_value=min_value,
+            max_value=max_value,
+        ), 400
     return parsed, None, None
 
 def _parse_optional_int(value, default=None):
@@ -315,7 +342,7 @@ def _parse_optional_int(value, default=None):
 
 def create_workout(user_id, payload):
     if not isinstance(payload, dict):
-        return None, {"ok": False, "error": "ugyldig payload"}, 400
+        return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
 
     date = str(payload.get("date", "")).strip()
     session_type = str(payload.get("type", "")).strip()
@@ -326,32 +353,32 @@ def create_workout(user_id, payload):
     entries = payload.get("entries", [])
 
     if not date:
-        return None, {"ok": False, "error": "date mangler"}, 400
+        return None, make_error_payload("missing_date", "date mangler", field="date"), 400
 
     if session_type == "cardio":
         session_type = "løb"
 
     if session_type not in ("styrke", "løb", "mobilitet", "andet"):
-        return None, {"ok": False, "error": "ugyldig type"}, 400
+        return None, make_error_payload("invalid_session_type", "ugyldig type", field="type"), 400
 
     duration_min, err, status = _parse_non_negative_int(duration_min, "duration_min")
     if err:
         return None, err, status
 
     if not isinstance(entries, list):
-        return None, {"ok": False, "error": "entries skal være en liste"}, 400
+        return None, make_error_payload("invalid_entries", "entries skal være en liste", field="entries"), 400
 
     clean_entries = []
     for e in entries:
         if not isinstance(e, dict):
-            return None, {"ok": False, "error": "hver entry skal være et objekt"}, 400
+            return None, make_error_payload("invalid_entry", "hver entry skal være et objekt", field="entries"), 400
 
         sets_raw = str(e.get("sets", "")).strip()
         if sets_raw:
             try:
                 int(float(sets_raw))
             except Exception:
-                return None, {"ok": False, "error": "sets skal være et tal eller tom"}, 400
+                return None, make_error_payload("invalid_sets", "sets skal være et tal eller tom", field="sets"), 400
 
         clean_entry = {
             "exercise_id": str(e.get("exercise_id", "")).strip(),
@@ -374,7 +401,7 @@ def create_workout(user_id, payload):
             clean_entries.append(clean_entry)
 
     if session_type == "styrke" and not clean_entries:
-        return None, {"ok": False, "error": "ingen træningsdata at gemme"}, 400
+        return None, make_error_payload("empty_workout", "ingen træningsdata at gemme"), 400
 
     item = {
         "id": str(uuid.uuid4()),
@@ -401,12 +428,15 @@ def get_latest_checkin_for_user(user_id):
     return get_latest_user_item("checkins", user_id)
 
 def create_checkin(user_id, payload):
+    if not isinstance(payload, dict):
+        return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
+
     date = str(payload.get("date", "")).strip()
     notes = str(payload.get("notes", "")).strip()
     time_budget_min = payload.get("time_budget_min", 0)
 
     if not date:
-        return None, {"ok": False, "error": "date mangler"}, 400
+        return None, make_error_payload("missing_date", "date mangler", field="date"), 400
 
     sleep_score, err, status = _parse_int_in_range(payload.get("sleep_score", ""), "sleep_score", 1, 5)
     if err:
@@ -457,7 +487,7 @@ def list_session_results_for_user(user_id):
 
 def create_session_result(user_id, payload):
     if not isinstance(payload, dict):
-        return None, {"ok": False, "error": "ugyldig payload"}, 400
+        return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
 
     date = str(payload.get("date", "")).strip()
     session_type = str(payload.get("session_type", "")).strip()
@@ -466,7 +496,7 @@ def create_session_result(user_id, payload):
 
     completed_raw = payload.get("completed", False)
     if not isinstance(completed_raw, bool):
-        return None, {"ok": False, "error": "completed skal være true/false"}, 400
+        return None, make_error_payload("invalid_completed", "completed skal være true/false", field="completed"), 400
     completed = completed_raw
 
     readiness_score = payload.get("readiness_score", None)
@@ -474,29 +504,29 @@ def create_session_result(user_id, payload):
         try:
             readiness_score = int(readiness_score)
         except Exception:
-            return None, {"ok": False, "error": "readiness_score skal være et heltal"}, 400
+            return None, make_error_payload("invalid_readiness_score", "readiness_score skal være et heltal", field="readiness_score"), 400
         if readiness_score < 1 or readiness_score > 5:
-            return None, {"ok": False, "error": "readiness_score skal være mellem 1 og 5"}, 400
+            return None, make_error_payload("invalid_readiness_score", "readiness_score skal være mellem 1 og 5", field="readiness_score"), 400
     else:
         readiness_score = None
 
     source = str(payload.get("source", "autoplan")).strip() or "autoplan"
     if source not in ("autoplan", "manual_override", "manual", "import"):
-        return None, {"ok": False, "error": "ugyldig source"}, 400
+        return None, make_error_payload("invalid_source", "ugyldig source", field="source"), 400
 
     results = payload.get("results", [])
 
     if not date:
-        return None, {"ok": False, "error": "date mangler"}, 400
+        return None, make_error_payload("missing_date", "date mangler", field="date"), 400
     if session_type == "cardio":
         session_type = "løb"
 
     if session_type not in ("styrke", "løb", "restitution"):
-        return None, {"ok": False, "error": "ugyldig session_type"}, 400
+        return None, make_error_payload("invalid_session_type", "ugyldig session_type", field="session_type"), 400
     if timing_state not in ("early", "on_time", "late", ""):
-        return None, {"ok": False, "error": "ugyldig timing_state"}, 400
+        return None, make_error_payload("invalid_timing_state", "ugyldig timing_state", field="timing_state"), 400
     if not isinstance(results, list):
-        return None, {"ok": False, "error": "results skal være en liste"}, 400
+        return None, make_error_payload("invalid_results", "results skal være en liste", field="results"), 400
 
     clean_results = []
     for r in results:
@@ -551,7 +581,7 @@ def create_session_result(user_id, payload):
                 "notes": ""
             })
         else:
-            return None, {"ok": False, "error": "ingen træningsdata at gemme"}, 400
+            return None, make_error_payload("empty_session", "ingen træningsdata at gemme"), 400
 
     cardio_kind = str(payload.get("cardio_kind", "")).strip().lower()
     avg_rpe = payload.get("avg_rpe", None)
@@ -561,14 +591,14 @@ def create_session_result(user_id, payload):
 
     avg_rpe = _parse_optional_int(avg_rpe, None)
     if avg_rpe is not None and (avg_rpe < 0 or avg_rpe > 10):
-        return None, {"ok": False, "error": "avg_rpe skal være mellem 0 og 10"}, 400
+        return None, make_error_payload("invalid_avg_rpe", "avg_rpe skal være mellem 0 og 10", field="avg_rpe"), 400
 
     try:
         distance_km = float(distance_km) if distance_km not in (None, "", "null") else None
     except Exception:
         distance_km = None
     if distance_km is not None and distance_km < 0:
-        return None, {"ok": False, "error": "distance_km må ikke være negativ"}, 400
+        return None, make_error_payload("negative_distance", "distance_km må ikke være negativ", field="distance_km"), 400
 
     duration_min = _parse_optional_int(duration_min, 0)
     duration_sec = _parse_optional_int(duration_sec, 0)
