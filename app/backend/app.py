@@ -2844,7 +2844,7 @@ def build_decision_trace(
         fatigue_bucket = "low"
 
     normalized = normalize_session_type(session_type)
-
+    
     rule_applied = "strength_default"
     override_label = None
 
