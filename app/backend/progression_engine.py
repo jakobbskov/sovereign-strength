@@ -346,59 +346,6 @@ def get_relevant_strength_history(session_results, exercise_id, max_items=6, rec
 
     return history
 
-    history = []
-    exercise_id = str(exercise_id or "").strip()
-
-    if not exercise_id:
-        return history
-
-    for session in reversed(session_results or []):
-        if not isinstance(session, dict):
-            continue
-
-        session_type = str(session.get("session_type", "")).strip().lower()
-        if session_type != "strength":
-            continue
-
-        results = session.get("results", [])
-        if not isinstance(results, list) or not results:
-            continue
-
-        matched_result = None
-        for result in reversed(results):
-            if not isinstance(result, dict):
-                continue
-            if str(result.get("exercise_id", "")).strip() == exercise_id:
-                matched_result = result
-                break
-
-        if not matched_result:
-            continue
-
-        analysis = analyze_session_result_for_progression(matched_result)
-        has_usable_data = bool(
-            analysis.get("first_set_load") is not None or
-            analysis.get("first_set_reps") is not None or
-            analysis.get("hit_failure", False) or
-            analysis.get("has_sets", False)
-        )
-        if not has_usable_data:
-            continue
-
-        history.append({
-            "session": session,
-            "result": matched_result,
-            "analysis": analysis,
-            "date": str(session.get("date", "")).strip(),
-            "created_at": str(session.get("created_at", "")).strip(),
-            "sort_dt": parse_session_sort_datetime(session),
-        })
-
-        if len(history) >= max_items:
-            break
-
-    return history
-
 
 def detect_progression_phase(relevant_history, pause_days=21, min_trend_sessions=3):
     count = len(relevant_history or [])
@@ -481,6 +428,46 @@ def summarize_strength_trend(relevant_history, window_size=3):
         "repeated_success": repeated_success,
         "blocking_signal_present": blocking_signal_present,
         "session_summaries": session_summaries,
+    }
+
+
+
+def evaluate_deload_need(phase, trend_ctx, fatigue_score):
+    if phase != "trend":
+        return {
+            "deload_recommended": False,
+            "deload_reason": None,
+            "deload_scope": None,
+        }
+
+    failures = int(trend_ctx.get("failure_sessions", 0) or 0)
+    load_drops = int(trend_ctx.get("load_drop_sessions", 0) or 0)
+
+    if failures >= 2:
+        return {
+            "deload_recommended": True,
+            "deload_reason": "gentagne failures",
+            "deload_scope": "exercise",
+        }
+
+    if load_drops >= 2:
+        return {
+            "deload_recommended": True,
+            "deload_reason": "gentagne load-drops",
+            "deload_scope": "exercise",
+        }
+
+    if (failures + load_drops) >= 2 and fatigue_score >= 2:
+        return {
+            "deload_recommended": True,
+            "deload_reason": "kombineret træthed og ustabil performance",
+            "deload_scope": "exercise",
+        }
+
+    return {
+        "deload_recommended": False,
+        "deload_reason": None,
+        "deload_scope": None,
     }
 
 
@@ -670,6 +657,12 @@ def decide_progression_from_context(exercise_id, ctx):
             decision = "hold"
             progression_reason = "progression holdes"
 
+        deload_ctx = evaluate_deload_need(
+            phase,
+            trend_ctx,
+            fatigue_score,
+        )
+
         return {
             "ok": True,
             "exercise": exercise_id,
@@ -699,6 +692,9 @@ def decide_progression_from_context(exercise_id, ctx):
             "trend_failure_sessions": trend_ctx.get("failure_sessions"),
             "trend_load_drop_sessions": trend_ctx.get("load_drop_sessions"),
             "trend_repeated_success": trend_ctx.get("repeated_success"),
+            "deload_recommended": deload_ctx.get("deload_recommended"),
+            "deload_reason": deload_ctx.get("deload_reason"),
+            "deload_scope": deload_ctx.get("deload_scope"),
         }
 
     if last_entry is None:

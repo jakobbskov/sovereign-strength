@@ -153,6 +153,24 @@ def test_trend_blocks_progression_when_load_drop_exists_in_window():
     assert out["progression_decision"] == "hold", out
 
 
+
+def test_trend_recommends_deload_after_repeated_failures():
+    session_results = [
+        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 8, 96, hit_failure=True),
+        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98, hit_failure=True),
+        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+    ]
+
+    out = run_strength_progression_scenario(session_results=session_results)
+
+    assert out["progression_phase"] == "trend", out
+    assert out["trend_failure_sessions"] == 2, out
+    assert out["deload_recommended"] is True, out
+    assert out["deload_reason"] == "gentagne failures", out
+    assert out["deload_scope"] == "exercise", out
+    assert out["progression_decision"] == "hold", out
+
+
 if __name__ == "__main__":
     test_calibration_requires_repeated_success()
     test_trend_allows_progression_after_repeated_success()
