@@ -440,6 +440,9 @@ def create_workout(user_id, payload):
 def list_checkins_for_user(user_id):
     return list_user_items("checkins", user_id)
 
+def list_session_results_for_user(user_id):
+    return list_user_items("session_results", user_id)
+
 def get_latest_checkin_for_user(user_id):
     return get_latest_user_item("checkins", user_id)
 
@@ -2788,6 +2791,52 @@ def build_today_plan_training_decision(
     }
 
 
+def build_decision_trace(
+    readiness_score,
+    fatigue_score,
+    session_type,
+    timing_state,
+    fatigue_session_override,
+):
+    readiness_bucket = "low" if readiness_score <= 3 else "high"
+
+    if fatigue_score >= 6:
+        fatigue_bucket = "high"
+    elif fatigue_score >= 4:
+        fatigue_bucket = "moderate"
+    elif fatigue_score >= 2:
+        fatigue_bucket = "elevated"
+    else:
+        fatigue_bucket = "low"
+
+    rule_applied = "strength_default"
+    override_label = None
+
+    if fatigue_session_override == "restitution":
+        rule_applied = "fatigue_override_restitution"
+        override_label = "fatigue_session_override"
+    elif readiness_score <= 3:
+        rule_applied = "low_readiness_restitution"
+    elif timing_state == "early":
+        rule_applied = "early_timing_cardio"
+    elif fatigue_score >= 6:
+        rule_applied = "high_fatigue_restitution"
+    elif fatigue_score >= 4:
+        rule_applied = "fatigue_cardio"
+    elif str(session_type).strip() in ("løb", "cardio"):
+        rule_applied = "cardio_default"
+    elif str(session_type).strip() == "restitution":
+        rule_applied = "restitution_default"
+
+    return {
+        "readiness_bucket": readiness_bucket,
+        "fatigue_bucket": fatigue_bucket,
+        "timing": timing_state or "unknown",
+        "rule_applied": rule_applied,
+        "override": override_label,
+    }
+
+
 def validate_today_plan_item(item):
     if not isinstance(item, dict):
         return {
@@ -3118,34 +3167,13 @@ def get_today_plan():
         plan_entries=plan_entries,
     )
 
-    readiness_bucket = "low" if readiness_score <= 3 else "high"
-    if fatigue_score >= 6:
-        fatigue_bucket = "high"
-    elif fatigue_score >= 4:
-        fatigue_bucket = "moderate"
-    elif fatigue_score >= 2:
-        fatigue_bucket = "elevated"
-    else:
-        fatigue_bucket = "low"
-
-    rule_applied = "strength_default"
-    override_label = None
-
-    if fatigue_session_override == "restitution":
-        rule_applied = "fatigue_override_restitution"
-        override_label = "fatigue_session_override"
-    elif readiness_score <= 3:
-        rule_applied = "low_readiness_restitution"
-    elif timing_state == "early":
-        rule_applied = "early_timing_cardio"
-    elif fatigue_score >= 6:
-        rule_applied = "high_fatigue_restitution"
-    elif fatigue_score >= 4:
-        rule_applied = "fatigue_cardio"
-    elif str(session_type).strip() in ("løb", "cardio"):
-        rule_applied = "cardio_default"
-    elif str(session_type).strip() == "restitution":
-        rule_applied = "restitution_default"
+    decision_trace = build_decision_trace(
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        session_type=session_type,
+        timing_state=timing_state,
+        fatigue_session_override=fatigue_session_override,
+    )
 
     item = {
         "checkin_id": latest_checkin.get("id"),
@@ -3169,13 +3197,7 @@ def get_today_plan():
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": days_since_last_strength,
-        "decision_trace": {
-            "readiness_bucket": readiness_bucket,
-            "fatigue_bucket": fatigue_bucket,
-            "timing": timing_state or "unknown",
-            "rule_applied": rule_applied,
-            "override": override_label,
-        },
+        "decision_trace": decision_trace,
         "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
         "entries": plan_entries
     }
