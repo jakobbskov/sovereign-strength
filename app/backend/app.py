@@ -3358,7 +3358,41 @@ def get_today_plan():
     })
 
 
+@app.get("/api/admin/today-plan-traces")
+def get_today_plan_traces():
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("admin:today-plan-traces", auth_err)
+        return auth_err
 
+    user_id = auth_user.get("user_id")
+
+    items = list_user_items("today_plan_traces", user_id)
+
+    # defensive check
+    if not isinstance(items, list):
+        return jsonify({
+            "ok": False,
+            "error": "storage_error",
+            "message": "Kunne ikke læse today_plan_traces"
+        }), 500
+
+    # newest first
+    items_sorted = sorted(
+        items,
+        key=lambda x: str(x.get("created_at", "")),
+        reverse=True
+    )
+
+    # hard limit
+    limit = 50
+    items_limited = items_sorted[:limit]
+
+    return jsonify({
+        "ok": True,
+        "items": items_limited,
+        "count": len(items_limited)
+    })
 
 
 @app.post("/api/admin/reset-catalog")
