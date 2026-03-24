@@ -477,6 +477,7 @@ def decide_progression_from_context(exercise_id, ctx):
     latest_result = ctx["latest_result"]
     analysis = ctx["analysis"]
     fatigue_score = ctx["fatigue_score"]
+    recent_recovery_ctx = ctx.get("recent_recovery_ctx", {}) or {}
     last_load = ctx["last_load"]
     last_entry = ctx["last_entry"]
     recommended_step = float(ctx.get("recommended_step", step or 0) or 0)
@@ -678,6 +679,11 @@ def decide_progression_from_context(exercise_id, ctx):
             "hit_failure": hit_failure,
             "load_drop_detected": load_drop_detected,
             "fatigue_score": fatigue_score,
+            "multi_session_fatigue_pressure": recent_recovery_ctx.get("multi_session_fatigue_pressure"),
+            "multi_session_fatigue_reason": recent_recovery_ctx.get("multi_session_fatigue_reason"),
+            "recent_recovery_checkin_count": recent_recovery_ctx.get("recent_checkin_count"),
+            "recent_poor_recovery_count": recent_recovery_ctx.get("poor_recovery_count"),
+            "latest_recovery_readiness_score": recent_recovery_ctx.get("latest_readiness_score"),
             "equipment_constraint": equipment_constraint,
             "secondary_constraints": secondary_constraints,
             "recommended_next_load": recommended_next_load,
