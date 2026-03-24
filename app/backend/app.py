@@ -9,6 +9,17 @@ import os
 from storage import get_storage_backend
 import urllib.request
 import urllib.error
+from progression_engine import (
+    get_effective_load_increment,
+    get_effective_recommended_step,
+    compute_next_possible_load,
+    evaluate_equipment_constraint,
+    parse_number_from_load,
+    parse_top_rep,
+    parse_seconds_value,
+    analyze_session_result_for_progression,
+    decide_progression_from_context,
+)
 
 app = Flask(__name__)
 
@@ -633,68 +644,7 @@ def get_weekly_target_sessions(user_settings):
         val = 7
     return val
 
-def get_effective_load_increment(exercise, user_settings):
-    if not isinstance(exercise, dict):
-        exercise = {}
-    if not isinstance(user_settings, dict):
-        user_settings = {}
 
-    load_increment = exercise.get("load_increment", None)
-    try:
-        if load_increment is not None:
-            load_increment = float(load_increment)
-            if load_increment >= 0:
-                return load_increment
-    except Exception:
-        pass
-
-    equipment_type = str(exercise.get("equipment_type", "")).strip()
-    increments = user_settings.get("equipment_increments", {})
-    if equipment_type and isinstance(increments, dict):
-        try:
-            val = increments.get(equipment_type, None)
-            if val is not None:
-                val = float(val)
-                if val >= 0:
-                    return val
-        except Exception:
-            pass
-
-    try:
-        step = exercise.get("progression_step", 0)
-        step = float(step)
-        if step >= 0:
-            return step
-    except Exception:
-        pass
-
-    return 0.0
-
-
-def get_effective_recommended_step(exercise):
-    if not isinstance(exercise, dict):
-        return 0.0
-    try:
-        step = exercise.get("recommended_step", exercise.get("progression_step", 0))
-        step = float(step)
-        if step >= 0:
-            return step
-    except Exception:
-        return 0.0
-    return 0.0
-
-
-def compute_next_possible_load(last_load, effective_load_increment):
-    try:
-        last_load = float(last_load)
-        effective_load_increment = float(effective_load_increment)
-    except Exception:
-        return None
-
-    if effective_load_increment <= 0:
-        return last_load
-
-    return last_load + effective_load_increment
 
 
 def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment):
@@ -754,37 +704,8 @@ def days_between_iso_dates(date_a, date_b):
         return None
 
 
-def parse_number_from_load(value):
-    x = str(value or "").strip().lower().replace("kg", "").strip()
-    if not x:
-        return None
-    try:
-        return float(x.replace(",", "."))
-    except Exception:
-        return None
 
 
-def parse_top_rep(rep_range):
-    txt = str(rep_range or "").strip()
-    if "-" in txt:
-        try:
-            return int(txt.split("-")[-1])
-        except Exception:
-            return None
-    try:
-        return int(txt)
-    except Exception:
-        return None
-
-
-def parse_seconds_value(value):
-    txt = str(value or "").strip().lower().replace("sek", "").replace("sec", "").strip()
-    if not txt:
-        return None
-    try:
-        return int(float(txt.replace(",", ".")))
-    except Exception:
-        return None
 
 
 def evaluate_equipment_constraint(last_load, recommended_step, effective_load_increment, candidate_for_progression):
@@ -893,82 +814,6 @@ def find_latest_session_result_for_exercise(session_results, exercise_id):
 
 
 
-
-def analyze_session_result_for_progression(result):
-    if not isinstance(result, dict):
-        return {
-            "source": "none",
-            "has_sets": False,
-            "first_set_load": None,
-            "first_set_reps": None,
-            "min_reps": None,
-            "hit_failure": False,
-            "load_drop_detected": False,
-        }
-
-    raw_sets = result.get("sets", [])
-    hit_failure = bool(result.get("hit_failure", False))
-
-    if isinstance(raw_sets, list) and raw_sets:
-        clean_sets = []
-        for x in raw_sets:
-            if not isinstance(x, dict):
-                continue
-            reps_raw = str(x.get("reps", "")).strip()
-            load_raw = x.get("load", "")
-            reps_num = None
-            try:
-                reps_num = int(reps_raw) if reps_raw != "" else None
-            except Exception:
-                reps_num = None
-            load_num = parse_number_from_load(load_raw)
-            clean_sets.append({
-                "reps": reps_num,
-                "load": load_num,
-            })
-
-        first_set = clean_sets[0] if clean_sets else {}
-        first_set_load = first_set.get("load")
-        first_set_reps = first_set.get("reps")
-
-        rep_values = [x["reps"] for x in clean_sets if x.get("reps") is not None]
-        min_reps = min(rep_values) if rep_values else None
-
-        load_values = [x["load"] for x in clean_sets if x.get("load") is not None]
-        load_drop_detected = False
-        if len(load_values) >= 2 and load_values[0] is not None:
-            for later in load_values[1:]:
-                if later is not None and later < load_values[0]:
-                    load_drop_detected = True
-                    break
-
-        return {
-            "source": "session_result",
-            "has_sets": True,
-            "first_set_load": first_set_load,
-            "first_set_reps": first_set_reps,
-            "min_reps": min_reps,
-            "hit_failure": hit_failure,
-            "load_drop_detected": load_drop_detected,
-        }
-
-    fallback_load = parse_number_from_load(result.get("load", ""))
-    fallback_reps = None
-    try:
-        achieved_raw = str(result.get("achieved_reps", "")).strip()
-        fallback_reps = int(achieved_raw) if achieved_raw != "" else None
-    except Exception:
-        fallback_reps = None
-
-    return {
-        "source": "session_result",
-        "has_sets": False,
-        "first_set_load": fallback_load,
-        "first_set_reps": fallback_reps,
-        "min_reps": fallback_reps,
-        "hit_failure": hit_failure,
-        "load_drop_detected": False,
-    }
 
 
 def find_latest_strength_workout(workouts):
@@ -2913,7 +2758,7 @@ def build_decision_trace(
         fatigue_bucket = "low"
 
     normalized = normalize_session_type(session_type)
-    
+
     rule_applied = "strength_default"
     override_label = None
 
