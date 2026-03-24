@@ -432,5 +432,9 @@
   "history.sessions_none": "Ingen sessions endnu.",
   "history.cardio_none": "Ingen cardio-data",
   "history.no_progress_flags": "Ingen progress flags",
-  "load.none_yet": "Ingen belastningsdata endnu."
+  "load.none_yet": "Ingen belastningsdata endnu.",
+  "exercise.none_yet": "Ingen øvelser endnu.",
+  "recovery.none_yet": "Ingen recovery-logs endnu.",
+  "overview.readiness_label": "Parathed",
+  "plan.none": "Ingen plan"
 }

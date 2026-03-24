@@ -866,7 +866,7 @@ function renderExercises(items){
   if (!root) return;
 
   if (!Array.isArray(items) || items.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen øvelser endnu.</div></li>`;
+    root.innerHTML = `<li><div class="small">${esc(tr("exercise.none_yet"))}</div></li>`;
     setText("exerciseMeta", tr("common.items_count", { count: 0 }));
     return;
   }
@@ -892,7 +892,7 @@ function renderRecovery(items){
   if (!root) return;
 
   if (!Array.isArray(items) || items.length === 0){
-    root.innerHTML = `<li><div class="small">Ingen recovery-logs endnu.</div></li>`;
+    root.innerHTML = `<li><div class="small">${esc(tr("recovery.none_yet"))}</div></li>`;
     setText("recoveryMeta", tr("common.items_count", { count: 0 }));
     return;
   }
@@ -905,7 +905,7 @@ function renderRecovery(items){
         <strong>${esc(item.date || "")}</strong>
         <span class="small">${tr("history.recovery_scores", { sleep: esc(item.sleep_score), energy: esc(item.energy_score), soreness: esc(item.soreness_score) })}</span>
       </div>
-      <div class="pill">Readiness ${esc(item.readiness_score ?? "-")}</div>
+      <div class="pill">${tr("overview.readiness_label")} ${esc(item.readiness_score ?? "-")}</div>
       <div class="pill">${esc(formatOverviewReadinessLabel(item.readiness_score))}</div>
       ${item.suggestion ? `<div class="small" style="margin-top:8px">${esc(item.suggestion)}</div>` : ""}
       ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
@@ -921,11 +921,11 @@ function renderRecovery(items){
 function formatSessionType(value){
   const x = String(value || "").trim();
   if (x === "styrke") return tr("workout.type.strength");
-  if (x === "cardio") return "Cardio";
+  if (x === "cardio") return tr("session_type.cardio");
   if (x === "restitution") return tr("session_type.recovery");
   if (x === "løb") return tr("session_type.run");
   if (x === "mobilitet") return tr("session_type.mobility");
-  return x || "Ingen plan";
+  return x || tr("plan.none");
 }
 
 

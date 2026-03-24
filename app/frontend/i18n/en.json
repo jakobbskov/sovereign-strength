@@ -420,5 +420,9 @@
   "history.sessions_none": "No sessions yet.",
   "history.cardio_none": "No cardio data",
   "history.no_progress_flags": "No progress flags",
-  "load.none_yet": "No load data yet."
+  "load.none_yet": "No load data yet.",
+  "exercise.none_yet": "No exercises yet.",
+  "recovery.none_yet": "No recovery logs yet.",
+  "overview.readiness_label": "Readiness",
+  "plan.none": "No plan"
 }
