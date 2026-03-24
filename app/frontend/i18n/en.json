@@ -404,5 +404,10 @@
   "profile.weekly_target_6": "6 sessions",
   "button.reset_catalog_from_seed": "Reset exercises and programs",
   "status.resetting_catalog": "Resetting exercises and programs from seed...",
-  "status.catalog_reset_done": "Exercises and programs were reset from seed."
+  "status.catalog_reset_done": "Exercises and programs were reset from seed.",
+  "decision_trace.rule": "Rule: {value}",
+  "decision_trace.readiness_bucket": "Readiness: {value}",
+  "decision_trace.fatigue_bucket": "Fatigue: {value}",
+  "decision_trace.timing": "Timing: {value}",
+  "decision_trace.override": "Override: {value}"
 }
