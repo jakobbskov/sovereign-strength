@@ -787,6 +787,31 @@ def parse_seconds_value(value):
         return None
 
 
+def evaluate_equipment_constraint(last_load, recommended_step, effective_load_increment, candidate_for_progression):
+    equipment_constraint = False
+    recommended_next_load = None
+    actual_possible_next_load = None
+    secondary_constraints = []
+
+    if candidate_for_progression and last_load is not None:
+        recommended_next_load = float(last_load) + recommended_step
+        actual_possible_next_load = compute_next_possible_load(float(last_load), effective_load_increment)
+
+        ideal_jump = recommended_next_load - float(last_load)
+        actual_jump = actual_possible_next_load - float(last_load)
+
+        if actual_jump > ideal_jump:
+            equipment_constraint = True
+            secondary_constraints.append("equipment_constraint")
+
+    return {
+        "equipment_constraint": equipment_constraint,
+        "secondary_constraints": secondary_constraints,
+        "recommended_next_load": recommended_next_load,
+        "actual_possible_next_load": actual_possible_next_load,
+    }
+
+
 def format_rep_progression_target(current_target, increment=2):
     txt = str(current_target or "").strip()
     if not txt:
@@ -2141,11 +2166,7 @@ def decide_progression_from_context(exercise_id, ctx):
         hit_failure = analysis.get("hit_failure", False)
         load_drop_detected = analysis.get("load_drop_detected", False)
 
-        equipment_constraint = False
-        recommended_next_load = None
-        actual_possible_next_load = None
         progression_reason = "progression holdes"
-        secondary_constraints = []
 
         candidate_for_progression = bool(
             first_set_load is not None and
@@ -2154,16 +2175,16 @@ def decide_progression_from_context(exercise_id, ctx):
             first_set_reps >= target_top
         )
 
-        if candidate_for_progression:
-            recommended_next_load = float(first_set_load) + recommended_step
-            actual_possible_next_load = compute_next_possible_load(float(first_set_load), effective_load_increment)
-
-            ideal_jump = recommended_next_load - float(first_set_load)
-            actual_jump = actual_possible_next_load - float(first_set_load)
-
-            if actual_jump > ideal_jump:
-                equipment_constraint = True
-                secondary_constraints.append("equipment_constraint")
+        constraint_ctx = evaluate_equipment_constraint(
+            last_load=first_set_load,
+            recommended_step=recommended_step,
+            effective_load_increment=effective_load_increment,
+            candidate_for_progression=candidate_for_progression,
+        )
+        equipment_constraint = constraint_ctx["equipment_constraint"]
+        secondary_constraints = constraint_ctx["secondary_constraints"]
+        recommended_next_load = constraint_ctx["recommended_next_load"]
+        actual_possible_next_load = constraint_ctx["actual_possible_next_load"]
 
         if first_set_load is None:
             next_load = start_weight
@@ -2253,11 +2274,7 @@ def decide_progression_from_context(exercise_id, ctx):
         fatigue_score < 2
     )
 
-    equipment_constraint = False
-    recommended_next_load = None
-    actual_possible_next_load = None
     progression_reason = "progression holdes"
-    secondary_constraints = []
     decision = "hold"
     next_load = last_load
 
@@ -2269,16 +2286,16 @@ def decide_progression_from_context(exercise_id, ctx):
         achieved >= target_top
     )
 
-    if candidate_for_progression:
-        recommended_next_load = float(last_load) + recommended_step
-        actual_possible_next_load = compute_next_possible_load(float(last_load), effective_load_increment)
-
-        ideal_jump = recommended_next_load - float(last_load)
-        actual_jump = actual_possible_next_load - float(last_load)
-
-        if actual_jump > ideal_jump:
-            equipment_constraint = True
-            secondary_constraints.append("equipment_constraint")
+    constraint_ctx = evaluate_equipment_constraint(
+        last_load=last_load,
+        recommended_step=recommended_step,
+        effective_load_increment=effective_load_increment,
+        candidate_for_progression=candidate_for_progression,
+    )
+    equipment_constraint = constraint_ctx["equipment_constraint"]
+    secondary_constraints = constraint_ctx["secondary_constraints"]
+    recommended_next_load = constraint_ctx["recommended_next_load"]
+    actual_possible_next_load = constraint_ctx["actual_possible_next_load"]
 
     if last_load is None:
         next_load = start_weight
