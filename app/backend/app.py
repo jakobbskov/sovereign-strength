@@ -3221,38 +3221,6 @@ def get_today_plan():
 
     if already_logged_today:
         log_today_plan_decision(
-            auth_user=auth_user,
-            checkin_date=checkin_date,
-            session_type=session_type,
-            template_id=template_id,
-            plan_variant=plan_variant,
-            reason=reason,
-            plan_entries=plan_entries,
-        )
-        return jsonify({
-            "ok": True,
-            "item": {
-                "date": checkin_date,
-                "recommended_for": recommended_for,
-                "session_type": "restitution",
-                "template_id": "completed_today",
-                "template_mode": "completed_today_v0_1",
-                "plan_variant": "completed_today",
-                "readiness_score": readiness_score,
-                "time_budget_min": time_budget_min,
-                "timing_state": "",
-                "reason": "Today's training is already logged.",
-                "recovery_state": None,
-                "weekly_status": None,
-                "training_day_context": {},
-                "families_selected": [],
-                "entries": []
-            }
-        })
-
-
-
-    log_today_plan_decision(
         auth_user=auth_user,
         checkin_date=checkin_date,
         session_type=session_type,
@@ -3262,6 +3230,35 @@ def get_today_plan():
         plan_entries=plan_entries,
     )
 
+    readiness_bucket = "low" if readiness_score <= 3 else "high"
+    if fatigue_score >= 6:
+        fatigue_bucket = "high"
+    elif fatigue_score >= 4:
+        fatigue_bucket = "moderate"
+    elif fatigue_score >= 2:
+        fatigue_bucket = "elevated"
+    else:
+        fatigue_bucket = "low"
+
+    rule_applied = "strength_default"
+    override_label = None
+
+    if fatigue_session_override == "restitution":
+        rule_applied = "fatigue_override_restitution"
+        override_label = "fatigue_session_override"
+    elif readiness_score <= 3:
+        rule_applied = "low_readiness_restitution"
+    elif timing_state == "early":
+        rule_applied = "early_timing_cardio"
+    elif fatigue_score >= 6:
+        rule_applied = "high_fatigue_restitution"
+    elif fatigue_score >= 4:
+        rule_applied = "fatigue_cardio"
+    elif str(session_type).strip() in ("løb", "cardio"):
+        rule_applied = "cardio_default"
+    elif str(session_type).strip() == "restitution":
+        rule_applied = "restitution_default"
+
     item = {
         "checkin_id": latest_checkin.get("id"),
         "date": checkin_date,
@@ -3270,7 +3267,7 @@ def get_today_plan():
         "timing_state": timing_state,
         "previous_recommended_for": previous_recommendation.get("recommended_for") if previous_recommendation else None,
         "readiness_score": readiness_score,
-            "weekly_status": weekly_status,
+        "weekly_status": weekly_status,
         "time_budget_min": time_budget_min,
         "session_type": session_type,
         "latest_strength_failed": latest_strength_failed,
@@ -3284,6 +3281,13 @@ def get_today_plan():
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": days_since_last_strength,
+        "decision_trace": {
+            "readiness_bucket": readiness_bucket,
+            "fatigue_bucket": fatigue_bucket,
+            "timing": timing_state or "unknown",
+            "rule_applied": rule_applied,
+            "override": override_label,
+        },
         "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
         "entries": plan_entries
     }
