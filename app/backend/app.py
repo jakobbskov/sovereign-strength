@@ -458,6 +458,71 @@ def list_session_results_for_user(user_id):
 def get_latest_checkin_for_user(user_id):
     return get_latest_user_item("checkins", user_id)
 
+
+def build_recent_recovery_context(user_id, max_items=3):
+    checkins = list_checkins_for_user(user_id)
+    if not isinstance(checkins, list):
+        checkins = []
+
+    recent = []
+    for item in checkins:
+        if not isinstance(item, dict):
+            continue
+        recent.append(item)
+        if len(recent) >= max_items:
+            break
+
+    poor_recovery_count = 0
+    latest_readiness_score = None
+
+    for idx, item in enumerate(recent):
+        try:
+            sleep_score = int(item.get("sleep_score", 0) or 0)
+        except Exception:
+            sleep_score = 0
+        try:
+            energy_score = int(item.get("energy_score", 0) or 0)
+        except Exception:
+            energy_score = 0
+        try:
+            soreness_score = int(item.get("soreness_score", 0) or 0)
+        except Exception:
+            soreness_score = 0
+        try:
+            readiness_score = int(item.get("readiness_score", 0) or 0)
+        except Exception:
+            readiness_score = 0
+
+        if idx == 0:
+            latest_readiness_score = readiness_score
+
+        poor_recovery = bool(
+            sleep_score <= 2 or
+            energy_score <= 2 or
+            soreness_score >= 4
+        )
+        if poor_recovery:
+            poor_recovery_count += 1
+
+    if poor_recovery_count >= 2:
+        pressure = "high"
+        reason = "gentagne tegn på lav restitution i de seneste checkins"
+    elif poor_recovery_count == 1:
+        pressure = "moderate"
+        reason = "ét nyligt checkin med lav restitution"
+    else:
+        pressure = "low"
+        reason = None
+
+    return {
+        "recent_checkin_count": len(recent),
+        "poor_recovery_count": poor_recovery_count,
+        "latest_readiness_score": latest_readiness_score,
+        "multi_session_fatigue_pressure": pressure,
+        "multi_session_fatigue_reason": reason,
+    }
+
+
 def compute_readiness_score(sleep_score, energy_score, soreness_score):
     readiness_score = round((sleep_score + energy_score + (6 - soreness_score)) / 3)
     readiness_score = max(1, min(5, readiness_score))
@@ -1844,6 +1909,7 @@ def build_progression_context(exercise_id, user_id=None):
     analysis = analyze_session_result_for_progression(latest_result)
     fatigue_ctx = compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=user_id, latest_checkin=None)
     fatigue_score = fatigue_ctx.get("fatigue_score", 0)
+    recent_recovery_ctx = build_recent_recovery_context(user_id, max_items=3)
 
     last_load = None
     last_entry = None
@@ -1874,6 +1940,7 @@ def build_progression_context(exercise_id, user_id=None):
         "latest_session": latest_session,
         "analysis": analysis,
         "fatigue_score": fatigue_score,
+        "recent_recovery_ctx": recent_recovery_ctx,
         "last_load": last_load,
         "last_entry": last_entry,
     }
