@@ -443,6 +443,11 @@ def list_checkins_for_user(user_id):
 def get_latest_checkin_for_user(user_id):
     return get_latest_user_item("checkins", user_id)
 
+def compute_readiness_score(sleep_score, energy_score, soreness_score):
+    readiness_score = round((sleep_score + energy_score + (6 - soreness_score)) / 3)
+    readiness_score = max(1, min(5, readiness_score))
+    return readiness_score
+
 def create_checkin(user_id, payload):
     if not isinstance(payload, dict):
         return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
@@ -470,206 +475,11 @@ def create_checkin(user_id, payload):
     if err:
         return None, err, status
 
-    readiness_score = round((sleep_score + energy_score + (6 - soreness_score)) / 3)
-    readiness_score = max(1, min(5, readiness_score))
-
-    item = {
-        "id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "date": date,
-        "sleep_score": sleep_score,
-        "energy_score": energy_score,
-        "soreness_score": soreness_score,
-        "time_budget_min": time_budget_min,
-        "readiness_score": readiness_score,
-        "notes": notes,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-
-    item, count = append_user_item("checkins", item)
-    return item, None, count
-
-
-def consume_manual_override_workout(user_id, date):
-    return consume_manual_override_workout_storage(user_id, date)
-
-
-
-def delete_session_result_for_user(user_id, session_result_id):
-    return delete_user_item("session_results", user_id, session_result_id)
-
-def list_session_results_for_user(user_id):
-    return list_user_items("session_results", user_id)
-
-def create_session_result(user_id, payload):
-    if not isinstance(payload, dict):
-        return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
-
-    date = str(payload.get("date", "")).strip()
-    session_type = str(payload.get("session_type", "")).strip()
-    timing_state = str(payload.get("timing_state", "")).strip()
-    notes = str(payload.get("notes", "")).strip()
-
-    completed_raw = payload.get("completed", False)
-    if not isinstance(completed_raw, bool):
-        return None, make_error_payload("invalid_completed", "completed skal være true/false", field="completed"), 400
-    completed = completed_raw
-
-    readiness_score = payload.get("readiness_score", None)
-    if readiness_score not in (None, ""):
-        try:
-            readiness_score = int(readiness_score)
-        except Exception:
-            return None, make_error_payload("invalid_readiness_score", "readiness_score skal være et heltal", field="readiness_score"), 400
-        if readiness_score < 1 or readiness_score > 5:
-            return None, make_error_payload("invalid_readiness_score", "readiness_score skal være mellem 1 og 5", field="readiness_score"), 400
-    else:
-        readiness_score = None
-
-    source = str(payload.get("source", "autoplan")).strip() or "autoplan"
-    if source not in ("autoplan", "manual_override", "manual", "import"):
-        return None, make_error_payload("invalid_source", "ugyldig source", field="source"), 400
-
-    results = payload.get("results", [])
-
-    if not date:
-        return None, make_error_payload("missing_date", "date mangler", field="date"), 400
-    if session_type == "cardio":
-        session_type = "løb"
-
-    if session_type not in ("styrke", "løb", "restitution"):
-        return None, make_error_payload("invalid_session_type", "ugyldig session_type", field="session_type"), 400
-    if timing_state not in ("early", "on_time", "late", ""):
-        return None, make_error_payload("invalid_timing_state", "ugyldig timing_state", field="timing_state"), 400
-    if not isinstance(results, list):
-        return None, make_error_payload("invalid_results", "results skal være en liste", field="results"), 400
-
-    clean_results = []
-    for r in results:
-        if not isinstance(r, dict):
-            continue
-
-        raw_sets = r.get("sets", [])
-        clean_sets = []
-        if isinstance(raw_sets, list):
-            for x in raw_sets:
-                if not isinstance(x, dict):
-                    continue
-                reps_val = str(x.get("reps", "")).strip()
-                load_val = str(x.get("load", "")).strip()
-                if not reps_val and not load_val:
-                    continue
-                clean_sets.append({
-                    "reps": reps_val,
-                    "load": load_val
-                })
-
-        achieved_reps = str(r.get("achieved_reps", "")).strip()
-        base_load = str(r.get("load", "")).strip()
-        notes_val = str(r.get("notes", "")).strip()
-        has_meaningful_data = bool(clean_sets or achieved_reps or base_load)
-
-        if not has_meaningful_data:
-            continue
-
-        clean_results.append({
-            "exercise_id": str(r.get("exercise_id", "")).strip(),
-            "completed": bool(r.get("completed", False)),
-            "target_reps": str(r.get("target_reps", "")).strip(),
-            "achieved_reps": achieved_reps,
-            "load": base_load,
-            "sets": clean_sets,
-            "hit_failure": bool(r.get("hit_failure", False)),
-            "notes": notes_val
-        })
-
-    if not clean_results:
-        # cardio-sessioner kan være gyldige uden sets
-        if session_type in ("løb", "cardio", "run"):
-            clean_results.append({
-                "exercise_id": "cardio_session",
-                "completed": True,
-                "target_reps": "",
-                "achieved_reps": "",
-                "load": "",
-                "sets": [],
-                "hit_failure": False,
-                "notes": ""
-            })
-        else:
-            return None, make_error_payload("empty_session", "ingen træningsdata at gemme"), 400
-
-    cardio_kind = str(payload.get("cardio_kind", "")).strip().lower()
-    avg_rpe = payload.get("avg_rpe", None)
-    distance_km = payload.get("distance_km", None)
-    duration_min = payload.get("duration_min", None)
-    duration_sec = payload.get("duration_sec", None)
-
-    avg_rpe = _parse_optional_int(avg_rpe, None)
-    if avg_rpe is not None and (avg_rpe < 0 or avg_rpe > 10):
-        return None, make_error_payload("invalid_avg_rpe", "avg_rpe skal være mellem 0 og 10", field="avg_rpe"), 400
-
-    try:
-        distance_km = float(distance_km) if distance_km not in (None, "", "null") else None
-    except Exception:
-        distance_km = None
-    if distance_km is not None and distance_km < 0:
-        return None, make_error_payload("negative_distance", "distance_km må ikke være negativ", field="distance_km"), 400
-
-    duration_min = _parse_optional_int(duration_min, 0)
-    duration_sec = _parse_optional_int(duration_sec, 0)
-
-    if duration_min < 0:
-        duration_min = 0
-    if duration_sec < 0:
-        duration_sec = 0
-    if duration_sec > 59:
-        duration_sec = 59
-
-    duration_total_sec = (duration_min * 60) + duration_sec
-
-    pace_sec_per_km = None
-    if distance_km and distance_km > 0 and duration_total_sec > 0:
-        try:
-            pace_sec_per_km = round(duration_total_sec / float(distance_km), 2)
-        except Exception:
-            pace_sec_per_km = None
-
-    session_type_normalized = str(session_type or "").strip().lower()
-    counts_toward_weekly_goal = False
-
-    has_meaningful_results = False
-    for r in clean_results:
-        if not isinstance(r, dict):
-            continue
-        if str(r.get("exercise_id", "")).strip():
-            has_meaningful_results = True
-            break
-        if str(r.get("achieved_reps", "")).strip():
-            has_meaningful_results = True
-            break
-        raw_sets = r.get("sets", [])
-        if isinstance(raw_sets, list) and raw_sets:
-            has_meaningful_results = True
-            break
-
-    if completed:
-        if session_type_normalized in ("styrke", "strength"):
-            counts_toward_weekly_goal = has_meaningful_results
-        elif session_type_normalized in ("løb", "run", "cardio"):
-            dist_ok = False
-            dur_ok = False
-            try:
-                dist_ok = float(distance_km or 0) > 0
-            except Exception:
-                dist_ok = False
-            try:
-                dur_ok = float(duration_total_sec or 0) > 0
-            except Exception:
-                dur_ok = False
-            counts_toward_weekly_goal = bool(dist_ok or dur_ok or has_meaningful_results)
-        elif session_type_normalized in ("restitution", "mobilitet", "mobility", "recovery"):
-            counts_toward_weekly_goal = False
+    readiness_score = compute_readiness_score(
+        sleep_score=sleep_score,
+        energy_score=energy_score,
+        soreness_score=soreness_score,
+    )
 
     item = {
         "id": str(uuid.uuid4()),
