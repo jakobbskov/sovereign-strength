@@ -18,6 +18,7 @@ from progression_engine import (
     parse_top_rep,
     parse_seconds_value,
     analyze_session_result_for_progression,
+    get_relevant_strength_history,
     decide_progression_from_context,
 )
 
