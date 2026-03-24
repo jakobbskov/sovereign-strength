@@ -2839,6 +2839,16 @@ def validate_today_plan_item(item):
 
 @app.get("/api/today-plan")
 def get_today_plan():
+    query_args = request.args or {}
+    allowed_query_params = set()
+    unexpected_query_params = sorted([key for key in query_args.keys() if key not in allowed_query_params])
+    if unexpected_query_params:
+        return jsonify(make_error_payload(
+            "invalid_query_params",
+            "ukendte query parametre",
+            fields=unexpected_query_params,
+        )), 400
+
     auth_user, auth_err = require_auth_user()
     if auth_err:
         log_auth_failure("today-plan", auth_err)
