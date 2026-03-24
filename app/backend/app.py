@@ -2791,6 +2791,18 @@ def build_today_plan_training_decision(
     }
 
 
+def get_autoplan_meta_value(autoplan_meta, key, default=None):
+    if isinstance(autoplan_meta, dict):
+        return autoplan_meta.get(key, default)
+    return default
+
+def build_decision_trace(
+    readiness_score,
+    fatigue_score,
+    session_type,
+    timing_state,
+    fatigue_session_override,
+):
 def build_decision_trace(
     readiness_score,
     fatigue_score,
@@ -3192,8 +3204,8 @@ def get_today_plan():
         "fatigue_score": fatigue_score,
         "recovery_state": recovery_state,
         "template_id": template_id,
-        "template_mode": autoplan_meta.get("template_mode") if isinstance(autoplan_meta, dict) else None,
-        "families_selected": autoplan_meta.get("families_selected", []) if isinstance(autoplan_meta, dict) else [],
+        "template_mode": get_autoplan_meta_value(autoplan_meta, "template_mode"),
+        "families_selected": get_autoplan_meta_value(autoplan_meta, "families_selected", []),
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": days_since_last_strength,
@@ -3432,8 +3444,8 @@ def get_today_plan_debug():
         "fatigue_score": fatigue_score,
         "recovery_state": recovery_state,
         "template_id": template_id,
-        "template_mode": autoplan_meta.get("template_mode") if isinstance(autoplan_meta, dict) else None,
-        "families_selected": autoplan_meta.get("families_selected", []) if isinstance(autoplan_meta, dict) else [],
+        "template_mode": get_autoplan_meta_value(autoplan_meta, "template_mode"),
+        "families_selected": get_autoplan_meta_value(autoplan_meta, "families_selected", []),
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": fatigue_ctx["days_since_last_strength"],
