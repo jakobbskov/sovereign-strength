@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 def get_effective_load_increment(exercise, user_settings):
     if not isinstance(exercise, dict):
         exercise = {}
@@ -225,6 +227,167 @@ def analyze_session_result_for_progression(result):
     }
 
 
+
+def parse_session_sort_datetime(session):
+    if not isinstance(session, dict):
+        return None
+
+    created_at = str(session.get("created_at", "")).strip()
+    if created_at:
+        try:
+            return datetime.fromisoformat(created_at)
+        except Exception:
+            pass
+
+    date_str = str(session.get("date", "")).strip()
+    if date_str:
+        try:
+            return datetime.fromisoformat(date_str)
+        except Exception:
+            return None
+
+    return None
+
+
+def get_relevant_strength_history(session_results, exercise_id, max_items=6):
+    history = []
+    exercise_id = str(exercise_id or "").strip()
+
+    if not exercise_id:
+        return history
+
+    for session in reversed(session_results or []):
+        if not isinstance(session, dict):
+            continue
+
+        session_type = str(session.get("session_type", "")).strip().lower()
+        if session_type != "strength":
+            continue
+
+        results = session.get("results", [])
+        if not isinstance(results, list) or not results:
+            continue
+
+        matched_result = None
+        for result in reversed(results):
+            if not isinstance(result, dict):
+                continue
+            if str(result.get("exercise_id", "")).strip() == exercise_id:
+                matched_result = result
+                break
+
+        if not matched_result:
+            continue
+
+        analysis = analyze_session_result_for_progression(matched_result)
+        has_usable_data = bool(
+            analysis.get("first_set_load") is not None or
+            analysis.get("first_set_reps") is not None or
+            analysis.get("hit_failure", False) or
+            analysis.get("has_sets", False)
+        )
+        if not has_usable_data:
+            continue
+
+        history.append({
+            "session": session,
+            "result": matched_result,
+            "analysis": analysis,
+            "date": str(session.get("date", "")).strip(),
+            "created_at": str(session.get("created_at", "")).strip(),
+            "sort_dt": parse_session_sort_datetime(session),
+        })
+
+        if len(history) >= max_items:
+            break
+
+    return history
+
+
+def detect_progression_phase(relevant_history, pause_days=21, min_trend_sessions=3):
+    count = len(relevant_history or [])
+    latest_dt = None
+
+    if relevant_history:
+        latest_dt = relevant_history[0].get("sort_dt")
+
+    days_since_last_relevant_session = None
+    if latest_dt is not None:
+        try:
+            now_dt = datetime.now(timezone.utc)
+            latest_cmp = latest_dt
+            if latest_cmp.tzinfo is None:
+                latest_cmp = latest_cmp.replace(tzinfo=timezone.utc)
+            days_since_last_relevant_session = max(0, (now_dt - latest_cmp).days)
+        except Exception:
+            days_since_last_relevant_session = None
+
+    if days_since_last_relevant_session is not None and days_since_last_relevant_session > pause_days:
+        phase = "recalibration"
+    elif count < min_trend_sessions:
+        phase = "calibration"
+    else:
+        phase = "trend"
+
+    return {
+        "phase": phase,
+        "relevant_session_count": count,
+        "days_since_last_relevant_session": days_since_last_relevant_session,
+        "pause_days_threshold": pause_days,
+        "min_trend_sessions": min_trend_sessions,
+    }
+
+
+def summarize_strength_trend(relevant_history, window_size=3):
+    window = list(relevant_history or [])[:window_size]
+    session_summaries = []
+
+    for item in window:
+        result = item.get("result", {}) or {}
+        analysis = item.get("analysis", {}) or {}
+
+        target_top = parse_top_rep(result.get("target_reps", ""))
+        first_set_reps = analysis.get("first_set_reps")
+        hit_failure = bool(analysis.get("hit_failure", False))
+        load_drop_detected = bool(analysis.get("load_drop_detected", False))
+
+        candidate_for_progression = bool(
+            target_top is not None and
+            first_set_reps is not None and
+            first_set_reps >= target_top
+        )
+
+        successful_session = bool(
+            candidate_for_progression and
+            not hit_failure and
+            not load_drop_detected
+        )
+
+        session_summaries.append({
+            "candidate_for_progression": candidate_for_progression,
+            "successful_session": successful_session,
+            "hit_failure": hit_failure,
+            "load_drop_detected": load_drop_detected,
+        })
+
+    successful_sessions = sum(1 for x in session_summaries if x["successful_session"])
+    failure_sessions = sum(1 for x in session_summaries if x["hit_failure"])
+    load_drop_sessions = sum(1 for x in session_summaries if x["load_drop_detected"])
+
+    repeated_success = successful_sessions >= 2
+    blocking_signal_present = failure_sessions > 0 or load_drop_sessions > 0
+
+    return {
+        "window_size": len(window),
+        "successful_sessions": successful_sessions,
+        "failure_sessions": failure_sessions,
+        "load_drop_sessions": load_drop_sessions,
+        "repeated_success": repeated_success,
+        "blocking_signal_present": blocking_signal_present,
+        "session_summaries": session_summaries,
+    }
+
+
 def decide_progression_from_context(exercise_id, ctx):
     step = ctx["step"]
     start_weight = ctx["start_weight"]
@@ -324,6 +487,11 @@ def decide_progression_from_context(exercise_id, ctx):
         }
 
     if analysis["source"] == "session_result" and latest_result:
+        session_results = ctx.get("session_results", [])
+        relevant_history = get_relevant_strength_history(session_results, exercise_id, max_items=6)
+        phase_ctx = detect_progression_phase(relevant_history, pause_days=21, min_trend_sessions=3)
+        trend_ctx = summarize_strength_trend(relevant_history, window_size=3)
+
         target_top = parse_top_rep(latest_result.get("target_reps", ""))
         first_set_load = analysis.get("first_set_load")
         first_set_reps = analysis.get("first_set_reps")
@@ -331,6 +499,7 @@ def decide_progression_from_context(exercise_id, ctx):
         load_drop_detected = analysis.get("load_drop_detected", False)
 
         progression_reason = "progression holdes"
+        phase = phase_ctx.get("phase")
 
         candidate_for_progression = bool(
             first_set_load is not None and
@@ -339,11 +508,21 @@ def decide_progression_from_context(exercise_id, ctx):
             first_set_reps >= target_top
         )
 
+        allow_progression_by_phase = False
+        if phase in ("calibration", "trend"):
+            allow_progression_by_phase = bool(
+                candidate_for_progression and
+                trend_ctx.get("repeated_success", False) and
+                not trend_ctx.get("blocking_signal_present", False)
+            )
+        elif phase == "recalibration":
+            allow_progression_by_phase = False
+
         constraint_ctx = evaluate_equipment_constraint(
             last_load=first_set_load,
             recommended_step=recommended_step,
             effective_load_increment=effective_load_increment,
-            candidate_for_progression=candidate_for_progression,
+            candidate_for_progression=allow_progression_by_phase,
         )
         equipment_constraint = constraint_ctx["equipment_constraint"]
         secondary_constraints = constraint_ctx["secondary_constraints"]
@@ -370,7 +549,15 @@ def decide_progression_from_context(exercise_id, ctx):
             next_load = int(first_set_load)
             decision = "hold"
             progression_reason = "muskeltræthed for høj til progression"
-        elif candidate_for_progression:
+        elif candidate_for_progression and phase == "recalibration":
+            next_load = int(first_set_load)
+            decision = "hold"
+            progression_reason = "rekalibrering efter pause"
+        elif candidate_for_progression and not trend_ctx.get("repeated_success", False):
+            next_load = int(first_set_load)
+            decision = "hold"
+            progression_reason = "afventer gentagen succes"
+        elif allow_progression_by_phase:
             if equipment_constraint:
                 next_load = int(first_set_load)
                 decision = "hold"
@@ -378,7 +565,10 @@ def decide_progression_from_context(exercise_id, ctx):
             else:
                 next_load = int(actual_possible_next_load)
                 decision = "increase"
-                progression_reason = "top af rep-interval ramt"
+                if phase == "calibration":
+                    progression_reason = "gentagen succes i kalibrering"
+                else:
+                    progression_reason = "gentagen succes i stabil trend"
         else:
             next_load = int(first_set_load)
             decision = "hold"
@@ -399,13 +589,20 @@ def decide_progression_from_context(exercise_id, ctx):
             "hit_failure": hit_failure,
             "load_drop_detected": load_drop_detected,
             "fatigue_score": fatigue_score,
-            "set_analysis": analysis,
-            "progression_decision": decision,
-            "progression_reason": progression_reason,
             "equipment_constraint": equipment_constraint,
             "secondary_constraints": secondary_constraints,
             "recommended_next_load": recommended_next_load,
-            "actual_possible_next_load": actual_possible_next_load
+            "actual_possible_next_load": actual_possible_next_load,
+            "progression_decision": decision,
+            "progression_reason": progression_reason,
+            "progression_phase": phase_ctx.get("phase"),
+            "relevant_session_count": phase_ctx.get("relevant_session_count"),
+            "days_since_last_relevant_session": phase_ctx.get("days_since_last_relevant_session"),
+            "trend_window_size": trend_ctx.get("window_size"),
+            "trend_successful_sessions": trend_ctx.get("successful_sessions"),
+            "trend_failure_sessions": trend_ctx.get("failure_sessions"),
+            "trend_load_drop_sessions": trend_ctx.get("load_drop_sessions"),
+            "trend_repeated_success": trend_ctx.get("repeated_success"),
         }
 
     if last_entry is None:
