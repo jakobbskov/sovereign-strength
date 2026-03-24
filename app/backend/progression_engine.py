@@ -249,7 +249,103 @@ def parse_session_sort_datetime(session):
     return None
 
 
-def get_relevant_strength_history(session_results, exercise_id, max_items=6):
+
+def normalize_dt_for_compare(dt):
+    if dt is None:
+        return None
+    try:
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def days_between_datetimes(newer, older):
+    newer_dt = normalize_dt_for_compare(newer)
+    older_dt = normalize_dt_for_compare(older)
+    if newer_dt is None or older_dt is None:
+        return None
+    try:
+        return max(0, (newer_dt - older_dt).days)
+    except Exception:
+        return None
+
+
+def get_relevant_strength_history(session_results, exercise_id, max_items=6, recent_days=42, continuity_gap_days=14):
+    history = []
+    exercise_id = str(exercise_id or "").strip()
+    newest_relevant_dt = None
+    previous_kept_dt = None
+
+    if not exercise_id:
+        return history
+
+    for session in reversed(session_results or []):
+        if not isinstance(session, dict):
+            continue
+
+        session_type = str(session.get("session_type", "")).strip().lower()
+        if session_type != "strength":
+            continue
+
+        results = session.get("results", [])
+        if not isinstance(results, list) or not results:
+            continue
+
+        matched_result = None
+        for result in reversed(results):
+            if not isinstance(result, dict):
+                continue
+            if str(result.get("exercise_id", "")).strip() == exercise_id:
+                matched_result = result
+                break
+
+        if not matched_result:
+            continue
+
+        analysis = analyze_session_result_for_progression(matched_result)
+        has_usable_data = bool(
+            analysis.get("first_set_load") is not None or
+            analysis.get("first_set_reps") is not None or
+            analysis.get("hit_failure", False) or
+            analysis.get("has_sets", False)
+        )
+        if not has_usable_data:
+            continue
+
+        sort_dt = parse_session_sort_datetime(session)
+        if sort_dt is None:
+            continue
+
+        if newest_relevant_dt is None:
+            newest_relevant_dt = sort_dt
+
+        age_from_newest_days = days_between_datetimes(newest_relevant_dt, sort_dt)
+        if age_from_newest_days is not None and age_from_newest_days > recent_days:
+            continue
+
+        if previous_kept_dt is not None:
+            gap_days = days_between_datetimes(previous_kept_dt, sort_dt)
+            if gap_days is not None and gap_days > continuity_gap_days:
+                break
+
+        history.append({
+            "session": session,
+            "result": matched_result,
+            "analysis": analysis,
+            "date": str(session.get("date", "")).strip(),
+            "created_at": str(session.get("created_at", "")).strip(),
+            "sort_dt": sort_dt,
+        })
+
+        previous_kept_dt = sort_dt
+
+        if len(history) >= max_items:
+            break
+
+    return history
+
     history = []
     exercise_id = str(exercise_id or "").strip()
 
