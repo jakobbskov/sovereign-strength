@@ -2410,12 +2410,32 @@ function renderTodayPlan(item){
   const motorSummary = tr("plan.motor_summary", { value: planMotorLabel });
   const familiesSummary = familiesSelectedText ? tr("plan.selected_families", { value: familiesSelectedText }) : "";
 
+  const decisionTrace = item?.decision_trace && typeof item.decision_trace === "object" ? item.decision_trace : null;
+  const decisionBits = [];
+  if (decisionTrace?.rule_applied) {
+    decisionBits.push(tr("decision_trace.rule", { value: decisionTrace.rule_applied }));
+  }
+  if (decisionTrace?.readiness_bucket) {
+    decisionBits.push(tr("decision_trace.readiness_bucket", { value: decisionTrace.readiness_bucket }));
+  }
+  if (decisionTrace?.fatigue_bucket) {
+    decisionBits.push(tr("decision_trace.fatigue_bucket", { value: decisionTrace.fatigue_bucket }));
+  }
+  if (decisionTrace?.timing) {
+    decisionBits.push(tr("decision_trace.timing", { value: decisionTrace.timing }));
+  }
+  if (decisionTrace?.override) {
+    decisionBits.push(tr("decision_trace.override", { value: decisionTrace.override }));
+  }
+  const decisionTraceSummary = decisionBits.length ? decisionBits.join(" · ") : "";
+
   setText(
     "todayPlanSummary",
     [
       baseSummary,
       recoveryDaySummary,
       motorSummary,
+      decisionTraceSummary,
       familiesSummary,
       trainingDaySummary,
       trainingAllowedSummary,
