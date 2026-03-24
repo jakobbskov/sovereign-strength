@@ -2714,6 +2714,23 @@ def log_today_plan_decision(auth_user, checkin_date, session_type, template_id, 
     )
 
 
+def append_today_plan_trace(user_id, trace):
+    if not isinstance(trace, dict):
+        return
+
+    item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        **trace,
+    }
+
+    try:
+        append_user_item("today_plan_traces", item)
+    except Exception:
+        logger.exception("today_plan_trace_write_failed")
+
+
 def validate_today_plan_item(item):
     if not isinstance(item, dict):
         return {
@@ -3272,6 +3289,19 @@ def get_today_plan():
     }
 
     item = validate_today_plan_item(item)
+
+    append_today_plan_trace(
+        auth_user.get("user_id"),
+        {
+            "date": checkin_date,
+            "session_type": item.get("session_type"),
+            "template_id": item.get("template_id"),
+            "plan_variant": item.get("plan_variant"),
+            "reason": item.get("reason"),
+            "readiness_score": item.get("readiness_score"),
+            "fatigue_score": item.get("fatigue_score"),
+        }
+    )
 
     return jsonify({
         "ok": True,
