@@ -296,6 +296,22 @@ def make_error_payload(error, message, **extra):
     payload.update(extra)
     return payload
 
+
+def ensure_error_contract(payload, status):
+    if not isinstance(payload, dict):
+        return payload, status
+
+    if payload.get("ok") is not False:
+        return payload, status
+
+    return {
+        "ok": False,
+        "error": str(payload.get("error") or "unknown_error"),
+        "message": str(payload.get("message") or ""),
+        **{k: v for k, v in payload.items() if k not in ("ok", "error", "message")}
+    }, status
+
+
 def _parse_non_negative_int(value, field_name):
     try:
         parsed = int(value)
@@ -5273,7 +5289,8 @@ def post_session_result():
     )
 
     if err_payload is not None:
-        return jsonify(err_payload), third
+        payload, status = ensure_error_contract(err_payload, third)
+        return jsonify(payload), status
 
     summary = build_session_summary(item)
     consume_manual_override_workout(auth_user.get("user_id"), item.get("date"))
@@ -5305,7 +5322,8 @@ def post_workouts():
 
     item, err_payload, third = create_workout(auth_user.get("user_id"), request.get_json(silent=True) or {})
     if err_payload is not None:
-        return jsonify(err_payload), third
+        payload, status = ensure_error_contract(err_payload, third)
+        return jsonify(payload), status
 
     return jsonify({"ok": True, "item": item, "count": third}), 201
 
@@ -5336,7 +5354,8 @@ def post_checkin():
 
     item, err_payload, third = create_checkin(auth_user.get("user_id"), request.get_json(silent=True) or {})
     if err_payload is not None:
-        return jsonify(err_payload), third
+        payload, status = ensure_error_contract(err_payload, third)
+        return jsonify(payload), status
 
     return jsonify({"ok": True, "item": item, "count": third}), 201
 
