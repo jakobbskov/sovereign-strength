@@ -416,5 +416,10 @@
   "profile.weekly_target_6": "6 pas",
   "button.reset_catalog_from_seed": "Reset øvelser og programmer",
   "status.resetting_catalog": "Nulstiller øvelser og programmer fra seed...",
-  "status.catalog_reset_done": "Øvelser og programmer blev nulstillet fra seed."
+  "status.catalog_reset_done": "Øvelser og programmer blev nulstillet fra seed.",
+  "decision_trace.rule": "Regel: {value}",
+  "decision_trace.readiness_bucket": "Parathed: {value}",
+  "decision_trace.fatigue_bucket": "Belastning: {value}",
+  "decision_trace.timing": "Timing: {value}",
+  "decision_trace.override": "Override: {value}"
 }
