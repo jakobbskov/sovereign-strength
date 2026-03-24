@@ -121,6 +121,38 @@ def test_recalibration_blocks_progression_after_long_pause():
     assert out["progression_reason"] == "rekalibrering efter pause", out
 
 
+
+def test_trend_at_minimum_threshold_without_repeated_success_holds():
+    session_results = [
+        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 7, 96),
+        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98),
+        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+    ]
+
+    out = run_strength_progression_scenario(session_results=session_results)
+
+    assert out["progression_phase"] == "trend", out
+    assert out["relevant_session_count"] == 3, out
+    assert out["trend_successful_sessions"] == 2, out
+    assert out["trend_repeated_success"] is True, out
+    assert out["progression_decision"] == "increase", out
+
+
+def test_trend_blocks_progression_when_load_drop_exists_in_window():
+    session_results = [
+        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 8, 96),
+        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98, load_drop=True),
+        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+    ]
+
+    out = run_strength_progression_scenario(session_results=session_results)
+
+    assert out["progression_phase"] == "trend", out
+    assert out["trend_load_drop_sessions"] == 1, out
+    assert out["trend_repeated_success"] is True, out
+    assert out["progression_decision"] == "hold", out
+
+
 if __name__ == "__main__":
     test_calibration_requires_repeated_success()
     test_trend_allows_progression_after_repeated_success()

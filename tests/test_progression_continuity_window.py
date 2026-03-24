@@ -84,6 +84,41 @@ def test_excludes_sessions_older_than_recent_window():
     assert [item["date"] for item in history] == ["2026-03-12", "2026-03-01"], history
 
 
+
+def test_gap_equal_to_threshold_keeps_continuity():
+    session_results = [
+        make_strength_session("2026-02-26", "2026-02-26T06:00:00+00:00", load=96),
+        make_strength_session("2026-03-12", "2026-03-12T06:00:00+00:00", load=100),
+    ]
+
+    history = backend_app.get_relevant_strength_history(
+        session_results,
+        "bench_press",
+        max_items=6,
+        recent_days=42,
+        continuity_gap_days=14,
+    )
+
+    assert [item["date"] for item in history] == ["2026-03-12", "2026-02-26"], history
+
+
+def test_gap_above_threshold_breaks_continuity():
+    session_results = [
+        make_strength_session("2026-02-25", "2026-02-25T06:00:00+00:00", load=96),
+        make_strength_session("2026-03-12", "2026-03-12T06:00:00+00:00", load=100),
+    ]
+
+    history = backend_app.get_relevant_strength_history(
+        session_results,
+        "bench_press",
+        max_items=6,
+        recent_days=42,
+        continuity_gap_days=14,
+    )
+
+    assert [item["date"] for item in history] == ["2026-03-12"], history
+
+
 if __name__ == "__main__":
     test_keeps_recent_continuous_block()
     test_stops_at_large_gap_and_excludes_older_block()
