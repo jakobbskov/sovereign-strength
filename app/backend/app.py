@@ -963,6 +963,21 @@ def find_latest_session_by_type(session_results, session_type):
     return None
 
 
+def compute_fatigue_score(
+    latest_strength_failed,
+    latest_strength_load_drop_count,
+    latest_strength_completed,
+    days_since_last_strength,
+):
+    fatigue_score = (
+        (3 if latest_strength_failed else 0)
+        + (2 * latest_strength_load_drop_count)
+        + (1 if latest_strength_completed is False else 0)
+        + (1 if days_since_last_strength is not None and days_since_last_strength < 2 else 0)
+    )
+    return fatigue_score
+
+
 def compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=None, latest_checkin=None):
     latest_strength_session = find_latest_session_by_type(session_results, "styrke")
     latest_strength_failed = session_has_failure(latest_strength_session)
@@ -986,11 +1001,11 @@ def compute_fatigue_score_from_latest_strength(session_results, workouts, user_i
         days_since_last_strength=days_since_last_strength
     )
 
-    fatigue_score = (
-        (3 if latest_strength_failed else 0)
-        + (2 * latest_strength_load_drop_count)
-        + (1 if latest_strength_completed is False else 0)
-        + (1 if days_since_last_strength is not None and days_since_last_strength < 2 else 0)
+    fatigue_score = compute_fatigue_score(
+        latest_strength_failed=latest_strength_failed,
+        latest_strength_load_drop_count=latest_strength_load_drop_count,
+        latest_strength_completed=latest_strength_completed,
+        days_since_last_strength=days_since_last_strength,
     )
 
     return {
@@ -2444,11 +2459,11 @@ def build_today_plan_fatigue_context(auth_user, latest_checkin, workouts, checki
     latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
     latest_strength_completed = None if latest_strength_session is None else bool(latest_strength_session.get("completed", False))
 
-    fatigue_score = (
-        (3 if latest_strength_failed else 0)
-        + (2 * latest_strength_load_drop_count)
-        + (1 if latest_strength_completed is False else 0)
-        + (1 if days_since_last_strength is not None and days_since_last_strength < 2 else 0)
+    fatigue_score = compute_fatigue_score(
+        latest_strength_failed=latest_strength_failed,
+        latest_strength_load_drop_count=latest_strength_load_drop_count,
+        latest_strength_completed=latest_strength_completed,
+        days_since_last_strength=days_since_last_strength,
     )
 
     recovery_state = build_recovery_state(
