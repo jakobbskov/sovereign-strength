@@ -2796,7 +2796,13 @@ def get_autoplan_meta_value(autoplan_meta, key, default=None):
         return autoplan_meta.get(key, default)
     return default
 
-
+def build_decision_trace(
+    readiness_score,
+    fatigue_score,
+    session_type,
+    timing_state,
+    fatigue_session_override,
+):
 def build_decision_trace(
     readiness_score,
     fatigue_score,
