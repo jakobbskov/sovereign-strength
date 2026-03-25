@@ -140,14 +140,32 @@ function resetEnhancedCheckinUi(){
   });
 }
 
+function deriveDailyUiState(planItem, latestCheckin){
+  const today = new Date().toISOString().slice(0,10);
+  const latestDate = String(latestCheckin?.date || "").slice(0,10);
+  const hasCheckinToday = latestDate === today;
+  const hasPlan = !!(planItem && typeof planItem === "object");
+
+  if (!hasCheckinToday) return "needs_checkin";
+  if (hasPlan) return "ready_for_plan";
+  return "overview";
+}
+
+function getDefaultWizardStepForDailyState(planItem, latestCheckin){
+  const dailyState = deriveDailyUiState(planItem, latestCheckin);
+  if (dailyState === "needs_checkin") return "checkin";
+  if (dailyState === "ready_for_plan") return "plan";
+  return "overview";
+}
+
 async function rerenderUiAfterLanguageChange(){
   applyStaticTranslations();
   resetEnhancedCheckinUi();
   if (typeof initCheckinScoreButtons === "function") initCheckinScoreButtons();
   renderWizardNav();
   renderAuthBar();
-  await refreshAll();
-  showWizardStep(CURRENT_STEP || "overview");
+  const uiState = await refreshAll();
+  showWizardStep(CURRENT_STEP || uiState?.defaultStep || "overview");
 }
 
 function setText(id, text){
@@ -435,6 +453,7 @@ function renderPendingEntries(){
       const idx = Number(btn.getAttribute("data-remove-entry"));
       STATE.pendingEntries.splice(idx, 1);
       renderPendingEntries();
+
     });
   });
 }
@@ -2698,6 +2717,8 @@ async function refreshAll(){
   renderPrograms(STATE.programs, STATE.exercises);
   renderPendingEntries();
 
+  const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null);
+
   debug.pendingEntries = STATE.pendingEntries;
   debug.workouts_file = workoutsFile;
   debug.workouts_api = workoutsApi;
@@ -2711,10 +2732,16 @@ async function refreshAll(){
   debug.programs = programs;
   debug.exercises = exercises;
   debug.user_settings = userSettingsApi && userSettingsApi.item ? userSettingsApi.item : {};
+  debug.daily_ui_state = dailyUiState;
 
   setText("status", "Frontend + API OK");
   document.getElementById("status")?.classList.add("ok");
   setText("debug", JSON.stringify(debug, null, 2));
+
+  return {
+    dailyUiState,
+    defaultStep: getDefaultWizardStepForDailyState(todayPlanApi.item || null, latestRecoveryApi.item || null)
+  };
 }
 
 async function handleExerciseChange(){
@@ -3193,7 +3220,7 @@ function getWizardStepLabel(step){
   return fallback[lang]?.[key] || fallback.da[key] || key;
 }
 
-let CURRENT_STEP = "overview";
+let CURRENT_STEP = "";
 
 function getWizardSections(){
   return {
