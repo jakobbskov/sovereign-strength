@@ -1476,13 +1476,19 @@ function updateOverviewLayoutForStep(stepId){
   const overviewSection = document.getElementById("overviewSection");
   if (!overviewSection) return;
 
+  const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null);
   const cards = Array.from(overviewSection.querySelectorAll(":scope > section.card"));
+
   cards.forEach(card => {
-    const keepVisible =
+    let keepVisible =
       card.id === "forecastHero" ||
       card.id === "overviewStatusCard" ||
       card.id === "profileEquipmentCard" ||
       card.id === "weekPlanCard";
+
+    if (stepId === "overview" && dailyUiState === "needs_checkin"){
+      keepVisible = card.id === "forecastHero";
+    }
 
     card.classList.toggle(
       "overview-metric-hidden",
@@ -2638,6 +2644,8 @@ async function refreshAll(){
     ? userSettingsApi.item
     : {};
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
+  STATE.latestCheckin = latestRecoveryApi.item || null;
+  STATE.currentTodayPlan = todayPlanApi.item || null;
 
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
   const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
