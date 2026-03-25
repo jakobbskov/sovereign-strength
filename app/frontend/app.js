@@ -2477,6 +2477,22 @@ function renderTodayPlan(item){
       return;
   }
 
+  const heroCard = `
+  <li>
+    <div style="font-weight:700; font-size:1.1rem">${esc(formatSessionType(item.session_type || "unknown"))}</div>
+    <div class="small" style="margin-top:6px">
+      ${esc([
+        variantLabel || "",
+        item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
+      ].filter(Boolean).join(" · "))}
+    </div>
+    ${item.reason ? `<div class="small" style="margin-top:8px">${esc(formatPlanReason(item.reason || ""))}</div>` : ""}
+    <div style="margin-top:12px">
+      <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
+    </div>
+  </li>
+`;
+  
   const recoveryCard = recovery ? `
     <li>
       <div style="font-weight:700">Recovery</div>
@@ -2487,7 +2503,7 @@ function renderTodayPlan(item){
     </li>
   ` : "";
 
-  root.innerHTML = recoveryCard + item.entries.map(entry => {
+  root.innerHTML = heroCard + recoveryCard + item.entries.map(entry => {
       const extras = formatPlanProgressionExtra(entry);
       return `
       <li>
@@ -2575,9 +2591,13 @@ function renderTodayPlan(item){
       `;
     }).join("");
 
+  document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
+    showWizardStep("review");
+  });
+
   renderReviewSummary(item);
-    renderSessionReview(item);
-  }
+  renderSessionReview(item);
+}
 
 function renderPrograms(programs, exercises){
   const root = document.getElementById("programsRoot");
