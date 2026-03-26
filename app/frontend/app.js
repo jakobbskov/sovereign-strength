@@ -1784,7 +1784,19 @@ function buildReviewSetFields(entry, idx, setIdx){
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">Tom belastning tolkes som kropsvægt.</div>` : ""}
     </div>
+    <div style="margin-top:14px">
+      <button type="button" id="reviewDoneBtn">
+        ${esc(tr("button.done_for_today"))}
+      </button>
+    </div>
   `;
+
+  const doneBtn = document.getElementById("reviewDoneBtn");
+  if (doneBtn){
+    doneBtn.addEventListener("click", () => {
+      showWizardStep("overview");
+    });
+  }
 }
 
 
@@ -1918,6 +1930,19 @@ function toggleCardioReviewFields(item){
 
 function renderSessionReview(item){
   const root = document.getElementById("sessionReviewList");
+  const form = document.getElementById("sessionResultForm");
+  if (form){
+    form.classList.remove("wizard-step-hidden");
+    form.querySelectorAll("input, select, textarea").forEach(el => {
+      el.disabled = false;
+    });
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn){
+      submitBtn.disabled = false;
+      submitBtn.style.display = "";
+      submitBtn.textContent = tr("after_training.save_session_result");
+    }
+  }
   if (!root) return;
 
   if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
@@ -2042,7 +2067,7 @@ function renderSessionResultSummary(summary){
   const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
   root.innerHTML = `
-    <div style="font-weight:700; margin-bottom:8px">${esc(tr("after_training.session_summary_title"))}</div>
+    <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
     <div class="small" style="margin-bottom:8px">
       ${esc(sessionType)} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigue)}
     </div>
@@ -3124,6 +3149,7 @@ session_type:
       submitBtn.textContent = "Session gemt";
       submitBtn.style.display = "none";
     }
+    form.classList.add("wizard-step-hidden");
   }catch(err){
     setText("sessionResultStatus", "Fejl: " + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
