@@ -3015,6 +3015,7 @@ async function handleRecoverySubmit(ev){
     form.soreness_score.value = "2";
     form.time_budget_min.value = "45";
     await refreshAll();
+    advanceWizardAfterCheckin();
   }catch(err){
     setText("recoveryFormStatus", tr("status.error_prefix") + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
@@ -3109,7 +3110,20 @@ session_type:
     statusEl?.classList.add("ok");
     form.reset();
     form.session_completed.value = "true";
-    showWizardStep("history");
+    await refreshAll();
+    showWizardStep("review");
+    renderSessionResultSummary(res?.summary || null);
+    setText("sessionResultStatus", "Session-resultat gemt.");
+    statusEl?.classList.add("ok");
+    form.querySelectorAll("input, select, textarea").forEach(el => {
+      el.disabled = true;
+    });
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn){
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Session gemt";
+      submitBtn.style.display = "none";
+    }
   }catch(err){
     setText("sessionResultStatus", "Fejl: " + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
@@ -3275,19 +3289,31 @@ function getWizardSections(){
 }
 
 function renderWizardNav(){
-
   const root = document.getElementById("wizardNav");
   if (!root) return;
 
-  root.innerHTML = WIZARD_STEPS.map(step => `
-    <button
-      type="button"
-      data-step="${esc(step.id)}"
-      class="${step.id === CURRENT_STEP ? "is-active" : ""}"
-    >
-      ${esc(getWizardStepLabel(step))}
-    </button>
-  `).join("");
+  const flow = ["checkin", "plan", "review"];
+  const currentIndex = flow.indexOf(CURRENT_STEP);
+
+  root.innerHTML = flow.map((stepId, idx) => {
+    const step = WIZARD_STEPS.find(x => x.id === stepId);
+    const label = getWizardStepLabel(step);
+
+    const stateClass =
+      idx < currentIndex ? "is-complete" :
+      idx === currentIndex ? "is-active" :
+      "is-upcoming";
+
+    return `
+      <button
+        type="button"
+        data-step="${esc(stepId)}"
+        class="${stateClass}"
+      >
+        ${esc(label)}
+      </button>
+    `;
+  }).join("");
 
   root.querySelectorAll("[data-step]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3295,10 +3321,6 @@ function renderWizardNav(){
     });
   });
 }
-
-
-
-
 
 function updateReviewHeadingForStep(stepId){
   const heading = document.getElementById("sessionReviewHeading");
@@ -3367,6 +3389,15 @@ function showWizardStep(stepId){
   updateReviewHeadingForStep(stepId);
   updateOverviewLayoutForStep(stepId);
   renderWizardNav();
+  requestAnimationFrame(() => {
+    const groups = getWizardSections();
+    const firstNode = (groups[stepId] || []).find(Boolean);
+    if (firstNode && typeof firstNode.scrollIntoView === "function"){
+      firstNode.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
 }
 
 function advanceWizardAfterCheckin(){
