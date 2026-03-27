@@ -372,6 +372,7 @@
   "plan.reason.manual_plan_selected_today": "Manual plan selected as today's training",
   "plan.reason.manual_override_today": "Manual plan overrides today's autoplan.",
   "plan.reason.generic_today_choice": "Today's plan was selected based on your current status.",
+  "plan.reason.cardio_autoplan_selected_today": "An easy run was selected based on your status, recovery, and recent cardio load.",
   "session_type.other": "Other",
   "workout.achieved_placeholder": "e.g. 8",
   "common.items_count": "{count} items",

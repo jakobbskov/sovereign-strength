@@ -384,6 +384,7 @@
   "plan.reason.manual_plan_selected_today": "Manuel plan valgt som dagens træning",
   "plan.reason.manual_override_today": "Manuel plan overstyrer dagens autoplan.",
   "plan.reason.generic_today_choice": "Planen er valgt ud fra din status i dag.",
+  "plan.reason.cardio_autoplan_selected_today": "Rolig løbetur valgt ud fra din status, restitution og den seneste cardio-belastning.",
   "session_type.other": "Andet",
   "workout.achieved_placeholder": "fx 8",
   "common.items_count": "{count} elementer",
