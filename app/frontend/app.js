@@ -2069,7 +2069,7 @@ function renderSessionResultSummary(summary){
     const paceSecPerKm = Number(summary.pace_sec_per_km || 0);
 
     const distanceText = distanceKm > 0 ? String(distanceKm) : "-";
-    const durationText = durationTotalSec > 0 ? formatSecondsAsDuration(durationTotalSec) : "-";
+    const durationText = durationTotalSec > 0 ? formatDurationFromSeconds(durationTotalSec) : "-";
     const paceText = paceSecPerKm > 0 ? formatPaceFromSeconds(paceSecPerKm) : "-";
 
     root.innerHTML = `

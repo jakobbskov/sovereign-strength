@@ -297,6 +297,7 @@
   "after_training.select_reps": "(Select reps)",
   "after_training.session_note_label": "Session note",
   "after_training.session_summary_title": "Session summary",
+  "after_training.save_session_result": "Save session",
   "after_training.short_note_placeholder_cardio": "e.g. easy run, good legs",
   "button.remove": "Remove",
   "button.start_workout": "Start workout",
