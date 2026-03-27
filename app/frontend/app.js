@@ -2486,7 +2486,7 @@ function renderTodayPlan(item){
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
-  const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText} · ${formatPlanReason(item.reason || "")}`;
+  const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText}`;
   const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
     ? tr("plan.light_movement_today")
     : "";
@@ -2517,10 +2517,6 @@ function renderTodayPlan(item){
     [
       baseSummary,
       recoveryDaySummary,
-      motorSummary,
-      decisionTraceSummary,
-      familiesSummary,
-      trainingDaySummary,
       trainingAllowedSummary,
       weeklyStatusSummary
     ]
@@ -2578,66 +2574,6 @@ function renderTodayPlan(item){
         ${
           entry.decision && typeof entry.decision === "object" && formatDecisionLabel(entry.decision)
             ? `<div class="small" style="margin-top:6px"><strong>${tr("common.decision_label")}:</strong> ${esc(formatDecisionLabel(entry.decision))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.explanation) && entry.decision.explanation.length
-            ? `<div class="small" style="margin-top:6px"><strong>${tr("common.why_label")}:</strong> ${esc(entry.decision.explanation.join(" · "))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.family_key
-            ? `<div class="small" style="margin-top:6px"><strong>${tr("common.family_label")}:</strong> ${esc(String(entry.decision.family_key))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.family_state
-            ? `<div class="small" style="margin-top:6px"><strong>Familietilstand:</strong> ${esc(formatFamilyState(entry.decision.family_state))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.family_signals) && entry.decision.family_signals.length
-            ? `<div class="small" style="margin-top:6px"><strong>Systemobservation:</strong> ${esc(entry.decision.family_signals.join(" · "))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.learned_recommendation
-            ? `<div class="small" style="margin-top:6px"><strong>Lært signal:</strong> ${esc(formatLearnedRecommendation(entry.decision.learned_recommendation))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.next_variation
-            ? `<div class="small" style="margin-top:6px"><strong>Næste variation:</strong> ${esc(formatVariationName(entry.decision.next_variation))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && Array.isArray(entry.decision.progression_channels) && entry.decision.progression_channels.length
-            ? `<div class="small" style="margin-top:6px"><strong>Kanaler:</strong> ${esc(formatProgressionChannels(entry.decision.progression_channels))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.top_hit_rate != null
-            ? `<div class="small" style="margin-top:6px"><strong>Top-hit-rate:</strong> ${esc(String(entry.decision.top_hit_rate))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.failure_signal != null
-            ? `<div class="small" style="margin-top:6px"><strong>Failure-signal:</strong> ${esc(String(entry.decision.failure_signal))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.dropoff_signal != null
-            ? `<div class="small" style="margin-top:6px"><strong>Dropoff:</strong> ${esc(String(entry.decision.dropoff_signal))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.consistency_signal != null
-            ? `<div class="small" style="margin-top:6px"><strong>Konsistens:</strong> ${esc(String(entry.decision.consistency_signal))}</div>`
-            : ""
-        }
-        ${
-          entry.decision && typeof entry.decision === "object" && entry.decision.confidence != null
-            ? `<div class="small" style="margin-top:6px"><strong>Sikkerhed:</strong> ${esc(String(entry.decision.confidence))}</div>`
             : ""
         }
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
