@@ -3488,7 +3488,8 @@ async function boot(){
 
 (async () => {
   try{
-    await ensureAuthOrRedirect();
+    const authUser = await ensureAuthOrRedirect();
+    if (!authUser) return;
     await boot();
   }catch(err){
     setText("status", "Fejl før opstart: " + (err?.message || String(err)));
