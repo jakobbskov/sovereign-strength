@@ -1583,14 +1583,16 @@ function formatProgressFlag(flag){
 }
 
 function formatProgressionDecision(value){
-  const x = String(value || "").trim();
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
   if (x === "increase") return tr("progression.increase_next_time");
   if (x === "increase_reps") return tr("progression.increase_next_time");
   if (x === "hold") return tr("progression.hold_today");
   if (x === "use_start_weight") return tr("progression.start_weight");
   if (x === "no_progression") return tr("progression.no_auto_progression");
   if (x === "manual_override") return tr("plan.motor.manual_override");
-  return x || "";
+  if (x === "autoplan_cardio_initial") return tr("decision.autoplan_cardio_initial");
+  return tr("decision.generic");
 }
 
 
@@ -1600,7 +1602,10 @@ function formatProgressionReason(value){
   if (!x) return "";
   if (x === "Manuel plan valgt som dagens træning") return tr("plan.reason.manual_plan_selected_today");
   if (x === "Manual plan selected as today's training") return tr("plan.reason.manual_plan_selected_today");
-  return x;
+  if (x === "autoplan selected a cardio session based on readiness, recovery, and recent cardio load") {
+    return tr("plan.reason.cardio_autoplan_selected_today");
+  }
+  return tr("plan.reason.generic_today_choice");
 }
 
 function formatPlanReason(value){
