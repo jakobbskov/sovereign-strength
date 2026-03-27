@@ -2131,6 +2131,14 @@ function formatPlanActionText(entry){
   const decision = String(entry?.progression_decision || "").trim();
   const load = String(entry?.target_load || "").trim();
   const nextTarget = String(entry?.next_target_reps || "").trim();
+  const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  const isCardio = exerciseId.startsWith("cardio_") || exerciseId === "cardio_session";
+
+  if (isCardio){
+    if (decision === "autoplan_cardio_initial") return tr("plan.action.cardio_easy_today");
+    if (decision === "hold") return tr("plan.action.cardio_hold_today");
+    return tr("plan.action.cardio_follow_today");
+  }
 
   if (decision === "increase"){
     return load ? tr("plan.action.use_load_today", { load }) : tr("plan.action.increase_load_today");
@@ -2577,8 +2585,8 @@ function renderTodayPlan(item){
         </div>
         <div style="margin-top:6px; font-weight:600">${esc(formatPlanActionText(entry))}</div>
         <div class="small">
-          ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
-          ${entry.target_reps ? ` · ${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
+          ${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
+          ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
         </div>
         ${entry.progression_reason ? `<div class="small" style="margin-top:6px">${tr("common.reason_label")}: ${esc(formatProgressionReason(entry.progression_reason))}</div>` : ""}
         ${
