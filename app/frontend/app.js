@@ -1546,14 +1546,15 @@ function formatExerciseName(exerciseId){
   const mapped = {
     restitution_walk: tr("exercise.recovery_walk"),
     mobility: tr("session_type.mobility"),
-    cardio_easy: "Rolig cardio",
-    cardio_intervals: "Intervaller",
-    cardio_session: "Cardio"
+    cardio_easy: tr("exercise.cardio_easy"),
+    cardio_intervals: tr("exercise.cardio_intervals"),
+    cardio_session: tr("session_type.cardio"),
+    cardio_base: tr("exercise.cardio_base")
   };
   if (mapped[exerciseId]) return mapped[exerciseId];
 
   const exerciseMap = new Map((STATE.exercises || []).map(x => [x.id, x.name]));
-  return exerciseMap.get(exerciseId) || exerciseId || tr("common.unknown_lower");
+  return exerciseMap.get(exerciseId) || tr("exercise.planned_session");
 }
 
 function formatInputKindLabel(value){
@@ -2346,7 +2347,11 @@ function formatProgressionChannels(channels){
 
 function formatDecisionLabel(decisionObj){
   if (!decisionObj || typeof decisionObj !== "object") return "";
-  return String(decisionObj.decision_label || "").trim();
+  const x = String(decisionObj.decision_label || "").trim();
+  if (!x) return "";
+  if (x === "autoplan_cardio_initial") return tr("decision.autoplan_cardio_initial");
+  if (x === "manual_override") return tr("plan.motor.manual_override");
+  return tr("decision.generic");
 }
 
 
