@@ -383,6 +383,7 @@
   "plan.action.follow_plan_today": "Følg planen i dag",
   "plan.reason.manual_plan_selected_today": "Manuel plan valgt som dagens træning",
   "plan.reason.manual_override_today": "Manuel plan overstyrer dagens autoplan.",
+  "plan.reason.generic_today_choice": "Planen er valgt ud fra din status i dag.",
   "session_type.other": "Andet",
   "workout.achieved_placeholder": "fx 8",
   "common.items_count": "{count} elementer",

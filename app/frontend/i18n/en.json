@@ -371,6 +371,7 @@
   "plan.action.follow_plan_today": "Follow the plan today",
   "plan.reason.manual_plan_selected_today": "Manual plan selected as today's training",
   "plan.reason.manual_override_today": "Manual plan overrides today's autoplan.",
+  "plan.reason.generic_today_choice": "Today's plan was selected based on your current status.",
   "session_type.other": "Other",
   "workout.achieved_placeholder": "e.g. 8",
   "common.items_count": "{count} items",

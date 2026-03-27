@@ -1607,7 +1607,7 @@ function formatPlanReason(value){
   if (!x) return "";
   if (x === "Manuel plan overstyrer dagens autoplan.") return tr("plan.reason.manual_override_today");
   if (x === "Manual plan overrides today's autoplan.") return tr("plan.reason.manual_override_today");
-  return x;
+  return tr("plan.reason.generic_today_choice");
 }
 
 function formatFatigueText(value){
