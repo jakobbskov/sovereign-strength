@@ -3524,6 +3524,10 @@ def build_session_summary(session_item):
 
     return {
         "session_type": session_item.get("session_type", ""),
+        "cardio_kind": session_item.get("cardio_kind", ""),
+        "distance_km": session_item.get("distance_km", None),
+        "duration_total_sec": session_item.get("duration_total_sec", None),
+        "pace_sec_per_km": session_item.get("pace_sec_per_km", None),
         "completed_exercises": completed_exercises,
         "total_exercises": total_exercises,
         "total_sets": total_sets,
