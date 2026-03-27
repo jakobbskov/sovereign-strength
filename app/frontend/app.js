@@ -2056,20 +2056,53 @@ function renderSessionResultSummary(summary){
   }
 
   const sessionType = summary.session_type ? formatSessionType(summary.session_type) : tr("common.unknown_title");
+  const sessionTypeKey = String(summary.session_type || "").trim().toLowerCase();
   const fatigue = String(summary.fatigue || "").trim() || tr("common.unknown_lower");
+  const fatigueText = formatFatigueText(fatigue);
+  const nextStepHint = String(summary.next_step_hint || "").trim();
+  const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
+
+  if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run"){
+    const cardioKind = String(summary.cardio_kind || "").trim();
+    const distanceKm = Number(summary.distance_km || 0);
+    const durationTotalSec = Number(summary.duration_total_sec || 0);
+    const paceSecPerKm = Number(summary.pace_sec_per_km || 0);
+
+    const distanceText = distanceKm > 0 ? String(distanceKm) : "-";
+    const durationText = durationTotalSec > 0 ? formatSecondsAsDuration(durationTotalSec) : "-";
+    const paceText = paceSecPerKm > 0 ? formatPaceFromSeconds(paceSecPerKm) : "-";
+
+    root.innerHTML = `
+      <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
+      <div class="small" style="margin-bottom:8px">
+        ${esc(sessionType)}${cardioKind ? ` · ${esc(formatCardioKindLabel(cardioKind))}` : ""} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}
+      </div>
+      <div class="small" style="margin-bottom:8px">
+        ${esc(tr("cardio.review.distance_label"))}: ${esc(distanceText)} km<br>
+        ${esc(tr("cardio.review.duration_label"))}: ${esc(durationText)}<br>
+        ${esc(tr("cardio.review.actual_pace_label"))}: ${esc(paceText)}
+      </div>
+      <div class="small" style="margin-bottom:8px">
+        ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
+      </div>
+      <div class="small">
+        ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
+      </div>
+    `;
+    return;
+  }
+
   const completedExercises = Number(summary.completed_exercises || 0);
   const totalExercises = Number(summary.total_exercises || 0);
   const totalSets = Number(summary.total_sets || 0);
   const totalReps = Number(summary.total_reps || 0);
   const estimatedVolume = Number(summary.estimated_volume || 0);
   const hitFailureCount = Number(summary.hit_failure_count || 0);
-  const nextStepHint = String(summary.next_step_hint || "").trim();
-  const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
   root.innerHTML = `
     <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
     <div class="small" style="margin-bottom:8px">
-      ${esc(sessionType)} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigue)}
+      ${esc(sessionType)} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}
     </div>
     <div class="small" style="margin-bottom:8px">
       ${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
