@@ -2132,8 +2132,8 @@ def api_health():
 
 @app.get("/api/auth/whoami")
 def auth_whoami():
-    auth_user = get_current_auth_user()
-    if not auth_user:
+    auth_status, auth_user = get_current_auth_user()
+    if auth_status != "ok" or not auth_user:
         return jsonify({
             "ok": False,
             "authenticated": False,
