@@ -1419,7 +1419,7 @@ async function handleEquipmentSettingsSubmit(ev){
     if (statusEl) statusEl.textContent = tr("status.equipment_saved");
   }catch(err){
     console.error("equipment save error", err);
-    if (statusEl) statusEl.textContent = "Fejl: " + (err?.message || String(err));
+    if (statusEl) statusEl.textContent = tr("status.error_prefix") + (err?.message || String(err));
   }
 }
 
@@ -1433,7 +1433,7 @@ async function handleResetCatalogFromSeed(){
     await refreshAll();
     if (statusEl) statusEl.textContent = tr("status.catalog_reset_done");
   }catch(err){
-    if (statusEl) statusEl.textContent = tr("status.error_prefix") + ": " + (err?.message || String(err));
+    if (statusEl) statusEl.textContent = tr("status.error_prefix") + (err?.message || String(err));
   }finally{
     if (btn) btn.disabled = false;
   }
@@ -2772,7 +2772,7 @@ async function refreshAll(){
   debug.user_settings = userSettingsApi && userSettingsApi.item ? userSettingsApi.item : {};
   debug.daily_ui_state = dailyUiState;
 
-  setText("status", "Frontend + API OK");
+  setText("status", tr("status.frontend_api_ok"));
   document.getElementById("status")?.classList.add("ok");
   setText("debug", JSON.stringify(debug, null, 2));
 
@@ -2796,7 +2796,7 @@ async function handleExerciseChange(){
       form.entry_load.value = "";
       STATE.lastAutoLoad = "";
     }
-    setText("progressionHint", "Intet load-forslag endnu.");
+    setText("progressionHint", tr("workout.no_load_suggestion"));
     return;
   }
 
@@ -2811,7 +2811,7 @@ async function handleExerciseChange(){
 
       const data = await apiGetProgression(exerciseId);
       if (!data || data.next_load == null){
-        setText("progressionHint", "Ingen progression tilgængelig for denne øvelse.");
+        setText("progressionHint", tr("workout.no_progression_available"));
         return;
       }
 
@@ -2862,7 +2862,7 @@ async function handleExerciseChange(){
     }
   }catch(err){
     console.error(err);
-    setText("progressionHint", "Kunne ikke hente progression.");
+    setText("progressionHint", tr("workout.progression_fetch_failed"));
   }
 }
 
@@ -2878,7 +2878,7 @@ function handleAddEntry(){
   const notes = form.entry_notes.value.trim();
 
   if (!exercise_id){
-    setText("entryStatus", "Vælg en øvelse først.");
+    setText("entryStatus", tr("workout.select_exercise_first"));
     document.getElementById("entryStatus")?.classList.add("warn");
     return;
   }
@@ -2909,14 +2909,14 @@ async function handleLoadProgramDay(){
   const statusEl = document.getElementById("programLoadStatus");
 
   if (!program){
-    setText("programLoadStatus", "Vælg et program først.");
+    setText("programLoadStatus", tr("workout.select_program_first"));
     statusEl?.classList.add("warn");
     return;
   }
 
   const idx = Number(daySelect?.value);
   if (!Number.isInteger(idx) || idx < 0 || !Array.isArray(program.days) || !program.days[idx]){
-    setText("programLoadStatus", "Vælg en dag fra programmet.");
+    setText("programLoadStatus", tr("workout.select_program_day_first"));
     statusEl?.classList.add("warn");
     return;
   }
@@ -2949,7 +2949,7 @@ async function handleLoadProgramDay(){
   const form = document.getElementById("workoutForm");
   if (form){
     resetEntryInputs(form);
-    setText("progressionHint", "Intet load-forslag endnu.");
+    setText("progressionHint", tr("workout.no_load_suggestion"));
   }
 
   statusEl?.classList.remove("warn");
@@ -2975,10 +2975,10 @@ async function handleWorkoutSubmit(ev){
   };
 
   try{
-    setText("formStatus", "Gemmer...");
+    setText("formStatus", tr("status.saving_generic"));
     statusEl?.classList.remove("warn");
     await apiPost("/api/workouts", payload);
-    setText("formStatus", "Workout gemt.");
+    setText("formStatus", tr("workout.saved"));
     statusEl?.classList.add("ok");
     STATE.pendingEntries = [];
     form.reset();
@@ -2987,11 +2987,11 @@ async function handleWorkoutSubmit(ev){
     form.type.value = "styrke";
     refreshProgramDaySelect();
     renderPendingEntries();
-    setText("programLoadStatus", "Intet program indlæst endnu.");
+    setText("programLoadStatus", tr("workout.no_program_loaded"));
     await refreshAll();
     advanceWizardAfterCheckin();
   }catch(err){
-    setText("formStatus", "Fejl: " + (err?.message || String(err)));
+    setText("formStatus", tr("status.error_prefix") + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
     statusEl?.classList.add("warn");
   }
@@ -3112,18 +3112,18 @@ session_type:
   };
 
   try{
-    setText("sessionResultStatus", "Gemmer session-resultat...");
+    setText("sessionResultStatus", tr("review.saving_session_result"));
     statusEl?.classList.remove("warn");
     const res = await apiPost("/api/session-result", payload);
     renderSessionResultSummary(res?.summary || null);
-    setText("sessionResultStatus", "Session-resultat gemt.");
+    setText("sessionResultStatus", tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
     form.reset();
     form.session_completed.value = "true";
     await refreshAll();
     showWizardStep("review");
     renderSessionResultSummary(res?.summary || null);
-    setText("sessionResultStatus", "Session-resultat gemt.");
+    setText("sessionResultStatus", tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
     form.querySelectorAll("input, select, textarea").forEach(el => {
       el.disabled = true;
@@ -3131,12 +3131,12 @@ session_type:
     const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn){
       submitBtn.disabled = true;
-      submitBtn.textContent = "Session gemt";
+      submitBtn.textContent = tr("review.session_saved_button");
       submitBtn.style.display = "none";
     }
     form.classList.add("wizard-step-hidden");
   }catch(err){
-    setText("sessionResultStatus", "Fejl: " + (err?.message || String(err)));
+    setText("sessionResultStatus", tr("status.error_prefix") + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
     statusEl?.classList.add("warn");
   }
@@ -3466,7 +3466,7 @@ async function boot(){
     await rerenderUiAfterLanguageChange();
     initSystemInfoToggle();
   }catch(err){
-    setText("status", "Fejl: " + (err?.message || String(err)));
+    setText("status", tr("status.error_prefix") + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
   }
 }
@@ -3477,7 +3477,7 @@ async function boot(){
     if (!authUser) return;
     await boot();
   }catch(err){
-    setText("status", "Fejl før opstart: " + (err?.message || String(err)));
+    setText("status", tr("status.startup_error_prefix") + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
   }
 })();
