@@ -1482,9 +1482,7 @@ function updateOverviewLayoutForStep(stepId){
   cards.forEach(card => {
     let keepVisible =
       card.id === "forecastHero" ||
-      card.id === "overviewStatusCard" ||
-      card.id === "profileEquipmentCard" ||
-      card.id === "weekPlanCard";
+      card.id === "overviewStatusCard";
 
     if (stepId === "overview" && dailyUiState === "needs_checkin"){
       keepVisible = card.id === "forecastHero";
