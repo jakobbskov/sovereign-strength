@@ -64,7 +64,7 @@ async function initLanguageToggle(){
         updateLanguageToggleLabel();
         await rerenderUiAfterLanguageChange();
       }catch(err){
-        setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
+        setText("status", tr("status.language_switch_error_prefix") + (err?.message || String(err)));
       }
     });
     return;
@@ -95,7 +95,7 @@ async function initLanguageToggle(){
         updateLanguageToggleLabel();
         await rerenderUiAfterLanguageChange();
       }catch(err){
-        setText("status", "Fejl ved sprogskift: " + (err?.message || String(err)));
+        setText("status", tr("status.language_switch_error_prefix") + (err?.message || String(err)));
       }
     });
   });
@@ -1499,7 +1499,7 @@ function updateOverviewLayoutForStep(stepId){
 function renderReadiness(item){
   if (!item){
     setText("readinessScore", "-");
-    setText("readinessLabel", "Ingen data endnu");
+    setText("readinessLabel", tr("common.no_data_yet"));
     setText("readinessSuggestion", "");
     setText("readinessAction", "");
     return;
@@ -2372,7 +2372,7 @@ function renderExerciseLibrary(){
 
   const items = Array.isArray(STATE.exercises) ? STATE.exercises.slice() : [];
   if (!items.length){
-    root.innerHTML = `<div class="small">Ingen øvelser indlæst endnu.</div>`;
+    root.innerHTML = `<div class="small">${esc(tr("exercise.none_loaded_yet"))}</div>`;
     return;
   }
 
@@ -2616,7 +2616,7 @@ function renderPrograms(programs, exercises){
   const exerciseMap = new Map((Array.isArray(exercises) ? exercises : []).map(x => [x.id, x]));
 
   if (!Array.isArray(programs) || programs.length === 0){
-    root.innerHTML = `<div class="small">Ingen programmer endnu.</div>`;
+    root.innerHTML = `<div class="small">${esc(tr("program.none_yet"))}</div>`;
     setText("programMeta", tr("common.items_count", { count: 0 }));
     return;
   }
@@ -3042,7 +3042,7 @@ async function handleSessionResultSubmit(ev){
   const plan = STATE.currentTodayPlan;
 
   if (!plan){
-    setText("sessionResultStatus", "Ingen dagens plan at gemme endnu.");
+    setText("sessionResultStatus", tr("session_result.no_plan_yet"));
     statusEl?.classList.remove("ok");
     statusEl?.classList.add("warn");
     return;
