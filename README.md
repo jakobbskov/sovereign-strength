@@ -1,6 +1,6 @@
 # SovereignStrength
 
-SovereignStrength is a local-first, deterministic training system for strength work.
+SovereignStrength is a local-first, deterministic training system for strength work and simple cardio-aware planning.
 
 It is designed to help a single user plan training, log sessions, and receive explainable feedback without relying on external platforms, cloud AI, or opaque recommendation systems.
 
@@ -18,31 +18,34 @@ SovereignStrength is built for the opposite:
 
 ## Training paradigm
 
-SovereignStrength is not built around gamified fitness tracking, fixed motivational loops, or opaque “smart coaching”.
+SovereignStrength is not built around gamified fitness tracking, fixed motivational loops, or opaque "smart coaching".
 
 Its training logic is closest to:
 
 - autoregulated strength training
 - fatigue- and readiness-aware session adjustment
 - conservative exercise-level progression
+- movement-family-aware planning
 - system-oriented load management
 
 In practical terms, this means the system asks:
 
 - what is realistic today?
 - what does recent training history suggest?
-- should the user progress, hold, or reduce slightly?
+- should the user progress, hold, simplify, or shift variation?
 - what can actually be loaded with the available equipment?
+- is a related movement family already showing fatigue signals?
 
 The goal is not maximal novelty or entertainment.
 
 The goal is sustainable training guidance that remains:
+
 - explainable
 - repeatable
 - calm
 - realistic
 
-Philosophically, the system has more in common with disciplined load management and regulated adaptation than with conventional fitness-app design.
+Philosophically, the system has more in common with regulated adaptation and practical load management than with conventional fitness-app design.
 
 It is closer to a decision-support layer for training than to a workout-content platform.
 
@@ -54,9 +57,13 @@ The currently documented system includes:
 - readiness and fatigue-aware decision logic
 - progression logic per exercise
 - equipment-aware load recommendations
+- movement-pattern-aware exercise metadata
+- family-based fatigue interpretation
+- controlled variation and substitution logic
 - forecast output
 - authenticated access
 - workout logging
+- review-oriented feedback
 
 The documented user flow is:
 
@@ -68,13 +75,14 @@ The documented user flow is:
 Data is stored locally in JSON files.
 
 ### 2. Explainable logic
-The system should always be able to explain why it recommends a load, a hold, or a lighter session.
+The system should always be able to explain why it recommends a load, a hold, a lighter session, or a changed variation.
 
 ### 3. Deterministic behavior
 The same inputs should produce the same outputs.
 
 ### 4. Low complexity
 The project aims to stay readable and maintainable:
+
 - HTML
 - CSS
 - Vanilla JavaScript
@@ -91,6 +99,7 @@ Static PWA-style frontend served from:
 `/var/www/sovereign-strength/`
 
 Primary files:
+
 - `index.html`
 - `app.js`
 - `styles.css`
@@ -104,6 +113,8 @@ Python Flask API served via Gunicorn and systemd from:
 JSON-based local storage in:
 
 `/var/www/sovereign-strength/data/`
+
+Seed exercise definitions in the repository include movement metadata used by the training engine, including movement patterns, categories, progression modes, and input configuration.
 
 ## Documentation
 
@@ -125,12 +136,12 @@ Not before.
 
 ## Repository status
 
-This repository currently documents the system architecture and intended direction.
-It should gradually become the authoritative source for:
+This repository should be the authoritative source for:
 
 - current implementation
 - deployment setup
 - data contracts
+- operating logic
 - release history
 
 ## License
