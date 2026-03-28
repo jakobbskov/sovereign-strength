@@ -154,14 +154,29 @@
       gap:8px;
       flex-wrap:wrap;
       margin:18px 0 8px;
+      align-items:center;
     }
     .wizard-nav button{
       width:auto;
       padding:8px 12px;
       border-radius:999px;
+      opacity:.72;
+      transition:opacity .15s ease, transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .wizard-nav button.is-upcoming{
+      opacity:.58;
+      border-color:#2c2c2c;
+      background:transparent;
+    }
+    .wizard-nav button.is-complete{
+      opacity:.82;
+      border-color:#2c2c2c;
+      background:#161616;
     }
     .wizard-nav button.is-active{
+      opacity:1;
       outline:2px solid var(--accent);
+      transform:translateY(-1px);
     }
     .wizard-step-hidden{
       display:none !important;
