@@ -1688,8 +1688,14 @@ function formatTarget(value){
   const v = String(value || "").trim();
   if (!v) return "";
 
-  if (v.endsWith("sek")){
-    const num = v.replace(/\s*sek\s*$/, "").trim();
+  const mappedTargets = {
+    "30 min roligt løb i snakketempo": tr("cardio.target.base_30_talk"),
+    "30 min easy run at conversational pace": tr("cardio.target.base_30_talk")
+  };
+  if (mappedTargets[v]) return mappedTargets[v];
+
+  if (v.endsWith("sek") || v.endsWith("sec")){
+    const num = v.replace(/\s*(sek|sec)\s*$/, "").trim();
     return `${num} ${tr("unit.seconds")}`;
   }
 
@@ -2011,7 +2017,7 @@ function renderSessionReview(item){
         <li>
           <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
           <div class="small" style="margin-bottom:10px">
-            ${tr("exercise.target_colon")} ${entry.target_reps ? esc(entry.target_reps) : tr("session_type.cardio")}
+            ${tr("exercise.target_colon")} ${entry.target_reps ? esc(formatTarget(entry.target_reps)) : tr("session_type.cardio")}
           </div>
           <div class="small" style="margin-bottom:10px">
             ${tr("common.type_label")}: ${tr("session_type.run")}
@@ -2032,7 +2038,7 @@ function renderSessionReview(item){
       <li>
         <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
         <div class="small" style="margin-bottom:10px">
-          ${tr("exercise.target_colon")} ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}${entry.target_reps ? ` · ${esc(entry.target_reps)}` : ""}${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
+          ${tr("exercise.target_colon")} ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}${entry.target_reps ? ` · ${esc(formatTarget(entry.target_reps))}` : ""}${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
         </div>
 
         <div class="small" style="margin-bottom:10px">
@@ -2213,6 +2219,27 @@ function formatPlanProgressionExtra(entry){
 }
 
 
+
+
+function formatRecoveryExplanationBit(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
+
+  const map = {
+    "god søvn": tr("recovery.explanation.good_sleep"),
+    "lav ømhed": tr("recovery.explanation.low_soreness"),
+    "belastning er lav": tr("recovery.explanation.load_is_low"),
+    "belastning er i spike": tr("recovery.explanation.load_is_spike"),
+    "du har haft lidt afstand til sidste styrkepas": tr("recovery.explanation.distance_since_last_strength"),
+    "good sleep": tr("recovery.explanation.good_sleep"),
+    "low soreness": tr("recovery.explanation.low_soreness"),
+    "load is low": tr("recovery.explanation.load_is_low"),
+    "load is in spike": tr("recovery.explanation.load_is_spike"),
+    "some distance since last strength session": tr("recovery.explanation.distance_since_last_strength")
+  };
+
+  return map[x] || value;
+}
 
 function formatRecoveryState(value){
   const v = String(value || "").trim();
@@ -2609,7 +2636,7 @@ function renderTodayPlan(item){
       <div style="margin-top:6px; font-size:1.35rem; font-weight:700">${esc(String(recovery.recovery_score ?? "-"))}</div>
       <div class="small" style="margin-top:6px">${tr("common.status_label")}: ${esc(formatRecoveryState(recovery.recovery_state || ""))}</div>
       <div class="small" style="margin-top:6px">${recovery.strain_flag ? tr("recovery.strain_flag_active") : tr("recovery.strain_flag_inactive")}</div>
-      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px">${tr("common.why_label")}: ${esc(recovery.explanation.join(" · "))}</div>` : ""}
+      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px">${tr("common.why_label")}: ${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
     </li>
   ` : "";
 
