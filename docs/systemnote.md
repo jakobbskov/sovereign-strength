@@ -357,3 +357,23 @@ The current model is deliberately narrow:
 
 This means deload is treated as a response to persistent instability, not as a generic reaction to one bad session or temporary fatigue alone.
 
+
+## Progression phase note
+
+The live progression engine already uses an explicit phase model over recent exercise history.
+
+Current live boundaries:
+
+- up to 6 relevant sessions as context
+- 3-session trend window for recent decision signals
+- `recalibration` after a pause longer than 21 days
+- `calibration` when relevant history is still below 3 sessions
+- `trend` when stable recent context exists
+
+Progression requires:
+- candidate-positive latest session
+- repeated success
+- no blocking signal
+
+This should be maintained as one coherent progression model together with deload logic, not as several loosely connected heuristics.
+
