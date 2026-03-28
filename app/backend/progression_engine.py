@@ -416,15 +416,24 @@ def summarize_strength_trend(relevant_history, window_size=3):
     successful_sessions = sum(1 for x in session_summaries if x["successful_session"])
     failure_sessions = sum(1 for x in session_summaries if x["hit_failure"])
     load_drop_sessions = sum(1 for x in session_summaries if x["load_drop_detected"])
+    negative_signal_sessions = failure_sessions + load_drop_sessions
+
+    latest_summary = session_summaries[0] if session_summaries else {}
+    latest_blocking_signal = bool(
+        latest_summary.get("hit_failure", False) or
+        latest_summary.get("load_drop_detected", False)
+    )
 
     repeated_success = successful_sessions >= 2
-    blocking_signal_present = failure_sessions > 0 or load_drop_sessions > 0
+    blocking_signal_present = latest_blocking_signal or negative_signal_sessions >= 2
 
     return {
         "window_size": len(window),
         "successful_sessions": successful_sessions,
         "failure_sessions": failure_sessions,
         "load_drop_sessions": load_drop_sessions,
+        "negative_signal_sessions": negative_signal_sessions,
+        "latest_blocking_signal": latest_blocking_signal,
         "repeated_success": repeated_success,
         "blocking_signal_present": blocking_signal_present,
         "session_summaries": session_summaries,
