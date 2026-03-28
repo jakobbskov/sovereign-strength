@@ -16,6 +16,36 @@ SovereignStrength is built for the opposite:
 - low technical complexity
 - repairable architecture
 
+## Training paradigm
+
+SovereignStrength is not built around gamified fitness tracking, fixed motivational loops, or opaque “smart coaching”.
+
+Its training logic is closest to:
+
+- autoregulated strength training
+- fatigue- and readiness-aware session adjustment
+- conservative exercise-level progression
+- system-oriented load management
+
+In practical terms, this means the system asks:
+
+- what is realistic today?
+- what does recent training history suggest?
+- should the user progress, hold, or reduce slightly?
+- what can actually be loaded with the available equipment?
+
+The goal is not maximal novelty or entertainment.
+
+The goal is sustainable training guidance that remains:
+- explainable
+- repeatable
+- calm
+- realistic
+
+Philosophically, the system has more in common with disciplined load management and regulated adaptation than with conventional fitness-app design.
+
+It is closer to a decision-support layer for training than to a workout-content platform.
+
 ## Current documented state
 
 The currently documented system includes:
