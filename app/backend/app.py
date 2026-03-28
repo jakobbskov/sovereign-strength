@@ -373,6 +373,72 @@ def _parse_optional_int(value, default=None):
     except Exception:
         return default
 
+def _parse_local_signals(value):
+    if value in (None, "", []):
+        return [], None, None
+    if not isinstance(value, list):
+        return None, make_error_payload(
+            "invalid_local_signals",
+            "local_signals skal være en liste",
+            field="local_signals",
+        ), 400
+
+    allowed_regions = {
+        "ankle_calf",
+        "knee",
+        "hip",
+        "low_back",
+        "shoulder",
+        "elbow",
+        "wrist",
+    }
+    allowed_signals = {"caution", "irritated"}
+
+    parsed = []
+    seen = set()
+
+    for idx, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, make_error_payload(
+                "invalid_local_signal_entry",
+                "hver local_signal skal være et objekt",
+                field="local_signals",
+                index=idx,
+            ), 400
+
+        region = str(item.get("region", "")).strip().lower()
+        signal = str(item.get("signal", "")).strip().lower()
+
+        if region not in allowed_regions:
+            return None, make_error_payload(
+                "invalid_local_signal_region",
+                "ukendt region i local_signals",
+                field="local_signals",
+                index=idx,
+                region=region,
+            ), 400
+
+        if signal not in allowed_signals:
+            return None, make_error_payload(
+                "invalid_local_signal_value",
+                "ukendt signal i local_signals",
+                field="local_signals",
+                index=idx,
+                signal=signal,
+            ), 400
+
+        key = region
+        if key in seen:
+            continue
+        seen.add(key)
+
+        parsed.append({
+            "region": region,
+            "signal": signal,
+        })
+
+    return parsed, None, None
+
 def create_workout(user_id, payload):
     if not isinstance(payload, dict):
         return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
@@ -540,6 +606,7 @@ def create_checkin(user_id, payload):
     date = str(payload.get("date", "")).strip()
     notes = str(payload.get("notes", "")).strip()
     time_budget_min = payload.get("time_budget_min", 0)
+    local_signals = payload.get("local_signals", [])
 
     if not date:
         return None, make_error_payload("missing_date", "date mangler", field="date"), 400
@@ -560,6 +627,10 @@ def create_checkin(user_id, payload):
     if err:
         return None, err, status
 
+    local_signals, err, status = _parse_local_signals(local_signals)
+    if err:
+        return None, err, status
+
     readiness_score = compute_readiness_score(
         sleep_score=sleep_score,
         energy_score=energy_score,
@@ -576,6 +647,7 @@ def create_checkin(user_id, payload):
         "time_budget_min": time_budget_min,
         "readiness_score": readiness_score,
         "notes": notes,
+        "local_signals": local_signals,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     item, count = append_user_item("checkins", item)

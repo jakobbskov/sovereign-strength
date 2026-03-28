@@ -2969,6 +2969,29 @@ function handleClearEntries(){
   renderPendingEntries();
 }
 
+function collectLocalCheckinSignals(form){
+  if (!form) return [];
+
+  const regionMap = [
+    "knee",
+    "low_back",
+    "shoulder",
+    "elbow",
+    "hip",
+    "ankle_calf",
+    "wrist",
+  ];
+
+  const signals = [];
+  for (const region of regionMap){
+    const raw = form[`local_signal_${region}`]?.value;
+    const signal = String(raw || "").trim().toLowerCase();
+    if (!signal) continue;
+    signals.push({ region, signal });
+  }
+  return signals;
+}
+
 async function handleLoadProgramDay(){
   const program = getSelectedProgram();
   const daySelect = document.getElementById("program_day_idx");
@@ -3075,7 +3098,8 @@ async function handleRecoverySubmit(ev){
     energy_score: Number(form.energy_score.value),
     soreness_score: Number(form.soreness_score.value),
     time_budget_min: Number(form.time_budget_min.value || 45),
-    notes: form.recovery_notes.value.trim()
+    notes: form.recovery_notes.value.trim(),
+    local_signals: collectLocalCheckinSignals(form)
   };
 
   try{
@@ -3090,6 +3114,9 @@ async function handleRecoverySubmit(ev){
     form.energy_score.value = "3";
     form.soreness_score.value = "2";
     form.time_budget_min.value = "45";
+    ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
+      if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
+    });
     await refreshAll();
     advanceWizardAfterCheckin();
   }catch(err){
