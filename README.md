@@ -122,6 +122,7 @@ Seed exercise definitions in the repository include movement metadata used by th
 - [Data model](docs/data-model.md)
 - [Deployment](docs/deployment.md)
 - [JSON storage integrity rules](docs/json-storage-integrity.md)
+- [Local protection state contract](docs/local-state-contract.md)
 - [Changelog](CHANGELOG.md)
 
 ## Planned 1.0 target
