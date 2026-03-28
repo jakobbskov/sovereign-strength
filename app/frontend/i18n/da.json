@@ -453,5 +453,13 @@
   "exercise.none_yet": "Ingen øvelser endnu.",
   "recovery.none_yet": "Ingen recovery-logs endnu.",
   "overview.readiness_label": "Parathed",
-  "plan.none": "Ingen plan"
+  "plan.none": "Ingen plan",
+  "forecast.intervals_with_target": "Intervaller · {value}",
+  "forecast.intervals_default": "Intervaller · kort, hårdt pas med pauser",
+  "forecast.tempo_with_target": "Tempopas · {value}",
+  "forecast.tempo_default": "Tempopas · kontrolleret hård løbebelastning",
+  "forecast.base_with_target": "Basepas · {value}",
+  "forecast.base_default": "Basepas · roligt løb i snakketempo",
+  "forecast.run_with_target": "Løb · {value}",
+  "forecast.run_default": "Løb · planlagt cardiopas"
 }

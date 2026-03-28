@@ -968,22 +968,22 @@ function buildForecastLeadText(planItem){
     }
     if (firstExercise.includes("interval")){
       return targetReps
-        ? `Intervaller · ${targetReps}`
-        : "Intervaller · kort, hårdt pas med pauser";
+        ? tr("forecast.intervals_with_target", { value: targetReps })
+        : tr("forecast.intervals_default");
     }
     if (firstExercise.includes("tempo")){
       return targetReps
-        ? `Tempopas · ${targetReps}`
-        : "Tempopas · kontrolleret hård løbebelastning";
+        ? tr("forecast.tempo_with_target", { value: targetReps })
+        : tr("forecast.tempo_default");
     }
     if (firstExercise.includes("base")){
       return targetReps
-        ? `Basepas · ${targetReps}`
-        : "Basepas · roligt løb i snakketempo";
+        ? tr("forecast.base_with_target", { value: targetReps })
+        : tr("forecast.base_default");
     }
     return targetReps
-      ? `Løb · ${targetReps}`
-      : "Løb · planlagt cardiopas";
+        ? tr("forecast.run_with_target", { value: targetReps })
+        : tr("forecast.run_default");
   }
 
   if (sessionType === "restitution"){
