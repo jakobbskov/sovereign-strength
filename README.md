@@ -147,3 +147,16 @@ This repository should be the authoritative source for:
 ## License
 
 See [LICENSE](LICENSE).
+
+## UI text and i18n guardrails
+
+Visible frontend text should resolve through the i18n layer wherever practical.
+
+Guardrails:
+- avoid shipping hardcoded user-facing strings in render paths when a translation key should exist
+- avoid mixed-language UI output in the same screen
+- review suspicious `innerHTML`, `setText(...)`, and `textContent` changes carefully
+- run `python3 scripts/audit_i18n_guardrails.py` before merging frontend text/rendering changes
+
+This is a lightweight guardrail, not a heavy framework rule.
+
