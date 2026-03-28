@@ -329,3 +329,18 @@ This document should stay aligned with:
 If implementation changes the logic materially, this file should be updated in the same commit.
 
 Do not let the system note become historical fiction with markdown headings.
+
+
+## Cardio boundary note
+
+Cardio is currently chosen through the daily planning flow rather than through the strength progression engine.
+
+In practice this means:
+
+- recent cardio load is evaluated separately
+- cardio kind is selected from planning context
+- restitution can override cardio
+- strength progression remains exercise-specific and separate
+
+This boundary should be preserved unless a later change explicitly redesigns the planning architecture.
+

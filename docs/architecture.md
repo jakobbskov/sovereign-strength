@@ -133,3 +133,57 @@ The currently documented system does not yet claim to fully support:
 - full cardio support
 
 Those belong to later iterations, not to the current documented core.
+
+
+## Cardio integration boundaries
+
+Cardio is integrated at the daily planning layer, not inside the strength progression engine.
+
+The active cardio entry points are:
+
+- `compute_cardio_load_metrics(...)`
+- `choose_cardio_session(...)`
+- `build_autoplan_cardio(...)`
+- `build_cardio_plan(...)`
+
+These helpers use top-level planning context such as:
+
+- readiness
+- fatigue
+- recovery state
+- timing / time budget
+- training-day context
+- recent cardio load
+
+### What cardio is
+
+Cardio is a planning outcome.
+It is selected by the daily planner as a session recommendation.
+
+### What cardio is not
+
+Cardio is not a strength progression mode.
+
+It does not rely on lift-specific progression internals such as:
+
+- recent successful load progression for a given strength exercise
+- progression phases
+- exercise-level strength progression history
+
+### Relationship to restitution
+
+Restitution can override cardio.
+
+This happens when recovery or fatigue logic determines that the safer daily recommendation is restitution instead of another cardio or strength session.
+
+### Relationship to strength planning
+
+Strength and cardio are both outputs of the daily planning layer, but they diverge after session selection:
+
+- strength can continue into exercise-specific progression logic
+- cardio remains a planning-layer recommendation based on top-level session signals and recent cardio load
+
+### Maintenance rule
+
+When refining cardio behavior, prefer changing planning-layer logic and explanation output before expanding strength progression internals.
+
