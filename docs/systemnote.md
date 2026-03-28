@@ -344,3 +344,16 @@ In practice this means:
 
 This boundary should be preserved unless a later change explicitly redesigns the planning architecture.
 
+
+## Deload trigger note
+
+Deload logic already exists in the live progression engine.
+
+The current model is deliberately narrow:
+
+- only evaluated in `trend` phase
+- triggered by repeated failures, repeated load drops, or instability combined with fatigue
+- scoped at exercise level
+
+This means deload is treated as a response to persistent instability, not as a generic reaction to one bad session or temporary fatigue alone.
+

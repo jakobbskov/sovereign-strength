@@ -187,3 +187,89 @@ Strength and cardio are both outputs of the daily planning layer, but they diver
 
 When refining cardio behavior, prefer changing planning-layer logic and explanation output before expanding strength progression internals.
 
+
+## Deload trigger boundaries
+
+The deload model is part of the progression engine and is only evaluated in the explicit trend phase.
+
+Current live behavior is grounded in three layers:
+
+- progression phase detection
+- recent trend summary over relevant sessions
+- a focused deload trigger check
+
+### Phase boundary
+
+Deload is only evaluated when the progression phase is `trend`.
+
+This means deload is **not** triggered during:
+
+- `recalibration`
+- `calibration`
+
+That boundary matters because the engine should not interpret sparse or recently reset history as stable enough to justify deload logic.
+
+### Trend inputs used for deload
+
+The current deload trigger evaluation uses:
+
+- repeated failure sessions
+- repeated load-drop sessions
+- combined instability plus fatigue
+
+The active trend summary exposes:
+
+- `failure_sessions`
+- `load_drop_sessions`
+- `negative_signal_sessions`
+- whether the latest session also showed a blocking signal
+
+### Current trigger rules
+
+In the live progression engine, deload is recommended only in trend phase and only when one of these conditions is true:
+
+1. `failure_sessions >= 2`
+2. `load_drop_sessions >= 2`
+3. `(failure_sessions + load_drop_sessions) >= 2` **and** `fatigue_score >= 2`
+
+Current deload scope is exercise-level.
+
+### What does not trigger deload by itself
+
+The current model does **not** recommend deload just because:
+
+- fatigue is elevated by itself
+- one isolated failure occurred
+- one isolated load drop occurred
+- the user is still in calibration or recalibration
+
+### Relationship to fatigue
+
+Fatigue is not an independent deload engine.
+It strengthens the case for deload when instability is already present.
+
+In other words:
+fatigue contributes to the trigger model, but does not replace trend-based evidence.
+
+### Relationship to progression behavior
+
+Deload logic sits alongside progression gating, not instead of it.
+
+The progression engine already uses:
+- repeated success requirements
+- blocking signals
+- phase-aware progression constraints
+
+Deload is the stronger protective response when trend instability becomes persistent enough.
+
+### Maintenance rule
+
+Refine deload thresholds inside the progression-engine vocabulary:
+- phase
+- repeated failure
+- repeated load drop
+- instability
+- fatigue
+
+Do not turn deload into a detached secondary framework.
+
