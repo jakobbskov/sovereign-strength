@@ -461,5 +461,10 @@
   "forecast.base_with_target": "Basepas · {value}",
   "forecast.base_default": "Basepas · roligt løb i snakketempo",
   "forecast.run_with_target": "Løb · {value}",
-  "forecast.run_default": "Løb · planlagt cardiopas"
+  "forecast.run_default": "Løb · planlagt cardiopas",
+  "status.language_switch_error_prefix": "Fejl ved sprogskift: ",
+  "common.no_data_yet": "Ingen data endnu",
+  "exercise.none_loaded_yet": "Ingen øvelser indlæst endnu.",
+  "program.none_yet": "Ingen programmer endnu.",
+  "session_result.no_plan_yet": "Ingen dagens plan at gemme endnu."
 }

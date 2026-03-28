@@ -449,5 +449,10 @@
   "forecast.base_with_target": "Base session · {value}",
   "forecast.base_default": "Base session · easy conversational running",
   "forecast.run_with_target": "Run · {value}",
-  "forecast.run_default": "Run · planned cardio session"
+  "forecast.run_default": "Run · planned cardio session",
+  "status.language_switch_error_prefix": "Language switch error: ",
+  "common.no_data_yet": "No data yet",
+  "exercise.none_loaded_yet": "No exercises loaded yet.",
+  "program.none_yet": "No programs yet.",
+  "session_result.no_plan_yet": "No current plan to save yet."
 }
