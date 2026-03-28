@@ -1231,7 +1231,7 @@ function renderProfileEquipmentCard(){
 
   if (trainingDaysLineEl){
     const dayText = selectedDays.length
-      ? `Mulige træningsdage: ${selectedDays.join(", ")}`
+      ? tr("profile.training_days_value", { value: selectedDays.join(", ") })
       : tr("checkin.possible_days_none");
     trainingDaysLineEl.textContent = `${dayText} · ${tr("profile.week_goal_value", { count: weeklyTargetSessions })}`;
   }
@@ -1411,12 +1411,12 @@ async function handleEquipmentSettingsSubmit(ev){
   };
 
   try{
-    if (statusEl) statusEl.textContent = "Gemmer udstyr...";
+    if (statusEl) statusEl.textContent = tr("status.saving_equipment");
     const res = await apiPost("/api/user-settings", payload);
     STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
     await refreshAll();
     setEquipmentEditorOpen(false);
-    if (statusEl) statusEl.textContent = "Udstyr gemt.";
+    if (statusEl) statusEl.textContent = tr("status.equipment_saved");
   }catch(err){
     console.error("equipment save error", err);
     if (statusEl) statusEl.textContent = "Fejl: " + (err?.message || String(err));
@@ -1453,7 +1453,7 @@ function bindEquipmentEditor(){
   if (saveBtn){
     saveBtn.onclick = (ev) => {
       ev.preventDefault();
-      if (statusEl) statusEl.textContent = "DEBUG: klik på Gem udstyr";
+      if (statusEl) statusEl.textContent = tr("status.ready_to_save_equipment");
       if (form?.requestSubmit){
         form.requestSubmit();
       } else if (form){
@@ -1558,7 +1558,7 @@ function formatExerciseName(exerciseId){
 function formatInputKindLabel(value){
   const x = String(value || "").trim().toLowerCase();
   if (x === "bodyweight_reps") return tr("input_kind.bodyweight_reps");
-  if (x === "time" || x === "cardio_time") return "Tid";
+  if (x === "time" || x === "cardio_time") return tr("input_kind.time");
   if (x === "load_reps") return tr("input_kind.load_reps");
   return x || tr("common.unknown_lower");
 }
@@ -1786,7 +1786,7 @@ function buildReviewSetFields(entry, idx, setIdx){
         ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder"))}
       </label>
 
-      ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">Tom belastning tolkes som kropsvægt.</div>` : ""}
+      ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
     </div>
     <div style="margin-top:14px">
       <button type="button" id="reviewDoneBtn">
@@ -1807,16 +1807,16 @@ function buildReviewSetFields(entry, idx, setIdx){
 
 
 const RPE_HELP = {
-  "1": "Minimal indsats",
-  "2": "Meget let",
-  "3": "Let, du kan snakke frit",
-  "4": "Komfortabelt tempo",
-  "5": "Moderat, lidt pres",
-  "6": "Hårdt men kontrolleret",
-  "7": "Meget hårdt",
-  "8": "Næsten maks",
-  "9": "Tæt på maks",
-  "10": "Maksimal indsats"
+  "1": "review.rpe.1",
+  "2": "review.rpe.2",
+  "3": "review.rpe.3",
+  "4": "review.rpe.4",
+  "5": "review.rpe.5",
+  "6": "review.rpe.6",
+  "7": "review.rpe.7",
+  "8": "review.rpe.8",
+  "9": "review.rpe.9",
+  "10": "review.rpe.10"
 };
 
 function setRpePickerValue(value){
@@ -1835,7 +1835,7 @@ function setRpePickerValue(value){
 
   if (help){
     help.textContent = normalized
-      ? tr("review.rpe_selected", { value: normalized, text: RPE_HELP[normalized] || "" })
+      ? tr("review.rpe_selected", { value: normalized, text: tr(RPE_HELP[normalized] || "") })
       : tr("review.rpe_help");
   }
 }
@@ -1881,7 +1881,7 @@ function updateCardioPacePreview(){
 
   if (distance > 0 && totalSec > 0){
     const pace = totalSec / distance;
-    previewEl.textContent = `Beregnet tempo: ${formatPaceFromSeconds(pace)}`;
+    previewEl.textContent = tr("cardio.preview.calculated_pace", { value: formatPaceFromSeconds(pace) });
   } else {
     previewEl.textContent = "";
   }
@@ -2142,10 +2142,10 @@ function formatPlanActionText(entry){
     return load ? tr("plan.action.use_load_today", { load }) : tr("plan.action.increase_load_today");
   }
   if (decision === "increase_reps"){
-    return nextTarget ? `Næste mål: ${nextTarget}` : "Øg reps næste gang";
+    return nextTarget ? tr("progression.next_target", { value: nextTarget }) : tr("progression.increase_reps_next_time");
   }
   if (decision === "hold"){
-    return load ? `Hold ${load} i dag` : "Hold nuværende belastning i dag";
+    return load ? tr("progression.hold_load_today", { load }) : tr("progression.hold_current_load_today");
   }
   if (decision === "use_start_weight"){
     return load ? tr("plan.action.use_start_weight_with_load", { load }) : tr("plan.action.use_start_weight_today");
@@ -2804,7 +2804,7 @@ async function handleExerciseChange(){
       const meta = getExerciseMeta(exerciseId) || {};
       if (String(meta.input_kind || "") !== "load_reps"){
         setText("progressionHint", meta.input_kind === "time"
-          ? "Tid styres via faste valg."
+          ? tr("manual_workout.time_fixed_choices")
           : tr("manual_workout.bodyweight_no_load_suggestion"));
         return;
       }
