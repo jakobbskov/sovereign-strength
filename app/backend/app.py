@@ -296,6 +296,11 @@ def get_user_settings_for(user_id):
 def save_user_settings_for(user_id, settings):
     return get_storage().save_user_settings_for(user_id, settings)
 
+
+def consume_manual_override_workout(user_id, date):
+    return get_storage().consume_manual_override_workout(user_id, date)
+
+
 def list_workouts_for_user(user_id):
     return list_user_items("workouts", user_id)
 
