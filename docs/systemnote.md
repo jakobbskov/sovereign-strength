@@ -6,9 +6,9 @@ This document describes the current documented operating logic of SovereignStren
 
 It is intended to function as the technical bridge between:
 
-- the earlier internal system notes
-- the repository documentation
-- the actual implementation as it stabilizes toward version 1.0
+- earlier internal system notes
+- repository documentation
+- actual implementation as it stabilizes toward version 1.0
 
 This file should describe how the system thinks, not just where files happen to live.
 
@@ -19,7 +19,9 @@ The current documented SovereignStrength core includes:
 - forecast output
 - check-in and readiness input
 - fatigue-aware planning
+- movement-family-aware exercise interpretation
 - progression logic
+- controlled variation and substitution
 - equipment-aware load adjustment
 - workout logging
 - review-oriented feedback
@@ -43,14 +45,17 @@ Its design goals are:
 
 ## Core operating model
 
-At the highest level, the system combines four inputs:
+At the highest level, the system combines these inputs:
 
 - current readiness
-- recent fatigue signals
+- recent fatigue and recovery signals
 - exercise-specific progression state
+- exercise identity metadata
+- family-based fatigue interpretation
+- controlled variation/substitution signals
 - equipment constraints
 
-These inputs influence the daily plan and recommended next loads.
+These inputs influence the daily plan, suggested exercise form, and recommended next loads.
 
 ## Forecast
 
@@ -87,6 +92,39 @@ Readiness influences:
 - session intensity
 - whether the system should bias toward lighter work
 
+Important limitation:
+
+The current documented check-in remains mostly global.
+It does not yet document a mature local irritation layer such as:
+- knee pain
+- back pain
+- calf irritation
+- side-specific soreness
+
+That means the engine can reason about family fatigue more strongly than it can reason about explicit local tissue symptoms.
+
+## Exercise identity layer
+
+The exercise system now contains more than minimal display metadata.
+
+Seed exercise definitions include fields such as:
+
+- `category`
+- `movement_pattern`
+- `difficulty_tier`
+- `input_kind`
+- `progression_mode`
+- `progression_style`
+
+This identity layer allows the backend to treat exercises as related members of broader movement families rather than isolated names.
+
+That supports:
+
+- family-level fatigue interpretation
+- substitution between related exercises
+- controlled variation
+- more coherent review/input behavior
+
 ## Fatigue model
 
 The fatigue model is one of the core decision layers in the system.
@@ -115,19 +153,41 @@ Fatigue affects:
 
 A documented example rule is:
 
-- if `fatigue_score >= 2`, bias toward `light_strength`
+- if `fatigue_score >= 2`, bias toward lighter work
+
+## Family fatigue model
+
+The backend also computes family-level fatigue context.
+
+Family keys may be derived from:
+
+- `fatigue_group` where available
+- otherwise `movement_pattern`
+- otherwise `category`
+
+This allows the system to reason not only about a single exercise, but about related exercises or movement families.
+
+Documented family-level outputs may include:
+
+- `family_state`
+- `family_signals`
+- related exercise members
+
+Current observed family states include values such as:
+
+- `fatigued`
+- `ready`
+- `stable`
+
+This is an important clarification:
+the system is not only progression-aware per exercise.
+It is also capable of family-aware training interpretation.
 
 ## Plan generation
 
 The main documented planning endpoint is `GET /plan/today`.
 
 Its role is to translate current system state into a session recommendation.
-
-Documented plan variants currently include:
-
-- `short_20`
-- `short_30`
-- `light_strength`
 
 The plan generator should be explainable.
 It should not only return what to do, but also why that recommendation was made.
@@ -137,13 +197,17 @@ Documented explanation fields may include:
 - `progression_decision`
 - `progression_reason`
 - fatigue-related explanation text
+- family-related explanation text
 - equipment-related explanation text
+- variation/substitution explanation text
+
+The planning layer also includes protection against repeating hard sessions too closely and may surface learned variation suggestions where relevant.
 
 ## Progression engine
 
 The progression engine determines how an exercise should move from one session to the next.
 
-The currently documented core function is `compute_progression_for_exercise()`.
+The documented core function is `compute_progression_for_exercise()`.
 
 Its job is to turn workout history plus current context into an actionable load recommendation.
 
@@ -173,6 +237,19 @@ If available equipment forces a larger step than desired, the system should flag
 This is one of the practical strengths of the model.
 It acknowledges reality instead of writing poetry about barbell math.
 
+## Variation and substitution
+
+The current implementation includes controlled variation and substitution logic.
+
+This supports use cases such as:
+
+- moving to a related exercise when needed
+- selecting among related movement forms
+- surfacing a likely next variation
+
+This is not random exercise shuffling.
+It is part of the engine's attempt to remain explainable while still avoiding static, brittle planning.
+
 ## Workout logging
 
 Workout logging preserves the training history used by later decisions.
@@ -186,21 +263,20 @@ Documented workout history includes fields such as:
 - load
 - notes
 
-Workout data serves at least three purposes:
+Workout data serves at least these purposes:
 
 - preserve session history
 - support progression logic
 - support fatigue interpretation
+- support family-aware planning
 
 ## Review layer
 
 The review layer closes the session.
 
-In the currently documented system, review means the session can be interpreted after execution rather than merely stored.
+In the current system, review means the session can be interpreted after execution rather than merely stored.
 
-Near-term 1.0 development should make this more explicit in the form of a session summary.
-
-A useful review output should eventually include:
+A useful review output may include:
 
 - completed exercises
 - total sets
@@ -209,6 +285,8 @@ A useful review output should eventually include:
 - fatigue interpretation
 - simple next-session guidance
 
+For cardio and non-standard exercise inputs, review behavior may differ by exercise identity and input configuration.
+
 ## Data model relationship
 
 The operating logic described here depends on a small local JSON model.
@@ -216,23 +294,28 @@ The operating logic described here depends on a small local JSON model.
 The main documented file types are:
 
 - `user_settings.json`
-- `exercises.json`
+- exercise definition files / seed exercise data
 - `workouts.json`
 - `checkins.json`
+- `recovery.json`
+- `runs.json` where relevant
 
 Those structures are described in more detail in `docs/data-model.md`.
 
 ## Current limitation boundary
 
-The currently documented system does not yet claim to fully implement:
+The current implementation is stronger than a simple readiness-only planner, but it does not yet claim to fully implement:
 
 - long-term trend analysis
 - stagnation detection
-- deload automation
-- adaptive program restructuring
-- full cardio support
+- adaptive program restructuring in a fully general sense
+- explicit local injury profile tracking
+- side-specific soreness or tissue tolerance tracking
+- mature local vulnerability override rules
+- full cardio support in every layer
 
-Those belong to later development stages unless and until they are documented as implemented.
+Movement-family-aware planning is real.
+A full tissue-aware protection model is not yet documented as complete.
 
 ## Versioning rule
 
