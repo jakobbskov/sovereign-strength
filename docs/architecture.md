@@ -273,3 +273,123 @@ Refine deload thresholds inside the progression-engine vocabulary:
 
 Do not turn deload into a detached secondary framework.
 
+
+## Progression phase boundaries
+
+The live progression engine uses an explicit phase model over recent relevant exercise history.
+
+Current phase vocabulary:
+
+- `recalibration`
+- `calibration`
+- `trend`
+
+### History context boundary
+
+The engine keeps up to 6 recent relevant sessions as exercise context.
+
+From that context it derives:
+
+- progression phase
+- a smaller recent trend window
+- repeated success and blocking signals
+- deload evaluation in trend phase
+
+### Recalibration
+
+`recalibration` applies when recent continuity is broken by a long enough pause.
+
+In the live model this happens when the latest relevant session is more than 21 days old.
+
+Practical meaning:
+- progression stays conservative
+- recent history is not treated as stable trend evidence
+- candidate progression is held rather than advanced
+
+### Calibration
+
+`calibration` applies when there is some recent continuity, but not yet enough relevant history for stable trend logic.
+
+In the live model this applies when there are fewer than 3 relevant sessions.
+
+Practical meaning:
+- progression can still be evaluated
+- but stable trend assumptions remain limited
+- repeated success is still required before progression
+
+### Trend
+
+`trend` applies when enough recent relevant sessions exist to evaluate progression more confidently.
+
+In the live model this begins when at least 3 relevant sessions exist without triggering recalibration.
+
+This is the phase where:
+- repeated success becomes meaningful in a stable way
+- blocking signals become trend-relevant
+- deload logic is evaluated
+
+### Trend window boundary
+
+The active recent trend summary uses a 3-session window.
+
+This window is used to count:
+
+- successful sessions
+- failure sessions
+- load-drop sessions
+- negative signal sessions
+- whether the latest session already contains a blocking signal
+
+### Repeated success boundary
+
+The live model does not progress because one session looked good.
+
+Current repeated-success rule:
+
+- `repeated_success = successful_sessions >= 2`
+
+That means at least 2 successful sessions inside the active trend window are required before the engine treats progression as sufficiently earned.
+
+### Blocking signal boundary
+
+The live model uses a blocking layer so recent instability can stop progression even when the latest session looked candidate-positive.
+
+Current blocking rule:
+
+- `blocking_signal_present = latest_blocking_signal or negative_signal_sessions >= 2`
+
+Blocking signals are built from:
+- failure
+- load drop between sets
+- repeated negative recent sessions
+
+### Progression gate
+
+In live behavior, progression by phase is only allowed when all of the following are true:
+
+- phase is `calibration` or `trend`
+- the latest session is a candidate for progression
+- repeated success is present
+- no blocking signal is present
+
+Progression is explicitly not allowed in `recalibration`.
+
+### Relationship to deload
+
+The deload model uses the same vocabulary as the phase/trend model.
+
+That means deload should be understood as an escalation from persistent instability inside `trend`, not as a detached secondary framework.
+
+### Maintenance rule
+
+Refine progression behavior inside this shared vocabulary:
+
+- recent history context
+- phase
+- trend window
+- repeated success
+- blocking signals
+- deload
+
+Do not split these into separate competing mental models.
+
