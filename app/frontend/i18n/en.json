@@ -441,5 +441,13 @@
   "exercise.none_yet": "No exercises yet.",
   "recovery.none_yet": "No recovery logs yet.",
   "overview.readiness_label": "Readiness",
-  "plan.none": "No plan"
+  "plan.none": "No plan",
+  "forecast.intervals_with_target": "Intervals · {value}",
+  "forecast.intervals_default": "Intervals · short, hard effort with breaks",
+  "forecast.tempo_with_target": "Tempo session · {value}",
+  "forecast.tempo_default": "Tempo session · controlled hard running effort",
+  "forecast.base_with_target": "Base session · {value}",
+  "forecast.base_default": "Base session · easy conversational running",
+  "forecast.run_with_target": "Run · {value}",
+  "forecast.run_default": "Run · planned cardio session"
 }
