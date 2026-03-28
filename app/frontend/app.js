@@ -173,6 +173,46 @@ function setText(id, text){
   if (el) el.textContent = String(text);
 }
 
+function applyBootFailureFallbacks(message){
+  [
+    "profileBodyLine",
+    "profileTrainingTypesLine",
+    "profileTrainingDaysLine",
+    "profileEquipmentLine",
+    "profileIncrementLine",
+    "profileAccountLine",
+    "forecastSummary",
+    "forecastReason",
+    "todayPlanSummary"
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(message || "");
+  });
+}
+
+function applyBootState(state, message){
+  const statusEl = document.getElementById("status");
+  const wizardNav = document.getElementById("wizardNav");
+
+  try{
+    document.body?.setAttribute("data-boot-state", String(state || ""));
+  }catch(err){}
+
+  if (statusEl){
+    statusEl.textContent = String(message || "");
+    statusEl.classList.remove("ok", "warn");
+    if (state === "ready"){
+      statusEl.classList.add("ok");
+    } else if (state && state !== "loading"){
+      statusEl.classList.add("warn");
+    }
+  }
+
+  if (wizardNav){
+    wizardNav.classList.toggle("wizard-step-hidden", state !== "ready");
+  }
+}
+
 function esc(value){
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -2772,8 +2812,7 @@ async function refreshAll(){
   debug.user_settings = userSettingsApi && userSettingsApi.item ? userSettingsApi.item : {};
   debug.daily_ui_state = dailyUiState;
 
-  setText("status", tr("status.frontend_api_ok"));
-  document.getElementById("status")?.classList.add("ok");
+  applyBootState("ready", tr("status.frontend_api_ok"));
   setText("debug", JSON.stringify(debug, null, 2));
 
   return {
@@ -3466,18 +3505,21 @@ async function boot(){
     await rerenderUiAfterLanguageChange();
     initSystemInfoToggle();
   }catch(err){
-    setText("status", tr("status.error_prefix") + (err?.message || String(err)));
+    applyBootFailureFallbacks(tr("status.boot_data_unavailable"));
+    applyBootState("boot_data_failed", tr("status.boot_data_failed_prefix") + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
   }
 }
 
 (async () => {
   try{
+    applyBootState("loading", tr("status.boot_loading"));
     const authUser = await ensureAuthOrRedirect();
     if (!authUser) return;
     await boot();
   }catch(err){
-    setText("status", tr("status.startup_error_prefix") + (err?.message || String(err)));
+    applyBootFailureFallbacks(tr("status.boot_auth_unavailable"));
+    applyBootState("boot_auth_failed", tr("status.boot_auth_failed_prefix") + (err?.message || String(err)));
     setText("debug", String(err?.stack || err));
   }
 })();
