@@ -30,6 +30,86 @@ Expected entry point:
 ### Data
 `/var/www/sovereign-strength/data/`
 
+## Runtime data safety
+
+Runtime JSON data lives under:
+
+`/var/www/sovereign-strength/data/`
+
+This path is operationally sensitive.
+
+It contains live application state such as:
+
+- check-ins
+- workouts
+- session results
+- user settings
+- adaptation state
+
+That means frontend deploy workflow must not treat the live web root as a disposable static-output directory.
+
+### Forbidden deploy pattern
+
+Do not run a frontend deploy like this against the live root:
+
+`rsync -av --delete app/frontend/ /var/www/sovereign-strength/`
+
+Why this is dangerous:
+
+- `app/frontend/` is only the frontend source subtree
+- `/var/www/sovereign-strength/` is not a frontend-only target
+- the live root may also coexist with runtime-sensitive paths and files
+- `--delete` can therefore remove data or other live files that are not present in the frontend source tree
+
+### Safe frontend deploy
+
+Deploy frontend files explicitly and without destructive delete semantics against the live root.
+
+Safer examples:
+
+- copy only `index.html`
+- copy only `app.js`
+- copy only `i18n/da.json`
+- copy only `i18n/en.json`
+
+If rsync is used, it should target explicit files or an isolated static-only directory.
+Do not use broad `--delete` sync against `/var/www/sovereign-strength/`.
+
+### Safe backend deploy
+
+Backend deploy should update the live backend entry point directly:
+
+- source: `app/backend/app.py`
+- target: `/opt/sovereign-strength-api/app.py`
+
+Then restart:
+
+- `sovereign-strength-api.service`
+
+### Minimum post-deploy checks
+
+After deploy, verify at minimum:
+
+- frontend files are present in the expected live locations
+- i18n files are present under `/var/www/sovereign-strength/i18n/`
+- runtime data still exists under `/var/www/sovereign-strength/data/`
+- backend service is active
+- `GET /api/health` returns healthy
+- at least one core user flow still works
+
+### Restore reality
+
+A bad frontend deploy can require runtime data restore.
+
+A known restore source used in practice was:
+
+`/home/jakob/backups/sovereign-strength-deploy-20260320-055123/data/`
+
+The operational lesson is simple:
+
+- static frontend deploy is not allowed to casually touch runtime data
+- restore is recovery, not a normal deploy step
+
 ## Backend runtime
 
 The documented backend runtime consists of:
