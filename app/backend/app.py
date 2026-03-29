@@ -4912,8 +4912,22 @@ def build_autoplan_strength(user_id, readiness=None, time_budget_min=None, user_
         if not picked or not isinstance(picked, dict):
             continue
 
-        exercise_id = str(picked.get("exercise_id", "")).strip()
+        raw_exercise_id = picked.get("exercise_id")
+        exercise_id = str(raw_exercise_id).strip() if raw_exercise_id not in (None, "") else ""
         if not exercise_id:
+            family_outputs.append({
+                "family_key": family_key,
+                "family_role": fam.get("family_role"),
+                "priority": fam.get("priority"),
+                "exercise_id": None,
+                "exercise_score": None,
+                "family_reason": fam.get("reason", []),
+                "exercise_reason": picked.get("reason", []),
+                "local_state_applied": bool(picked.get("blocked_by_local_state", False)),
+                "blocked_by_local_state": bool(picked.get("blocked_by_local_state", False)),
+                "blocked_regions": picked.get("blocked_regions", []),
+                "blocked_reason": picked.get("blocked_reason")
+            })
             continue
 
         exercise_meta = get_exercise_meta(exercise_id) or {}
@@ -5019,6 +5033,7 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
         available = {}
 
     scored = []
+    family_blocked_regions = set()
 
     for item in candidates:
         ex_id = str(item.get("id", "")).strip()
@@ -5055,6 +5070,8 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
                 caution_regions.append(region)
 
         if blocked_regions:
+            for region in blocked_regions:
+                family_blocked_regions.add(region)
             continue
 
         score = 0.0
@@ -5110,6 +5127,18 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
     scored.sort(key=lambda x: (x.get("score", 0), x.get("exercise_id", "")), reverse=True)
 
     if not scored:
+        if family_blocked_regions:
+            blocked_regions = sorted(family_blocked_regions)
+            return {
+                "family_key": family_key,
+                "exercise_id": None,
+                "score": None,
+                "reason": [],
+                "alternatives": [],
+                "blocked_by_local_state": True,
+                "blocked_regions": blocked_regions,
+                "blocked_reason": f"lokal beskyttelse blokerede familien: {', '.join(blocked_regions)}"
+            }
         return None
 
     top = scored[0]
