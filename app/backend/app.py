@@ -981,9 +981,10 @@ def get_local_load_targets_for_exercise(exercise_id, exercises=None):
 
     return []
 
-def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment):
+def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment, local_state=None, exercises=None):
     original_meta = exercise_map.get(original_exercise_id, {}) or {}
     original_pattern = str(original_meta.get("movement_pattern", "")).strip()
+    local_state = local_state if isinstance(local_state, dict) else {}
     try:
         original_tier = int(original_meta.get("difficulty_tier", 1) or 1)
     except Exception:
@@ -1007,10 +1008,27 @@ def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, av
         except Exception:
             candidate_tier = 1
 
+        local_targets = get_local_load_targets_for_exercise(candidate_id, exercises=exercises)
+        blocked_regions = []
+        caution_count = 0
+        for region in local_targets:
+            info = local_state.get(region, {}) if isinstance(local_state, dict) else {}
+            if not isinstance(info, dict):
+                continue
+            region_state = str(info.get("state", "")).strip()
+            if region_state == "protect":
+                blocked_regions.append(region)
+            elif region_state == "caution":
+                caution_count += 1
+
+        if blocked_regions:
+            continue
+
         same_pattern = 1 if original_pattern and candidate_pattern == original_pattern else 0
         tier_distance = abs(candidate_tier - original_tier)
 
         ranked.append((
+            caution_count,      # fewer caution hits first
             -same_pattern,      # same pattern first
             tier_distance,      # closest difficulty next
             candidate_tier,     # then easier before harder if equal distance
@@ -2024,6 +2042,11 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
     if not isinstance(available_equipment, dict):
         available_equipment = {}
 
+    state = get_live_adaptation_state_for(user_id) if user_id is not None else {}
+    local_state = state.get("local_state", {}) if isinstance(state, dict) else {}
+    if not isinstance(local_state, dict):
+        local_state = {}
+
     substitution_map = {
         "squat": ["lunges", "split_squat", "step_ups", "single_leg_sit_to_stand"],
         "bench_press": ["push_ups", "incline_push_ups", "diamond_push_ups"],
@@ -2058,7 +2081,9 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             original_exercise_id=exercise_id,
             candidate_ids=substitute_candidates,
             exercise_map=exercise_map,
-            available_equipment=available_equipment
+            available_equipment=available_equipment,
+            local_state=local_state,
+            exercises=exercises
         )
 
         if chosen_substitute_id:
