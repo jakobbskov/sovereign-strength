@@ -950,6 +950,37 @@ def get_weekly_target_sessions(user_settings):
 
 
 
+def get_local_load_targets_for_exercise(exercise_id, exercises=None):
+    exercise_id = str(exercise_id or "").strip()
+    if not exercise_id:
+        return []
+
+    exercise_items = exercises if isinstance(exercises, list) else read_json_file(FILES["exercises"])
+    if not isinstance(exercise_items, list):
+        return []
+
+    for item in exercise_items:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("id", "")).strip() != exercise_id:
+            continue
+
+        raw = item.get("local_load_targets", [])
+        if not isinstance(raw, list):
+            return []
+
+        cleaned = []
+        seen = set()
+        for value in raw:
+            target = str(value or "").strip()
+            if not target or target in seen:
+                continue
+            seen.add(target)
+            cleaned.append(target)
+        return cleaned
+
+    return []
+
 def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment):
     original_meta = exercise_map.get(original_exercise_id, {}) or {}
     original_pattern = str(original_meta.get("movement_pattern", "")).strip()

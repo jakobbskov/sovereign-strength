@@ -49,7 +49,12 @@
     ],
     "name_en": "Squat",
     "category_en": "legs",
-    "notes_en": "Foundational lift. Focus on technique and depth."
+    "notes_en": "Foundational lift. Focus on technique and depth.",
+    "local_load_targets": [
+      "knee",
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "bench_press",
@@ -101,7 +106,12 @@
     ],
     "name_en": "Bench press",
     "category_en": "push",
-    "notes_en": "Horizontal press."
+    "notes_en": "Horizontal press.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ]
   },
   {
     "id": "barbell_row",
@@ -153,7 +163,12 @@
     ],
     "name_en": "Bent-over row",
     "category_en": "pull",
-    "notes_en": "Back and posterior chain."
+    "notes_en": "Back and posterior chain.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "low_back"
+    ]
   },
   {
     "id": "overhead_press",
@@ -200,7 +215,12 @@
     ],
     "name_en": "Overhead press",
     "category_en": "push",
-    "notes_en": "Vertical press."
+    "notes_en": "Vertical press.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ]
   },
   {
     "id": "romanian_deadlift",
@@ -247,7 +267,11 @@
     ],
     "name_en": "RDL",
     "category_en": "posterior chain",
-    "notes_en": "Romanian deadlift."
+    "notes_en": "Romanian deadlift.",
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "lunges",
@@ -317,7 +341,11 @@
     ],
     "name_en": "Lunges",
     "category_en": "legs",
-    "notes_en": "Start with bodyweight. Can be increased later."
+    "notes_en": "Start with bodyweight. Can be increased later.",
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ]
   },
   {
     "id": "plank",
@@ -373,7 +401,11 @@
     ],
     "name_en": "Plank",
     "category_en": "core",
-    "notes_en": "Isometric core exercise."
+    "notes_en": "Isometric core exercise.",
+    "local_load_targets": [
+      "shoulder",
+      "low_back"
+    ]
   },
   {
     "id": "dead_bug",
@@ -427,7 +459,11 @@
     ],
     "name_en": "Dead bug",
     "category_en": "core",
-    "notes_en": "Core and control."
+    "notes_en": "Core and control.",
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "run_easy",
@@ -462,7 +498,11 @@
     ],
     "name_en": "Easy run",
     "category_en": "running",
-    "notes_en": "Zone 2 / easy pace."
+    "notes_en": "Zone 2 / easy pace.",
+    "local_load_targets": [
+      "ankle_calf",
+      "hip"
+    ]
   },
   {
     "id": "run_intervals",
@@ -497,7 +537,12 @@
     ],
     "name_en": "Intervals",
     "category_en": "running",
-    "notes_en": "E.g. 10×(1 min hard + 1 min easy)."
+    "notes_en": "E.g. 10×(1 min hard + 1 min easy).",
+    "local_load_targets": [
+      "ankle_calf",
+      "knee",
+      "hip"
+    ]
   },
   {
     "id": "push_ups",
@@ -555,7 +600,12 @@
     ],
     "name_en": "Push-ups",
     "category_en": "push",
-    "notes_en": "Bodyweight press as a substitute for bench press/overhead press when equipment is limited."
+    "notes_en": "Bodyweight press as a substitute for bench press/overhead press when equipment is limited.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ]
   },
   {
     "id": "dumbbell_row",
@@ -602,7 +652,12 @@
     ],
     "name_en": "Dumbbell row",
     "category_en": "pull",
-    "notes_en": "One-arm dumbbell row as a substitute for barbell row."
+    "notes_en": "One-arm dumbbell row as a substitute for barbell row.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "low_back"
+    ]
   },
   {
     "id": "glute_bridge",
@@ -639,7 +694,11 @@
     ],
     "name_en": "Glute bridge",
     "category_en": "posterior chain",
-    "notes_en": "Bodyweight posterior-chain exercise as a fallback when no barbell is available."
+    "notes_en": "Bodyweight posterior-chain exercise as a fallback when no barbell is available.",
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "incline_push_ups",
@@ -676,7 +735,12 @@
     ],
     "name_en": "Incline push-ups",
     "category_en": "push",
-    "notes_en": "Easier push variation with elevated hands."
+    "notes_en": "Easier push variation with elevated hands.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ]
   },
   {
     "id": "diamond_push_ups",
@@ -713,7 +777,12 @@
     ],
     "name_en": "Diamond push-ups",
     "category_en": "push",
-    "notes_en": "Harder push variation with extra triceps focus."
+    "notes_en": "Harder push variation with extra triceps focus.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ]
   },
   {
     "id": "pike_push_ups",
@@ -750,7 +819,12 @@
     ],
     "name_en": "Pike push-ups",
     "category_en": "push",
-    "notes_en": "Vertical bodyweight press that can substitute for overhead press."
+    "notes_en": "Vertical bodyweight press that can substitute for overhead press.",
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ]
   },
   {
     "id": "reverse_snow_angels",
@@ -787,7 +861,10 @@
     ],
     "name_en": "Reverse snow angels",
     "category_en": "pull",
-    "notes_en": "Bodyweight back activation on the floor, face down."
+    "notes_en": "Bodyweight back activation on the floor, face down.",
+    "local_load_targets": [
+      "shoulder"
+    ]
   },
   {
     "id": "superman_hold",
@@ -826,7 +903,10 @@
     ],
     "name_en": "Superman hold",
     "category_en": "pull",
-    "notes_en": "Isometric back and posterior-chain exercise."
+    "notes_en": "Isometric back and posterior-chain exercise.",
+    "local_load_targets": [
+      "low_back"
+    ]
   },
   {
     "id": "split_squat",
@@ -867,7 +947,11 @@
     ],
     "name_en": "Split squat",
     "category_en": "legs",
-    "notes_en": "Bodyweight leg exercise, good as a squat substitute."
+    "notes_en": "Bodyweight leg exercise, good as a squat substitute.",
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ]
   },
   {
     "id": "step_ups",
@@ -903,7 +987,11 @@
     ],
     "name_en": "Step-ups",
     "category_en": "legs",
-    "notes_en": "Leg exercise focusing on one leg at a time."
+    "notes_en": "Leg exercise focusing on one leg at a time.",
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ]
   },
   {
     "id": "single_leg_sit_to_stand",
@@ -939,7 +1027,11 @@
     ],
     "name_en": "Single-leg sit-to-stand",
     "category_en": "legs",
-    "notes_en": "Unilateral leg strength from a chair or bench."
+    "notes_en": "Unilateral leg strength from a chair or bench.",
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ]
   },
   {
     "id": "calf_raises",
@@ -976,7 +1068,10 @@
     ],
     "name_en": "Calf raises",
     "category_en": "legs",
-    "notes_en": "Bodyweight calf training."
+    "notes_en": "Bodyweight calf training.",
+    "local_load_targets": [
+      "ankle_calf"
+    ]
   },
   {
     "id": "hip_hinge_bw",
@@ -1013,7 +1108,11 @@
     ],
     "name_en": "Hip hinge",
     "category_en": "posterior chain",
-    "notes_en": "Bodyweight hip hinge as a technique and posterior-chain fallback."
+    "notes_en": "Bodyweight hip hinge as a technique and posterior-chain fallback.",
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "single_leg_glute_bridge",
@@ -1050,7 +1149,11 @@
     ],
     "name_en": "Single-leg glute bridge",
     "category_en": "posterior chain",
-    "notes_en": "More challenging unilateral glute bridge variation."
+    "notes_en": "More challenging unilateral glute bridge variation.",
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "hamstring_walkouts",
@@ -1087,7 +1190,11 @@
     ],
     "name_en": "Hamstring walkouts",
     "category_en": "posterior chain",
-    "notes_en": "Hamstrings and posterior chain with bodyweight."
+    "notes_en": "Hamstrings and posterior chain with bodyweight.",
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ]
   },
   {
     "id": "side_plank",
@@ -1126,7 +1233,11 @@
     ],
     "name_en": "Side plank",
     "category_en": "core",
-    "notes_en": "Anti-lateral flexion for the core."
+    "notes_en": "Anti-lateral flexion for the core.",
+    "local_load_targets": [
+      "shoulder",
+      "low_back"
+    ]
   },
   {
     "id": "hollow_body_hold",
@@ -1165,7 +1276,11 @@
     ],
     "name_en": "Hollow body hold",
     "category_en": "core",
-    "notes_en": "Anterior core and full-body tension."
+    "notes_en": "Anterior core and full-body tension.",
+    "local_load_targets": [
+      "low_back",
+      "hip"
+    ]
   },
   {
     "id": "bird_dog",
@@ -1216,7 +1331,11 @@
     "external_images": [],
     "name_en": "Bird dog",
     "category_en": "core",
-    "notes_en": "Core and back control."
+    "notes_en": "Core and back control.",
+    "local_load_targets": [
+      "low_back",
+      "hip"
+    ]
   },
   {
     "id": "mountain_climbers",
@@ -1253,7 +1372,12 @@
     ],
     "name_en": "Mountain climbers",
     "category_en": "core",
-    "notes_en": "Core and heart rate in one exercise."
+    "notes_en": "Core and heart rate in one exercise.",
+    "local_load_targets": [
+      "shoulder",
+      "wrist",
+      "hip"
+    ]
   },
   {
     "id": "worlds_greatest_stretch",
@@ -1290,7 +1414,11 @@
     ],
     "name_en": "World’s greatest stretch",
     "category_en": "mobility",
-    "notes_en": "Full-body mobility."
+    "notes_en": "Full-body mobility.",
+    "local_load_targets": [
+      "hip",
+      "shoulder"
+    ]
   },
   {
     "id": "cossack_squat",
@@ -1327,7 +1455,11 @@
     ],
     "name_en": "Cossack squat",
     "category_en": "mobility",
-    "notes_en": "Mobility for hips and adductors."
+    "notes_en": "Mobility for hips and adductors.",
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ]
   },
   {
     "id": "jumping_jacks",
@@ -1362,7 +1494,11 @@
     ],
     "name_en": "Jumping jacks",
     "category_en": "cardio",
-    "notes_en": "Simple bodyweight cardio."
+    "notes_en": "Simple bodyweight cardio.",
+    "local_load_targets": [
+      "ankle_calf",
+      "knee"
+    ]
   },
   {
     "id": "burpees",
@@ -1399,7 +1535,13 @@
     ],
     "name_en": "Burpees",
     "category_en": "cardio",
-    "notes_en": "High-intensity cardio and full body work."
+    "notes_en": "High-intensity cardio and full body work.",
+    "local_load_targets": [
+      "ankle_calf",
+      "knee",
+      "shoulder",
+      "wrist"
+    ]
   },
   {
     "id": "high_knees",
@@ -1434,6 +1576,11 @@
     ],
     "name_en": "High knees",
     "category_en": "cardio",
-    "notes_en": "Heart rate and coordination."
+    "notes_en": "Heart rate and coordination.",
+    "local_load_targets": [
+      "ankle_calf",
+      "hip",
+      "knee"
+    ]
   }
 ]

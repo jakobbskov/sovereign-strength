@@ -52,6 +52,23 @@ Common documented fields include:
 - `equipment_type`
 - `default_unit`
 - `input_kind`
+- `local_load_targets`
+
+`local_load_targets` is a compact protection-oriented metadata field.
+
+It defines which local regions an exercise typically loads enough that local irritation or protection signals may matter later in planning logic.
+
+It is intended as a practical mapping layer, not a medical model.
+
+Current target keys include:
+
+- `ankle_calf`
+- `knee`
+- `hip`
+- `low_back`
+- `shoulder`
+- `elbow`
+- `wrist`
 - `progression_mode`
 - `progression_style`
 - `progression_step`
