@@ -247,6 +247,98 @@ If the available equipment forces a larger jump than the ideal progression step,
 
 - `equipment_constraint = true`
 
+## Adaptation-oriented rolling local state
+
+The implementation now includes a compact rolling `local_state` structure inside adaptation-oriented user state.
+
+Its purpose is to provide a small protection-oriented regional view that combines:
+
+- recent local check-in signals
+- recent exercise loading
+- recent cardio loading
+- explicit `local_load_targets` metadata
+
+This is not a diagnosis layer.
+It is a short-horizon protection context.
+
+### `local_state`
+
+`local_state` is keyed by compact region names such as:
+
+- `ankle_calf`
+- `knee`
+- `hip`
+- `low_back`
+- `shoulder`
+- `elbow`
+- `wrist`
+
+Each region contains a compact state object with fields such as:
+
+- `latest_signal`
+- `signal_persistence`
+- `recent_load_count`
+- `state`
+- `reasons`
+
+### `latest_signal`
+
+Represents the latest recent local signal seen in check-in input for that region.
+
+Current values include:
+
+- `none`
+- `caution`
+- `irritated`
+
+### `signal_persistence`
+
+Counts how many recent check-ins included a local signal for that region within the short rolling window.
+
+This is intended as a compact persistence hint, not a clinical severity scale.
+
+### `recent_load_count`
+
+Counts how often recent training history loaded that region through:
+
+- exercise `local_load_targets`
+- cardio mode local target mapping
+
+This is a simple rolling pressure signal.
+It is not a biomechanical quantity.
+
+### `state`
+
+Current compact local protection state.
+
+Current values include:
+
+- `ready`
+- `caution`
+- `protect`
+
+This field is intended to be conservative and explainable.
+
+### `reasons`
+
+A short list of explanation strings describing why a region currently has its local state.
+
+This exists for debugging and future planning transparency.
+
+## Important local-state boundary
+
+The rolling `local_state` model is still intentionally small.
+
+It should not be confused with:
+
+- diagnosis logic
+- injury prediction
+- side-specific pathology tracking
+- long-horizon health modeling
+- detailed tissue simulation
+
+It is a deterministic protection-oriented state, not sports medicine cosplay.
+
 ## Important boundary
 
 The current model is richer than the original minimal documentation, but it still does not claim to fully implement:

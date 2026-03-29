@@ -4153,6 +4153,158 @@ def get_adaptation_state_for(user_id):
 
 
 
+def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
+    user_id = str(user_id or "").strip()
+    if not user_id:
+        return {}
+
+    region_keys = [
+        "ankle_calf",
+        "knee",
+        "hip",
+        "low_back",
+        "shoulder",
+        "elbow",
+        "wrist",
+    ]
+
+    out = {
+        key: {
+            "latest_signal": "none",
+            "signal_persistence": 0,
+            "recent_load_count": 0,
+            "state": "ready",
+            "reasons": [],
+        }
+        for key in region_keys
+    }
+
+    checkins = list_checkins_for_user(user_id)
+    if not isinstance(checkins, list):
+        checkins = []
+
+    checkins = sorted(
+        [x for x in checkins if isinstance(x, dict)],
+        key=lambda x: str(x.get("created_at", x.get("date", ""))),
+        reverse=True,
+    )[:max_checkins]
+
+    for idx, item in enumerate(checkins):
+        local_signals = item.get("local_signals", [])
+        if not isinstance(local_signals, list):
+            continue
+        for signal_item in local_signals:
+            if not isinstance(signal_item, dict):
+                continue
+            region = str(signal_item.get("region", "")).strip()
+            signal = str(signal_item.get("signal", "")).strip()
+            if region not in out or signal not in ("caution", "irritated"):
+                continue
+
+            if idx == 0:
+                out[region]["latest_signal"] = signal
+            out[region]["signal_persistence"] += 1
+
+    session_items = list_session_results_for_user(user_id)
+    if not isinstance(session_items, list):
+        session_items = []
+
+    today = datetime.now(timezone.utc).date()
+
+    for item in session_items:
+        if not isinstance(item, dict):
+            continue
+        date_str = str(item.get("date", "")).strip()
+        try:
+            session_date = datetime.fromisoformat(date_str).date()
+        except Exception:
+            continue
+
+        if (today - session_date).days < 0 or (today - session_date).days > recent_days:
+            continue
+
+        results = item.get("results", [])
+        if not isinstance(results, list):
+            continue
+
+        for result in results:
+            if not isinstance(result, dict):
+                continue
+            ex_id = str(result.get("exercise_id", "")).strip()
+            if not ex_id:
+                continue
+            targets = get_local_load_targets_for_exercise(ex_id, exercises=exercises)
+            for region in targets:
+                if region in out:
+                    out[region]["recent_load_count"] += 1
+
+    workouts = list_workouts_for_user(user_id)
+    if not isinstance(workouts, list):
+        workouts = []
+
+    for item in workouts:
+        if not isinstance(item, dict):
+            continue
+        session_type = str(item.get("session_type", item.get("type", ""))).strip().lower()
+        if session_type not in ("løb", "cardio", "run"):
+            continue
+
+        date_str = str(item.get("date", "")).strip()
+        try:
+            session_date = datetime.fromisoformat(date_str).date()
+        except Exception:
+            continue
+
+        if (today - session_date).days < 0 or (today - session_date).days > recent_days:
+            continue
+
+        cardio_kind = str(item.get("cardio_kind", item.get("cardio_type", "base"))).strip().lower() or "base"
+        cardio_targets_map = {
+            "restitution": ["ankle_calf"],
+            "recovery": ["ankle_calf"],
+            "base": ["ankle_calf", "hip"],
+            "tempo": ["ankle_calf", "hip", "low_back"],
+            "threshold": ["ankle_calf", "hip", "low_back"],
+            "interval": ["ankle_calf", "knee", "hip"],
+            "intervals": ["ankle_calf", "knee", "hip"],
+            "test": ["ankle_calf", "knee", "hip", "low_back"],
+            "benchmark": ["ankle_calf", "knee", "hip", "low_back"],
+        }
+        for region in cardio_targets_map.get(cardio_kind, []):
+            if region in out:
+                out[region]["recent_load_count"] += 1
+
+    for region, info in out.items():
+        latest_signal = info.get("latest_signal", "none")
+        persistence = int(info.get("signal_persistence", 0) or 0)
+        recent_load = int(info.get("recent_load_count", 0) or 0)
+        reasons = []
+
+        if latest_signal == "irritated":
+            reasons.append("latest local signal is irritated")
+        elif latest_signal == "caution":
+            reasons.append("latest local signal is caution")
+
+        if persistence >= 2:
+            reasons.append("local signal persisted across recent check-ins")
+
+        if recent_load >= 3:
+            reasons.append("recent local load is elevated")
+        elif recent_load >= 1:
+            reasons.append("recent local load is present")
+
+        if latest_signal == "irritated" or (persistence >= 2 and recent_load >= 2):
+            state = "protect"
+        elif latest_signal == "caution" or persistence >= 1 or recent_load >= 3:
+            state = "caution"
+        else:
+            state = "ready"
+
+        info["state"] = state
+        info["reasons"] = reasons[:6]
+
+    return out
+
 def compute_family_fatigue(exercise_id, identity_graph, exercise_profiles):
     """
     Compute fatigue state for one movement/fatigue family.
@@ -5115,6 +5267,7 @@ def update_adaptation_state(user_id):
     exercise_profiles = build_exercise_profiles(user_id)
     family_fatigue = build_family_fatigue_map(identity_graph, exercise_profiles)
     learning_signals = build_learning_signals(user_id)
+    local_state = build_local_state(user_id, exercises=exercises)
 
     state = get_adaptation_state()
     users = state.setdefault("users", {})
@@ -5129,6 +5282,7 @@ def update_adaptation_state(user_id):
     current["exercise_profiles"] = exercise_profiles
     current["family_fatigue"] = family_fatigue
     current["learning_signals"] = learning_signals
+    current["local_state"] = local_state
 
     users[user_id] = current
     save_adaptation_state(state)
