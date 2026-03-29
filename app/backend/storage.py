@@ -121,7 +121,11 @@ class JSONStorage:
 
     def list_user_items(self, file_key, user_id, sort_keys=("created_at", "date")):
         items = self._read_list(file_key)
-        items = [x for x in items if isinstance(x, dict) and x.get("user_id", 1) == user_id]
+        user_id = str(user_id).strip()
+        items = [
+            x for x in items
+            if isinstance(x, dict) and str(x.get("user_id", "")).strip() == user_id
+        ]
         return self._sort_desc(items, *sort_keys)
 
     def append_item(self, file_key, item):
