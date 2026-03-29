@@ -1802,6 +1802,67 @@ def compute_cardio_load_metrics(user_id):
     }
 
 
+def get_local_protect_regions(user_id, regions=None):
+    user_id = str(user_id or "").strip()
+    state = get_live_adaptation_state_for(user_id)
+    local_state = state.get("local_state", {}) if isinstance(state, dict) else {}
+    if not isinstance(local_state, dict):
+        local_state = {}
+
+    if not isinstance(regions, (list, tuple, set)):
+        regions = local_state.keys()
+
+    out = []
+    for region in regions:
+        key = str(region or "").strip()
+        if not key:
+            continue
+        info = local_state.get(key, {})
+        if not isinstance(info, dict):
+            continue
+        if str(info.get("state", "")).strip() == "protect":
+            out.append(key)
+    return sorted(set(out))
+
+
+def build_local_risk_planning_override(user_id, readiness_score, fatigue_score, timing_state, time_budget_min):
+    protect_regions = get_local_protect_regions(user_id, regions=("knee", "ankle_calf", "low_back"))
+    if not protect_regions:
+        return None
+
+    if timing_state == "early":
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_variant": "local_protection_override",
+            "reason": f"lokal beskyttelse i {', '.join(protect_regions)} overstyrer cardiovalg",
+            "autoplan_meta": {
+                "template_mode": "local_protection_override_v0_1",
+                "families_selected": [],
+                "local_protection_override": True,
+                "protected_regions": protect_regions,
+            },
+        }
+
+    if int(fatigue_score or 0) >= 4:
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_variant": "local_protection_override",
+            "reason": f"lokal beskyttelse i {', '.join(protect_regions)} prioriterer restitution",
+            "autoplan_meta": {
+                "template_mode": "local_protection_override_v0_1",
+                "families_selected": [],
+                "local_protection_override": True,
+                "protected_regions": protect_regions,
+            },
+        }
+
+    return None
+
+
 def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None):
     user_id = str(user_id or "").strip()
     metrics = compute_cardio_load_metrics(user_id)
@@ -1827,6 +1888,7 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
     last_cardio_kind = str(metrics.get("last_cardio_kind", "")).strip().lower()
     last_hard_days = metrics.get("last_hard_cardio_days_ago")
     load_status = str(metrics.get("load_status", "balanced")).strip().lower()
+    protect_regions = get_local_protect_regions(user_id, regions=("knee", "ankle_calf", "low_back"))
 
     kind = "base"
     duration = 30
@@ -1886,6 +1948,21 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
             kind = "base"
             duration = min(max(20, time_val), 35)
             reason.append("hård cardio for nylig, nedjusteret til base")
+
+    if protect_regions:
+        knee_or_calf = any(x in protect_regions for x in ("knee", "ankle_calf"))
+        low_back_protect = "low_back" in protect_regions
+
+        if knee_or_calf:
+            kind = "restitution"
+            duration = min(time_val, 20) if time_val > 0 else 20
+            reason.append(f"lokal beskyttelse i {', '.join(protect_regions)}")
+            reason.append("cardio nedjusteret til restitution")
+        elif low_back_protect and kind in ("interval", "tempo"):
+            kind = "base"
+            duration = min(max(20, time_val), 30)
+            reason.append("lokal beskyttelse i low_back")
+            reason.append("hård cardio nedjusteret til base")
 
     return {
         "cardio_kind": kind,
@@ -2495,6 +2572,17 @@ def build_today_plan_priority_decision(
     training_day_ctx,
     weekly_status,
 ):
+    local_override = build_local_risk_planning_override(
+        auth_user.get("user_id") if isinstance(auth_user, dict) else None,
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        timing_state=timing_state,
+        time_budget_min=time_budget_min,
+    )
+    if isinstance(local_override, dict):
+        local_override["weekly_status"] = weekly_status
+        return local_override
+
     if readiness_score <= 3:
         return {
             "session_type": "restitution",
