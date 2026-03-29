@@ -1212,6 +1212,7 @@ function renderProfileEquipmentCard(){
   const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
     ? preferences.training_types
     : {};
+  const menstruationSupportEnabled = preferences.menstruation_support_enabled === true;
   const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
     ? preferences.training_days
     : {};
@@ -1337,6 +1338,7 @@ function populateEquipmentEditor(){
   const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
     ? preferences.training_types
     : {};
+  const menstruationSupportEnabled = preferences.menstruation_support_enabled === true;
   const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
     ? preferences.training_days
     : {};
@@ -1365,6 +1367,7 @@ function populateEquipmentEditor(){
   setChecked("pref_strength_weights", trainingTypes.strength_weights !== false);
   setChecked("pref_bodyweight", trainingTypes.bodyweight !== false);
   setChecked("pref_mobility", trainingTypes.mobility !== false);
+  setChecked("pref_menstruation_support_enabled", menstruationSupportEnabled);
 
   setChecked("day_mon", trainingDays.mon !== false);
   setChecked("day_tue", trainingDays.tue !== false);
@@ -1427,6 +1430,7 @@ async function handleEquipmentSettingsSubmit(ev){
         bodyweight: readChecked("pref_bodyweight"),
         mobility: readChecked("pref_mobility"),
       },
+      menstruation_support_enabled: readChecked("pref_menstruation_support_enabled"),
       training_days: {
         mon: readChecked("day_mon"),
         tue: readChecked("day_tue"),
@@ -1455,6 +1459,7 @@ async function handleEquipmentSettingsSubmit(ev){
     const res = await apiPost("/api/user-settings", payload);
     STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
     await refreshAll();
+    updateMenstruationCheckinVisibility();
     setEquipmentEditorOpen(false);
     if (statusEl) statusEl.textContent = tr("status.equipment_saved");
   }catch(err){
@@ -3086,11 +3091,26 @@ async function handleWorkoutSubmit(ev){
   }
 }
 
+function updateMenstruationCheckinVisibility(){
+  const prefs = STATE.userSettings && typeof STATE.userSettings === "object" && STATE.userSettings.preferences && typeof STATE.userSettings.preferences === "object"
+    ? STATE.userSettings.preferences
+    : {};
+  const enabled = prefs.menstruation_support_enabled === true;
+  const block = document.getElementById("menstruationCheckinFields");
+  if (block){
+    block.classList.toggle("wizard-step-hidden", !enabled);
+  }
+}
+
 async function handleRecoverySubmit(ev){
   ev.preventDefault();
 
   const form = ev.currentTarget;
   const statusEl = document.getElementById("recoveryFormStatus");
+
+  const menstruationEnabled = STATE.userSettings && typeof STATE.userSettings === "object" && STATE.userSettings.preferences && typeof STATE.userSettings.preferences === "object"
+    ? STATE.userSettings.preferences.menstruation_support_enabled === true
+    : false;
 
   const payload = {
     date: form.recovery_date.value,
@@ -3099,7 +3119,9 @@ async function handleRecoverySubmit(ev){
     soreness_score: Number(form.soreness_score.value),
     time_budget_min: Number(form.time_budget_min.value || 45),
     notes: form.recovery_notes.value.trim(),
-    local_signals: collectLocalCheckinSignals(form)
+    local_signals: collectLocalCheckinSignals(form),
+    menstruation_today: menstruationEnabled ? Boolean(form.menstruation_today?.checked) : null,
+    menstrual_pain: menstruationEnabled ? String(form.menstrual_pain?.value || "none") : "none"
   };
 
   try{
@@ -3114,10 +3136,13 @@ async function handleRecoverySubmit(ev){
     form.energy_score.value = "3";
     form.soreness_score.value = "2";
     form.time_budget_min.value = "45";
+    if (form.menstruation_today) form.menstruation_today.checked = false;
+    if (form.menstrual_pain) form.menstrual_pain.value = "none";
     ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
       if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
     });
     await refreshAll();
+    updateMenstruationCheckinVisibility();
     advanceWizardAfterCheckin();
   }catch(err){
     setText("recoveryFormStatus", tr("status.error_prefix") + (err?.message || String(err)));
@@ -3823,6 +3848,7 @@ function initCheckinScoreButtons(){
   enhanceCheckinScoreField("sleep_score");
   enhanceCheckinScoreField("energy_score");
   enhanceCheckinScoreField("soreness_score");
+  updateMenstruationCheckinVisibility();
 }
 
 

@@ -599,6 +599,31 @@ def compute_readiness_score(sleep_score, energy_score, soreness_score):
     readiness_score = max(1, min(5, readiness_score))
     return readiness_score
 
+def _parse_optional_bool(value, field):
+    if value in (None, "", "null"):
+        return None, None, None
+    if isinstance(value, bool):
+        return value, None, None
+    s = str(value).strip().lower()
+    if s in ("true", "1", "yes", "ja"):
+        return True, None, None
+    if s in ("false", "0", "no", "nej"):
+        return False, None, None
+    return None, make_error_payload("invalid_boolean", f"{field} skal være true/false", field=field), 400
+
+def _parse_menstrual_pain(value):
+    if value in (None, "", "null"):
+        return "none", None, None
+    allowed = {"none", "light", "moderate", "severe"}
+    s = str(value).strip().lower()
+    if s in allowed:
+        return s, None, None
+    return None, make_error_payload(
+        "invalid_menstrual_pain",
+        "menstrual_pain skal være none, light, moderate eller severe",
+        field="menstrual_pain",
+    ), 400
+
 def create_checkin(user_id, payload):
     if not isinstance(payload, dict):
         return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
@@ -631,6 +656,14 @@ def create_checkin(user_id, payload):
     if err:
         return None, err, status
 
+    menstruation_today, err, status = _parse_optional_bool(payload.get("menstruation_today"), "menstruation_today")
+    if err:
+        return None, err, status
+
+    menstrual_pain, err, status = _parse_menstrual_pain(payload.get("menstrual_pain"))
+    if err:
+        return None, err, status
+
     readiness_score = compute_readiness_score(
         sleep_score=sleep_score,
         energy_score=energy_score,
@@ -648,6 +681,8 @@ def create_checkin(user_id, payload):
         "readiness_score": readiness_score,
         "notes": notes,
         "local_signals": local_signals,
+        "menstruation_today": menstruation_today,
+        "menstrual_pain": menstrual_pain,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     item, count = append_user_item("checkins", item)
@@ -2562,6 +2597,23 @@ def append_today_plan_trace(user_id, trace):
         logger.exception("today_plan_trace_write_failed")
 
 
+def get_menstruation_planning_signal(latest_checkin):
+    if not isinstance(latest_checkin, dict):
+        return None
+
+    menstrual_pain = str(latest_checkin.get("menstrual_pain", "none") or "none").strip().lower()
+    menstruation_today = latest_checkin.get("menstruation_today")
+
+    if menstrual_pain in ("moderate", "severe"):
+        return {
+            "active": True,
+            "menstrual_pain": menstrual_pain,
+            "menstruation_today": menstruation_today,
+            "reason": f"rapporterede menstruationssmerter ({menstrual_pain})"
+        }
+
+    return None
+
 def build_today_plan_priority_decision(
     auth_user,
     readiness_score,
@@ -2571,6 +2623,7 @@ def build_today_plan_priority_decision(
     time_budget_min,
     training_day_ctx,
     weekly_status,
+    latest_checkin=None,
 ):
     local_override = build_local_risk_planning_override(
         auth_user.get("user_id") if isinstance(auth_user, dict) else None,
@@ -2582,6 +2635,24 @@ def build_today_plan_priority_decision(
     if isinstance(local_override, dict):
         local_override["weekly_status"] = weekly_status
         return local_override
+
+    menstruation_signal = get_menstruation_planning_signal(latest_checkin)
+    if isinstance(menstruation_signal, dict):
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_variant": "menstruation_support_override",
+            "reason": f"{menstruation_signal.get('reason')} · restitution prioriteres",
+            "autoplan_meta": {
+                "template_mode": "menstruation_support_v0_1",
+                "families_selected": [],
+                "menstruation_support_applied": True,
+                "menstrual_pain": menstruation_signal.get("menstrual_pain"),
+                "menstruation_today": menstruation_signal.get("menstruation_today"),
+            },
+            "weekly_status": weekly_status,
+        }
 
     if readiness_score <= 3:
         return {
@@ -3119,6 +3190,7 @@ def get_today_plan():
         time_budget_min=time_budget_min,
         training_day_ctx=training_day_ctx,
         weekly_status=weekly_status,
+        latest_checkin=latest_checkin,
     )
 
     if isinstance(priority_decision_ctx, dict):
