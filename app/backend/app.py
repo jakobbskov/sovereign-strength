@@ -2891,6 +2891,9 @@ def get_today_plan():
     if auth_err:
         log_auth_failure("today-plan", auth_err)
         return auth_err
+
+    update_adaptation_state(auth_user.get("user_id"))
+
     checkins = list_user_items("checkins", auth_user.get("user_id"))
     checkins_error = get_storage_last_error()
     if checkins_error and checkins_error.get("file_key") == "checkins":
