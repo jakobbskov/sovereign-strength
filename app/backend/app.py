@@ -4955,7 +4955,8 @@ def build_autoplan_strength(user_id, readiness=None, time_budget_min=None, user_
             "exercise_id": exercise_id,
             "exercise_score": picked.get("score", 0),
             "family_reason": fam.get("reason", []),
-            "exercise_reason": picked.get("reason", [])
+            "exercise_reason": picked.get("reason", []),
+            "local_state_applied": any("lokal caution" in str(x) for x in (picked.get("reason", []) or []))
         })
 
     return {
@@ -4972,10 +4973,13 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
     state = get_live_adaptation_state_for(user_id)
     identity_graph = state.get("exercise_identity_graph", {}) if isinstance(state, dict) else {}
     learning_signals = state.get("learning_signals", {}) if isinstance(state, dict) else {}
+    local_state = state.get("local_state", {}) if isinstance(state, dict) else {}
     if not isinstance(identity_graph, dict):
         identity_graph = {}
     if not isinstance(learning_signals, dict):
         learning_signals = {}
+    if not isinstance(local_state, dict):
+        local_state = {}
 
     exercises = read_json_file(FILES["exercises"])
     candidates = get_exercises_for_family(family_key, exercises=exercises, identity_graph=identity_graph)
@@ -5012,6 +5016,22 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
         learned = str(learning.get("learned_recommendation", "")).strip()
         next_variation = str(learning.get("next_variation", "")).strip()
 
+        local_targets = get_local_load_targets_for_exercise(ex_id, exercises=exercises)
+        blocked_regions = []
+        caution_regions = []
+        for region in local_targets:
+            info = local_state.get(region, {}) if isinstance(local_state, dict) else {}
+            if not isinstance(info, dict):
+                continue
+            region_state = str(info.get("state", "")).strip()
+            if region_state == "protect":
+                blocked_regions.append(region)
+            elif region_state == "caution":
+                caution_regions.append(region)
+
+        if blocked_regions:
+            continue
+
         score = 0.0
         reasons = []
 
@@ -5041,6 +5061,10 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
         progression_mode = str(item.get("progression_mode", "")).strip()
         if progression_mode == "double_progression":
             score += 0.15
+
+        if caution_regions:
+            score -= 0.6 * len(caution_regions)
+            reasons.append(f"lokal caution i: {', '.join(caution_regions[:3])}")
 
         input_kind = str(item.get("input_kind", "")).strip()
         if readiness is not None:
