@@ -404,6 +404,7 @@
             <label class="training-option"><input id="pref_strength_weights" type="checkbox"><span data-i18n="settings.strength_weights">Styrke med vægte</span></label>
             <label class="training-option"><input id="pref_bodyweight" type="checkbox"><span data-i18n="training_type.bodyweight">Kropsvægtøvelser</span></label>
             <label class="training-option"><input id="pref_mobility" type="checkbox"><span data-i18n="settings.mobility_recovery">Mobility and recovery</span></label>
+            <label class="training-option"><input id="pref_menstruation_support_enabled" type="checkbox"><span>Vis valgfri menstruationsfelter i check-in</span></label>
 
             <div style="margin:16px 0 6px; font-weight:700" data-i18n="profile.training_days_title">Jeg kan typisk træne på</div>
             <div class="small" style="margin-bottom:8px" data-i18n="profile.training_days_help">Dage du ikke vælger her, bliver altid hviledage.</div>
@@ -857,6 +858,22 @@
             <option value="60">60 min</option>
           </select>
         </label>
+
+        <div id="menstruationCheckinFields" class="wizard-step-hidden">
+          <label>
+            <span>Menstruation i dag</span>
+            <input id="menstruation_today" name="menstruation_today" type="checkbox">
+          </label>
+          <label>
+            <span>Menstruationssmerter</span>
+            <select id="menstrual_pain" name="menstrual_pain">
+              <option value="none">Ingen</option>
+              <option value="light">Lette</option>
+              <option value="moderate">Moderate</option>
+              <option value="severe">Svære</option>
+            </select>
+          </label>
+        </div>
 
         <label>
           <span data-i18n="checkin.notes">Noter</span>
