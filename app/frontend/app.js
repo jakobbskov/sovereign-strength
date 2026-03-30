@@ -1327,6 +1327,21 @@ function renderProfileEquipmentCard(){
 
   }
 
+function mountEquipmentEditorInline(){
+  const wrap = document.getElementById("equipmentEditorWrap");
+  const modal = document.getElementById("equipmentSettingsModal");
+  if (!wrap || !modal) return;
+
+  const card = modal.querySelector(".modal-card");
+  if (!card) return;
+
+  if (wrap.dataset.mounted !== "1"){
+    wrap.innerHTML = "";
+    wrap.appendChild(card);
+    wrap.dataset.mounted = "1";
+  }
+}
+
 function populateEquipmentEditor(){
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
   const profile = settings.profile && typeof settings.profile === "object"
@@ -1387,13 +1402,22 @@ function populateEquipmentEditor(){
 }
 
 function setEquipmentEditorOpen(isOpen){
+  const wrap = document.getElementById("equipmentEditorWrap");
   const modal = document.getElementById("equipmentSettingsModal");
-  if (!modal) return;
-  modal.classList.toggle("wizard-step-hidden", !isOpen);
+  if (wrap){
+    wrap.classList.toggle("wizard-step-hidden", !isOpen);
+    wrap.style.display = isOpen ? "block" : "none";
+  }
+  if (modal){
+    modal.classList.add("wizard-step-hidden");
+    modal.style.display = "none";
+  }
   if (isOpen){
     populateEquipmentEditor();
     const status = document.getElementById("equipmentSettingsStatus");
     if (status) status.textContent = tr("profile.edit_and_save_when_ready");
+    const firstField = document.getElementById("profile_height_cm");
+    if (firstField && typeof firstField.focus === "function") firstField.focus();
   }
 }
 
@@ -1486,6 +1510,7 @@ async function handleResetCatalogFromSeed(){
 
 function bindEquipmentEditor(){
   const form = document.getElementById("equipmentSettingsForm");
+  const openBtn = document.getElementById("openEquipmentSettingsBtn");
   const saveBtn = document.getElementById("saveEquipmentSettingsBtn");
   const cancelBtn = document.getElementById("cancelEquipmentSettingsBtn");
   const resetBtn = document.getElementById("resetCatalogFromSeedBtn");
@@ -1493,6 +1518,14 @@ function bindEquipmentEditor(){
 
   if (form){
     form.onsubmit = handleEquipmentSettingsSubmit;
+  }
+
+  if (openBtn && !openBtn.dataset.bound){
+    openBtn.dataset.bound = "1";
+    openBtn.onclick = (ev) => {
+      ev.preventDefault();
+      setEquipmentEditorOpen(true);
+    };
   }
 
   if (saveBtn){
@@ -1508,7 +1541,10 @@ function bindEquipmentEditor(){
   }
 
   if (cancelBtn){
-    cancelBtn.onclick = () => setEquipmentEditorOpen(false);
+    cancelBtn.onclick = (ev) => {
+      ev.preventDefault();
+      setEquipmentEditorOpen(false);
+    };
   }
 
   if (resetBtn && !resetBtn.dataset.bound){
@@ -1687,6 +1723,10 @@ function formatPlanVariant(value){
   if (x === "default") return tr("plan_variant.standard");
   if (x === "weekly_goal_cap") return tr("plan.motor.weekly_goal_cap");
   if (x === "manual_override") return tr("plan.motor.manual_override");
+  if (x === "consistency_fallback") return tr("session_type.recovery");
+  if (x === "local_protection_override") return tr("plan.motor.autoplan");
+  if (x === "menstruation_support_override") return tr("plan.motor.autoplan");
+  if (x === "reentry_strength") return tr("workout.type.strength");
   if (x === "completed_today") return "";
   return x || "";
 }
@@ -2602,6 +2642,23 @@ function renderTodayPlan(item){
     decisionBits.push(tr("decision_trace.override", { value: decisionTrace.override }));
   }
   const decisionTraceSummary = decisionBits.length ? decisionBits.join(" · ") : "";
+  const planVariantKey = String(item?.plan_variant || "").trim();
+  const hasHighImpactOverride = Boolean(
+    decisionTrace?.override ||
+    planVariantKey === "local_protection_override" ||
+    planVariantKey === "menstruation_support_override" ||
+    planVariantKey === "reentry_strength"
+  );
+  const rawReason = String(item?.reason || "").trim();
+  const overrideReasonText = rawReason
+    ? (hasHighImpactOverride ? rawReason : formatPlanReason(rawReason))
+    : "";
+  const planContextBits = hasHighImpactOverride
+    ? [
+        overrideReasonText ? `${tr("common.why_label")}: ${overrideReasonText}` : "",
+        familiesSummary,
+      ].filter(Boolean)
+    : [];
 
   setText(
     "todayPlanSummary",
@@ -2631,7 +2688,7 @@ function renderTodayPlan(item){
         item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
       ].filter(Boolean).join(" · "))}
     </div>
-    ${item.reason ? `<div class="small" style="margin-top:8px">${esc(formatPlanReason(item.reason || ""))}</div>` : ""}
+    ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
     <div style="margin-top:12px">
       <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
     </div>
@@ -3441,7 +3498,10 @@ function renderUtilityNav(){
     btn.addEventListener("click", () => {
       const target = String(btn.getAttribute("data-utility-step") || "").trim();
       if (target === "profile"){
-        setEquipmentEditorOpen(true);
+        showWizardStep("overview");
+        requestAnimationFrame(() => {
+          setEquipmentEditorOpen(true);
+        });
         return;
       }
       showWizardStep(target);
@@ -3611,6 +3671,7 @@ async function boot(){
     document.getElementById("loadProgramDayBtn")?.addEventListener("click", handleLoadProgramDay);
     document.getElementById("program_id")?.addEventListener("change", refreshProgramDaySelect);
     document.getElementById("entry_exercise_id")?.addEventListener("change", handleExerciseChange);
+    mountEquipmentEditorInline();
     bindEquipmentEditor();
     bindRpePicker();
 
