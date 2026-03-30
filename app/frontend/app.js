@@ -1527,10 +1527,13 @@ function updateOverviewLayoutForStep(stepId){
   cards.forEach(card => {
     let keepVisible =
       card.id === "forecastHero" ||
-      card.id === "overviewStatusCard";
+      card.id === "overviewStatusCard" ||
+      card.id === "profileEquipmentCard";
 
     if (stepId === "overview" && dailyUiState === "needs_checkin"){
-      keepVisible = card.id === "forecastHero";
+      keepVisible =
+        card.id === "forecastHero" ||
+        card.id === "profileEquipmentCard";
     }
 
     card.classList.toggle(
@@ -3417,6 +3420,35 @@ function getWizardSections(){
   };
 }
 
+function renderUtilityNav(){
+  const root = document.getElementById("utilityNav");
+  if (!root) return;
+
+  const items = [
+    { id: "overview", label: getWizardStepLabel({ labelKey: "wizard.overview" }) },
+    { id: "profile", label: tr("overview.profile_equipment") },
+    { id: "manual", label: getWizardStepLabel({ labelKey: "wizard.manual" }) },
+    { id: "history", label: getWizardStepLabel({ labelKey: "wizard.history" }) },
+  ];
+
+  root.innerHTML = items.map(item => `
+      <button type="button" data-utility-step="${esc(item.id)}">
+        ${esc(item.label)}
+      </button>
+    `).join("");
+
+  root.querySelectorAll("[data-utility-step]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = String(btn.getAttribute("data-utility-step") || "").trim();
+      if (target === "profile"){
+        setEquipmentEditorOpen(true);
+        return;
+      }
+      showWizardStep(target);
+    });
+  });
+}
+
 function renderWizardNav(){
   const root = document.getElementById("wizardNav");
   if (!root) return;
@@ -3518,6 +3550,7 @@ function showWizardStep(stepId){
   updateReviewHeadingForStep(stepId);
   updateOverviewLayoutForStep(stepId);
   renderWizardNav();
+  renderUtilityNav();
   requestAnimationFrame(() => {
     const groups = getWizardSections();
     const firstNode = (groups[stepId] || []).find(Boolean);

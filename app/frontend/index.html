@@ -178,6 +178,26 @@
       outline:2px solid var(--accent);
       transform:translateY(-1px);
     }
+    .utility-nav{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:0 0 14px;
+      align-items:center;
+    }
+    .utility-nav button{
+      width:auto;
+      padding:7px 11px;
+      border-radius:999px;
+      opacity:.88;
+      background:#141414;
+      border:1px solid #2c2c2c;
+      transition:opacity .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .utility-nav button:hover{
+      opacity:1;
+      border-color:var(--accent);
+    }
     .wizard-step-hidden{
       display:none !important;
     }
@@ -333,6 +353,7 @@
     </div>
     <p data-i18n="app.tagline">Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
     <div id="wizardNav" class="wizard-nav"></div>
+    <div id="utilityNav" class="utility-nav"></div>
 
     <div class="grid" id="overviewSection">
       <section class="card" id="forecastHero" style="grid-column:1/-1">
