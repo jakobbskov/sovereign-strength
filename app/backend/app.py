@@ -1334,6 +1334,114 @@ def build_restitution_plan(time_budget_min):
 
 
 
+def build_reentry_strength_plan(time_budget_min):
+    try:
+        time_budget_min = int(time_budget_min or 0)
+    except Exception:
+        time_budget_min = 20
+
+    if time_budget_min <= 0:
+        time_budget_min = 20
+
+    rounds = 1 if time_budget_min <= 20 else 2
+
+    return [
+        {
+            "exercise_id": "glute_bridge",
+            "sets": rounds,
+            "target_reps": "8-10",
+            "target_load": None,
+            "progression_decision": "no_progression",
+            "progression_reason": "re-entry strength prioritized",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+        },
+        {
+            "exercise_id": "incline_push_ups",
+            "sets": rounds,
+            "target_reps": "6-8",
+            "target_load": None,
+            "progression_decision": "no_progression",
+            "progression_reason": "re-entry strength prioritized",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+        },
+        {
+            "exercise_id": "bird_dog",
+            "sets": rounds,
+            "target_reps": "20 sek",
+            "target_load": None,
+            "progression_decision": "no_progression",
+            "progression_reason": "re-entry strength prioritized",
+            "recommended_next_load": None,
+            "actual_possible_next_load": None,
+            "equipment_constraint": False,
+            "secondary_constraints": [],
+            "next_target_reps": None,
+            "substituted_from": None,
+        },
+    ]
+
+
+def should_use_reentry_strength(readiness_score, fatigue_score, recovery_state, days_since_last_strength, training_day_ctx=None):
+    try:
+        readiness_score = int(readiness_score or 0)
+    except Exception:
+        readiness_score = 0
+
+    try:
+        fatigue_score = int(fatigue_score or 0)
+    except Exception:
+        fatigue_score = 0
+
+    try:
+        days_since_last_strength = int(days_since_last_strength) if days_since_last_strength is not None else None
+    except Exception:
+        days_since_last_strength = None
+
+    training_day_ctx = training_day_ctx if isinstance(training_day_ctx, dict) else {}
+
+    recovery_state = recovery_state if isinstance(recovery_state, dict) else {}
+    recovery_key = str(recovery_state.get("recovery_state", "")).strip().lower()
+    load_status = str(recovery_state.get("load_status", "")).strip().lower()
+
+    logger.warning(
+        "reentry_check readiness=%s fatigue=%s recovery_key=%s load_status=%s days_since_last_strength=%s training_day_ctx=%s",
+        readiness_score,
+        fatigue_score,
+        recovery_key,
+        load_status,
+        days_since_last_strength,
+        training_day_ctx,
+    )
+    if readiness_score > 3:
+        logger.warning("reentry_check_result=false reason=readiness_above_3")
+        return False
+    if fatigue_score >= 4:
+        logger.warning("reentry_check_result=false reason=fatigue_gte_4")
+        return False
+    if recovery_key == "recover":
+        logger.warning("reentry_check_result=false reason=recovery_key_recover")
+        return False
+    if load_status not in ("underloaded", "balanced"):
+        logger.warning("reentry_check_result=false reason=load_status_not_allowed")
+        return False
+    if days_since_last_strength is not None and days_since_last_strength < 3:
+        logger.warning("reentry_check_result=false reason=recent_strength")
+        return False
+
+    logger.warning("reentry_check_result=true")
+    return True
+
+
 def get_live_adaptation_state_for(user_id):
     try:
         user_id = str(user_id or "").strip()
@@ -2620,6 +2728,7 @@ def build_today_plan_priority_decision(
     fatigue_score,
     timing_state,
     recovery_state,
+    days_since_last_strength,
     time_budget_min,
     training_day_ctx,
     weekly_status,
@@ -2650,6 +2759,29 @@ def build_today_plan_priority_decision(
                 "menstruation_support_applied": True,
                 "menstrual_pain": menstruation_signal.get("menstrual_pain"),
                 "menstruation_today": menstruation_signal.get("menstruation_today"),
+            },
+            "weekly_status": weekly_status,
+        }
+
+    if should_use_reentry_strength(
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        recovery_state=recovery_state,
+        days_since_last_strength=days_since_last_strength,
+        training_day_ctx=training_day_ctx,
+    ):
+        return {
+            "session_type": "styrke",
+            "template_id": "reentry_strength",
+            "plan_entries": build_reentry_strength_plan(time_budget_min),
+            "plan_variant": "reentry_strength",
+            "reason": "low readiness, but recent load is low and re-entry strength is prioritized",
+            "autoplan_meta": {
+                "template_mode": "reentry_strength_v0_1",
+                "families_selected": [],
+                "reentry_strength_applied": True,
+                "days_since_last_strength": days_since_last_strength,
+                "load_status": recovery_state.get("load_status") if isinstance(recovery_state, dict) else None,
             },
             "weekly_status": weekly_status,
         }
@@ -2960,6 +3092,7 @@ def build_decision_trace(
     session_type,
     timing_state,
     fatigue_session_override,
+    plan_variant=None,
 ):
     readiness_bucket = "low" if readiness_score <= 3 else "high"
 
@@ -2980,6 +3113,8 @@ def build_decision_trace(
     if fatigue_session_override == "restitution":
         rule_applied = "fatigue_override_restitution"
         override_label = "fatigue_session_override"
+    elif str(plan_variant or "").strip() == "reentry_strength":
+        rule_applied = "reentry_strength"
     elif readiness_score <= 3:
         rule_applied = "low_readiness_restitution"
     elif timing_state == "early":
@@ -3014,6 +3149,7 @@ def validate_today_plan_item(item):
         }
 
     session_type = str(item.get("session_type", "")).strip().lower()
+    plan_variant = str(item.get("plan_variant", "")).strip().lower()
     entries = item.get("entries", [])
     if not isinstance(entries, list):
         entries = []
@@ -3023,16 +3159,14 @@ def validate_today_plan_item(item):
         isinstance(e, dict) and str(e.get("exercise_id", "")).strip()
         for e in entries
     )
+    is_reentry_strength = plan_variant == "reentry_strength"
 
     invalid = False
     invalid_reason = None
 
-    if session_type == "styrke" and not has_entries:
+    if (session_type == "styrke" or is_reentry_strength) and not has_entries:
         invalid = True
         invalid_reason = "strength plan missing entries"
-    elif session_type == "restitution" and has_exercise_entries:
-        invalid = True
-        invalid_reason = "restitution plan should not contain exercise entries"
     elif session_type in ("cardio", "løb") and not has_entries:
         invalid = True
         invalid_reason = "cardio plan missing entries"
@@ -3187,6 +3321,7 @@ def get_today_plan():
         fatigue_score=fatigue_score,
         timing_state=timing_state,
         recovery_state=recovery_state,
+        days_since_last_strength=days_since_last_strength,
         time_budget_min=time_budget_min,
         training_day_ctx=training_day_ctx,
         weekly_status=weekly_status,
@@ -3194,6 +3329,17 @@ def get_today_plan():
     )
 
     if isinstance(priority_decision_ctx, dict):
+        logger.warning(
+            "priority_decision_result session_type=%s plan_variant=%s reason=%s readiness=%s fatigue=%s recovery_state=%s load_status=%s days_since_last_strength=%s",
+            priority_decision_ctx.get("session_type"),
+            priority_decision_ctx.get("plan_variant", "default"),
+            priority_decision_ctx.get("reason"),
+            readiness_score,
+            fatigue_score,
+            recovery_state.get("recovery_state") if isinstance(recovery_state, dict) else None,
+            recovery_state.get("load_status") if isinstance(recovery_state, dict) else None,
+            days_since_last_strength,
+        )
         session_type = priority_decision_ctx.get("session_type")
         template_id = priority_decision_ctx.get("template_id")
         plan_entries = priority_decision_ctx.get("plan_entries", [])
@@ -3254,6 +3400,7 @@ def get_today_plan():
         session_type=session_type,
         timing_state=timing_state,
         fatigue_session_override=fatigue_session_override,
+        plan_variant=plan_variant,
     )
 
     item = {
@@ -3453,7 +3600,19 @@ def get_today_plan_debug():
 
     autoplan_meta = None
 
-    if readiness_score <= 3:
+    if should_use_reentry_strength(
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        recovery_state=recovery_state,
+        days_since_last_strength=fatigue_ctx["days_since_last_strength"],
+        training_day_ctx=training_day_ctx,
+    ):
+        session_type = "styrke"
+        template_id = "reentry_strength"
+        reason = "low readiness, but recent load is low and re-entry strength is prioritized"
+        plan_variant = "reentry_strength"
+        plan_entries = build_reentry_strength_plan(time_budget_min)
+    elif readiness_score <= 3:
         session_type = "restitution"
         template_id = "restitution_easy"
         reason = "low readiness"
