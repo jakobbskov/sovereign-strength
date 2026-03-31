@@ -142,6 +142,53 @@ class JSONStorage:
         items = self.list_user_items(file_key, user_id, sort_keys=sort_keys)
         return items[0] if items else None
 
+    def get_user_item(self, file_key, user_id, item_id):
+        items = self._read_list(file_key)
+        user_id = str(user_id).strip()
+        item_id = str(item_id).strip()
+
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("user_id", "")).strip() != user_id:
+                continue
+            if str(item.get("id", "")).strip() != item_id:
+                continue
+            return item
+
+        return None
+
+    def update_user_item(self, file_key, user_id, item_id, new_item):
+        lock_file = self._acquire_lock(file_key)
+        try:
+            items = self._read_list(file_key)
+            out = []
+            updated = None
+            user_id = str(user_id).strip()
+            item_id = str(item_id).strip()
+
+            for item in items:
+                if not isinstance(item, dict):
+                    out.append(item)
+                    continue
+
+                same_user = str(item.get("user_id", "")).strip() == user_id
+                same_id = str(item.get("id", "")).strip() == item_id
+
+                if same_user and same_id and updated is None:
+                    updated = dict(new_item or {})
+                    out.append(updated)
+                    continue
+
+                out.append(item)
+
+            if updated is not None:
+                self._write_list(file_key, out)
+
+            return updated
+        finally:
+            self._release_lock(lock_file)
+
     def delete_user_item(self, file_key, user_id, item_id):
         lock_file = self._acquire_lock(file_key)
         try:

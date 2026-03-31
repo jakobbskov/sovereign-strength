@@ -15,6 +15,10 @@ let STATE = {
   userSettings: {},
   pendingEntries: [],
   sessionResults: [],
+  recoveryHistory: [],
+  editingRecoveryId: null,
+  pendingRecoveryEditId: null,
+  editingSessionResultId: null,
   lastAutoLoad: ""
 };
 
@@ -166,6 +170,22 @@ async function rerenderUiAfterLanguageChange(){
   renderAuthBar();
   const uiState = await refreshAll();
   showWizardStep(CURRENT_STEP || uiState?.defaultStep || "overview");
+
+  const hasEditCheckin = String(getEditCheckinIdFromUrl() || "").trim();
+  if (hasEditCheckin){
+    await loadDedicatedCheckinEditFromUrl();
+    setTimeout(() => {
+      loadDedicatedCheckinEditFromUrl();
+    }, 250);
+  }
+
+  const hasEditSession = String(getEditSessionIdFromUrl() || "").trim();
+  if (hasEditSession){
+    await loadSessionEditFromUrl();
+    setTimeout(() => {
+      loadSessionEditFromUrl();
+    }, 250);
+  }
 }
 
 function setText(id, text){
@@ -779,6 +799,132 @@ function ensureSessionHistoryMount(){
   return document.getElementById("sessionResultsList");
 }
 
+function getEditSessionIdFromUrl(){
+  try{
+    const url = new URL(window.location.href);
+    return String(url.searchParams.get("edit_session") || "").trim();
+  }catch(err){
+    return "";
+  }
+}
+
+function clearEditSessionIdFromUrl(){
+  try{
+    const url = new URL(window.location.href);
+    url.searchParams.delete("edit_session");
+    window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : "") + url.hash);
+  }catch(err){}
+}
+
+function buildSessionPlanFromHistoryItem(item){
+  const results = Array.isArray(item?.results) ? item.results : [];
+  return {
+    date: item?.date || new Date().toISOString().slice(0,10),
+    session_type: item?.session_type || "styrke",
+    timing_state: item?.timing_state || "",
+    readiness_score: item?.readiness_score ?? null,
+    entries: results.map(result => {
+      const sets = Array.isArray(result?.sets) ? result.sets : [];
+      return {
+        exercise_id: result?.exercise_id || "",
+        sets: Math.max(1, sets.length || 1),
+        target_reps: result?.target_reps || "",
+        target_load: result?.load || "",
+        _existing_result: {
+          achieved_reps: result?.achieved_reps || "",
+          hit_failure: Boolean(result?.hit_failure),
+          notes: result?.notes || "",
+          sets: sets
+        }
+      };
+    })
+  };
+}
+
+function prefillSessionReviewFormFromHistoryItem(item){
+  const form = document.getElementById("sessionResultForm");
+  if (!form || !item || typeof item !== "object") return;
+
+  form.session_completed.value = item.completed ? "true" : "false";
+  form.session_notes.value = String(item.notes || "");
+
+  if (form.cardio_kind) form.cardio_kind.value = String(item.cardio_kind || "");
+  if (form.avg_rpe) form.avg_rpe.value = item.avg_rpe == null ? "" : String(item.avg_rpe);
+
+  const distance = Number(item.distance_km || 0);
+  const kmWhole = Math.floor(distance);
+  const kmPart = Math.round((distance - kmWhole) * 1000);
+  if (form.cardio_distance_km_whole) form.cardio_distance_km_whole.value = String(kmWhole || 0);
+  if (form.cardio_distance_km_part) form.cardio_distance_km_part.value = String(kmPart || 0);
+
+  const totalSec = Number(item.duration_total_sec || 0);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  if (form.cardio_duration_min) form.cardio_duration_min.value = totalSec ? String(min) : "";
+  if (form.cardio_duration_sec) form.cardio_duration_sec.value = String(sec || 0);
+
+  if (typeof updateCardioPacePreview === "function") updateCardioPacePreview();
+}
+
+async function loadSessionEditFromUrl(){
+  const sessionId = getEditSessionIdFromUrl();
+  if (!sessionId) return false;
+
+  const statusEl = document.getElementById("sessionResultStatus");
+  try{
+    setText("sessionResultStatus", "Åbner session til redigering...");
+    statusEl?.classList.remove("warn");
+    const data = await apiJsonRequest("GET", `/api/session-results/${encodeURIComponent(sessionId)}`);
+    const item = data?.item;
+    if (!item) return false;
+
+    STATE.editingSessionResultId = String(item.id || "").trim() || null;
+    STATE.currentTodayPlan = buildSessionPlanFromHistoryItem(item);
+    renderReviewSummary(STATE.currentTodayPlan);
+    renderSessionReview(STATE.currentTodayPlan);
+    prefillSessionReviewFormFromHistoryItem(item);
+
+    const submitBtn = document.querySelector('#sessionResultForm button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Gem ændringer";
+    const deleteBtn = document.getElementById("deleteSessionResultBtn");
+    if (deleteBtn) deleteBtn.classList.remove("wizard-step-hidden");
+
+    document.getElementById("todayPlanSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    showWizardStep("review");
+    return true;
+  }catch(err){
+    setText("sessionResultStatus", tr("status.error_prefix") + (err?.message || String(err)));
+    statusEl?.classList.add("warn");
+  }
+  return false;
+}
+
+async function handleSessionDelete(){
+  const sessionId = String(STATE.editingSessionResultId || "").trim();
+  const statusEl = document.getElementById("sessionResultStatus");
+  if (!sessionId) return;
+
+  if (!window.confirm("Er du sikker på at du vil slette denne session? Dette kan påvirke historik, progression og anbefalinger.")){
+    return;
+  }
+
+  try{
+    setText("sessionResultStatus", "Sletter session...");
+    statusEl?.classList.remove("warn");
+    await apiJsonRequest("DELETE", `/api/session-results/${encodeURIComponent(sessionId)}`);
+    STATE.editingSessionResultId = null;
+    clearEditSessionIdFromUrl();
+    await refreshAll();
+    renderSessionResultSummary(null);
+    showWizardStep("history");
+    setText("sessionResultStatus", "Session slettet.");
+    statusEl?.classList.add("ok");
+  }catch(err){
+    setText("sessionResultStatus", tr("status.error_prefix") + (err?.message || String(err)));
+    statusEl?.classList.add("warn");
+  }
+}
+
 function renderSessionHistory(items){
   const root = ensureSessionHistoryMount();
   if (!root) return;
@@ -827,6 +973,9 @@ function renderSessionHistory(items){
           ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
         </div>
         ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
+        <div class="btn-row" style="margin-top:10px">
+          <a href="/?edit_session=${encodeURIComponent(String(item?.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">Åbn / redigér</a>
+        </div>
       </li>
     `;
   }).join("");
@@ -946,17 +1095,209 @@ function renderExercises(items){
   setText("exerciseMeta", tr("common.items_count", { count: sorted.length }));
 }
 
+function getEditCheckinIdFromUrl(){
+  try{
+    const url = new URL(window.location.href);
+    return String(url.searchParams.get("edit_checkin") || "").trim();
+  }catch(err){
+    return "";
+  }
+}
+
+
+function clearEditCheckinIdFromUrl(){
+  try{
+    const url = new URL(window.location.href);
+    url.searchParams.delete("edit_checkin");
+    window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : "") + url.hash);
+  }catch(err){}
+}
+
+async function loadRecoveryEditFromUrl(){
+  const recoveryId = String(STATE.pendingRecoveryEditId || getEditCheckinIdFromUrl() || "").trim();
+  if (!recoveryId) return false;
+
+  const statusEl = document.getElementById("recoveryFormStatus");
+  try{
+    setText("recoveryFormStatus", "Åbner check-in til redigering...");
+    statusEl?.classList.remove("warn");
+    const data = await apiJsonRequest("GET", `/api/checkins/${encodeURIComponent(recoveryId)}`);
+    if (data?.item){
+      setRecoveryEditMode(data.item);
+      STATE.pendingRecoveryEditId = null;
+      setTimeout(() => {
+        try{
+          showWizardStep("checkin");
+        }catch(err){}
+        document.getElementById("checkinSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+      setTimeout(() => {
+        try{
+          showWizardStep("checkin");
+        }catch(err){}
+        document.getElementById("checkinSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        clearEditCheckinIdFromUrl();
+      }, 250);
+      return true;
+    }
+  }catch(err){
+    setText("recoveryFormStatus", tr("status.error_prefix") + (err?.message || String(err)));
+    statusEl?.classList.add("warn");
+  }
+  return false;
+}
+
+async function apiJsonRequest(method, path, payload){
+  const options = {
+    method,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "same-origin"
+  };
+  if (payload !== undefined){
+    options.body = JSON.stringify(payload);
+  }
+
+  const res = await fetch(path, options);
+  let data = null;
+  try{
+    data = await res.json();
+  }catch(err){
+    data = null;
+  }
+
+  if (!res.ok || !data?.ok){
+    const message = data?.message || data?.error || `${method} ${path} failed`;
+    throw new Error(message);
+  }
+  return data;
+}
+
+function resetRecoveryFormLocalSignals(form){
+  ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
+    if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
+  });
+}
+
+function applyRecoveryLocalSignals(form, localSignals){
+  resetRecoveryFormLocalSignals(form);
+  const items = Array.isArray(localSignals) ? localSignals : [];
+  items.forEach((item) => {
+    if (!item || typeof item !== "object") return;
+    const region = String(item.region || "").trim();
+    const signal = String(item.signal || "").trim();
+    if (!region || !signal) return;
+    const field = form[`local_signal_${region}`];
+    if (field) field.value = signal;
+  });
+}
+
+
+function setRecoveryEditMode(item){
+  const form = document.getElementById("recoveryForm");
+  const statusEl = document.getElementById("recoveryFormStatus");
+  const cancelBtn = document.getElementById("cancelRecoveryEditBtn");
+  const deleteBtn = document.getElementById("deleteRecoveryBtn");
+  const submitBtn = form?.querySelector('button[type="submit"]');
+
+  if (!form || !item || typeof item !== "object") return;
+
+  STATE.editingRecoveryId = String(item.id || "").trim() || null;
+
+  form.recovery_date.value = String(item.date || "").slice(0,10);
+  form.sleep_score.value = String(item.sleep_score ?? "3");
+  form.energy_score.value = String(item.energy_score ?? "3");
+  form.soreness_score.value = String(item.soreness_score ?? "2");
+  form.time_budget_min.value = String(item.time_budget_min ?? "45");
+  form.recovery_notes.value = String(item.notes || "");
+  if (form.menstruation_today) form.menstruation_today.checked = item.menstruation_today === true;
+  if (form.menstrual_pain) form.menstrual_pain.value = String(item.menstrual_pain || "none");
+  applyRecoveryLocalSignals(form, item.local_signals || []);
+
+  if (submitBtn) submitBtn.textContent = "Gem ændringer";
+  if (cancelBtn) cancelBtn.classList.remove("wizard-step-hidden");
+  if (deleteBtn) deleteBtn.classList.remove("wizard-step-hidden");
+  if (statusEl){
+    statusEl.textContent = "Redigerer eksisterende check-in.";
+    statusEl.classList.remove("warn");
+    statusEl.classList.add("ok");
+  }
+
+  document.getElementById("checkinSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetRecoveryEditMode(){
+  const form = document.getElementById("recoveryForm");
+  const statusEl = document.getElementById("recoveryFormStatus");
+  const cancelBtn = document.getElementById("cancelRecoveryEditBtn");
+  const deleteBtn = document.getElementById("deleteRecoveryBtn");
+  const submitBtn = form?.querySelector('button[type="submit"]');
+
+  STATE.editingRecoveryId = null;
+
+  if (submitBtn) submitBtn.textContent = tr("button.calculate_today_plan");
+  if (cancelBtn) cancelBtn.classList.add("wizard-step-hidden");
+  if (deleteBtn) deleteBtn.classList.add("wizard-step-hidden");
+
+  if (!form) return;
+
+  form.reset();
+  form.recovery_date.value = new Date().toISOString().slice(0,10);
+  form.sleep_score.value = "3";
+  form.energy_score.value = "3";
+  form.soreness_score.value = "2";
+  form.time_budget_min.value = "45";
+  if (form.menstruation_today) form.menstruation_today.checked = false;
+  if (form.menstrual_pain) form.menstrual_pain.value = "none";
+  resetRecoveryFormLocalSignals(form);
+
+  updateMenstruationCheckinVisibility();
+
+  if (statusEl){
+    statusEl.textContent = tr("status.ready");
+    statusEl.classList.remove("ok", "warn");
+  }
+}
+
+async function handleRecoveryDelete(){
+  const recoveryId = String(STATE.editingRecoveryId || "").trim();
+  const statusEl = document.getElementById("recoveryFormStatus");
+
+  if (!recoveryId) return;
+  if (!window.confirm("Er du sikker på at du vil slette denne check-in? Dette kan påvirke anbefalinger, historik og progression.")){
+    return;
+  }
+
+  try{
+    setText("recoveryFormStatus", "Sletter check-in...");
+    statusEl?.classList.remove("warn");
+    await apiJsonRequest("DELETE", `/api/checkins/${encodeURIComponent(recoveryId)}`);
+    clearEditCheckinIdFromUrl();
+    resetRecoveryEditMode();
+    await refreshAll();
+    setText("recoveryFormStatus", "Check-in slettet.");
+    statusEl?.classList.add("ok");
+  }catch(err){
+    setText("recoveryFormStatus", tr("status.error_prefix") + (err?.message || String(err)));
+    statusEl?.classList.remove("ok");
+    statusEl?.classList.add("warn");
+  }
+}
+
 function renderRecovery(items){
   const root = document.getElementById("recoveryList");
   if (!root) return;
 
   if (!Array.isArray(items) || items.length === 0){
+    STATE.recoveryHistory = [];
     root.innerHTML = `<li><div class="small">${esc(tr("recovery.none_yet"))}</div></li>`;
     setText("recoveryMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
   const sorted = [...items].sort((a,b) => String(b.created_at || b.date).localeCompare(String(a.created_at || a.date)));
+  STATE.recoveryHistory = sorted;
 
   root.innerHTML = sorted.map(item => `
     <li>
@@ -968,8 +1309,19 @@ function renderRecovery(items){
       <div class="pill">${esc(formatOverviewReadinessLabel(item.readiness_score))}</div>
       ${item.suggestion ? `<div class="small" style="margin-top:8px">${esc(item.suggestion)}</div>` : ""}
       ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
+      <div class="btn-row" style="margin-top:10px">
+        <a class="edit-recovery-btn" data-recovery-id="${esc(item.id || "")}" href="/?edit_checkin=${encodeURIComponent(String(item.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">Åbn / redigér</a>
+      </div>
     </li>
   `).join("");
+
+  root.querySelectorAll(".edit-recovery-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const recoveryId = String(btn.getAttribute("data-recovery-id") || "").trim();
+      const item = STATE.recoveryHistory.find((entry) => String(entry?.id || "").trim() === recoveryId);
+      if (item) setRecoveryEditMode(item);
+    });
+  });
 
   setText("recoveryMeta", tr("common.items_count", { count: sorted.length }));
 }
@@ -1845,6 +2197,11 @@ function buildReviewSetFields(entry, idx, setIdx){
   const meta = getReviewExerciseMeta(entry?.exercise_id);
   const inputKind = String(meta?.input_kind || "");
   const currentLoad = String(entry?.target_load || "").trim();
+  const existingResult = entry?._existing_result && typeof entry._existing_result === "object" ? entry._existing_result : {};
+  const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
+  const existingSet = existingSets[setIdx] && typeof existingSets[setIdx] === "object" ? existingSets[setIdx] : {};
+  const existingReps = String(existingSet.reps || (setIdx === 0 ? existingResult.achieved_reps || "" : "")).trim();
+  const existingLoad = String(existingSet.load || "").trim();
 
   if (inputKind === "time" || inputKind === "cardio_time"){
     return `
@@ -1853,9 +2210,8 @@ function buildReviewSetFields(entry, idx, setIdx){
 
         <label>
           Tid
-          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), "", "(Vælg tid)")}
+          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), existingReps, "(Vælg tid)")}
         </label>
-
         <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
       </div>
     `;
@@ -1868,9 +2224,8 @@ function buildReviewSetFields(entry, idx, setIdx){
 
         <label>
           Reps
-          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), "", tr("after_training.select_reps"))}
+          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
         </label>
-
         <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
       </div>
     `;
@@ -1882,33 +2237,18 @@ function buildReviewSetFields(entry, idx, setIdx){
 
       <label>
         Reps
-        ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), "", tr("after_training.select_reps"))}
+        ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
       </label>
 
       <label>
         ${esc(tr("load.title"))}
-        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder"))}
+        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), existingLoad || currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder"))}
       </label>
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
     </div>
-    <div style="margin-top:14px">
-      <button type="button" id="reviewDoneBtn">
-        ${esc(tr("button.done_for_today"))}
-      </button>
-    </div>
   `;
-
-  const doneBtn = document.getElementById("reviewDoneBtn");
-  if (doneBtn){
-    doneBtn.addEventListener("click", () => {
-      showWizardStep("overview");
-    });
-  }
 }
-
-
-
 
 const RPE_HELP = {
   "1": "review.rpe.1",
@@ -2048,7 +2388,11 @@ function renderSessionReview(item){
     if (submitBtn){
       submitBtn.disabled = false;
       submitBtn.style.display = "";
-      submitBtn.textContent = tr("after_training.save_session_result");
+      submitBtn.textContent = STATE.editingSessionResultId ? "Gem ændringer" : tr("after_training.save_session_result");
+    }
+    const deleteBtn = document.getElementById("deleteSessionResultBtn");
+    if (deleteBtn){
+      deleteBtn.classList.toggle("wizard-step-hidden", !STATE.editingSessionResultId);
     }
   }
   if (!root) return;
@@ -2082,7 +2426,7 @@ function renderSessionReview(item){
           </div>
           <label>
             ${esc(tr("after_training.session_note_label"))}
-            <input type="text" name="review_notes_${idx}" placeholder="${esc(tr("after_training.short_note_placeholder_cardio"))}">
+            <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("after_training.short_note_placeholder_cardio"))}">
           </label>
         </li>
       `;
@@ -2111,14 +2455,14 @@ function renderSessionReview(item){
         <label>
           ${esc(tr("after_training.fail_label"))}
           <select name="review_hit_failure_${idx}">
-            <option value="false" selected>${esc(tr("common.no"))}</option>
-            <option value="true">${esc(tr("common.yes"))}</option>
+            <option value="false" ${entry?._existing_result?.hit_failure ? "" : "selected"}>${esc(tr("common.no"))}</option>
+            <option value="true" ${entry?._existing_result?.hit_failure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
           </select>
         </label>
 
         <label>
           ${esc(tr("exercise.note_label"))}
-          <input type="text" name="review_notes_${idx}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
+          <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
         </label>
       </li>
     `;
@@ -3173,6 +3517,151 @@ async function handleWorkoutSubmit(ev){
   }
 }
 
+function updateCheckinEditMenstruationVisibility(){
+  const prefs = STATE.userSettings && typeof STATE.userSettings === "object" && STATE.userSettings.preferences && typeof STATE.userSettings.preferences === "object"
+    ? STATE.userSettings.preferences
+    : {};
+  const enabled = prefs.menstruation_support_enabled === true;
+  const block = document.getElementById("editMenstruationCheckinFields");
+  if (block){
+    block.classList.toggle("wizard-step-hidden", !enabled);
+  }
+}
+
+function resetCheckinEditForm(form){
+  if (!form) return;
+  form.reset();
+  form.recovery_date.value = new Date().toISOString().slice(0,10);
+  form.sleep_score.value = "3";
+  form.energy_score.value = "3";
+  form.soreness_score.value = "2";
+  form.time_budget_min.value = "45";
+  if (form.menstruation_today) form.menstruation_today.checked = false;
+  if (form.menstrual_pain) form.menstrual_pain.value = "none";
+  ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
+    if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
+  });
+}
+
+function applyCheckinEditItem(item){
+  const form = document.getElementById("checkinEditForm");
+  const section = document.getElementById("checkinEditSection");
+  if (!form || !section || !item || typeof item !== "object") return;
+
+  STATE.editingRecoveryId = String(item.id || "").trim() || null;
+
+  form.recovery_date.value = String(item.date || "").slice(0,10);
+  form.sleep_score.value = String(item.sleep_score ?? "3");
+  form.energy_score.value = String(item.energy_score ?? "3");
+  form.soreness_score.value = String(item.soreness_score ?? "2");
+  form.time_budget_min.value = String(item.time_budget_min ?? "45");
+  form.recovery_notes.value = String(item.notes || "");
+  if (form.menstruation_today) form.menstruation_today.checked = item.menstruation_today === true;
+  if (form.menstrual_pain) form.menstrual_pain.value = String(item.menstrual_pain || "none");
+
+  ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
+    if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
+  });
+  const localSignals = Array.isArray(item.local_signals) ? item.local_signals : [];
+  localSignals.forEach((signalItem) => {
+    if (!signalItem || typeof signalItem !== "object") return;
+    const region = String(signalItem.region || "").trim();
+    const signal = String(signalItem.signal || "").trim();
+    if (!region || !signal) return;
+    if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = signal;
+  });
+
+  updateCheckinEditMenstruationVisibility();
+  section.classList.remove("wizard-step-hidden");
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  setText("checkinEditStatus", "Redigerer eksisterende check-in.");
+}
+
+function closeCheckinEditSection(){
+  const section = document.getElementById("checkinEditSection");
+  const form = document.getElementById("checkinEditForm");
+  STATE.editingRecoveryId = null;
+  if (section) section.classList.add("wizard-step-hidden");
+  if (form) resetCheckinEditForm(form);
+  clearEditCheckinIdFromUrl();
+  setText("checkinEditStatus", "Klar.");
+}
+
+async function loadDedicatedCheckinEditFromUrl(){
+  const recoveryId = String(getEditCheckinIdFromUrl() || "").trim();
+  if (!recoveryId) return false;
+
+  try{
+    setText("checkinEditStatus", "Åbner check-in til redigering...");
+    const data = await apiJsonRequest("GET", `/api/checkins/${encodeURIComponent(recoveryId)}`);
+    if (data?.item){
+      applyCheckinEditItem(data.item);
+      return true;
+    }
+  }catch(err){
+    setText("checkinEditStatus", tr("status.error_prefix") + (err?.message || String(err)));
+  }
+  return false;
+}
+
+async function handleDedicatedCheckinEditSubmit(ev){
+  ev.preventDefault();
+  const form = ev.currentTarget;
+  const recoveryId = String(STATE.editingRecoveryId || "").trim();
+  if (!recoveryId){
+    setText("checkinEditStatus", "Ingen check-in valgt til redigering.");
+    return;
+  }
+
+  const prefs = STATE.userSettings && typeof STATE.userSettings === "object" && STATE.userSettings.preferences && typeof STATE.userSettings.preferences === "object"
+    ? STATE.userSettings.preferences
+    : {};
+  const menstruationEnabled = prefs.menstruation_support_enabled === true;
+
+  const payload = {
+    date: form.recovery_date.value,
+    sleep_score: Number(form.sleep_score.value),
+    energy_score: Number(form.energy_score.value),
+    soreness_score: Number(form.soreness_score.value),
+    time_budget_min: Number(form.time_budget_min.value || 45),
+    notes: form.recovery_notes.value.trim(),
+    local_signals: collectLocalCheckinSignals(form),
+    menstruation_today: menstruationEnabled ? Boolean(form.menstruation_today?.checked) : null,
+    menstrual_pain: menstruationEnabled ? String(form.menstrual_pain?.value || "none") : "none"
+  };
+
+  try{
+    setText("checkinEditStatus", "Gemmer ændringer...");
+    await apiJsonRequest("PUT", `/api/checkins/${encodeURIComponent(recoveryId)}`, payload);
+    setText("checkinEditStatus", "Check-in opdateret.");
+    await refreshAll();
+    await loadDedicatedCheckinEditFromUrl();
+  }catch(err){
+    setText("checkinEditStatus", tr("status.error_prefix") + (err?.message || String(err)));
+  }
+}
+
+async function handleDedicatedCheckinDelete(){
+  const recoveryId = String(STATE.editingRecoveryId || "").trim();
+  if (!recoveryId){
+    setText("checkinEditStatus", "Ingen check-in valgt til sletning.");
+    return;
+  }
+  if (!window.confirm("Er du sikker på at du vil slette denne check-in? Dette kan påvirke anbefalinger, historik og progression.")){
+    return;
+  }
+
+  try{
+    setText("checkinEditStatus", "Sletter check-in...");
+    await apiJsonRequest("DELETE", `/api/checkins/${encodeURIComponent(recoveryId)}`);
+    closeCheckinEditSection();
+    await refreshAll();
+    setText("checkinEditStatus", "Check-in slettet.");
+  }catch(err){
+    setText("checkinEditStatus", tr("status.error_prefix") + (err?.message || String(err)));
+  }
+}
+
 function updateMenstruationCheckinVisibility(){
   const prefs = STATE.userSettings && typeof STATE.userSettings === "object" && STATE.userSettings.preferences && typeof STATE.userSettings.preferences === "object"
     ? STATE.userSettings.preferences
@@ -3206,26 +3695,30 @@ async function handleRecoverySubmit(ev){
     menstrual_pain: menstruationEnabled ? String(form.menstrual_pain?.value || "none") : "none"
   };
 
+  const editingRecoveryId = String(STATE.editingRecoveryId || "").trim();
+  const isEditing = Boolean(editingRecoveryId);
+
   try{
-    setText("recoveryFormStatus", tr("status.calculating"));
+    setText("recoveryFormStatus", isEditing ? "Gemmer ændringer..." : tr("status.calculating"));
     statusEl?.classList.remove("warn");
-    await apiPost("/api/checkin", payload);
-    setText("recoveryFormStatus", tr("status.checkin_saved_updated"));
+
+    if (isEditing){
+      await apiJsonRequest("PUT", `/api/checkins/${encodeURIComponent(editingRecoveryId)}`, payload);
+      clearEditCheckinIdFromUrl();
+      setText("recoveryFormStatus", "Check-in opdateret.");
+    } else {
+      await apiPost("/api/checkin", payload);
+      setText("recoveryFormStatus", tr("status.checkin_saved_updated"));
+    }
+
     statusEl?.classList.add("ok");
-    form.reset();
-    form.recovery_date.value = new Date().toISOString().slice(0,10);
-    form.sleep_score.value = "3";
-    form.energy_score.value = "3";
-    form.soreness_score.value = "2";
-    form.time_budget_min.value = "45";
-    if (form.menstruation_today) form.menstruation_today.checked = false;
-    if (form.menstrual_pain) form.menstrual_pain.value = "none";
-    ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
-      if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
-    });
+    resetRecoveryEditMode();
     await refreshAll();
     updateMenstruationCheckinVisibility();
-    advanceWizardAfterCheckin();
+
+    if (!isEditing){
+      advanceWizardAfterCheckin();
+    }
   }catch(err){
     setText("recoveryFormStatus", tr("status.error_prefix") + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
@@ -3314,20 +3807,28 @@ session_type:
   try{
     setText("sessionResultStatus", tr("review.saving_session_result"));
     statusEl?.classList.remove("warn");
-    const res = await apiPost("/api/session-result", payload);
+    const editingSessionResultId = String(STATE.editingSessionResultId || "").trim();
+    const isEditingSession = Boolean(editingSessionResultId);
+
+    const res = isEditingSession
+      ? await apiJsonRequest("PUT", `/api/session-results/${encodeURIComponent(editingSessionResultId)}`, payload)
+      : await apiPost("/api/session-result", payload);
+
     renderSessionResultSummary(res?.summary || null);
-    setText("sessionResultStatus", tr("review.session_result_saved"));
+    setText("sessionResultStatus", isEditingSession ? "Session opdateret." : tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
     form.reset();
     form.session_completed.value = "true";
     await refreshAll();
     showWizardStep("review");
     renderSessionResultSummary(res?.summary || null);
-    setText("sessionResultStatus", tr("review.session_result_saved"));
+    setText("sessionResultStatus", isEditingSession ? "Session opdateret." : tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
     form.querySelectorAll("input, select, textarea").forEach(el => {
       el.disabled = true;
     });
+    STATE.editingSessionResultId = null;
+    clearEditSessionIdFromUrl();
     const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn){
       submitBtn.disabled = true;
@@ -3678,9 +4179,22 @@ async function boot(){
       recoveryForm.addEventListener("submit", handleRecoverySubmit);
     }
 
+    const checkinEditForm = document.getElementById("checkinEditForm");
+    if (checkinEditForm){
+      checkinEditForm.addEventListener("submit", handleDedicatedCheckinEditSubmit);
+      resetCheckinEditForm(checkinEditForm);
+    }
+    document.getElementById("cancelCheckinEditSectionBtn")?.addEventListener("click", closeCheckinEditSection);
+    document.getElementById("deleteCheckinEditSectionBtn")?.addEventListener("click", handleDedicatedCheckinDelete);
+    document.getElementById("cancelRecoveryEditBtn")?.addEventListener("click", () => {
+      resetRecoveryEditMode();
+    });
+    document.getElementById("deleteRecoveryBtn")?.addEventListener("click", handleRecoveryDelete);
+
     const sessionResultForm = document.getElementById("sessionResultForm");
     if (sessionResultForm){
       sessionResultForm.addEventListener("submit", handleSessionResultSubmit);
+      document.getElementById("deleteSessionResultBtn")?.addEventListener("click", handleSessionDelete);
 
       document.getElementById("cardio_distance_km_whole")?.addEventListener("change", updateCardioPacePreview);
       document.getElementById("cardio_distance_km_part")?.addEventListener("change", updateCardioPacePreview);
