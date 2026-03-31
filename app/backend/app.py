@@ -3137,6 +3137,137 @@ def build_decision_trace(
     }
 
 
+def _safe_iso_date_string(value):
+    s = str(value or "").strip()
+    if not s:
+        return ""
+    try:
+        return datetime.fromisoformat(s[:10]).date().isoformat()
+    except Exception:
+        return ""
+
+def _session_type_label_da(session_type):
+    normalized = str(session_type or "").strip().lower()
+    if normalized in ("styrke", "strength"):
+        return "styrke"
+    if normalized in ("løb", "run", "cardio"):
+        return "løb"
+    if normalized in ("restitution", "mobilitet", "mobility", "recovery", "rest"):
+        return "restitution"
+    return normalized or "træning"
+
+def _guess_next_session_type_from_training_day_context(training_day_ctx):
+    ctx = training_day_ctx if isinstance(training_day_ctx, dict) else {}
+    if ctx.get("is_training_day") is True:
+        return "styrke"
+    return "styrke"
+
+def find_next_planned_training_date(training_day_ctx, from_date, max_days=14):
+    ctx = training_day_ctx if isinstance(training_day_ctx, dict) else {}
+    training_days = ctx.get("training_days", [])
+    if not isinstance(training_days, list):
+        training_days = []
+
+    normalized_days = {str(x).strip().lower() for x in training_days if str(x).strip()}
+    if not normalized_days:
+        return None
+
+    start = _safe_iso_date(from_date)
+    if not start:
+        return None
+
+    weekday_map = {
+        0: "mon",
+        1: "tue",
+        2: "wed",
+        3: "thu",
+        4: "fri",
+        5: "sat",
+        6: "sun",
+    }
+
+    for offset in range(1, max_days + 1):
+        candidate = start + timedelta(days=offset)
+        weekday_key = weekday_map.get(candidate.weekday())
+        if weekday_key in normalized_days:
+            return candidate.isoformat()
+
+    return None
+
+def build_next_guidance(today_plan_item, completed_today=False):
+    item = today_plan_item if isinstance(today_plan_item, dict) else {}
+    if not item:
+        return None
+
+    date_str = _safe_iso_date_string(item.get("date"))
+    if not date_str:
+        return None
+
+    session_type = str(item.get("session_type", "")).strip().lower()
+    training_day_ctx = item.get("training_day_context", {})
+    if not isinstance(training_day_ctx, dict):
+        training_day_ctx = {}
+
+    next_date = find_next_planned_training_date(training_day_ctx, date_str)
+    next_session_type = _guess_next_session_type_from_training_day_context(training_day_ctx)
+
+    today_label = _session_type_label_da(session_type)
+    next_label = _session_type_label_da(next_session_type)
+
+    if completed_today:
+        if next_date:
+            return {
+                "kind": "completed_today",
+                "next_session_type": next_session_type,
+                "next_date": next_date,
+                "source": "after_session",
+                "message": f"Session gemt. Næste forventede træning er {next_label} {next_date}."
+            }
+        return {
+            "kind": "completed_today",
+            "next_session_type": None,
+            "next_date": None,
+            "source": "after_session",
+            "message": "Session gemt. Der er ingen næste træningsdag endnu."
+        }
+
+    is_training_day = bool(training_day_ctx.get("is_training_day"))
+    if session_type == "restitution" or not is_training_day:
+        if next_date:
+            return {
+                "kind": "rest_today",
+                "next_session_type": next_session_type,
+                "next_date": next_date,
+                "source": "weekly_plan",
+                "message": f"I dag er {today_label}. Næste forventede træning er {next_label} {next_date}."
+            }
+        return {
+            "kind": "rest_today",
+            "next_session_type": None,
+            "next_date": None,
+            "source": "weekly_plan",
+            "message": f"I dag er {today_label}. Der er ingen næste træningsdag endnu."
+        }
+
+    if next_date:
+        return {
+            "kind": "next_training",
+            "next_session_type": next_session_type,
+            "next_date": next_date,
+            "source": "adaptive",
+            "message": f"Dagens fokus er {today_label}. Næste forventede træning efter i dag er {next_label} {next_date}."
+        }
+
+    return {
+        "kind": "next_training",
+        "next_session_type": None,
+        "next_date": None,
+        "source": "adaptive",
+        "message": f"Dagens fokus er {today_label}. Der er ingen næste træningsdag endnu."
+    }
+
+
+
 def validate_today_plan_item(item):
     if not isinstance(item, dict):
         return {
@@ -3431,6 +3562,10 @@ def get_today_plan():
     }
 
     item = validate_today_plan_item(item)
+    item["next_guidance"] = build_next_guidance(
+        item,
+        completed_today=already_logged_today,
+    )
 
     append_today_plan_trace(
         auth_user.get("user_id"),

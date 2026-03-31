@@ -1105,10 +1105,19 @@ function renderForecastHero(planItem, latestCheckin){
   if (planVariantLabel) bits.push(tr("forecast.plan_label", { value: formatPlanMotor(planVariantLabel) }));
   if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
 
+  const nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
   const reasonParts = [bits.join(" · "), formatPlanReason(planItem.reason || "")].filter(Boolean);
+  const forecastReasonText = [
+    reasonParts.join(" · "),
+    nextGuidanceMessage
+  ].filter(Boolean).join("\n");
 
   setText("forecastSummary", leadText);
-  setText("forecastReason", reasonParts.join(" · "));
+  const forecastReasonEl = document.getElementById("forecastReason");
+  if (forecastReasonEl){
+    forecastReasonEl.textContent = forecastReasonText;
+    forecastReasonEl.style.whiteSpace = "pre-line";
+  }
 
   const btn = document.getElementById("forecastPrimaryBtn");
   if (btn){
@@ -1727,8 +1736,9 @@ function formatPlanVariant(value){
   if (x === "local_protection_override") return tr("plan.motor.autoplan");
   if (x === "menstruation_support_override") return tr("plan.motor.autoplan");
   if (x === "reentry_strength") return tr("workout.type.strength");
+  if (x === "calendar_rest") return "";
   if (x === "completed_today") return "";
-  return x || "";
+  return "";
 }
 
 
@@ -2617,6 +2627,17 @@ function renderTodayPlan(item){
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
+  const nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
+  const shouldSuppressTrainingAllowedSummary =
+    Boolean(nextGuidanceMessage) &&
+    (
+      (todayWeekKind === "rest" && String(item?.session_type || "").trim().toLowerCase() === "restitution") ||
+      trainingAllowedSummary === nextGuidanceMessage
+    );
+
+  if (shouldSuppressTrainingAllowedSummary){
+    trainingAllowedSummary = "";
+  }
   const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText}`;
   const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
     ? tr("plan.light_movement_today")
@@ -2666,7 +2687,8 @@ function renderTodayPlan(item){
       baseSummary,
       recoveryDaySummary,
       trainingAllowedSummary,
-      weeklyStatusSummary
+      weeklyStatusSummary,
+      nextGuidanceMessage
     ]
       .filter(Boolean)
       .join("\n")
