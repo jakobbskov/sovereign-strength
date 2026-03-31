@@ -140,21 +140,45 @@ function resetEnhancedCheckinUi(){
   });
 }
 
-function deriveDailyUiState(planItem, latestCheckin){
-  const today = new Date().toISOString().slice(0,10);
-  const latestDate = String(latestCheckin?.date || "").slice(0,10);
-  const hasCheckinToday = latestDate === today;
-  const hasPlan = !!(planItem && typeof planItem === "object");
-
-  if (!hasCheckinToday) return "needs_checkin";
-  if (hasPlan) return "ready_for_plan";
-  return "overview";
+function getTodayIsoDate(){
+  return new Date().toISOString().slice(0,10);
 }
 
-function getDefaultWizardStepForDailyState(planItem, latestCheckin){
-  const dailyState = deriveDailyUiState(planItem, latestCheckin);
+function isSameIsoDay(a, b){
+  return String(a || "").slice(0,10) === String(b || "").slice(0,10);
+}
+
+function hasCompletedSessionToday(sessionResults, planItem, latestCheckin){
+  const today = getTodayIsoDate();
+  const planDate = String(planItem?.date || planItem?.recommended_for || "").slice(0,10);
+  const checkinDate = String(latestCheckin?.date || "").slice(0,10);
+  const targetDate = planDate || checkinDate || today;
+
+  return Array.isArray(sessionResults) && sessionResults.some(item => {
+    if (!item || typeof item !== "object") return false
+    return Boolean(item.completed) && isSameIsoDay(item.date, targetDate)
+  });
+}
+
+function deriveDailyUiState(planItem, latestCheckin, sessionResults, currentStep){
+  const today = getTodayIsoDate();
+  const latestDate = String(latestCheckin?.date || "").slice(0,10);
+  const hasCheckinToday = latestDate === today;
+  const completedToday = hasCompletedSessionToday(sessionResults, planItem, latestCheckin);
+  const step = String(currentStep || "").trim();
+
+  if (!hasCheckinToday) return "needs_checkin";
+  if (completedToday) return "post_workout";
+  if (step === "review") return "in_workout";
+  return "ready_for_training";
+}
+
+function getDefaultWizardStepForDailyState(planItem, latestCheckin, sessionResults, currentStep){
+  const dailyState = deriveDailyUiState(planItem, latestCheckin, sessionResults, currentStep);
   if (dailyState === "needs_checkin") return "checkin";
-  if (dailyState === "ready_for_plan") return "plan";
+  if (dailyState === "ready_for_training") return "plan";
+  if (dailyState === "in_workout") return "review";
+  if (dailyState === "post_workout") return "session_done";
   return "overview";
 }
 
@@ -1557,7 +1581,7 @@ function updateOverviewLayoutForStep(stepId){
   const overviewSection = document.getElementById("overviewSection");
   if (!overviewSection) return;
 
-  const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null);
+  const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null, STATE.sessionResults || [], CURRENT_STEP);
   const cards = Array.from(overviewSection.querySelectorAll(":scope > section.card"));
 
   cards.forEach(card => {
@@ -1882,19 +1906,7 @@ function buildReviewSetFields(entry, idx, setIdx){
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
     </div>
-    <div style="margin-top:14px">
-      <button type="button" id="reviewDoneBtn">
-        ${esc(tr("button.done_for_today"))}
-      </button>
-    </div>
   `;
-
-  const doneBtn = document.getElementById("reviewDoneBtn");
-  if (doneBtn){
-    doneBtn.addEventListener("click", () => {
-      showWizardStep("overview");
-    });
-  }
 }
 
 
@@ -2679,6 +2691,12 @@ function renderTodayPlan(item){
       return;
   }
 
+  const completedToday = Boolean(
+    item &&
+    item.template_mode === "completed_today_v0_1"
+  );
+  const planCtaLabel = completedToday ? tr("review.session_saved_button") : tr("button.start_workout");
+
   const heroCard = `
   <li>
     <div style="font-weight:700; font-size:1.1rem">${esc(formatSessionType(item.session_type || "unknown"))}</div>
@@ -2690,7 +2708,7 @@ function renderTodayPlan(item){
     </div>
     ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
     <div style="margin-top:12px">
-      <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
+      <button type="button" id="startWorkoutBtn">${esc(planCtaLabel)}</button>
     </div>
   </li>
 `;
@@ -2734,6 +2752,10 @@ function renderTodayPlan(item){
     }).join("");
 
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
+    if (completedToday){
+      showWizardStep("session_done");
+      return;
+    }
     showWizardStep("review");
   });
 
@@ -2887,7 +2909,7 @@ async function refreshAll(){
   renderPrograms(STATE.programs, STATE.exercises);
   renderPendingEntries();
 
-  const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null);
+  const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, STATE.sessionResults || [], CURRENT_STEP);
 
   debug.pendingEntries = STATE.pendingEntries;
   debug.workouts_file = workoutsFile;
@@ -2909,7 +2931,7 @@ async function refreshAll(){
 
   return {
     dailyUiState,
-    defaultStep: getDefaultWizardStepForDailyState(todayPlanApi.item || null, latestRecoveryApi.item || null)
+    defaultStep: getDefaultWizardStepForDailyState(todayPlanApi.item || null, latestRecoveryApi.item || null, STATE.sessionResults || [], CURRENT_STEP)
   };
 }
 
@@ -3299,8 +3321,13 @@ session_type:
     form.reset();
     form.session_completed.value = "true";
     await refreshAll();
-    showWizardStep("review");
     renderSessionResultSummary(res?.summary || null);
+    const doneSummaryEl = document.getElementById("sessionDoneSummary");
+    if (doneSummaryEl){
+      const nextStepHint = String(res?.summary?.next_step_hint || "").trim();
+      doneSummaryEl.textContent = nextStepHint || tr("review.session_done_default");
+    }
+    showWizardStep("session_done");
     setText("sessionResultStatus", tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
     form.querySelectorAll("input, select, textarea").forEach(el => {
@@ -3581,9 +3608,10 @@ function showWizardStep(stepId){
   const todayPlanTiming = document.getElementById("todayPlanTiming");
   const todayPlanSummary = document.getElementById("todayPlanSummary");
   const reviewSummary = document.getElementById("reviewPlanSummary");
+  const sessionDonePanel = document.getElementById("sessionDonePanel");
 
   if (todayPlanSection){
-    todayPlanSection.classList.toggle("wizard-step-hidden", !(stepId === "plan" || stepId === "review"));
+    todayPlanSection.classList.toggle("wizard-step-hidden", !(stepId === "plan" || stepId === "review" || stepId === "session_done"));
   }
 
   if (todayPlanList){
@@ -3599,11 +3627,15 @@ function showWizardStep(stepId){
   }
 
   if (reviewSummary){
-    reviewSummary.classList.toggle("wizard-step-hidden", stepId !== "review");
+    reviewSummary.classList.toggle("wizard-step-hidden", !(stepId === "review" || stepId === "session_done"));
   }
 
   if (reviewWrap){
-    reviewWrap.classList.toggle("wizard-step-hidden", stepId !== "review");
+    reviewWrap.classList.toggle("wizard-step-hidden", !(stepId === "review" || stepId === "session_done"));
+  }
+
+  if (sessionDonePanel){
+    sessionDonePanel.classList.toggle("wizard-step-hidden", stepId !== "session_done");
   }
 
   updatePlanHeadingForStep(stepId);
@@ -3671,6 +3703,7 @@ async function boot(){
     document.getElementById("loadProgramDayBtn")?.addEventListener("click", handleLoadProgramDay);
     document.getElementById("program_id")?.addEventListener("change", refreshProgramDaySelect);
     document.getElementById("entry_exercise_id")?.addEventListener("change", handleExerciseChange);
+    document.getElementById("sessionDoneOverviewBtn")?.addEventListener("click", () => showWizardStep("overview"));
     mountEquipmentEditorInline();
     bindEquipmentEditor();
     bindRpePicker();
