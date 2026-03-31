@@ -238,6 +238,12 @@ def get_latest_user_item(file_key, user_id, sort_keys=("created_at", "date")):
 def delete_user_item(file_key, user_id, item_id):
     return get_storage().delete_user_item(file_key, user_id, item_id)
 
+def get_user_item(file_key, user_id, item_id):
+    return get_storage().get_user_item(file_key, user_id, item_id)
+
+def update_user_item(file_key, user_id, item_id, item):
+    return get_storage().update_user_item(file_key, user_id, item_id, item)
+
 
 
 def consume_manual_override_workout_storage(user_id, date):
@@ -624,9 +630,11 @@ def _parse_menstrual_pain(value):
         field="menstrual_pain",
     ), 400
 
-def create_checkin(user_id, payload):
+def build_checkin_item(user_id, payload, existing_item=None):
     if not isinstance(payload, dict):
         return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
+
+    existing_item = existing_item if isinstance(existing_item, dict) else {}
 
     date = str(payload.get("date", "")).strip()
     notes = str(payload.get("notes", "")).strip()
@@ -671,7 +679,7 @@ def create_checkin(user_id, payload):
     )
 
     item = {
-        "id": str(uuid.uuid4()),
+        "id": str(existing_item.get("id") or uuid.uuid4()),
         "user_id": user_id,
         "date": date,
         "sleep_score": sleep_score,
@@ -683,10 +691,35 @@ def create_checkin(user_id, payload):
         "local_signals": local_signals,
         "menstruation_today": menstruation_today,
         "menstrual_pain": menstrual_pain,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": existing_item.get("created_at") or datetime.now(timezone.utc).isoformat()
     }
+    return item, None, None
+
+
+def create_checkin(user_id, payload):
+    item, err, status = build_checkin_item(user_id, payload)
+    if err:
+        return None, err, status
     item, count = append_user_item("checkins", item)
     return item, None, count
+
+def update_checkin(user_id, checkin_id, payload):
+    existing = get_user_item("checkins", user_id, checkin_id)
+    if not isinstance(existing, dict):
+        return None, make_error_payload("not_found", "checkin blev ikke fundet", id=checkin_id), 404
+
+    item, err, status = build_checkin_item(user_id, payload, existing_item=existing)
+    if err:
+        return None, err, status
+
+    item["id"] = existing.get("id")
+    item["created_at"] = existing.get("created_at")
+
+    updated = update_user_item("checkins", user_id, checkin_id, item)
+    if not isinstance(updated, dict):
+        return None, make_error_payload("update_failed", "checkin kunne ikke opdateres", id=checkin_id), 500
+
+    return updated, None, None
 
 
 def create_session_result(user_id, payload):
@@ -858,6 +891,150 @@ def create_session_result(user_id, payload):
 
     item, count = append_user_item("session_results", item)
     return item, None, count
+
+def build_session_result_item(user_id, payload, existing_item=None):
+    if not isinstance(payload, dict):
+        return None, {"ok": False, "error": "ugyldig payload"}, 400
+
+    existing_item = existing_item if isinstance(existing_item, dict) else {}
+
+    date = str(payload.get("date", "")).strip()
+    session_type = str(payload.get("session_type", "")).strip() or str(existing_item.get("session_type", "")).strip() or "styrke"
+    timing_state = str(payload.get("timing_state", "")).strip() or str(existing_item.get("timing_state", "")).strip() or "on_time"
+    notes = str(payload.get("notes", "")).strip()
+    source = str(payload.get("source", "")).strip() or str(existing_item.get("source", "")).strip() or "manual"
+    completed = bool(payload.get("completed", False))
+    readiness_score = payload.get("readiness_score", existing_item.get("readiness_score"))
+    cardio_kind = str(payload.get("cardio_kind", "")).strip()
+    avg_rpe = payload.get("avg_rpe")
+    distance_km = payload.get("distance_km")
+    duration_total_sec = payload.get("duration_total_sec")
+    pace_sec_per_km = payload.get("pace_sec_per_km")
+    results = payload.get("results", [])
+
+    if not date:
+        return None, {"ok": False, "error": "date mangler", "field": "date"}, 400
+
+    if readiness_score in (None, ""):
+        readiness_score = None
+    else:
+        try:
+            readiness_score = int(float(readiness_score))
+        except Exception:
+            return None, {"ok": False, "error": "ugyldig readiness_score", "field": "readiness_score"}, 400
+
+    if avg_rpe in (None, ""):
+        avg_rpe = None
+    else:
+        try:
+            avg_rpe = float(avg_rpe)
+        except Exception:
+            return None, {"ok": False, "error": "ugyldig avg_rpe", "field": "avg_rpe"}, 400
+
+    if distance_km in (None, ""):
+        distance_km = None
+    else:
+        try:
+            distance_km = float(distance_km)
+        except Exception:
+            return None, {"ok": False, "error": "ugyldig distance_km", "field": "distance_km"}, 400
+
+    if duration_total_sec in (None, ""):
+        duration_total_sec = None
+    else:
+        try:
+            duration_total_sec = int(float(duration_total_sec))
+        except Exception:
+            return None, {"ok": False, "error": "ugyldig duration_total_sec", "field": "duration_total_sec"}, 400
+
+    if pace_sec_per_km in (None, ""):
+        pace_sec_per_km = None
+    else:
+        try:
+            pace_sec_per_km = int(float(pace_sec_per_km))
+        except Exception:
+            return None, {"ok": False, "error": "ugyldig pace_sec_per_km", "field": "pace_sec_per_km"}, 400
+
+    if not isinstance(results, list):
+        return None, {"ok": False, "error": "ugyldige results", "field": "results"}, 400
+
+    clean_results = []
+    has_meaningful_results = False
+    for raw in results:
+        if not isinstance(raw, dict):
+            continue
+        cleaned = dict(raw)
+        clean_results.append(cleaned)
+
+        if str(cleaned.get("exercise_id", "")).strip():
+            has_meaningful_results = True
+        if str(cleaned.get("achieved_reps", "")).strip():
+            has_meaningful_results = True
+        raw_sets = cleaned.get("sets", [])
+        if isinstance(raw_sets, list) and raw_sets:
+            has_meaningful_results = True
+
+    session_type_normalized = str(session_type).strip().lower()
+    counts_toward_weekly_goal = False
+    if completed:
+        if session_type_normalized in ("styrke", "strength"):
+            counts_toward_weekly_goal = has_meaningful_results
+        elif session_type_normalized in ("løb", "run", "cardio"):
+            dist_ok = False
+            dur_ok = False
+            try:
+                dist_ok = float(distance_km or 0) > 0
+            except Exception:
+                dist_ok = False
+            try:
+                dur_ok = float(duration_total_sec or 0) > 0
+            except Exception:
+                dur_ok = False
+            counts_toward_weekly_goal = bool(dist_ok or dur_ok or has_meaningful_results)
+        elif session_type_normalized in ("restitution", "mobilitet", "mobility", "recovery"):
+            counts_toward_weekly_goal = False
+
+    item = {
+        "id": str(existing_item.get("id") or uuid.uuid4()),
+        "user_id": user_id,
+        "date": date,
+        "session_type": session_type,
+        "timing_state": timing_state,
+        "readiness_score": readiness_score,
+        "completed": completed,
+        "source": source,
+        "counts_toward_weekly_goal": counts_toward_weekly_goal,
+        "notes": notes,
+        "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run") else "",
+        "avg_rpe": avg_rpe if session_type in ("løb", "cardio", "run") else None,
+        "distance_km": distance_km if session_type in ("løb", "cardio", "run") else None,
+        "duration_total_sec": duration_total_sec if session_type in ("løb", "cardio", "run") else None,
+        "pace_sec_per_km": pace_sec_per_km if session_type in ("løb", "cardio", "run") else None,
+        "results": clean_results,
+        "created_at": existing_item.get("created_at") or datetime.now(timezone.utc).isoformat()
+    }
+    item["summary"] = build_session_summary(item)
+    return item, None, None
+
+def update_session_result(user_id, session_result_id, payload):
+    existing = get_user_item("session_results", user_id, session_result_id)
+    if not isinstance(existing, dict):
+        return None, {"ok": False, "error": "session_result blev ikke fundet", "id": session_result_id}, 404
+
+    item, err_payload, status = build_session_result_item(user_id, payload, existing_item=existing)
+    if err_payload is not None:
+        return None, err_payload, status
+
+    item["id"] = existing.get("id")
+    item["created_at"] = existing.get("created_at")
+
+    updated = update_user_item("session_results", user_id, session_result_id, item)
+    if not isinstance(updated, dict):
+        return None, {"ok": False, "error": "session_result kunne ikke opdateres", "id": session_result_id}, 500
+
+    updated["summary"] = build_session_summary(updated)
+    return updated, None, None
+
 
 def create_session_result_from_workout(user_id, workout_item):
     if not isinstance(workout_item, dict):
@@ -5830,6 +6007,54 @@ def get_session_results():
     items = list_session_results_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
 
+@app.get("/api/session-results/<session_result_id>")
+def get_session_result_by_id(session_result_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("session-result:get_by_id", auth_err)
+        return auth_err
+
+    item = get_user_item("session_results", auth_user.get("user_id"), session_result_id)
+    if not isinstance(item, dict):
+        return jsonify({"ok": False, "error": "not_found", "message": "session_result blev ikke fundet", "id": session_result_id}), 404
+
+    item["summary"] = build_session_summary(item)
+    return jsonify({"ok": True, "item": item})
+
+@app.put("/api/session-results/<session_result_id>")
+def put_session_result(session_result_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("session-result:put", auth_err)
+        return auth_err
+
+    item, err_payload, status = update_session_result(
+        auth_user.get("user_id"),
+        session_result_id,
+        request.get_json(silent=True) or {}
+    )
+    if err_payload is not None:
+        payload, status = ensure_error_contract(err_payload, status)
+        return jsonify(payload), status
+
+    adaptation_state = update_adaptation_state(auth_user.get("user_id"))
+    return jsonify({"ok": True, "item": item, "summary": item.get("summary"), "adaptation_state": adaptation_state})
+
+@app.delete("/api/session-results/<session_result_id>")
+def delete_session_result_by_id(session_result_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("session-result:delete", auth_err)
+        return auth_err
+
+    deleted = delete_user_item("session_results", auth_user.get("user_id"), session_result_id)
+    if not isinstance(deleted, dict):
+        return jsonify({"ok": False, "error": "not_found", "message": "session_result blev ikke fundet", "id": session_result_id}), 404
+
+    adaptation_state = update_adaptation_state(auth_user.get("user_id"))
+    deleted["summary"] = build_session_summary(deleted)
+    return jsonify({"ok": True, "deleted": deleted, "summary": deleted.get("summary"), "adaptation_state": adaptation_state})
+
 @app.post("/api/session-result")
 def post_session_result():
     auth_user, auth_err = require_auth_user()
@@ -5889,6 +6114,50 @@ def get_checkins():
         return auth_err
     items = list_checkins_for_user(auth_user.get("user_id"))
     return jsonify({"ok": True, "items": items})
+
+@app.get("/api/checkins/<checkin_id>")
+def get_checkin_by_id(checkin_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("checkin:get_by_id", auth_err)
+        return auth_err
+
+    item = get_user_item("checkins", auth_user.get("user_id"), checkin_id)
+    if not isinstance(item, dict):
+        return jsonify(make_error_payload("not_found", "checkin blev ikke fundet", id=checkin_id)), 404
+
+    return jsonify({"ok": True, "item": item})
+
+@app.put("/api/checkins/<checkin_id>")
+def put_checkin(checkin_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("checkin:put", auth_err)
+        return auth_err
+
+    item, err_payload, status = update_checkin(
+        auth_user.get("user_id"),
+        checkin_id,
+        request.get_json(silent=True) or {}
+    )
+    if err_payload is not None:
+        payload, status = ensure_error_contract(err_payload, status)
+        return jsonify(payload), status
+
+    return jsonify({"ok": True, "item": item})
+
+@app.delete("/api/checkins/<checkin_id>")
+def delete_checkin_by_id(checkin_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("checkin:delete", auth_err)
+        return auth_err
+
+    deleted = delete_user_item("checkins", auth_user.get("user_id"), checkin_id)
+    if not isinstance(deleted, dict):
+        return jsonify(make_error_payload("not_found", "checkin blev ikke fundet", id=checkin_id)), 404
+
+    return jsonify({"ok": True, "deleted": deleted})
 
 @app.get("/api/checkin/latest")
 def get_latest_checkin():

@@ -823,7 +823,10 @@
         </div>
 
 
-          <button type="submit" data-i18n="button.save_session_result">Gem session-resultat</button>
+          <div class="btn-row">
+            <button type="submit" data-i18n="button.save_session_result">Gem session-resultat</button>
+            <button type="button" id="deleteSessionResultBtn" class="wizard-step-hidden">Slet session</button>
+          </div>
         </form><p id="sessionResultStatus" class="small" style="margin-top:12px" data-i18n="review.no_session_saved_yet">Ingen session gemt endnu.</p>
       </div>
     </section>
@@ -969,10 +972,165 @@
           </label>
         </div>
 
-        <button type="submit" data-i18n="button.calculate_today_plan">Beregn dagens plan</button>
+        <div class="btn-row">
+          <button type="submit" data-i18n="button.calculate_today_plan">Beregn dagens plan</button>
+          <button type="button" id="cancelRecoveryEditBtn" class="wizard-step-hidden">Annullér redigering</button>
+          <button type="button" id="deleteRecoveryBtn" class="wizard-step-hidden">Slet check-in</button>
+        </div>
       </form>
 
       <p id="recoveryFormStatus" class="small" style="margin-top:12px" data-i18n="status.ready">Klar.</p>
+    </section>
+
+    <section class="card wizard-step-hidden" id="checkinEditSection" style="margin-top:18px">
+      <h2>Redigér check-in</h2>
+      <p id="checkinEditIntro" class="small">Redigér eller slet en tidligere check-in uden at gå gennem dagens plan-flow.</p>
+      <form id="checkinEditForm">
+        <label>
+          <span>Dato</span>
+          <input id="edit_recovery_date" name="recovery_date" type="date" required>
+        </label>
+
+        <label>
+          <span>Søvn (1-5)</span>
+          <select id="edit_sleep_score" name="sleep_score" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Energi (1-5)</span>
+          <select id="edit_energy_score" name="energy_score" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Ømhed (1-5)</span>
+          <select id="edit_soreness_score" name="soreness_score" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Tid i dag</span>
+          <select id="edit_time_budget_min" name="time_budget_min" required>
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </label>
+
+        <div id="editMenstruationCheckinFields" class="wizard-step-hidden">
+          <label>
+            <span>Menstruation i dag</span>
+            <input id="edit_menstruation_today" name="menstruation_today" type="checkbox">
+          </label>
+          <label>
+            <span>Menstruationssmerter</span>
+            <select id="edit_menstrual_pain" name="menstrual_pain">
+              <option value="none">Ingen</option>
+              <option value="light">Lette</option>
+              <option value="moderate">Moderate</option>
+              <option value="severe">Svære</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span>Noter</span>
+          <textarea id="edit_recovery_notes" name="recovery_notes" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
+        </label>
+
+        <div class="entry-box">
+          <strong>Lokale signaler</strong>
+          <p class="small">Valgfrit. Markér kun områder der kræver ekstra hensyn i dag.</p>
+
+          <label>
+            <span>Knæ</span>
+            <select name="local_signal_knee">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Lænd</span>
+            <select name="local_signal_low_back">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Skulder</span>
+            <select name="local_signal_shoulder">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Albue</span>
+            <select name="local_signal_elbow">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Hofte</span>
+            <select name="local_signal_hip">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Ankel / læg</span>
+            <select name="local_signal_ankle_calf">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Håndled</span>
+            <select name="local_signal_wrist">
+              <option value="">Ingen særlige signaler</option>
+              <option value="caution">Vær opmærksom</option>
+              <option value="irritated">Irriteret</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button type="submit">Gem ændringer</button>
+          <button type="button" id="cancelCheckinEditSectionBtn">Luk redigering</button>
+          <button type="button" id="deleteCheckinEditSectionBtn">Slet check-in</button>
+        </div>
+      </form>
+
+      <p id="checkinEditStatus" class="small" style="margin-top:12px">Klar.</p>
     </section>
 
     <div class="two-col" id="historyTopSection">
@@ -1028,7 +1186,7 @@
   </div>
 
   <script src="/i18n.js?v=0.2.20"></script>
-  <script src="/app.js?v=0.2.24"></script>
+  <script src="/app.js?v=0.2.32"></script>
 
 
   <div id="exerciseViewerModal" class="modal" style="display:none">
