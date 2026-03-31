@@ -3022,7 +3022,14 @@ function renderTodayPlan(item){
 
   const ws = item?.weekly_status || {};
   const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
-  const nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
+  const isPlannedRestDay = todayWeekKind === "rest";
+  let nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
+  if (isPlannedRestDay && nextGuidanceMessage){
+    const lowered = nextGuidanceMessage.toLowerCase();
+    if (lowered.includes("i dag er styrke") || lowered.includes("today is strength")){
+      nextGuidanceMessage = "";
+    }
+  }
   const shouldSuppressTrainingAllowedSummary =
     Boolean(nextGuidanceMessage) &&
     (
@@ -3033,10 +3040,14 @@ function renderTodayPlan(item){
   if (shouldSuppressTrainingAllowedSummary){
     trainingAllowedSummary = "";
   }
-  const baseSummary = `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText}`;
-  const recoveryDaySummary = String(item?.session_type || "").trim().toLowerCase() === "restitution"
-    ? tr("plan.light_movement_today")
-    : "";
+  const baseSummary = isPlannedRestDay
+    ? `Planlagt hviledag · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${recoveryText}`
+    : `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText}`;
+  const recoveryDaySummary = isPlannedRestDay
+    ? "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit."
+    : String(item?.session_type || "").trim().toLowerCase() === "restitution"
+      ? tr("plan.light_movement_today")
+      : "";
   const motorSummary = tr("plan.motor_summary", { value: planMotorLabel });
   const familiesSummary = familiesSelectedText ? tr("plan.selected_families", { value: familiesSelectedText }) : "";
 
@@ -3096,19 +3107,37 @@ function renderTodayPlan(item){
       return;
   }
 
-  const heroCard = `
-  <li>
-    <div style="font-weight:700; font-size:1.1rem">${esc(formatSessionType(item.session_type || "unknown"))}</div>
-    <div class="small" style="margin-top:6px">
-      ${esc([
-        variantLabel || "",
-        item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
-      ].filter(Boolean).join(" · "))}
+  const heroTitle = isPlannedRestDay
+    ? "Planlagt hviledag"
+    : formatSessionType(item.session_type || "unknown");
+  const heroLead = isPlannedRestDay
+    ? "I dag er planlagt som hvile. Let bevægelse er valgfrit, ikke dagens hovedtræning."
+    : "";
+  const heroActions = isPlannedRestDay
+    ? `
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+      <button type="button" id="startRecoveryBtn">${esc(tr("plan.light_movement_today"))}</button>
+      <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
     </div>
-    ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
+    `
+    : `
     <div style="margin-top:12px">
       <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
     </div>
+    `;
+
+  const heroCard = `
+  <li>
+    <div style="font-weight:700; font-size:1.1rem">${esc(heroTitle)}</div>
+    <div class="small" style="margin-top:6px">
+      ${esc([
+        !isPlannedRestDay ? (variantLabel || "") : "",
+        item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
+      ].filter(Boolean).join(" · "))}
+    </div>
+    ${heroLead ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(heroLead)}</div>` : ""}
+    ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
+    ${heroActions}
   </li>
 `;
   
@@ -3122,7 +3151,15 @@ function renderTodayPlan(item){
     </li>
   ` : "";
 
-  root.innerHTML = heroCard + recoveryCard + item.entries.map(entry => {
+  const entryCards = isPlannedRestDay
+    ? `
+      <li>
+        <div class="small" style="line-height:1.5">
+          Dagens ugeplan siger hvile. De normale øvelser vises derfor ikke som standardplan her.
+        </div>
+      </li>
+    `
+    : item.entries.map(entry => {
       const extras = formatPlanProgressionExtra(entry);
       return `
       <li>
@@ -3150,8 +3187,16 @@ function renderTodayPlan(item){
       `;
     }).join("");
 
+  root.innerHTML = heroCard + recoveryCard + entryCards;
+
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
     showWizardStep("review");
+  });
+  document.getElementById("startRecoveryBtn")?.addEventListener("click", () => {
+    showWizardStep("review");
+  });
+  document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
+    showWizardStep("manual");
   });
 
   renderReviewSummary(item);
