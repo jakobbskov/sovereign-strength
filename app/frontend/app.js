@@ -162,6 +162,58 @@ function getDefaultWizardStepForDailyState(planItem, latestCheckin){
   return "overview";
 }
 
+function resolveNavigationIntent(uiState){
+  const editCheckinId = String(getEditCheckinIdFromUrl() || "").trim();
+  if (editCheckinId){
+    return {
+      kind: "edit_checkin",
+      targetStep: "checkin",
+      entityId: editCheckinId
+    };
+  }
+
+  const editSessionId = String(getEditSessionIdFromUrl() || "").trim();
+  if (editSessionId){
+    return {
+      kind: "edit_session",
+      targetStep: "review",
+      entityId: editSessionId
+    };
+  }
+
+  const currentStep = String(CURRENT_STEP || "").trim();
+  if (currentStep){
+    return {
+      kind: "current_step",
+      targetStep: currentStep,
+      entityId: ""
+    };
+  }
+
+  return {
+    kind: "default_step",
+    targetStep: uiState?.defaultStep || "overview",
+    entityId: ""
+  };
+}
+
+async function applyNavigationIntent(intent){
+  const kind = String(intent?.kind || "").trim();
+  const targetStep = String(intent?.targetStep || "overview").trim() || "overview";
+
+  showWizardStep(targetStep);
+
+  if (kind === "edit_checkin"){
+    return await loadDedicatedCheckinEditFromUrl();
+  }
+
+  if (kind === "edit_session"){
+    return await loadSessionEditFromUrl();
+  }
+
+  return true;
+}
+
 async function rerenderUiAfterLanguageChange(){
   applyStaticTranslations();
   resetEnhancedCheckinUi();
@@ -169,23 +221,10 @@ async function rerenderUiAfterLanguageChange(){
   renderWizardNav();
   renderAuthBar();
   const uiState = await refreshAll();
-  showWizardStep(CURRENT_STEP || uiState?.defaultStep || "overview");
-
-  const hasEditCheckin = String(getEditCheckinIdFromUrl() || "").trim();
-  if (hasEditCheckin){
-    await loadDedicatedCheckinEditFromUrl();
-    setTimeout(() => {
-      loadDedicatedCheckinEditFromUrl();
-    }, 250);
-  }
-
-  const hasEditSession = String(getEditSessionIdFromUrl() || "").trim();
-  if (hasEditSession){
-    await loadSessionEditFromUrl();
-    setTimeout(() => {
-      loadSessionEditFromUrl();
-    }, 250);
-  }
+  updateMenstruationCheckinVisibility();
+  updateCheckinEditMenstruationVisibility();
+  const intent = resolveNavigationIntent(uiState);
+  await applyNavigationIntent(intent);
 }
 
 function setText(id, text){
@@ -890,7 +929,6 @@ async function loadSessionEditFromUrl(){
     if (deleteBtn) deleteBtn.classList.remove("wizard-step-hidden");
 
     document.getElementById("todayPlanSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    showWizardStep("review");
     return true;
   }catch(err){
     setText("sessionResultStatus", tr("status.error_prefix") + (err?.message || String(err)));
@@ -1125,19 +1163,8 @@ async function loadRecoveryEditFromUrl(){
     if (data?.item){
       setRecoveryEditMode(data.item);
       STATE.pendingRecoveryEditId = null;
-      setTimeout(() => {
-        try{
-          showWizardStep("checkin");
-        }catch(err){}
-        document.getElementById("checkinSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
-      setTimeout(() => {
-        try{
-          showWizardStep("checkin");
-        }catch(err){}
-        document.getElementById("checkinSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        clearEditCheckinIdFromUrl();
-      }, 250);
+      clearEditCheckinIdFromUrl();
+      document.getElementById("checkinSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return true;
     }
   }catch(err){
