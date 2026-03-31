@@ -16,8 +16,9 @@ let STATE = {
   pendingEntries: [],
   sessionResults: [],
   recoveryHistory: [],
-  editingRecoveryId: null,
+  editingCheckinId: null,
   pendingRecoveryEditId: null,
+  lastFocusedRecoveryId: null,
   editingSessionResultId: null,
   lastAutoLoad: ""
 };
@@ -612,7 +613,7 @@ function renderWorkouts(items){
       : "";
 
     return `
-      <li>
+      <li data-recovery-id="${esc(String(item.id || ""))}">
         <div class="row">
           <strong>${esc(formatSessionType(item.session_type || tr("common.unknown_lower")))}</strong>
           <span class="small">${esc(item.date || "")}</span>
@@ -1120,7 +1121,7 @@ function renderExercises(items){
   const sorted = [...items].sort((a,b) => String(a.name).localeCompare(String(b.name), "da"));
 
   root.innerHTML = sorted.map(item => `
-    <li>
+    <li data-recovery-id="${esc(String(item.id || ""))}">
       <div class="row">
         <strong>${esc(item.name || tr("common.unknown_lower"))}</strong>
         <span class="small">${esc(item.default_unit || "")}</span>
@@ -1230,7 +1231,7 @@ function setRecoveryEditMode(item){
 
   if (!form || !item || typeof item !== "object") return;
 
-  STATE.editingRecoveryId = String(item.id || "").trim() || null;
+  STATE.editingCheckinId = String(item.id || "").trim() || null;
 
   form.recovery_date.value = String(item.date || "").slice(0,10);
   form.sleep_score.value = String(item.sleep_score ?? "3");
@@ -1261,7 +1262,7 @@ function resetRecoveryEditMode(){
   const deleteBtn = document.getElementById("deleteRecoveryBtn");
   const submitBtn = form?.querySelector('button[type="submit"]');
 
-  STATE.editingRecoveryId = null;
+  STATE.editingCheckinId = null;
 
   if (submitBtn) submitBtn.textContent = tr("button.calculate_today_plan");
   if (cancelBtn) cancelBtn.classList.add("wizard-step-hidden");
@@ -1288,7 +1289,7 @@ function resetRecoveryEditMode(){
 }
 
 async function handleRecoveryDelete(){
-  const recoveryId = String(STATE.editingRecoveryId || "").trim();
+  const recoveryId = String(STATE.editingCheckinId || "").trim();
   const statusEl = document.getElementById("recoveryFormStatus");
 
   if (!recoveryId) return;
@@ -1312,6 +1313,28 @@ async function handleRecoveryDelete(){
   }
 }
 
+function focusRecoveryHistoryItem(recoveryId){
+  const id = String(recoveryId || "").trim();
+  if (!id) return false;
+
+  const root = document.getElementById("recoveryList");
+  if (!root) return false;
+
+  const target = root.querySelector(`[data-recovery-id="${id}"]`);
+  if (!target) return false;
+
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.style.outline = "2px solid rgba(255,255,255,0.85)";
+  target.style.outlineOffset = "4px";
+  target.style.background = "rgba(255,255,255,0.08)";
+  setTimeout(() => {
+    target.style.outline = "";
+    target.style.outlineOffset = "";
+    target.style.background = "";
+  }, 1800);
+  return true;
+}
+
 function renderRecovery(items){
   const root = document.getElementById("recoveryList");
   if (!root) return;
@@ -1327,7 +1350,7 @@ function renderRecovery(items){
   STATE.recoveryHistory = sorted;
 
   root.innerHTML = sorted.map(item => `
-    <li>
+    <li data-recovery-id="${esc(String(item.id || ""))}">
       <div class="row">
         <strong>${esc(item.date || "")}</strong>
         <span class="small">${tr("history.recovery_scores", { sleep: esc(item.sleep_score), energy: esc(item.energy_score), soreness: esc(item.soreness_score) })}</span>
@@ -1342,15 +1365,16 @@ function renderRecovery(items){
     </li>
   `).join("");
 
-  root.querySelectorAll(".edit-recovery-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const recoveryId = String(btn.getAttribute("data-recovery-id") || "").trim();
-      const item = STATE.recoveryHistory.find((entry) => String(entry?.id || "").trim() === recoveryId);
-      if (item) setRecoveryEditMode(item);
-    });
-  });
-
   setText("recoveryMeta", tr("common.items_count", { count: sorted.length }));
+
+  const pendingId = String(STATE.lastFocusedRecoveryId || "").trim();
+  if (pendingId){
+    requestAnimationFrame(() => {
+      if (focusRecoveryHistoryItem(pendingId)){
+        STATE.lastFocusedRecoveryId = null;
+      }
+    });
+  }
 }
 
 
@@ -3575,7 +3599,7 @@ function applyCheckinEditItem(item){
   const section = document.getElementById("checkinEditSection");
   if (!form || !section || !item || typeof item !== "object") return;
 
-  STATE.editingRecoveryId = String(item.id || "").trim() || null;
+  STATE.editingCheckinId = String(item.id || "").trim() || null;
 
   form.recovery_date.value = String(item.date || "").slice(0,10);
   form.sleep_score.value = String(item.sleep_score ?? "3");
@@ -3607,7 +3631,7 @@ function applyCheckinEditItem(item){
 function closeCheckinEditSection(){
   const section = document.getElementById("checkinEditSection");
   const form = document.getElementById("checkinEditForm");
-  STATE.editingRecoveryId = null;
+  STATE.editingCheckinId = null;
   if (section) section.classList.add("wizard-step-hidden");
   if (form) resetCheckinEditForm(form);
   clearEditCheckinIdFromUrl();
@@ -3634,7 +3658,7 @@ async function loadDedicatedCheckinEditFromUrl(){
 async function handleDedicatedCheckinEditSubmit(ev){
   ev.preventDefault();
   const form = ev.currentTarget;
-  const recoveryId = String(STATE.editingRecoveryId || "").trim();
+  const recoveryId = String(STATE.editingCheckinId || "").trim();
   if (!recoveryId){
     setText("checkinEditStatus", "Ingen check-in valgt til redigering.");
     return;
@@ -3660,16 +3684,20 @@ async function handleDedicatedCheckinEditSubmit(ev){
   try{
     setText("checkinEditStatus", "Gemmer ændringer...");
     await apiJsonRequest("PUT", `/api/checkins/${encodeURIComponent(recoveryId)}`, payload);
-    setText("checkinEditStatus", "Check-in opdateret.");
     await refreshAll();
-    await loadDedicatedCheckinEditFromUrl();
+    closeCheckinEditSection();
+    showWizardStep("history");
+    setTimeout(() => {
+      focusRecoveryHistoryItem(recoveryId);
+    }, 120);
+    setText("recoveryFormStatus", "Historisk check-in opdateret. Se den i historik.");
   }catch(err){
     setText("checkinEditStatus", tr("status.error_prefix") + (err?.message || String(err)));
   }
 }
 
 async function handleDedicatedCheckinDelete(){
-  const recoveryId = String(STATE.editingRecoveryId || "").trim();
+  const recoveryId = String(STATE.editingCheckinId || "").trim();
   if (!recoveryId){
     setText("checkinEditStatus", "Ingen check-in valgt til sletning.");
     return;
@@ -3722,15 +3750,15 @@ async function handleRecoverySubmit(ev){
     menstrual_pain: menstruationEnabled ? String(form.menstrual_pain?.value || "none") : "none"
   };
 
-  const editingRecoveryId = String(STATE.editingRecoveryId || "").trim();
-  const isEditing = Boolean(editingRecoveryId);
+  const editingCheckinId = String(STATE.editingCheckinId || "").trim();
+  const isEditing = Boolean(editingCheckinId);
 
   try{
     setText("recoveryFormStatus", isEditing ? "Gemmer ændringer..." : tr("status.calculating"));
     statusEl?.classList.remove("warn");
 
     if (isEditing){
-      await apiJsonRequest("PUT", `/api/checkins/${encodeURIComponent(editingRecoveryId)}`, payload);
+      await apiJsonRequest("PUT", `/api/checkins/${encodeURIComponent(editingCheckinId)}`, payload);
       clearEditCheckinIdFromUrl();
       setText("recoveryFormStatus", "Check-in opdateret.");
     } else {
