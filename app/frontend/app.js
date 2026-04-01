@@ -145,21 +145,44 @@ function resetEnhancedCheckinUi(){
   });
 }
 
-function deriveDailyUiState(planItem, latestCheckin){
+function hasCompletedSessionToday(sessionResults){
+  const today = new Date().toISOString().slice(0,10);
+  const items = Array.isArray(sessionResults) ? sessionResults : [];
+  return items.some(item =>
+    item &&
+    typeof item === "object" &&
+    String(item.date || "").slice(0,10) === today &&
+    item.completed === true
+  );
+}
+
+function isPlannedRestDayPlan(planItem){
+  if (!planItem || typeof planItem !== "object") return false;
+  const weekItem = getTodayWeekPlanItem(planItem);
+  return String(weekItem?.kind || "").trim().toLowerCase() === "rest";
+}
+
+function deriveDailyUiState(planItem, latestCheckin, sessionResults){
   const today = new Date().toISOString().slice(0,10);
   const latestDate = String(latestCheckin?.date || "").slice(0,10);
   const hasCheckinToday = latestDate === today;
   const hasPlan = !!(planItem && typeof planItem === "object");
+  const completedToday = hasCompletedSessionToday(sessionResults);
+  const plannedRestToday = isPlannedRestDayPlan(planItem);
 
-  if (!hasCheckinToday) return "needs_checkin";
-  if (hasPlan) return "ready_for_plan";
+  if (!hasCheckinToday) return "no_checkin_yet";
+  if (completedToday) return "completed_today";
+  if (plannedRestToday) return "planned_rest_today";
+  if (hasPlan) return "plan_ready";
   return "overview";
 }
 
-function getDefaultWizardStepForDailyState(planItem, latestCheckin){
-  const dailyState = deriveDailyUiState(planItem, latestCheckin);
-  if (dailyState === "needs_checkin") return "checkin";
-  if (dailyState === "ready_for_plan") return "plan";
+function getDefaultWizardStepForDailyState(planItem, latestCheckin, sessionResults){
+  const dailyState = deriveDailyUiState(planItem, latestCheckin, sessionResults);
+  if (dailyState === "no_checkin_yet") return "checkin";
+  if (dailyState === "planned_rest_today") return "plan";
+  if (dailyState === "plan_ready") return "plan";
+  if (dailyState === "completed_today") return "overview";
   return "overview";
 }
 
@@ -182,17 +205,8 @@ function resolveNavigationIntent(uiState){
     };
   }
 
-  const currentStep = String(CURRENT_STEP || "").trim();
-  if (currentStep){
-    return {
-      kind: "current_step",
-      targetStep: currentStep,
-      entityId: ""
-    };
-  }
-
   return {
-    kind: "default_step",
+    kind: "daily_state",
     targetStep: uiState?.defaultStep || "overview",
     entityId: ""
   };
@@ -1484,9 +1498,12 @@ function getForecastTypeLabel(planItem){
 
 function renderForecastHero(planItem, latestCheckin){
   setText("forecastDate", planItem?.recommended_for || latestCheckin?.date || "");
-  setText("forecastType", getForecastTypeLabel(planItem));
+
+  const completedToday = hasCompletedSessionToday(STATE.sessionResults || []);
+  const plannedRestToday = isPlannedRestDayPlan(planItem);
 
   if (!planItem){
+    setText("forecastType", "");
     setText("forecastSummary", tr("forecast.welcome_no_history"));
     setText("forecastReason", latestCheckin ? tr("forecast.latest_readiness", { value: latestCheckin.readiness_score ?? "-" }) : tr("forecast.no_readiness_data"));
     const btn = document.getElementById("forecastPrimaryBtn");
@@ -1497,7 +1514,37 @@ function renderForecastHero(planItem, latestCheckin){
     return;
   }
 
-  const leadText = buildForecastLeadText(planItem);
+  if (completedToday){
+    setText("forecastType", "Færdig i dag");
+    setText("forecastSummary", "Dagens session er gemt.");
+
+    const bits = [];
+    if (planItem.session_type) bits.push(formatSessionType(planItem.session_type));
+    if (planItem.time_budget_min) bits.push(tr("forecast.time_label", { minutes: planItem.time_budget_min }));
+    if (planItem.recovery_state && typeof planItem.recovery_state === "object"){
+      bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
+    }
+
+    const nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
+    const forecastReasonEl = document.getElementById("forecastReason");
+    if (forecastReasonEl){
+      forecastReasonEl.textContent = [bits.join(" · "), nextGuidanceMessage].filter(Boolean).join("\n");
+      forecastReasonEl.style.whiteSpace = "pre-line";
+    }
+
+    const btn = document.getElementById("forecastPrimaryBtn");
+    if (btn){
+      btn.textContent = "Se status";
+      btn.onclick = () => showWizardStep("overview");
+    }
+    return;
+  }
+
+  setText("forecastType", plannedRestToday ? "Hviledag" : getForecastTypeLabel(planItem));
+
+  const leadText = plannedRestToday
+    ? "Planlagt hviledag i dag."
+    : buildForecastLeadText(planItem);
 
   const bits = [];
   if (planItem.readiness_score != null) bits.push(tr("forecast.readiness_label", { value: planItem.readiness_score }));
@@ -1505,10 +1552,21 @@ function renderForecastHero(planItem, latestCheckin){
   const timingLabel = formatTimingState(planItem.timing_state);
   if (timingLabel) bits.push(tr("forecast.timing_label", { value: timingLabel }));
   const planVariantLabel = formatPlanVariant(planItem.plan_variant || "");
-  if (planVariantLabel) bits.push(tr("forecast.plan_label", { value: formatPlanMotor(planVariantLabel) }));
+  if (planVariantLabel && !plannedRestToday) bits.push(tr("forecast.plan_label", { value: formatPlanMotor(planVariantLabel) }));
   if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
 
-  const nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
+  let nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
+  if (plannedRestToday){
+    const lowered = nextGuidanceMessage.toLowerCase();
+    if (
+      lowered.includes("i dag er restitution") ||
+      lowered.includes("today is recovery") ||
+      lowered.includes("today is restitution")
+    ){
+      nextGuidanceMessage = "";
+    }
+  }
+
   const reasonParts = [bits.join(" · "), formatPlanReason(planItem.reason || "")].filter(Boolean);
   const forecastReasonText = [
     reasonParts.join(" · "),
@@ -1524,13 +1582,10 @@ function renderForecastHero(planItem, latestCheckin){
 
   const btn = document.getElementById("forecastPrimaryBtn");
   if (btn){
-    btn.textContent = tr("button.view_today_plan");
+    btn.textContent = plannedRestToday ? "Se hviledag" : tr("button.view_today_plan");
     btn.onclick = () => showWizardStep("plan");
   }
 }
-
-
-
 
 function formatOverviewReadinessLabel(value){
   const n = Number(value);
@@ -1969,7 +2024,7 @@ function updateOverviewLayoutForStep(stepId){
   const overviewSection = document.getElementById("overviewSection");
   if (!overviewSection) return;
 
-  const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null);
+  const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null, STATE.sessionResults || []);
   const cards = Array.from(overviewSection.querySelectorAll(":scope > section.card"));
 
   cards.forEach(card => {
@@ -3026,7 +3081,13 @@ function renderTodayPlan(item){
   let nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
   if (isPlannedRestDay && nextGuidanceMessage){
     const lowered = nextGuidanceMessage.toLowerCase();
-    if (lowered.includes("i dag er styrke") || lowered.includes("today is strength")){
+    if (
+      lowered.includes("i dag er styrke") ||
+      lowered.includes("today is strength") ||
+      lowered.includes("i dag er restitution") ||
+      lowered.includes("today is recovery") ||
+      lowered.includes("today is restitution")
+    ){
       nextGuidanceMessage = "";
     }
   }
@@ -3349,7 +3410,7 @@ async function refreshAll(){
   renderPrograms(STATE.programs, STATE.exercises);
   renderPendingEntries();
 
-  const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null);
+  const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || []);
 
   debug.pendingEntries = STATE.pendingEntries;
   debug.workouts_file = workoutsFile;
@@ -3371,7 +3432,7 @@ async function refreshAll(){
 
   return {
     dailyUiState,
-    defaultStep: getDefaultWizardStepForDailyState(todayPlanApi.item || null, latestRecoveryApi.item || null)
+    defaultStep: getDefaultWizardStepForDailyState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || [])
   };
 }
 
