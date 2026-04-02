@@ -156,6 +156,20 @@ function hasCompletedSessionToday(sessionResults){
   );
 }
 
+function getCompletedSessionToday(sessionResults){
+  const today = new Date().toISOString().slice(0,10);
+  const items = Array.isArray(sessionResults) ? sessionResults : [];
+  const matches = items.filter(item =>
+    item &&
+    typeof item === "object" &&
+    String(item.date || "").slice(0,10) === today &&
+    item.completed === true
+  );
+  if (!matches.length) return null;
+  matches.sort((a, b) => String(b.created_at || b.date || "").localeCompare(String(a.created_at || a.date || "")));
+  return matches[0] || null;
+}
+
 function isPlannedRestDayPlan(planItem){
   if (!planItem || typeof planItem !== "object") return false;
   const weekItem = getTodayWeekPlanItem(planItem);
@@ -1535,7 +1549,7 @@ function renderForecastHero(planItem, latestCheckin){
     const btn = document.getElementById("forecastPrimaryBtn");
     if (btn){
       btn.textContent = "Se status";
-      btn.onclick = () => showWizardStep("overview");
+      btn.onclick = () => showWizardStep("review");
     }
     return;
   }
@@ -2485,23 +2499,48 @@ function toggleCardioReviewFields(item){
 function renderSessionReview(item){
   const root = document.getElementById("sessionReviewList");
   const form = document.getElementById("sessionResultForm");
+  const completedTodayItem = !STATE.editingSessionResultId ? getCompletedSessionToday(STATE.sessionResults || []) : null;
+
   if (form){
-    form.classList.remove("wizard-step-hidden");
-    form.querySelectorAll("input, select, textarea").forEach(el => {
-      el.disabled = false;
-    });
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn){
-      submitBtn.disabled = false;
-      submitBtn.style.display = "";
-      submitBtn.textContent = STATE.editingSessionResultId ? "Gem ændringer" : tr("after_training.save_session_result");
-    }
-    const deleteBtn = document.getElementById("deleteSessionResultBtn");
-    if (deleteBtn){
-      deleteBtn.classList.toggle("wizard-step-hidden", !STATE.editingSessionResultId);
+    if (completedTodayItem){
+      form.classList.add("wizard-step-hidden");
+      form.querySelectorAll("input, select, textarea").forEach(el => {
+        el.disabled = true;
+      });
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn){
+        submitBtn.disabled = true;
+        submitBtn.style.display = "none";
+        submitBtn.textContent = tr("review.session_saved_button");
+      }
+      const deleteBtn = document.getElementById("deleteSessionResultBtn");
+      if (deleteBtn){
+        deleteBtn.classList.add("wizard-step-hidden");
+      }
+    } else {
+      form.classList.remove("wizard-step-hidden");
+      form.querySelectorAll("input, select, textarea").forEach(el => {
+        el.disabled = false;
+      });
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn){
+        submitBtn.disabled = false;
+        submitBtn.style.display = "";
+        submitBtn.textContent = STATE.editingSessionResultId ? "Gem ændringer" : tr("after_training.save_session_result");
+      }
+      const deleteBtn = document.getElementById("deleteSessionResultBtn");
+      if (deleteBtn){
+        deleteBtn.classList.toggle("wizard-step-hidden", !STATE.editingSessionResultId);
+      }
     }
   }
   if (!root) return;
+
+  if (completedTodayItem){
+    root.innerHTML = `<li><div class="small">${esc("Dagens session er allerede gemt. Brug historik, hvis du vil redigere den.")}</div></li>`;
+    toggleCardioReviewFields(null);
+    return;
+  }
 
   if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
     root.innerHTML = `<li><div class="small">${esc(tr("after_training.no_exercises_to_review"))}</div></li>`;
@@ -3975,9 +4014,6 @@ session_type:
       ? await apiJsonRequest("PUT", `/api/session-results/${encodeURIComponent(editingSessionResultId)}`, payload)
       : await apiPost("/api/session-result", payload);
 
-    renderSessionResultSummary(res?.summary || null);
-    setText("sessionResultStatus", isEditingSession ? "Session opdateret." : tr("review.session_result_saved"));
-    statusEl?.classList.add("ok");
     form.reset();
     form.session_completed.value = "true";
     await refreshAll();
@@ -3985,6 +4021,7 @@ session_type:
     renderSessionResultSummary(res?.summary || null);
     setText("sessionResultStatus", isEditingSession ? "Session opdateret." : tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
+
     form.querySelectorAll("input, select, textarea").forEach(el => {
       el.disabled = true;
     });
