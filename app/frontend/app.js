@@ -246,8 +246,36 @@ function getAcknowledgedRestDayCheckin(latestCheckin, planItem){
   const itemDate = String(item.date || "").slice(0,10);
   if (itemDate !== today) return null;
   if (item.rest_day_acknowledged !== true) return null;
+  if (!isPlannedRestDayPlan(planItem)) return null;
 
   return item;
+}
+
+function getTodayCheckin(checkins, latestCheckin, planItem){
+  const items = Array.isArray(checkins) ? checkins : [];
+  const today = String(planItem?.date || planItem?.recommended_for || new Date().toISOString().slice(0,10)).slice(0,10);
+
+  const matches = items.filter(item =>
+    item &&
+    typeof item === "object" &&
+    String(item.date || "").slice(0,10) === today
+  );
+
+  if (matches.length){
+    const sorted = matches
+      .slice()
+      .sort((a, b) => String(b.created_at || b.date || "").localeCompare(String(a.created_at || a.date || "")));
+
+    const acknowledged = sorted.find(item => item && item.rest_day_acknowledged === true);
+    return acknowledged || sorted[0];
+  }
+
+  const latest = latestCheckin && typeof latestCheckin === "object" ? latestCheckin : null;
+  if (latest && String(latest.date || "").slice(0,10) === today){
+    return latest;
+  }
+
+  return null;
 }
 
 function deriveDailyUiState(planItem, latestCheckin, sessionResults){
@@ -2596,7 +2624,8 @@ function renderSessionReview(item){
   const root = document.getElementById("sessionReviewList");
   const form = document.getElementById("sessionResultForm");
   const completedTodayItem = !STATE.editingSessionResultId ? getCompletedSessionToday(STATE.sessionResults || []) : null;
-  const acknowledgedRestDayItem = !STATE.editingSessionResultId ? getAcknowledgedRestDayCheckin(STATE.latestCheckin || null, STATE.currentTodayPlan || null) : null;
+  const todayCheckin = !STATE.editingSessionResultId ? getTodayCheckin(STATE.checkins || [], STATE.latestCheckin || null, STATE.currentTodayPlan || null) : null;
+  const acknowledgedRestDayItem = !STATE.editingSessionResultId ? getAcknowledgedRestDayCheckin(todayCheckin, STATE.currentTodayPlan || null) : null;
   const isClosedDay = Boolean(completedTodayItem || acknowledgedRestDayItem);
 
   if (form){
@@ -3344,7 +3373,11 @@ function renderTodayPlan(item){
   const heroLead = isPlannedRestDay
     ? tr("today_plan.rest_day_lead")
     : "";
-  const heroActions = isPlannedRestDay
+
+  const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
+  const showRestDayCta = isPlannedRestDay && !hasEntries;
+
+  const heroActions = showRestDayCta
     ? `
     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
       <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
@@ -3487,6 +3520,7 @@ async function refreshAll(){
   STATE.userSettings = userSettingsApi && userSettingsApi.item && typeof userSettingsApi.item === "object"
     ? userSettingsApi.item
     : {};
+  STATE.checkins = Array.isArray(recoveryApi && recoveryApi.items) ? recoveryApi.items : [];
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
   STATE.latestCheckin = latestRecoveryApi.item || null;
   STATE.currentTodayPlan = todayPlanApi.item || null;
@@ -3995,12 +4029,13 @@ function updateMenstruationCheckinVisibility(){
 
 
 async function handleRestDayAcknowledge(){
-  const latestCheckin = STATE.latestCheckin && typeof STATE.latestCheckin === "object" ? STATE.latestCheckin : null;
   const plan = STATE.currentTodayPlan && typeof STATE.currentTodayPlan === "object" ? STATE.currentTodayPlan : null;
+  const todayCheckin = getTodayCheckin(STATE.checkins || [], STATE.latestCheckin || null, plan || null);
   const statusEl = document.getElementById("sessionResultStatus");
 
-  const checkinId = String(latestCheckin?.id || "").trim();
-  const checkinDate = String(latestCheckin?.date || plan?.date || plan?.recommended_for || "").trim();
+
+  const checkinId = String(todayCheckin?.id || "").trim();
+  const checkinDate = String(todayCheckin?.date || plan?.date || plan?.recommended_for || "").trim();
 
   if (!checkinId || !checkinDate){
     setText("sessionResultStatus", tr("today_plan.rest_day_checkin_required"));
@@ -4011,14 +4046,14 @@ async function handleRestDayAcknowledge(){
 
   const payload = {
     date: checkinDate,
-    sleep_score: Number(latestCheckin.sleep_score || 0),
-    energy_score: Number(latestCheckin.energy_score || 0),
-    soreness_score: Number(latestCheckin.soreness_score || 0),
-    time_budget_min: Number(latestCheckin.time_budget_min || 45),
-    notes: String(latestCheckin.notes || "").trim(),
-    local_signals: Array.isArray(latestCheckin.local_signals) ? latestCheckin.local_signals : [],
-    menstruation_today: latestCheckin.menstruation_today ?? null,
-    menstrual_pain: String(latestCheckin.menstrual_pain || "none"),
+    sleep_score: Number(todayCheckin.sleep_score || 0),
+    energy_score: Number(todayCheckin.energy_score || 0),
+    soreness_score: Number(todayCheckin.soreness_score || 0),
+    time_budget_min: Number(todayCheckin.time_budget_min || 45),
+    notes: String(todayCheckin.notes || "").trim(),
+    local_signals: Array.isArray(todayCheckin.local_signals) ? todayCheckin.local_signals : [],
+    menstruation_today: todayCheckin.menstruation_today ?? null,
+    menstrual_pain: String(todayCheckin.menstrual_pain || "none"),
     rest_day_acknowledged: true
   };
 
@@ -4030,7 +4065,7 @@ async function handleRestDayAcknowledge(){
 
     const acknowledgedCheckin = res?.item && typeof res.item === "object"
       ? { ...res.item, rest_day_acknowledged: true }
-      : { ...latestCheckin, ...payload, rest_day_acknowledged: true };
+      : { ...todayCheckin, ...payload, rest_day_acknowledged: true };
 
     STATE.latestCheckin = acknowledgedCheckin;
 
