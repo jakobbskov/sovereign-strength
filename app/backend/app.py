@@ -668,6 +668,10 @@ def build_checkin_item(user_id, payload, existing_item=None):
     if err:
         return None, err, status
 
+    rest_day_acknowledged, err, status = _parse_optional_bool(payload.get("rest_day_acknowledged"), "rest_day_acknowledged")
+    if err:
+        return None, err, status
+
     menstrual_pain, err, status = _parse_menstrual_pain(payload.get("menstrual_pain"))
     if err:
         return None, err, status
@@ -690,6 +694,7 @@ def build_checkin_item(user_id, payload, existing_item=None):
         "notes": notes,
         "local_signals": local_signals,
         "menstruation_today": menstruation_today,
+        "rest_day_acknowledged": rest_day_acknowledged,
         "menstrual_pain": menstrual_pain,
         "created_at": existing_item.get("created_at") or datetime.now(timezone.utc).isoformat()
     }
@@ -6135,10 +6140,11 @@ def put_checkin(checkin_id):
         log_auth_failure("checkin:put", auth_err)
         return auth_err
 
+    payload = request.get_json(silent=True) or {}
     item, err_payload, status = update_checkin(
         auth_user.get("user_id"),
         checkin_id,
-        request.get_json(silent=True) or {}
+        payload
     )
     if err_payload is not None:
         payload, status = ensure_error_contract(err_payload, status)

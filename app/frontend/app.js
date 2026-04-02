@@ -238,16 +238,29 @@ function isPlannedRestDayPlan(planItem){
   return String(weekItem?.kind || "").trim().toLowerCase() === "rest";
 }
 
+function getAcknowledgedRestDayCheckin(latestCheckin, planItem){
+  const item = latestCheckin && typeof latestCheckin === "object" ? latestCheckin : null;
+  if (!item) return null;
+
+  const today = new Date().toISOString().slice(0,10);
+  const itemDate = String(item.date || "").slice(0,10);
+  if (itemDate !== today) return null;
+  if (item.rest_day_acknowledged !== true) return null;
+
+  return item;
+}
+
 function deriveDailyUiState(planItem, latestCheckin, sessionResults){
   const today = new Date().toISOString().slice(0,10);
   const latestDate = String(latestCheckin?.date || "").slice(0,10);
   const hasCheckinToday = latestDate === today;
   const hasPlan = !!(planItem && typeof planItem === "object");
   const completedToday = hasCompletedSessionToday(sessionResults);
+  const acknowledgedRestDay = Boolean(getAcknowledgedRestDayCheckin(latestCheckin, planItem));
   const plannedRestToday = isPlannedRestDayPlan(planItem);
 
   if (!hasCheckinToday) return "no_checkin_yet";
-  if (completedToday) return "completed_today";
+  if (completedToday || acknowledgedRestDay) return "completed_today";
   if (plannedRestToday) return "planned_rest_today";
   if (hasPlan) return "plan_ready";
   return "overview";
@@ -2583,9 +2596,11 @@ function renderSessionReview(item){
   const root = document.getElementById("sessionReviewList");
   const form = document.getElementById("sessionResultForm");
   const completedTodayItem = !STATE.editingSessionResultId ? getCompletedSessionToday(STATE.sessionResults || []) : null;
+  const acknowledgedRestDayItem = !STATE.editingSessionResultId ? getAcknowledgedRestDayCheckin(STATE.latestCheckin || null, STATE.currentTodayPlan || null) : null;
+  const isClosedDay = Boolean(completedTodayItem || acknowledgedRestDayItem);
 
   if (form){
-    if (completedTodayItem){
+    if (isClosedDay){
       form.classList.add("wizard-step-hidden");
       form.querySelectorAll("input, select, textarea").forEach(el => {
         el.disabled = true;
@@ -2625,6 +2640,14 @@ function renderSessionReview(item){
     toggleCardioReviewFields(null);
     setText("sessionResultStatus", "");
     renderSessionResultSummary(storedSummary);
+    return;
+  }
+
+  if (acknowledgedRestDayItem){
+    root.innerHTML = `<li><div class="small">${esc(tr("today_plan.rest_day_acknowledged_saved"))}</div></li>`;
+    toggleCardioReviewFields(null);
+    setText("sessionResultStatus", "");
+    renderRestDayAcknowledgedSummary(acknowledgedRestDayItem, STATE.currentTodayPlan || null);
     return;
   }
 
@@ -2730,6 +2753,28 @@ function renderReviewSummary(item){
 
 
 
+
+function renderRestDayAcknowledgedSummary(checkinItem, planItem){
+  const root = document.getElementById("reviewPlanSummary");
+  if (!root) return;
+
+  const item = checkinItem && typeof checkinItem === "object" ? checkinItem : {};
+  const bits = [];
+
+  if (item.readiness_score != null){
+    bits.push(`${tr("overview.readiness")}: ${esc(String(item.readiness_score))}`);
+  }
+  if (item.time_budget_min){
+    bits.push(tr("overview.time_today_short", { minutes: item.time_budget_min }));
+  }
+
+  root.innerHTML = `
+    <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("today_plan.rest_day_logged_title"))}</div>
+    <div class="small" style="margin-bottom:8px">${esc(tr("today_plan.rest_day_logged_text"))}</div>
+    ${bits.length ? `<div class="small" style="margin-bottom:8px">${bits.map(x => esc(x)).join(" · ")}</div>` : ""}
+    ${buildNextPlannedSessionHtml(planItem || null)}
+  `;
+}
 
 function renderSessionResultSummary(summary){
   const root = document.getElementById("reviewPlanSummary");
@@ -3302,7 +3347,7 @@ function renderTodayPlan(item){
   const heroActions = isPlannedRestDay
     ? `
     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-      <button type="button" id="startRecoveryBtn">${esc(tr("plan.light_movement_today"))}</button>
+      <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
       <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
     </div>
     `
@@ -3369,9 +3414,7 @@ function renderTodayPlan(item){
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
     showWizardStep("review");
   });
-  document.getElementById("startRecoveryBtn")?.addEventListener("click", () => {
-    showWizardStep("review");
-  });
+  document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
   document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
     showWizardStep("manual");
   });
@@ -3947,6 +3990,60 @@ function updateMenstruationCheckinVisibility(){
   const block = document.getElementById("menstruationCheckinFields");
   if (block){
     block.classList.toggle("wizard-step-hidden", !enabled);
+  }
+}
+
+
+async function handleRestDayAcknowledge(){
+  const latestCheckin = STATE.latestCheckin && typeof STATE.latestCheckin === "object" ? STATE.latestCheckin : null;
+  const plan = STATE.currentTodayPlan && typeof STATE.currentTodayPlan === "object" ? STATE.currentTodayPlan : null;
+  const statusEl = document.getElementById("sessionResultStatus");
+
+  const checkinId = String(latestCheckin?.id || "").trim();
+  const checkinDate = String(latestCheckin?.date || plan?.date || plan?.recommended_for || "").trim();
+
+  if (!checkinId || !checkinDate){
+    setText("sessionResultStatus", tr("today_plan.rest_day_checkin_required"));
+    statusEl?.classList.remove("ok");
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  const payload = {
+    date: checkinDate,
+    sleep_score: Number(latestCheckin.sleep_score || 0),
+    energy_score: Number(latestCheckin.energy_score || 0),
+    soreness_score: Number(latestCheckin.soreness_score || 0),
+    time_budget_min: Number(latestCheckin.time_budget_min || 45),
+    notes: String(latestCheckin.notes || "").trim(),
+    local_signals: Array.isArray(latestCheckin.local_signals) ? latestCheckin.local_signals : [],
+    menstruation_today: latestCheckin.menstruation_today ?? null,
+    menstrual_pain: String(latestCheckin.menstrual_pain || "none"),
+    rest_day_acknowledged: true
+  };
+
+  try{
+    setText("sessionResultStatus", tr("today_plan.rest_day_acknowledging"));
+    statusEl?.classList.remove("warn");
+
+    const res = await apiJsonRequest("PUT", `/api/checkins/${encodeURIComponent(checkinId)}`, payload);
+
+    const acknowledgedCheckin = res?.item && typeof res.item === "object"
+      ? { ...res.item, rest_day_acknowledged: true }
+      : { ...latestCheckin, ...payload, rest_day_acknowledged: true };
+
+    STATE.latestCheckin = acknowledgedCheckin;
+
+    statusEl?.classList.add("ok");
+    setText("sessionResultStatus", tr("today_plan.rest_day_acknowledged_saved"));
+    await refreshAll();
+    STATE.latestCheckin = { ...(STATE.latestCheckin || {}), ...acknowledgedCheckin, rest_day_acknowledged: true };
+    renderSessionReview(STATE.currentTodayPlan || null);
+    showWizardStep("review");
+  }catch(err){
+    setText("sessionResultStatus", tr("status.error_prefix") + (err?.message || String(err)));
+    statusEl?.classList.remove("ok");
+    statusEl?.classList.add("warn");
   }
 }
 
@@ -5156,7 +5253,7 @@ function buildNextPlannedSessionHtml(planItem){
   const nextTraining = info.nextTraining;
 
   const tomorrowLine = tomorrow && tomorrow.kind === "rest"
-    ? `<div class="small" style="margin-bottom:6px">${esc(tr("review.tomorrow_label"))}: ${esc(tr("weekplan.label.rest"))} · ${esc(tomorrow.dateLabel || "")}</div>`
+    ? `<div class="small" style="margin-bottom:6px">${esc(tr("review.tomorrow_rest_label"))} · ${esc(tomorrow.dateLabel || "")}</div>`
     : "";
 
   return `

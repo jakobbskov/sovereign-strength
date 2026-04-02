@@ -258,6 +258,7 @@
   "review.next_progression_label": "Next progression",
   "review.next_planned_session_label": "Next planned session",
   "review.tomorrow_label": "Tomorrow",
+  "review.tomorrow_rest_label": "Tomorrow is a planned rest day",
   "review.session_saved_button": "Session saved",
   "status.startup_error_prefix": "Startup error: ",
   "checkin.sleep_score_label": "Sleep (1-5)",
@@ -527,5 +528,11 @@
   "progression.increase_reps_next_time": "Increase reps next time",
   "progression.hold_load_today": "Hold {load} today",
   "progression.hold_current_load_today": "Hold the current load today",
-  "status.ready_to_save_equipment": "Edit profile and equipment, then save when you're ready."
+  "status.ready_to_save_equipment": "Edit profile and equipment, then save when you're ready.",
+  "today_plan.acknowledge_rest_day": "Log rest day",
+  "today_plan.rest_day_checkin_required": "You need a check-in for today before you can log a rest day.",
+  "today_plan.rest_day_acknowledging": "Logging rest day...",
+  "today_plan.rest_day_acknowledged_saved": "Rest day logged.",
+  "today_plan.rest_day_logged_title": "Rest day logged",
+  "today_plan.rest_day_logged_text": "Today's planned rest day has been logged."
 }
