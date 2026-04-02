@@ -1096,7 +1096,7 @@ function renderSessionHistory(items){
             : `${tr("history.session_totals", { sets: esc(String(totalSets)), reps: esc(String(totalReps)), tut_part: totalTUT ? ` · TUT: ${esc(String(totalTUT))} ${tr("unit.seconds")}` : "", volume: esc(String(estimatedVolume)) })}`}
         </div>
         <div class="small" style="margin-top:6px">
-          ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
+          ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
         </div>
         <div class="small" style="margin-top:6px">
           ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
@@ -2767,11 +2767,12 @@ function renderSessionResultSummary(summary){
         ${esc(tr("cardio.review.actual_pace_label"))}: ${esc(paceText)}
       </div>
       <div class="small" style="margin-bottom:8px">
-        ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
+        ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
       </div>
       <div class="small">
         ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
       </div>
+      ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
     `;
     return;
   }
@@ -2796,11 +2797,12 @@ function renderSessionResultSummary(summary){
       Failure-markører: ${esc(String(hitFailureCount))}
     </div>
     <div class="small" style="margin-bottom:8px">
-      ${tr("history.next_step_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
+      ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
     </div>
     <div class="small">
       ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
     </div>
+    ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
   `;
 }
 
@@ -5069,6 +5071,102 @@ function getTodayWeekPlanItem(planItem){
   const keyMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const fallbackKey = keyMap[jsDay] || "";
   return items.find(item => item && item.key === fallbackKey) || null;
+}
+
+function formatIsoDateForUi(dateStr){
+  const raw = String(dateStr || "").trim();
+  if (!raw) return "";
+
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return raw;
+
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const d = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  if (Number.isNaN(d.getTime())) return raw;
+
+  const weekdayIndex = d.getUTCDay(); // 0=sun
+  const lang = String(getCurrentLang() || "").trim().toLowerCase();
+  const isEnglish = lang === "en" || lang.startsWith("en-") || lang.startsWith("en_");
+
+  const weekdayNames = isEnglish
+    ? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    : ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+
+  const monthNames = isEnglish
+    ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    : ["januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"];
+
+  return `${weekdayNames[weekdayIndex]} ${day}. ${monthNames[month - 1]}`;
+}
+
+function getNextPlannedSessionInfo(planItem){
+  const items = buildWeekPlanItems(planItem);
+  if (!Array.isArray(items) || !items.length) return null;
+
+  const todayKey = String(planItem?.training_day_context?.weekday_key || "").trim().toLowerCase();
+  const todayIdx = items.findIndex(item => item && item.key === todayKey);
+  if (todayIdx < 0) return null;
+
+  const baseDate = String(planItem?.date || planItem?.recommended_for || "").trim();
+  if (!baseDate) return null;
+
+  const nextDay = items[(todayIdx + 1) % items.length] || null;
+  let nextTraining = null;
+
+  for (let offset = 1; offset <= items.length; offset += 1){
+    const candidate = items[(todayIdx + offset) % items.length];
+    if (!candidate) continue;
+    if (candidate.kind !== "rest" && candidate.key !== todayKey){
+      nextTraining = { ...candidate, offsetDays: offset };
+      break;
+    }
+  }
+
+  const out = {};
+  if (nextDay){
+    const d = new Date(`${baseDate}T12:00:00`);
+    d.setDate(d.getDate() + 1);
+    out.tomorrow = {
+      ...nextDay,
+      date: d.toISOString().slice(0,10),
+      dateLabel: formatIsoDateForUi(d.toISOString().slice(0,10))
+    };
+  }
+
+  if (nextTraining){
+    const d = new Date(`${baseDate}T12:00:00`);
+    d.setDate(d.getDate() + Number(nextTraining.offsetDays || 0));
+    out.nextTraining = {
+      ...nextTraining,
+      date: d.toISOString().slice(0,10),
+      dateLabel: formatIsoDateForUi(d.toISOString().slice(0,10))
+    };
+  }
+
+  return out;
+}
+
+function buildNextPlannedSessionHtml(planItem){
+  const info = getNextPlannedSessionInfo(planItem);
+  if (!info || !info.nextTraining) return "";
+
+  const tomorrow = info.tomorrow;
+  const nextTraining = info.nextTraining;
+
+  const tomorrowLine = tomorrow && tomorrow.kind === "rest"
+    ? `<div class="small" style="margin-bottom:6px">${esc(tr("review.tomorrow_label"))}: ${esc(tr("weekplan.label.rest"))} · ${esc(tomorrow.dateLabel || "")}</div>`
+    : "";
+
+  return `
+    <div class="small" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08)">
+      ${tomorrowLine}
+      <div><strong>${esc(tr("review.next_planned_session_label"))}:</strong> ${esc(nextTraining.kindLabel || "")}</div>
+      <div class="small" style="margin-top:4px">${esc(nextTraining.dateLabel || nextTraining.date || "")}</div>
+      ${nextTraining.note ? `<div class="small" style="margin-top:4px">${esc(nextTraining.note)}</div>` : ""}
+    </div>
+  `;
 }
 
 function renderWeekPlanPreview(planItem){
