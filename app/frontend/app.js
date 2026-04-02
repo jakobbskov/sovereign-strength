@@ -1618,7 +1618,9 @@ function getForecastTypeLabel(planItem){
 function renderForecastHero(planItem, latestCheckin){
   setText("forecastDate", planItem?.recommended_for || latestCheckin?.date || "");
 
-  const completedToday = hasCompletedSessionToday(STATE.sessionResults || []);
+  const dailyUiState = deriveDailyUiState(planItem || null, latestCheckin || null, STATE.sessionResults || []);
+  const completedToday = dailyUiState === "completed_session_today";
+  const completedRestDayToday = dailyUiState === "completed_rest_day_today";
   const plannedRestToday = isPlannedRestDayPlan(planItem);
 
   if (!planItem){
@@ -1633,15 +1635,22 @@ function renderForecastHero(planItem, latestCheckin){
     return;
   }
 
-  if (completedToday){
+  if (completedToday || completedRestDayToday){
     setText("forecastType", "Færdig i dag");
-    setText("forecastSummary", "Dagens session er gemt.");
+    setText(
+      "forecastSummary",
+      completedRestDayToday ? tr("today_plan.rest_day_acknowledged_saved") : "Dagens session er gemt."
+    );
 
     const bits = [];
-    if (planItem.session_type) bits.push(formatSessionType(planItem.session_type));
-    if (planItem.time_budget_min) bits.push(tr("forecast.time_label", { minutes: planItem.time_budget_min }));
-    if (planItem.recovery_state && typeof planItem.recovery_state === "object"){
-      bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
+    if (completedRestDayToday) {
+      bits.push(tr("today_plan.rest_day_logged_title"));
+    } else {
+      if (planItem?.session_type) bits.push(formatSessionType(planItem.session_type));
+      if (planItem?.time_budget_min) bits.push(tr("forecast.time_label", { minutes: planItem.time_budget_min }));
+      if (planItem?.recovery_state && typeof planItem.recovery_state === "object"){
+        bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
+      }
     }
 
     const nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
@@ -1654,7 +1663,7 @@ function renderForecastHero(planItem, latestCheckin){
     const btn = document.getElementById("forecastPrimaryBtn");
     if (btn){
       btn.textContent = "Se status";
-      btn.onclick = () => showWizardStep("review");
+      btn.onclick = () => showWizardStep(completedRestDayToday ? "overview" : "review");
     }
     return;
   }
