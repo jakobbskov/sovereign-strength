@@ -269,6 +269,7 @@
   "review.next_progression_label": "Progression næste gang",
   "review.next_planned_session_label": "Næste planlagte træning",
   "review.tomorrow_label": "I morgen",
+  "review.tomorrow_rest_label": "I morgen er planlagt hviledag",
   "review.session_saved_button": "Session gemt",
   "status.startup_error_prefix": "Fejl før opstart: ",
   "checkin.sleep_score_label": "Søvn (1-5)",
@@ -538,5 +539,11 @@
   "progression.increase_reps_next_time": "Øg reps næste gang",
   "progression.hold_load_today": "Hold {load} i dag",
   "progression.hold_current_load_today": "Hold nuværende belastning i dag",
-  "status.ready_to_save_equipment": "Redigér profil og udstyr, og gem når du er klar."
+  "status.ready_to_save_equipment": "Redigér profil og udstyr, og gem når du er klar.",
+  "today_plan.acknowledge_rest_day": "Registrer hviledag",
+  "today_plan.rest_day_checkin_required": "Du skal have et check-in i dag, før du kan registrere hviledag.",
+  "today_plan.rest_day_acknowledging": "Registrerer hviledag...",
+  "today_plan.rest_day_acknowledged_saved": "Hviledag registreret.",
+  "today_plan.rest_day_logged_title": "Hviledag registreret",
+  "today_plan.rest_day_logged_text": "Dagens planlagte hviledag er registreret."
 }
