@@ -1286,7 +1286,7 @@
     "id": "bird_dog",
     "name": "Bird dog",
     "category": "core",
-    "default_unit": "reps",
+    "default_unit": "sec",
     "progression_step": 0,
     "start_weight": 0,
     "notes": "Core and back control.",
@@ -1296,8 +1296,8 @@
     "equipment_type": "bodyweight",
     "movement_pattern": "core_control",
     "difficulty_tier": 1,
-    "progression_style": "reps_then_variant",
-    "input_kind": "bodyweight_reps",
+    "progression_style": "time_then_variant",
+    "input_kind": "time",
     "load_optional": false,
     "supports_bodyweight": true,
     "supports_load": false,
@@ -1308,14 +1308,8 @@
       4,
       5
     ],
-    "rep_options": [
-      "6/side",
-      "8/side",
-      "10/side",
-      "12/side"
-    ],
     "progression_channels": [
-      "reps",
+      "time",
       "variation",
       "tempo",
       "support_reduction"
@@ -1335,6 +1329,13 @@
     "local_load_targets": [
       "low_back",
       "hip"
+    ],
+    "time_options": [
+      "20 sek",
+      "30 sek",
+      "40 sek",
+      "45 sek",
+      "60 sek"
     ]
   },
   {

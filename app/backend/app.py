@@ -4405,23 +4405,24 @@ def build_session_summary(session_item):
                 if reps_val or tut_val or load_val:
                     non_empty_sets += 1
 
-                total_reps += reps_val
-                total_time_under_tension_sec += tut_val
-
                 if is_time_based:
+                    total_time_under_tension_sec += tut_val
                     estimated_volume += tut_val * effective_set_load
                 else:
+                    total_reps += reps_val
+                    total_time_under_tension_sec += tut_val
                     estimated_volume += reps_val * effective_set_load
 
             total_sets += non_empty_sets if non_empty_sets else len(sets)
         else:
             if achieved_reps or achieved_tut or base_load:
                 total_sets += 1
-                total_reps += achieved_reps
-                total_time_under_tension_sec += achieved_tut
                 if is_time_based:
+                    total_time_under_tension_sec += achieved_tut
                     estimated_volume += achieved_tut * effective_load
                 else:
+                    total_reps += achieved_reps
+                    total_time_under_tension_sec += achieved_tut
                     estimated_volume += achieved_reps * effective_load
 
         if bool(r.get("completed", False)):
