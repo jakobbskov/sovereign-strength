@@ -288,7 +288,8 @@ function deriveDailyUiState(planItem, latestCheckin, sessionResults){
   const plannedRestToday = isPlannedRestDayPlan(planItem);
 
   if (!hasCheckinToday) return "no_checkin_yet";
-  if (completedToday || acknowledgedRestDay) return "completed_today";
+  if (completedToday) return "completed_session_today";
+  if (acknowledgedRestDay) return "completed_rest_day_today";
   if (plannedRestToday) return "planned_rest_today";
   if (hasPlan) return "plan_ready";
   return "overview";
@@ -299,7 +300,8 @@ function getDefaultWizardStepForDailyState(planItem, latestCheckin, sessionResul
   if (dailyState === "no_checkin_yet") return "checkin";
   if (dailyState === "planned_rest_today") return "plan";
   if (dailyState === "plan_ready") return "plan";
-  if (dailyState === "completed_today") return "overview";
+  if (dailyState === "completed_session_today") return "overview";
+  if (dailyState === "completed_rest_day_today") return "overview";
   return "overview";
 }
 
@@ -2150,7 +2152,7 @@ function updateOverviewLayoutForStep(stepId){
       card.id === "overviewStatusCard" ||
       card.id === "profileEquipmentCard";
 
-    if (stepId === "overview" && dailyUiState === "needs_checkin"){
+    if (stepId === "overview" && dailyUiState === "no_checkin_yet"){
       keepVisible =
         card.id === "forecastHero" ||
         card.id === "profileEquipmentCard";
