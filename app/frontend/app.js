@@ -170,6 +170,68 @@ function getCompletedSessionToday(sessionResults){
   return matches[0] || null;
 }
 
+function buildSessionResultSummaryFromStoredItem(item){
+  if (!item || typeof item !== "object") return null;
+
+  const sessionTypeKey = String(item.session_type || "").trim().toLowerCase();
+  const results = Array.isArray(item.results) ? item.results : [];
+  const nextStepHint = String(item.next_step_hint || "").trim();
+  const progressFlags = Array.isArray(item.progress_flags) ? item.progress_flags : [];
+  const fatigue = String(item.fatigue || "").trim();
+
+  if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run"){
+    const distanceKm = Number(item.distance_km || 0);
+    const durationTotalSec = Number(item.duration_total_sec || 0);
+    const paceSecPerKm = distanceKm > 0 && durationTotalSec > 0
+      ? Math.round(durationTotalSec / distanceKm)
+      : 0;
+
+    return {
+      session_type: item.session_type || "",
+      cardio_kind: item.cardio_kind || "",
+      fatigue,
+      distance_km: distanceKm || 0,
+      duration_total_sec: durationTotalSec || 0,
+      pace_sec_per_km: paceSecPerKm || 0,
+      next_step_hint: nextStepHint,
+      progress_flags: progressFlags
+    };
+  }
+
+  const totalExercises = results.length;
+  const completedExercises = results.filter(x => x && x.completed !== false).length;
+  const totalSets = results.reduce((acc, result) => {
+    const sets = Array.isArray(result?.sets) ? result.sets : [];
+    return acc + sets.length;
+  }, 0);
+  const totalReps = results.reduce((acc, result) => {
+    const sets = Array.isArray(result?.sets) ? result.sets : [];
+    return acc + sets.reduce((inner, s) => inner + (Number(s?.reps || 0) || 0), 0);
+  }, 0);
+  const estimatedVolume = results.reduce((acc, result) => {
+    const sets = Array.isArray(result?.sets) ? result.sets : [];
+    return acc + sets.reduce((inner, s) => {
+      const reps = Number(s?.reps || 0) || 0;
+      const load = Number(String(s?.load || "").replace(",", ".").replace(/[^0-9.\-]/g, "")) || 0;
+      return inner + (reps * load);
+    }, 0);
+  }, 0);
+  const hitFailureCount = results.reduce((acc, result) => acc + (result?.hit_failure ? 1 : 0), 0);
+
+  return {
+    session_type: item.session_type || "",
+    fatigue,
+    completed_exercises: completedExercises,
+    total_exercises: totalExercises,
+    total_sets: totalSets,
+    total_reps: totalReps,
+    estimated_volume: Math.round(estimatedVolume),
+    hit_failure_count: hitFailureCount,
+    next_step_hint: nextStepHint,
+    progress_flags: progressFlags
+  };
+}
+
 function isPlannedRestDayPlan(planItem){
   if (!planItem || typeof planItem !== "object") return false;
   const weekItem = getTodayWeekPlanItem(planItem);
@@ -2537,8 +2599,11 @@ function renderSessionReview(item){
   if (!root) return;
 
   if (completedTodayItem){
+    const storedSummary = buildSessionResultSummaryFromStoredItem(completedTodayItem);
     root.innerHTML = `<li><div class="small">${esc("Dagens session er allerede gemt. Brug historik, hvis du vil redigere den.")}</div></li>`;
     toggleCardioReviewFields(null);
+    setText("sessionResultStatus", "");
+    renderSessionResultSummary(storedSummary);
     return;
   }
 
@@ -2654,8 +2719,9 @@ function renderSessionResultSummary(summary){
 
   const sessionType = summary.session_type ? formatSessionType(summary.session_type) : tr("common.unknown_title");
   const sessionTypeKey = String(summary.session_type || "").trim().toLowerCase();
-  const fatigue = String(summary.fatigue || "").trim() || tr("common.unknown_lower");
+  const fatigue = String(summary.fatigue || "").trim();
   const fatigueText = formatFatigueText(fatigue);
+  const fatigueLine = fatigue ? ` · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}` : "";
   const nextStepHint = String(summary.next_step_hint || "").trim();
   const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
@@ -2672,7 +2738,7 @@ function renderSessionResultSummary(summary){
     root.innerHTML = `
       <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
       <div class="small" style="margin-bottom:8px">
-        ${esc(sessionType)}${cardioKind ? ` · ${esc(formatCardioKindLabel(cardioKind))}` : ""} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}
+        ${esc(sessionType)}${cardioKind ? ` · ${esc(formatCardioKindLabel(cardioKind))}` : ""}${fatigueLine}
       </div>
       <div class="small" style="margin-bottom:8px">
         ${esc(tr("cardio.review.distance_label"))}: ${esc(distanceText)} km<br>
@@ -2699,7 +2765,7 @@ function renderSessionResultSummary(summary){
   root.innerHTML = `
     <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
     <div class="small" style="margin-bottom:8px">
-      ${esc(sessionType)} · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}
+      ${esc(sessionType)}${fatigueLine}
     </div>
     <div class="small" style="margin-bottom:8px">
       ${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
