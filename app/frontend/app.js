@@ -1471,12 +1471,12 @@ function renderRecovery(items){
 
 
 function formatSessionType(value){
-  const x = String(value || "").trim();
-  if (x === "styrke") return tr("workout.type.strength");
+  const x = String(value || "").trim().toLowerCase();
+  if (x === "styrke" || x === "strength") return tr("workout.type.strength");
   if (x === "cardio") return tr("session_type.cardio");
-  if (x === "restitution") return tr("session_type.recovery");
-  if (x === "løb") return tr("session_type.run");
-  if (x === "mobilitet") return tr("session_type.mobility");
+  if (x === "restitution" || x === "recovery" || x === "rest") return tr("session_type.recovery");
+  if (x === "løb" || x === "run") return tr("session_type.run");
+  if (x === "mobilitet" || x === "mobility") return tr("session_type.mobility");
   return x || tr("plan.none");
 }
 
@@ -1619,7 +1619,7 @@ function renderForecastHero(planItem, latestCheckin){
   setText("forecastType", plannedRestToday ? "Hviledag" : getForecastTypeLabel(planItem));
 
   const leadText = plannedRestToday
-    ? "Planlagt hviledag i dag."
+    ? tr("today_plan.rest_day_planned_today")
     : buildForecastLeadText(planItem);
 
   const bits = [];
@@ -2234,10 +2234,29 @@ function formatProgressionReason(value){
 }
 
 function formatPlanReason(value){
-  const x = String(value || "").trim();
-  if (!x) return "";
-  if (x === "Manuel plan overstyrer dagens autoplan.") return tr("plan.reason.manual_override_today");
-  if (x === "Manual plan overrides today's autoplan.") return tr("plan.reason.manual_override_today");
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const map = {
+    "Manuel plan overstyrer dagens autoplan.": tr("plan.reason.manual_override_today"),
+    "Manual plan overrides today's autoplan.": tr("plan.reason.manual_override_today"),
+    "Rolig løbetur valgt ud fra din status, restitution og den seneste cardio-belastning.": tr("plan.reason.cardio_autoplan_selected_today"),
+    "An easy run was selected based on your status, recovery, and recent cardio load.": tr("plan.reason.cardio_autoplan_selected_today"),
+    "dagen er ikke valgt som mulig træningsdag": tr("plan.reason.day_not_selected_as_training_day"),
+    "day is not selected as a possible training day": tr("plan.reason.day_not_selected_as_training_day"),
+    "ikke planlagt styrkedag": tr("plan.reason.not_planned_strength_day"),
+    "not a planned strength day": tr("plan.reason.not_planned_strength_day"),
+    "cardio-autoplan aktiv": tr("plan.reason.cardio_autoplan_active"),
+    "cardio autoplan active": tr("plan.reason.cardio_autoplan_active")
+  };
+
+  if (map[raw]) return map[raw];
+
+  const parts = raw.split("·").map(x => String(x || "").trim()).filter(Boolean);
+  if (parts.length > 1){
+    return parts.map(part => map[part] || part).join(" · ");
+  }
+
   return tr("plan.reason.generic_today_choice");
 }
 
@@ -2282,7 +2301,9 @@ function formatTarget(value){
 
   const mappedTargets = {
     "30 min roligt løb i snakketempo": tr("cardio.target.base_30_talk"),
-    "30 min easy run at conversational pace": tr("cardio.target.base_30_talk")
+    "30 min easy run at conversational pace": tr("cardio.target.base_30_talk"),
+    "20 min rolig gang eller meget let jog": tr("cardio.target.easy_walk_or_jog_20"),
+    "20 min easy walk or very light jog": tr("cardio.target.easy_walk_or_jog_20")
   };
   if (mappedTargets[v]) return mappedTargets[v];
 
@@ -2840,12 +2861,16 @@ function formatRecoveryExplanationBit(value){
 
   const map = {
     "god søvn": tr("recovery.explanation.good_sleep"),
+    "god energi": tr("recovery.explanation.good_energy"),
     "lav ømhed": tr("recovery.explanation.low_soreness"),
+    "høj ømhed": tr("recovery.explanation.high_soreness"),
     "belastning er lav": tr("recovery.explanation.load_is_low"),
     "belastning er i spike": tr("recovery.explanation.load_is_spike"),
     "du har haft lidt afstand til sidste styrkepas": tr("recovery.explanation.distance_since_last_strength"),
     "good sleep": tr("recovery.explanation.good_sleep"),
+    "good energy": tr("recovery.explanation.good_energy"),
     "low soreness": tr("recovery.explanation.low_soreness"),
+    "high soreness": tr("recovery.explanation.high_soreness"),
     "load is low": tr("recovery.explanation.load_is_low"),
     "load is in spike": tr("recovery.explanation.load_is_spike"),
     "some distance since last strength session": tr("recovery.explanation.distance_since_last_strength")
@@ -3134,7 +3159,7 @@ function renderTodayPlan(item){
       return;
   }
 
-  setText("todayPlanMeta", item.recommended_for || "");
+  setText("todayPlanMeta", "");
   const variantLabel = formatPlanVariant(item.plan_variant || "");
   const timingLabel = formatTimingState(item.timing_state || "");
   const timingExplanation = formatTimingExplanation(item.timing_state || "");
@@ -3143,7 +3168,7 @@ function renderTodayPlan(item){
 
   setText(
     "todayPlanTiming",
-    timingLabel ? tr("plan.timing_label", { value: `${timingLabel}${timingExplanation ? ` · ${timingExplanation}` : ""}` }) : tr("today_plan.no_timing_yet")
+    ""
   );
 
   const recovery = item && item.recovery_state && typeof item.recovery_state === "object" ? item.recovery_state : null;
@@ -3244,7 +3269,7 @@ function renderTodayPlan(item){
   );
   const rawReason = String(item?.reason || "").trim();
   const overrideReasonText = rawReason
-    ? (hasHighImpactOverride ? rawReason : formatPlanReason(rawReason))
+    ? formatPlanReason(rawReason)
     : "";
   const planContextBits = hasHighImpactOverride
     ? [
@@ -3253,17 +3278,10 @@ function renderTodayPlan(item){
       ].filter(Boolean)
     : [];
 
+  const compactSummaryLead = trainingAllowedSummary || recoveryDaySummary || "";
   setText(
     "todayPlanSummary",
-    [
-      baseSummary,
-      recoveryDaySummary,
-      trainingAllowedSummary,
-      weeklyStatusSummary,
-      nextGuidanceMessage
-    ]
-      .filter(Boolean)
-      .join("\n")
+    compactSummaryLead
   );
 
   if (!Array.isArray(item.entries) || item.entries.length === 0){
@@ -3274,10 +3292,10 @@ function renderTodayPlan(item){
   }
 
   const heroTitle = isPlannedRestDay
-    ? "Planlagt hviledag"
+    ? tr("today_plan.rest_day_title")
     : formatSessionType(item.session_type || "unknown");
   const heroLead = isPlannedRestDay
-    ? "I dag er planlagt som hvile. Let bevægelse er valgfrit, ikke dagens hovedtræning."
+    ? tr("today_plan.rest_day_lead")
     : "";
   const heroActions = isPlannedRestDay
     ? `
@@ -3308,20 +3326,17 @@ function renderTodayPlan(item){
 `;
   
   const recoveryCard = recovery ? `
-    <li>
-      <div style="font-weight:700">Recovery</div>
-      <div style="margin-top:6px; font-size:1.35rem; font-weight:700">${esc(String(recovery.recovery_score ?? "-"))}</div>
-      <div class="small" style="margin-top:6px">${tr("common.status_label")}: ${esc(formatRecoveryState(recovery.recovery_state || ""))}</div>
-      <div class="small" style="margin-top:6px">${recovery.strain_flag ? tr("recovery.strain_flag_active") : tr("recovery.strain_flag_inactive")}</div>
-      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px">${tr("common.why_label")}: ${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
-    </li>
+  <li>
+    <div class="small" style="font-weight:700">${tr("today_plan.recovery_label", { value: `${formatRecoveryState(recovery.recovery_state || "")}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}</div>
+    ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px; line-height:1.45">${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
+  </li>
   ` : "";
 
   const entryCards = isPlannedRestDay
     ? `
       <li>
         <div class="small" style="line-height:1.5">
-          Dagens ugeplan siger hvile. De normale øvelser vises derfor ikke som standardplan her.
+          ${esc(tr("today_plan.rest_day_entries_hidden"))}
         </div>
       </li>
     `
@@ -3338,17 +3353,11 @@ function renderTodayPlan(item){
           ${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
           ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
         </div>
-        ${entry.progression_reason ? `<div class="small" style="margin-top:6px">${tr("common.reason_label")}: ${esc(formatProgressionReason(entry.progression_reason))}</div>` : ""}
-        ${
-          entry.decision && typeof entry.decision === "object" && formatDecisionLabel(entry.decision)
-            ? `<div class="small" style="margin-top:6px"><strong>${tr("common.decision_label")}:</strong> ${esc(formatDecisionLabel(entry.decision))}</div>`
-            : ""
-        }
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
         <div style="margin-top:10px">
           <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
         </div>
-        ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">Udstyr: næste mulige spring er højere end anbefalet.</div>` : ""}
+        ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
       </li>
       `;
     }).join("");
