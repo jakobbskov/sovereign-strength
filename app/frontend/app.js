@@ -4502,10 +4502,22 @@ function renderWizardNav(){
 
   const flow = ["checkin", "plan", "review"];
   const currentIndex = flow.indexOf(CURRENT_STEP);
+  const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null, STATE.sessionResults || []);
+
+  const clickableByState = {
+    no_checkin_yet: new Set(["checkin"]),
+    plan_ready: new Set(["checkin", "plan"]),
+    planned_rest_today: new Set(["checkin", "plan"]),
+    completed_session_today: new Set([]),
+    completed_rest_day_today: new Set([]),
+    overview: new Set(["checkin", "plan", "review"])
+  };
+  const clickableSteps = clickableByState[dailyUiState] || new Set(["checkin", "plan", "review"]);
 
   root.innerHTML = flow.map((stepId, idx) => {
     const step = WIZARD_STEPS.find(x => x.id === stepId);
     const label = getWizardStepLabel(step);
+    const isClickable = clickableSteps.has(stepId);
 
     const stateClass =
       idx < currentIndex ? "is-complete" :
@@ -4516,7 +4528,8 @@ function renderWizardNav(){
       <button
         type="button"
         data-step="${esc(stepId)}"
-        class="${stateClass}"
+        class="${stateClass}${isClickable ? "" : " is-disabled"}"
+        ${isClickable ? "" : 'disabled aria-disabled="true"'}
       >
         ${esc(label)}
       </button>
@@ -4524,6 +4537,7 @@ function renderWizardNav(){
   }).join("");
 
   root.querySelectorAll("[data-step]").forEach(btn => {
+    if (btn.disabled) return;
     btn.addEventListener("click", () => {
       showWizardStep(btn.getAttribute("data-step"));
     });
