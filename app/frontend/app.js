@@ -2621,6 +2621,9 @@ function toggleCardioReviewFields(item){
 }
 
 function renderSessionReview(item){
+  if (STATE.restDayReviewLocked !== true) {
+    STATE.restDayReviewLocked = false;
+  }
   const root = document.getElementById("sessionReviewList");
   const form = document.getElementById("sessionResultForm");
   const completedTodayItem = !STATE.editingSessionResultId ? getCompletedSessionToday(STATE.sessionResults || []) : null;
@@ -3367,20 +3370,23 @@ function renderTodayPlan(item){
       return;
   }
 
-  const heroTitle = isPlannedRestDay
+  const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
+  const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
+  const showPlannedRestChoiceCard = isPlannedRestDay;
+  const showRestitutionChoice = showPlannedRestChoiceCard && hasEntries && isRestitutionPlan;
+
+  const heroTitle = showPlannedRestChoiceCard
     ? tr("today_plan.rest_day_title")
     : formatSessionType(item.session_type || "unknown");
-  const heroLead = isPlannedRestDay
+  const heroLead = showPlannedRestChoiceCard
     ? tr("today_plan.rest_day_lead")
     : "";
 
-  const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
-  const showRestDayCta = isPlannedRestDay && !hasEntries;
-
-  const heroActions = showRestDayCta
+  const heroActions = showPlannedRestChoiceCard
     ? `
     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
       <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
+      ${showRestitutionChoice ? `<button type="button" id="startRestitutionBtn">${esc(tr("button.start_workout"))}</button>` : ""}
       <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
     </div>
     `
@@ -3445,6 +3451,9 @@ function renderTodayPlan(item){
   root.innerHTML = heroCard + recoveryCard + entryCards;
 
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
+    showWizardStep("review");
+  });
+  document.getElementById("startRestitutionBtn")?.addEventListener("click", () => {
     showWizardStep("review");
   });
   document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
@@ -4067,14 +4076,30 @@ async function handleRestDayAcknowledge(){
       ? { ...res.item, rest_day_acknowledged: true }
       : { ...todayCheckin, ...payload, rest_day_acknowledged: true };
 
-    STATE.latestCheckin = acknowledgedCheckin;
+    STATE.latestCheckin = { ...(STATE.latestCheckin || {}), ...acknowledgedCheckin, rest_day_acknowledged: true };
+
+    const todayKey = String(acknowledgedCheckin?.date || checkinDate || "").slice(0,10);
+    const existingCheckins = Array.isArray(STATE.checkins) ? STATE.checkins.slice() : [];
+    let replaced = false;
+    STATE.checkins = existingCheckins.map(item => {
+      const sameId = String(item?.id || "").trim() === String(acknowledgedCheckin?.id || "").trim();
+      const sameDate = String(item?.date || "").slice(0,10) === todayKey;
+      if (!replaced && (sameId || sameDate)) {
+        replaced = true;
+        return { ...item, ...acknowledgedCheckin, rest_day_acknowledged: true };
+      }
+      return item;
+    });
+    if (!replaced) {
+      STATE.checkins.unshift({ ...acknowledgedCheckin, rest_day_acknowledged: true });
+    }
 
     statusEl?.classList.add("ok");
     setText("sessionResultStatus", tr("today_plan.rest_day_acknowledged_saved"));
-    await refreshAll();
-    STATE.latestCheckin = { ...(STATE.latestCheckin || {}), ...acknowledgedCheckin, rest_day_acknowledged: true };
     renderSessionReview(STATE.currentTodayPlan || null);
     showWizardStep("review");
+
+    STATE.restDayReviewLocked = true;
   }catch(err){
     setText("sessionResultStatus", tr("status.error_prefix") + (err?.message || String(err)));
     statusEl?.classList.remove("ok");
