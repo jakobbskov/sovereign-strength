@@ -3071,7 +3071,22 @@ function formatVariationName(value){
 function getExerciseImages(exerciseId){
   const meta = getExerciseMeta(exerciseId);
   const images = Array.isArray(meta?.external_images) ? meta.external_images : [];
-  return images.filter(Boolean);
+  const imageFolder = String(meta?.image_folder || "").trim();
+  return images
+    .filter(Boolean)
+    .map(src => {
+      const value = String(src || "").trim();
+      if (!value) return "";
+      if (value.startsWith("/images/")){
+        const filename = value.split("/").pop();
+        if (imageFolder && filename){
+          return `/assets/exercise-db/${imageFolder}/${filename}`;
+        }
+      }
+      if (value.startsWith("/")) return value;
+      return `/assets/exercise-db/${value}`;
+    })
+    .filter(Boolean);
 }
 
 function openExerciseViewer(exerciseId){
