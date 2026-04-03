@@ -1583,5 +1583,745 @@
       "hip",
       "knee"
     ]
+  },
+  {
+    "id": "bench_dips",
+    "name": "Bench Dips",
+    "name_en": "Bench Dips",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Bench_Dips",
+    "external_images": [
+      "Bench_Dips/0.jpg",
+      "Bench_Dips/1.jpg"
+    ]
+  },
+  {
+    "id": "body_tricep_press",
+    "name": "Body Tricep Press",
+    "name_en": "Body Tricep Press",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Body_Tricep_Press",
+    "external_images": [
+      "Body_Tricep_Press/0.jpg",
+      "Body_Tricep_Press/1.jpg"
+    ]
+  },
+  {
+    "id": "bodyweight_squat",
+    "name": "Bodyweight Squat",
+    "name_en": "Bodyweight Squat",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ],
+    "movement_pattern": "squat",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Bodyweight_Squat",
+    "external_images": [
+      "Bodyweight_Squat/0.jpg",
+      "Bodyweight_Squat/1.jpg"
+    ]
+  },
+  {
+    "id": "butt_lift_bridge",
+    "name": "Butt Lift (Bridge)",
+    "name_en": "Butt Lift (Bridge)",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ],
+    "movement_pattern": "hinge",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Butt_Lift_Bridge",
+    "external_images": [
+      "Butt_Lift_Bridge/0.jpg",
+      "Butt_Lift_Bridge/1.jpg"
+    ]
+  },
+  {
+    "id": "chin_up",
+    "name": "Chin-Up",
+    "name_en": "Chin-Up",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "vertical_pull",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Chin-Up",
+    "external_images": [
+      "Chin-Up/0.jpg",
+      "Chin-Up/1.jpg"
+    ]
+  },
+  {
+    "id": "glute_kickback",
+    "name": "Glute Kickback",
+    "name_en": "Glute Kickback",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "hip",
+      "low_back"
+    ],
+    "movement_pattern": "hinge",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Glute_Kickback",
+    "external_images": [
+      "Glute_Kickback/0.jpg",
+      "Glute_Kickback/1.jpg"
+    ]
+  },
+  {
+    "id": "incline_push_up",
+    "name": "Incline Push-Up",
+    "name_en": "Incline Push-Up",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Incline_Push-Up",
+    "external_images": [
+      "Incline_Push-Up/0.jpg",
+      "Incline_Push-Up/1.jpg"
+    ]
+  },
+  {
+    "id": "incline_push_up_close_grip",
+    "name": "Incline Push-Up Close-Grip",
+    "name_en": "Incline Push-Up Close-Grip",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Incline_Push-Up_Close-Grip",
+    "external_images": [
+      "Incline_Push-Up_Close-Grip/0.jpg",
+      "Incline_Push-Up_Close-Grip/1.jpg"
+    ]
+  },
+  {
+    "id": "incline_push_up_medium",
+    "name": "Incline Push-Up Medium",
+    "name_en": "Incline Push-Up Medium",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Incline_Push-Up_Medium",
+    "external_images": [
+      "Incline_Push-Up_Medium/0.jpg",
+      "Incline_Push-Up_Medium/1.jpg"
+    ]
+  },
+  {
+    "id": "incline_push_up_wide",
+    "name": "Incline Push-Up Wide",
+    "name_en": "Incline Push-Up Wide",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Incline_Push-Up_Wide",
+    "external_images": [
+      "Incline_Push-Up_Wide/0.jpg",
+      "Incline_Push-Up_Wide/1.jpg"
+    ]
+  },
+  {
+    "id": "pullups",
+    "name": "Pullups",
+    "name_en": "Pullups",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "vertical_pull",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Pullups",
+    "external_images": [
+      "Pullups/0.jpg",
+      "Pullups/1.jpg"
+    ]
+  },
+  {
+    "id": "push_up_wide",
+    "name": "Push-Up Wide",
+    "name_en": "Push-Up Wide",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Push-Up_Wide",
+    "external_images": [
+      "Push-Up_Wide/0.jpg",
+      "Push-Up_Wide/1.jpg"
+    ]
+  },
+  {
+    "id": "push_ups_close_triceps_position",
+    "name": "Push-Ups - Close Triceps Position",
+    "name_en": "Push-Ups - Close Triceps Position",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Push-Ups_-_Close_Triceps_Position",
+    "external_images": [
+      "Push-Ups_-_Close_Triceps_Position/0.jpg",
+      "Push-Ups_-_Close_Triceps_Position/1.jpg"
+    ]
+  },
+  {
+    "id": "push_up_to_side_plank",
+    "name": "Push Up to Side Plank",
+    "name_en": "Push Up to Side Plank",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "low_back"
+    ],
+    "movement_pattern": "core_control",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Push_Up_to_Side_Plank",
+    "external_images": [
+      "Push_Up_to_Side_Plank/0.jpg",
+      "Push_Up_to_Side_Plank/1.jpg"
+    ]
+  },
+  {
+    "id": "pushups",
+    "name": "Pushups",
+    "name_en": "Pushups",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Pushups",
+    "external_images": [
+      "Pushups/0.jpg",
+      "Pushups/1.jpg"
+    ]
+  },
+  {
+    "id": "reverse_crunch",
+    "name": "Reverse Crunch",
+    "name_en": "Reverse Crunch",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "low_back",
+      "hip"
+    ],
+    "movement_pattern": "core_control",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Reverse_Crunch",
+    "external_images": [
+      "Reverse_Crunch/0.jpg",
+      "Reverse_Crunch/1.jpg"
+    ]
+  },
+  {
+    "id": "russian_twist",
+    "name": "Russian Twist",
+    "name_en": "Russian Twist",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "low_back",
+      "hip"
+    ],
+    "movement_pattern": "core_control",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Russian_Twist",
+    "external_images": [
+      "Russian_Twist/0.jpg",
+      "Russian_Twist/1.jpg"
+    ]
+  },
+  {
+    "id": "side_bridge",
+    "name": "Side Bridge",
+    "name_en": "Side Bridge",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "low_back"
+    ],
+    "movement_pattern": "core_bracing",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Side_Bridge",
+    "external_images": [
+      "Side_Bridge/0.jpg",
+      "Side_Bridge/1.jpg"
+    ]
+  },
+  {
+    "id": "spider_crawl",
+    "name": "Spider Crawl",
+    "name_en": "Spider Crawl",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "hip"
+    ],
+    "movement_pattern": "core_control",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Spider_Crawl",
+    "external_images": [
+      "Spider_Crawl/0.jpg",
+      "Spider_Crawl/1.jpg"
+    ]
+  },
+  {
+    "id": "step_up_with_knee_raise",
+    "name": "Step-up with Knee Raise",
+    "name_en": "Step-up with Knee Raise",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "knee",
+      "hip"
+    ],
+    "movement_pattern": "single_leg_squat",
+    "notes": "",
+    "notes_en": "",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Step-up_with_Knee_Raise",
+    "external_images": [
+      "Step-up_with_Knee_Raise/0.jpg",
+      "Step-up_with_Knee_Raise/1.jpg"
+    ]
   }
 ]
