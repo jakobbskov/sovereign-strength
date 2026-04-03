@@ -94,7 +94,6 @@ def map_record(raw: dict[str, Any]) -> dict[str, Any]:
         "supports_bodyweight": supports_bodyweight,
         "supports_load": supports_load,
     }
-
     raw_images = raw.get("external_images")
     if raw_images in (None, "", []):
         raw_images = raw.get("images")
@@ -115,6 +114,7 @@ def map_record(raw: dict[str, Any]) -> dict[str, Any]:
         "progression_ladder": raw.get("progression_ladder"),
         "rep_display_hint": raw.get("rep_display_hint"),
     }
+
 
     for key, value in optional_map.items():
         if value not in (None, "", []):
