@@ -2464,6 +2464,11 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
     if isinstance(ankle_info, dict):
         ankle_calf_protect = str(ankle_info.get("state", "")).strip() == "protect"
 
+    knee_protect = False
+    knee_info = local_state.get("knee", {}) if isinstance(local_state, dict) else {}
+    if isinstance(knee_info, dict):
+        knee_protect = str(knee_info.get("state", "")).strip() == "protect"
+
     filtered_exercises = []
     excluded_due_to_equipment = []
     substitutions_used = []
@@ -2502,6 +2507,14 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 "hip_hinge_bw",
                 "split_squat",
                 "step_ups",
+            ]
+        elif exercise_id == "squat" and local_blocked and knee_protect:
+            substitute_candidates = [
+                "glute_bridge",
+                "hip_hinge_bw",
+                "hamstring_walkouts",
+                "step_ups",
+                "split_squat",
             ]
         if isinstance(substitute_candidates, str):
             substitute_candidates = [substitute_candidates]
