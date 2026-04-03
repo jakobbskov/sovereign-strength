@@ -2814,6 +2814,20 @@ function renderReviewSummary(item){
   `;
 }
 
+function buildFeedbackFooterHtml(){
+  return `
+    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
+      <button type="button" id="finishFeedbackBtn" class="secondary">Til overblik</button>
+    </div>
+  `;
+}
+
+function wireFeedbackFooterActions(){
+  document.getElementById("finishFeedbackBtn")?.addEventListener("click", () => {
+    showWizardStep("overview");
+  });
+}
+
 
 
 
@@ -2837,7 +2851,9 @@ function renderRestDayAcknowledgedSummary(checkinItem, planItem){
     <div class="small" style="margin-bottom:8px">${esc(tr("today_plan.rest_day_logged_text"))}</div>
     ${bits.length ? `<div class="small" style="margin-bottom:8px">${bits.map(x => esc(x)).join(" · ")}</div>` : ""}
     ${buildNextPlannedSessionHtml(planItem || null)}
+    ${buildFeedbackFooterHtml()}
   `;
+  wireFeedbackFooterActions();
 }
 
 function renderSessionResultSummary(summary){
@@ -2888,7 +2904,9 @@ function renderSessionResultSummary(summary){
         ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
       </div>
       ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
+      ${buildFeedbackFooterHtml()}
     `;
+    wireFeedbackFooterActions();
     return;
   }
 
@@ -2922,7 +2940,9 @@ function renderSessionResultSummary(summary){
       ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
     </div>
     ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
+    ${buildFeedbackFooterHtml()}
   `;
+  wireFeedbackFooterActions();
 }
 
 
