@@ -2457,6 +2457,11 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         "romanian_deadlift": ["glute_bridge", "single_leg_glute_bridge", "hamstring_walkouts", "hip_hinge_bw"],
     }
 
+    ankle_calf_protect = False
+    ankle_info = local_state.get("ankle_calf", {}) if isinstance(local_state, dict) else {}
+    if isinstance(ankle_info, dict):
+        ankle_calf_protect = str(ankle_info.get("state", "")).strip() == "protect"
+
     filtered_exercises = []
     excluded_due_to_equipment = []
     substitutions_used = []
@@ -2488,6 +2493,14 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             continue
 
         substitute_candidates = substitution_map.get(exercise_id, [])
+        if exercise_id == "squat" and local_blocked and ankle_calf_protect:
+            substitute_candidates = [
+                "glute_bridge",
+                "hamstring_walkouts",
+                "hip_hinge_bw",
+                "split_squat",
+                "step_ups",
+            ]
         if isinstance(substitute_candidates, str):
             substitute_candidates = [substitute_candidates]
 
