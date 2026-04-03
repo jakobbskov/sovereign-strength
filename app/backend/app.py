@@ -4455,7 +4455,37 @@ def build_session_summary(session_item):
         fatigue = "light"
         next_step_hint = "Du kan sandsynligvis progressere næste gang."
 
+    recovery_recommendation = {
+        "level": fatigue,
+        "text": next_step_hint,
+    }
+
+    progression_summary = next_step_hint
+
+    session_type_value = str(session_item.get("session_type", "") or "").strip().lower()
+    if session_type_value in ("restitution", "recovery", "rest", "mobilitet", "mobility"):
+        post_workout_message = "Dagens restitution er registreret."
+    elif session_type_value in ("løb", "run", "cardio"):
+        post_workout_message = "Dagens konditionssession er gemt."
+    else:
+        post_workout_message = "Dagens session er gemt."
+
+    explanation_bits = []
+    if fatigue == "high":
+        explanation_bits.append("Høj samlet belastning registreret.")
+    elif fatigue == "moderate":
+        explanation_bits.append("Moderat samlet belastning registreret.")
+    elif fatigue == "light":
+        explanation_bits.append("Lav samlet belastning registreret.")
+
+    if next_step_hint:
+        explanation_bits.append(next_step_hint)
+
+    if hit_failure_count > 0:
+        explanation_bits.append(f"Failure-markører: {hit_failure_count}")
+
     return {
+        "completion_state": "completed_session",
         "session_type": session_item.get("session_type", ""),
         "cardio_kind": session_item.get("cardio_kind", ""),
         "distance_km": session_item.get("distance_km", None),
@@ -4471,6 +4501,10 @@ def build_session_summary(session_item):
         "fatigue": fatigue,
         "progress_flags": progress_flags,
         "next_step_hint": next_step_hint,
+        "recovery_recommendation": recovery_recommendation,
+        "progression_summary": progression_summary,
+        "post_workout_message": post_workout_message,
+        "explanation_bits": explanation_bits,
     }
 
 
