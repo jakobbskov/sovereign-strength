@@ -1601,8 +1601,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Kropsvægts-pres med hænderne bag kroppen på en bænk eller kant.",
+    "notes_en": "Bodyweight press using a bench or edge behind the body.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1619,6 +1619,16 @@
     "external_images": [
       "Bench_Dips/0.jpg",
       "Bench_Dips/1.jpg"
+    ],
+    "form_cues": [
+      "Hold skuldrene nede og brystet åbent",
+      "Bøj albuerne kontrolleret bagud",
+      "Pres op uden at kaste kroppen frem"
+    ],
+    "form_cues_en": [
+      "Keep shoulders down and chest open",
+      "Bend the elbows back under control",
+      "Press up without throwing the body forward"
     ]
   },
   {
@@ -1638,8 +1648,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Kropsvægts-tricepsøvelse hvor kroppen holdes i en lige linje under presset.",
+    "notes_en": "Bodyweight triceps exercise performed with the body held in a straight line.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1656,6 +1666,16 @@
     "external_images": [
       "Body_Tricep_Press/0.jpg",
       "Body_Tricep_Press/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen samlet fra hoved til hæl",
+      "Lad albuerne pege bagud",
+      "Pres tilbage uden at miste spænding"
+    ],
+    "form_cues_en": [
+      "Keep the body connected from head to heel",
+      "Let the elbows point backward",
+      "Press back without losing tension"
     ]
   },
   {
@@ -1675,8 +1695,8 @@
       "hip"
     ],
     "movement_pattern": "squat",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Grundlæggende squat med kropsvægt til benstyrke og bevægelseskontrol.",
+    "notes_en": "Fundamental bodyweight squat for leg strength and movement control.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1693,6 +1713,16 @@
     "external_images": [
       "Bodyweight_Squat/0.jpg",
       "Bodyweight_Squat/1.jpg"
+    ],
+    "form_cues": [
+      "Hold vægten midt på foden",
+      "Skub knæene i samme retning som tæerne",
+      "Rejs dig op ved at presse gulvet væk"
+    ],
+    "form_cues_en": [
+      "Keep your weight over the mid-foot",
+      "Track the knees in the same direction as the toes",
+      "Stand up by pressing the floor away"
     ]
   },
   {
@@ -1712,8 +1742,8 @@
       "low_back"
     ],
     "movement_pattern": "hinge",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Bro-øvelse for baller og hofteekstension med ryggen i rolig kontrol.",
+    "notes_en": "Bridge exercise for glutes and hip extension with controlled spinal position.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1730,6 +1760,16 @@
     "external_images": [
       "Butt_Lift_Bridge/0.jpg",
       "Butt_Lift_Bridge/1.jpg"
+    ],
+    "form_cues": [
+      "Spænd balderne i toppen",
+      "Løft hofterne uden at overstrække lænden",
+      "Sænk roligt tilbage igen"
+    ],
+    "form_cues_en": [
+      "Squeeze the glutes at the top",
+      "Lift the hips without overextending the lower back",
+      "Lower back down under control"
     ]
   },
   {
@@ -1749,8 +1789,8 @@
       "elbow"
     ],
     "movement_pattern": "vertical_pull",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Vertikalt træk med underhåndsgreb, hvor kroppen løftes til stangen.",
+    "notes_en": "Vertical pull with a supinated grip, lifting the body toward the bar.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1767,6 +1807,16 @@
     "external_images": [
       "Chin-Up/0.jpg",
       "Chin-Up/1.jpg"
+    ],
+    "form_cues": [
+      "Start med aktive skuldre",
+      "Træk albuerne ned mod siden",
+      "Undgå at sparke eller svinge kroppen op"
+    ],
+    "form_cues_en": [
+      "Start with active shoulders",
+      "Pull the elbows down toward the sides",
+      "Avoid kicking or swinging the body up"
     ]
   },
   {
@@ -1786,8 +1836,8 @@
       "low_back"
     ],
     "movement_pattern": "hinge",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Hofteekstensionsøvelse med fokus på baldeaktivering og rolig lænd.",
+    "notes_en": "Hip extension exercise focused on glute activation and a stable lower back.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1804,6 +1854,16 @@
     "external_images": [
       "Glute_Kickback/0.jpg",
       "Glute_Kickback/1.jpg"
+    ],
+    "form_cues": [
+      "Hold bækkenet så roligt som muligt",
+      "Spark bagud fra hoften, ikke fra lænden",
+      "Stop før du mister spænding og kontrol"
+    ],
+    "form_cues_en": [
+      "Keep the pelvis as steady as possible",
+      "Drive backward from the hip, not the lower back",
+      "Stop before you lose tension and control"
     ]
   },
   {
@@ -1823,8 +1883,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Push-up med hænderne hævet for at gøre bevægelsen lettere og mere kontrolleret.",
+    "notes_en": "Push-up with elevated hands to make the movement easier and more controlled.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1841,6 +1901,16 @@
     "external_images": [
       "Incline_Push-Up/0.jpg",
       "Incline_Push-Up/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen i en lige linje",
+      "Sænk brystet roligt mod underlaget",
+      "Pres op uden at lade hofterne hænge"
+    ],
+    "form_cues_en": [
+      "Keep the body in a straight line",
+      "Lower the chest under control toward the support",
+      "Press up without letting the hips sag"
     ]
   },
   {
@@ -1860,8 +1930,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Incline push-up med smallere greb og større fokus på triceps.",
+    "notes_en": "Incline push-up with a narrower grip and more triceps emphasis.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1878,6 +1948,16 @@
     "external_images": [
       "Incline_Push-Up_Close-Grip/0.jpg",
       "Incline_Push-Up_Close-Grip/1.jpg"
+    ],
+    "form_cues": [
+      "Hold albuerne tættere på kroppen",
+      "Bevar spænding i maven hele vejen",
+      "Pres jævnt gennem begge hænder"
+    ],
+    "form_cues_en": [
+      "Keep the elbows closer to the body",
+      "Maintain abdominal tension throughout",
+      "Press evenly through both hands"
     ]
   },
   {
@@ -1897,8 +1977,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Incline push-up med et neutralt greb, der balancerer bryst og triceps.",
+    "notes_en": "Incline push-up with a neutral hand width balancing chest and triceps.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1915,6 +1995,16 @@
     "external_images": [
       "Incline_Push-Up_Medium/0.jpg",
       "Incline_Push-Up_Medium/1.jpg"
+    ],
+    "form_cues": [
+      "Hold håndplaceringen stabil",
+      "Sænk dig med skuldrene under kontrol",
+      "Afslut med et stærkt pres tilbage"
+    ],
+    "form_cues_en": [
+      "Keep the hand position stable",
+      "Lower with controlled shoulders",
+      "Finish with a strong press back up"
     ]
   },
   {
@@ -1934,8 +2024,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Incline push-up med bredere håndplacering og større brystfokus.",
+    "notes_en": "Incline push-up with a wider hand position and more chest emphasis.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1952,6 +2042,16 @@
     "external_images": [
       "Incline_Push-Up_Wide/0.jpg",
       "Incline_Push-Up_Wide/1.jpg"
+    ],
+    "form_cues": [
+      "Hold brystet aktivt gennem hele løftet",
+      "Lad ikke skuldrene glide frem",
+      "Bevar en lige linje i kroppen"
+    ],
+    "form_cues_en": [
+      "Keep the chest active through the whole rep",
+      "Do not let the shoulders roll forward",
+      "Maintain a straight body line"
     ]
   },
   {
@@ -1971,8 +2071,8 @@
       "elbow"
     ],
     "movement_pattern": "vertical_pull",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Vertikalt træk med overhåndsgreb, hvor kroppen løftes kontrolleret til stangen.",
+    "notes_en": "Vertical pull with a pronated grip, lifting the body under control toward the bar.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -1989,6 +2089,16 @@
     "external_images": [
       "Pullups/0.jpg",
       "Pullups/1.jpg"
+    ],
+    "form_cues": [
+      "Start med spændte skulderblade",
+      "Træk albuerne ned og bagud",
+      "Undgå at bruge momentum"
+    ],
+    "form_cues_en": [
+      "Start with engaged shoulder blades",
+      "Pull the elbows down and back",
+      "Avoid using momentum"
     ]
   },
   {
@@ -2008,8 +2118,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Push-up med bredere håndplacering og øget fokus på brystet.",
+    "notes_en": "Push-up with a wider hand position and increased chest emphasis.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2026,6 +2136,16 @@
     "external_images": [
       "Push-Up_Wide/0.jpg",
       "Push-Up_Wide/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen stiv som en planke",
+      "Sænk brystet mellem hænderne",
+      "Pres op uden at miste kropslinjen"
+    ],
+    "form_cues_en": [
+      "Keep the body rigid like a plank",
+      "Lower the chest between the hands",
+      "Press up without losing body alignment"
     ]
   },
   {
@@ -2045,8 +2165,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Push-up med smal armstilling og større belastning på triceps.",
+    "notes_en": "Push-up with a close arm position and greater triceps demand.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2063,6 +2183,16 @@
     "external_images": [
       "Push-Ups_-_Close_Triceps_Position/0.jpg",
       "Push-Ups_-_Close_Triceps_Position/1.jpg"
+    ],
+    "form_cues": [
+      "Hold albuerne tæt på kroppen",
+      "Spænd maven for at undgå svaj",
+      "Pres hele vejen igennem håndfladerne"
+    ],
+    "form_cues_en": [
+      "Keep the elbows close to the body",
+      "Brace the abdomen to avoid sagging",
+      "Press through the full hand"
     ]
   },
   {
@@ -2082,8 +2212,8 @@
       "low_back"
     ],
     "movement_pattern": "core_control",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Push-up efterfulgt af rotation til sideplanke for presstyrke og kropskontrol.",
+    "notes_en": "Push-up followed by a rotation into side plank for pressing strength and body control.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2100,6 +2230,16 @@
     "external_images": [
       "Push_Up_to_Side_Plank/0.jpg",
       "Push_Up_to_Side_Plank/1.jpg"
+    ],
+    "form_cues": [
+      "Hold en stabil planke i push-up-delen",
+      "Rotér kontrolleret til siden",
+      "Stabl skuldre og hofter i sideplanken"
+    ],
+    "form_cues_en": [
+      "Hold a stable plank during the push-up phase",
+      "Rotate to the side under control",
+      "Stack shoulders and hips in the side plank"
     ]
   },
   {
@@ -2119,8 +2259,8 @@
       "elbow"
     ],
     "movement_pattern": "horizontal_push",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Klassisk kropsvægts-pres med fokus på overkrop og kropsspænding.",
+    "notes_en": "Classic bodyweight press focused on upper-body strength and full-body tension.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2137,6 +2277,16 @@
     "external_images": [
       "Pushups/0.jpg",
       "Pushups/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen i én linje",
+      "Sænk brystet roligt mod gulvet",
+      "Pres op uden at miste spænding"
+    ],
+    "form_cues_en": [
+      "Keep the body in one line",
+      "Lower the chest under control toward the floor",
+      "Press up without losing tension"
     ]
   },
   {
@@ -2156,8 +2306,8 @@
       "hip"
     ],
     "movement_pattern": "core_control",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Core-øvelse hvor bækkenet vippes og benene løftes kontrolleret.",
+    "notes_en": "Core exercise using a controlled pelvic tilt and leg lift.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2174,6 +2324,16 @@
     "external_images": [
       "Reverse_Crunch/0.jpg",
       "Reverse_Crunch/1.jpg"
+    ],
+    "form_cues": [
+      "Start bevægelsen fra maven, ikke med sving",
+      "Hold lænden under kontrol",
+      "Sænk benene roligt tilbage"
+    ],
+    "form_cues_en": [
+      "Initiate the movement from the abs, not with momentum",
+      "Keep the lower back controlled",
+      "Lower the legs back down slowly"
     ]
   },
   {
@@ -2193,8 +2353,8 @@
       "hip"
     ],
     "movement_pattern": "core_control",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Roterende core-øvelse med fokus på kontrol frem for fart.",
+    "notes_en": "Rotational core exercise focused on control rather than speed.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2211,6 +2371,16 @@
     "external_images": [
       "Russian_Twist/0.jpg",
       "Russian_Twist/1.jpg"
+    ],
+    "form_cues": [
+      "Hold brystet løftet",
+      "Rotér fra overkroppen med kontrol",
+      "Undgå at kaste armene fra side til side"
+    ],
+    "form_cues_en": [
+      "Keep the chest lifted",
+      "Rotate the torso with control",
+      "Do not throw the arms from side to side"
     ]
   },
   {
@@ -2230,8 +2400,8 @@
       "low_back"
     ],
     "movement_pattern": "core_bracing",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Sideplanke for lateral core-stabilitet og skulderkontrol.",
+    "notes_en": "Side plank for lateral core stability and shoulder control.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2248,6 +2418,16 @@
     "external_images": [
       "Side_Bridge/0.jpg",
       "Side_Bridge/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen lang og lige",
+      "Løft hoften aktivt væk fra gulvet",
+      "Hold skulderen stabil over albuen"
+    ],
+    "form_cues_en": [
+      "Keep the body long and straight",
+      "Actively lift the hip away from the floor",
+      "Keep the shoulder stable over the elbow"
     ]
   },
   {
@@ -2267,8 +2447,8 @@
       "hip"
     ],
     "movement_pattern": "core_control",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Kravleøvelse for core, skulderstabilitet og koordination.",
+    "notes_en": "Crawling exercise for core strength, shoulder stability, and coordination.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2285,6 +2465,16 @@
     "external_images": [
       "Spider_Crawl/0.jpg",
       "Spider_Crawl/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen lav og spændt",
+      "Flyt modsatte arm og ben kontrolleret",
+      "Undgå unødig rotation i overkroppen"
+    ],
+    "form_cues_en": [
+      "Keep the body low and braced",
+      "Move opposite arm and leg under control",
+      "Avoid unnecessary torso rotation"
     ]
   },
   {
@@ -2304,8 +2494,8 @@
       "hip"
     ],
     "movement_pattern": "single_leg_squat",
-    "notes": "",
-    "notes_en": "",
+    "notes": "Ensidig benøvelse med step-up efterfulgt af knæløft for balance og kontrol.",
+    "notes_en": "Single-leg exercise combining a step-up with a knee raise for balance and control.",
     "progression_mode": "reps_only",
     "progression_step": 0.0,
     "progression_style": "standard",
@@ -2322,6 +2512,16 @@
     "external_images": [
       "Step-up_with_Knee_Raise/0.jpg",
       "Step-up_with_Knee_Raise/1.jpg"
+    ],
+    "form_cues": [
+      "Pres gennem hele foden på boksen eller trinnet",
+      "Hold hoften stabil i toppen",
+      "Sænk dig roligt tilbage uden at falde ned"
+    ],
+    "form_cues_en": [
+      "Drive through the full foot on the step or box",
+      "Keep the hip stable at the top",
+      "Lower back down under control without dropping"
     ]
   }
 ]

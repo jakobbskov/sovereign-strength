@@ -3105,6 +3105,7 @@ function openExerciseViewer(exerciseId){
     const images = getExerciseImages(exerciseId);
     const notes = String(meta.notes || "").trim();
     const category = String(meta.category || "").trim();
+    const formCues = Array.isArray(meta.form_cues) ? meta.form_cues.filter(Boolean).map(x => String(x).trim()).filter(Boolean) : [];
 
     titleEl.textContent = name;
 
@@ -3121,8 +3122,17 @@ function openExerciseViewer(exerciseId){
 
     metaEl.textContent = metaParts.join(" · ");
 
+    const cuesHtml = formCues.length ? `
+      <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
+        <div style="font-weight:700;margin-bottom:8px">Form cues</div>
+        <ul style="margin:0;padding-left:18px">
+          ${formCues.map(cue => `<li style="margin-bottom:6px">${esc(cue)}</li>`).join("")}
+        </ul>
+      </div>
+    ` : "";
+
     if (!images.length){
-      imagesEl.innerHTML = `<div class="small">${tr("exercise.no_images")}</div>`;
+      imagesEl.innerHTML = `<div class="small">${tr("exercise.no_images")}</div>${cuesHtml}`;
     } else {
       imagesEl.innerHTML = images.map((src, idx) => `
         <div style="margin-top:${idx === 0 ? 0 : 12}px">
@@ -3133,7 +3143,7 @@ function openExerciseViewer(exerciseId){
             style="width:100%;height:auto;border-radius:18px;display:block;background:#111;border:1px solid rgba(255,255,255,0.08)"
           />
         </div>
-      `).join("");
+      `).join("") + cuesHtml;
     }
 
     modal.style.display = "block";

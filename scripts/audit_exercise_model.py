@@ -43,6 +43,8 @@ OPTIONAL_FIELDS = {
     "progression_channels",
     "progression_ladder",
     "rep_display_hint",
+    "form_cues",
+    "form_cues_en",
 }
 
 ALLOWED_FIELDS = REQUIRED_FIELDS | OPTIONAL_FIELDS
@@ -137,6 +139,12 @@ def main() -> None:
 
         if "progression_ladder" in item and not isinstance(item["progression_ladder"], list):
             fail(f"{item_id}: progression_ladder must be a list when present")
+
+        if "form_cues" in item and not isinstance(item["form_cues"], list):
+            fail(f"{item_id}: form_cues must be a list when present")
+
+        if "form_cues_en" in item and not isinstance(item["form_cues_en"], list):
+            fail(f"{item_id}: form_cues_en must be a list when present")
 
     print(f"OK: validated {len(items)} exercise entries against the exercise model contract")
     print(f"Source: {data_path}")

@@ -129,6 +129,8 @@ These fields are valid advanced extensions:
 - `progression_channels`
 - `progression_ladder`
 - `rep_display_hint`
+- `form_cues`
+- `form_cues_en`
 
 These should be treated as optional metadata for richer progression or review behavior.
 Core logic must retain safe defaults if they are absent.
