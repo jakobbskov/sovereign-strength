@@ -551,7 +551,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Bodyweight push alternative to bench press/shoulder press when equipment is unavailable.",
+    "notes": "Klassisk kropsvægts-pres med fokus på overkrop og kropsspænding.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -595,16 +595,26 @@
     ],
     "image_folder": "Pushups",
     "external_images": [
-      "/assets/exercise-db/Pushups/0.jpg",
-      "/assets/exercise-db/Pushups/1.jpg"
+      "Pushups/0.jpg",
+      "Pushups/1.jpg"
     ],
     "name_en": "Push-ups",
     "category_en": "push",
-    "notes_en": "Bodyweight press as a substitute for bench press/overhead press when equipment is limited.",
+    "notes_en": "Classic bodyweight press focused on upper-body strength and full-body tension.",
     "local_load_targets": [
       "shoulder",
       "elbow",
       "wrist"
+    ],
+    "form_cues": [
+      "Hold kroppen i én linje",
+      "Sænk brystet roligt mod gulvet",
+      "Pres op uden at miste spænding"
+    ],
+    "form_cues_en": [
+      "Keep the body in one line",
+      "Lower the chest under control toward the floor",
+      "Press up without losing tension"
     ]
   },
   {
@@ -666,7 +676,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Bodyweight posterior-chain exercise as a fallback when no barbell is available.",
+    "notes": "Bro-øvelse for baller og hofteekstension med ryggen i rolig kontrol.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -694,10 +704,25 @@
     ],
     "name_en": "Glute bridge",
     "category_en": "posterior chain",
-    "notes_en": "Bodyweight posterior-chain exercise as a fallback when no barbell is available.",
+    "notes_en": "Bridge exercise for glutes and hip extension with controlled spinal position.",
     "local_load_targets": [
       "hip",
       "low_back"
+    ],
+    "external_images": [
+      "Butt_Lift_Bridge/0.jpg",
+      "Butt_Lift_Bridge/1.jpg"
+    ],
+    "image_folder": "Butt_Lift_Bridge",
+    "form_cues": [
+      "Spænd balderne i toppen",
+      "Løft hofterne uden at overstrække lænden",
+      "Sænk roligt tilbage igen"
+    ],
+    "form_cues_en": [
+      "Squeeze the glutes at the top",
+      "Lift the hips without overextending the lower back",
+      "Lower back down under control"
     ]
   },
   {
@@ -707,7 +732,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Easier push variant with elevated hands.",
+    "notes": "Push-up med hænderne hævet for at gøre bevægelsen lettere og mere kontrolleret.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -735,11 +760,26 @@
     ],
     "name_en": "Incline push-ups",
     "category_en": "push",
-    "notes_en": "Easier push variation with elevated hands.",
+    "notes_en": "Push-up with elevated hands to make the movement easier and more controlled.",
     "local_load_targets": [
       "shoulder",
       "elbow",
       "wrist"
+    ],
+    "external_images": [
+      "Incline_Push-Up/0.jpg",
+      "Incline_Push-Up/1.jpg"
+    ],
+    "image_folder": "Incline_Push-Up",
+    "form_cues": [
+      "Hold kroppen i en lige linje",
+      "Sænk brystet roligt mod underlaget",
+      "Pres op uden at lade hofterne hænge"
+    ],
+    "form_cues_en": [
+      "Keep the body in a straight line",
+      "Lower the chest under control toward the support",
+      "Press up without letting the hips sag"
     ]
   },
   {
@@ -1203,7 +1243,7 @@
     "default_unit": "sec",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Anti-lateral flexion for the core.",
+    "notes": "Sideplanke for lateral core-stabilitet og skulderkontrol.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1233,10 +1273,25 @@
     ],
     "name_en": "Side plank",
     "category_en": "core",
-    "notes_en": "Anti-lateral flexion for the core.",
+    "notes_en": "Side plank for lateral core stability and shoulder control.",
     "local_load_targets": [
       "shoulder",
       "low_back"
+    ],
+    "external_images": [
+      "Side_Bridge/0.jpg",
+      "Side_Bridge/1.jpg"
+    ],
+    "image_folder": "Side_Bridge",
+    "form_cues": [
+      "Hold kroppen lang og lige",
+      "Løft hoften aktivt væk fra gulvet",
+      "Hold skulderen stabil over albuen"
+    ],
+    "form_cues_en": [
+      "Keep the body long and straight",
+      "Actively lift the hip away from the floor",
+      "Keep the shoulder stable over the elbow"
     ]
   },
   {
