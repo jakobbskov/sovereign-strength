@@ -95,12 +95,22 @@ def map_record(raw: dict[str, Any]) -> dict[str, Any]:
         "supports_load": supports_load,
     }
 
+    raw_images = raw.get("external_images")
+    if raw_images in (None, "", []):
+        raw_images = raw.get("images")
+
+    raw_image_folder = raw.get("image_folder")
+    if raw_image_folder in (None, "") and isinstance(raw_images, list) and raw_images:
+        first_image = str(raw_images[0] or "").strip()
+        if "/" in first_image:
+            raw_image_folder = first_image.split("/", 1)[0]
+
     optional_map = {
         "rep_options": raw.get("rep_options"),
         "time_options": raw.get("time_options"),
         "load_options": raw.get("load_options"),
-        "image_folder": raw.get("image_folder"),
-        "external_images": raw.get("external_images"),
+        "image_folder": raw_image_folder,
+        "external_images": raw_images,
         "progression_channels": raw.get("progression_channels"),
         "progression_ladder": raw.get("progression_ladder"),
         "rep_display_hint": raw.get("rep_display_hint"),
