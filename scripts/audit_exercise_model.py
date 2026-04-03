@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
 
-DATA_PATH = Path("app/data/seed/exercises.json")
+DEFAULT_DATA_PATH = Path("app/data/seed/exercises.json")
 
 REQUIRED_FIELDS = {
     "id",
@@ -60,11 +61,17 @@ def warn(msg: str) -> None:
 
 
 def main() -> None:
-    if not DATA_PATH.exists():
-        fail(f"Missing file: {DATA_PATH}")
+    parser = argparse.ArgumentParser(description="Validate exercise JSON against the SovereignStrength exercise model contract.")
+    parser.add_argument("--input", default=str(DEFAULT_DATA_PATH), help="Path to exercise JSON file")
+    args = parser.parse_args()
+
+    data_path = Path(args.input)
+
+    if not data_path.exists():
+        fail(f"Missing file: {data_path}")
 
     try:
-        items = json.loads(DATA_PATH.read_text(encoding="utf-8"))
+        items = json.loads(data_path.read_text(encoding="utf-8"))
     except Exception as exc:
         fail(f"Could not parse JSON: {exc}")
 
@@ -132,6 +139,7 @@ def main() -> None:
             fail(f"{item_id}: progression_ladder must be a list when present")
 
     print(f"OK: validated {len(items)} exercise entries against the exercise model contract")
+    print(f"Source: {data_path}")
 
 
 if __name__ == "__main__":
