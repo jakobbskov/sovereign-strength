@@ -2852,7 +2852,9 @@ function renderSessionResultSummary(summary){
   const fatigue = String(summary.fatigue || "").trim();
   const fatigueText = formatFatigueText(fatigue);
   const fatigueLine = fatigue ? ` · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}` : "";
-  const nextStepHint = String(summary.next_step_hint || "").trim();
+  const nextStepHint = String(summary.progression_summary || summary.next_step_hint || "").trim();
+  const postWorkoutMessage = String(summary.post_workout_message || "").trim();
+  const explanationBits = Array.isArray(summary.explanation_bits) ? summary.explanation_bits.filter(Boolean) : [];
   const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
   if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run"){
@@ -2868,6 +2870,9 @@ function renderSessionResultSummary(summary){
     root.innerHTML = `
       <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
       <div class="small" style="margin-bottom:8px">
+        ${esc(postWorkoutMessage || tr("after_training.session_completed_title"))}
+      </div>
+      <div class="small" style="margin-bottom:8px">
         ${esc(sessionType)}${cardioKind ? ` · ${esc(formatCardioKindLabel(cardioKind))}` : ""}${fatigueLine}
       </div>
       <div class="small" style="margin-bottom:8px">
@@ -2878,6 +2883,7 @@ function renderSessionResultSummary(summary){
       <div class="small" style="margin-bottom:8px">
         ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
       </div>
+      ${explanationBits.length ? `<div class="small" style="margin-bottom:8px">${esc(explanationBits.join(" · "))}</div>` : ""}
       <div class="small">
         ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
       </div>
@@ -2896,6 +2902,9 @@ function renderSessionResultSummary(summary){
   root.innerHTML = `
     <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
     <div class="small" style="margin-bottom:8px">
+      ${esc(postWorkoutMessage || tr("after_training.session_completed_title"))}
+    </div>
+    <div class="small" style="margin-bottom:8px">
       ${esc(sessionType)}${fatigueLine}
     </div>
     <div class="small" style="margin-bottom:8px">
@@ -2908,6 +2917,7 @@ function renderSessionResultSummary(summary){
     <div class="small" style="margin-bottom:8px">
       ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
     </div>
+    ${explanationBits.length ? `<div class="small" style="margin-bottom:8px">${esc(explanationBits.join(" · "))}</div>` : ""}
     <div class="small">
       ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
     </div>
