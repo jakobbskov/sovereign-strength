@@ -2454,6 +2454,8 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         "bench_press": ["push_ups", "incline_push_ups", "diamond_push_ups"],
         "overhead_press": ["pike_push_ups", "push_ups", "incline_push_ups"],
         "barbell_row": ["dumbbell_row", "reverse_snow_angels", "superman_hold"],
+        "incline_push_ups": ["dead_bug"],
+        "dumbbell_row": ["dead_bug"],
         "romanian_deadlift": ["glute_bridge", "single_leg_glute_bridge", "hamstring_walkouts", "hip_hinge_bw"],
     }
 
