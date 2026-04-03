@@ -5765,11 +5765,25 @@ def choose_exercise_for_family(user_id, family_key, readiness=None, time_budget_
             reasons.append("er foreslået næste variation")
 
         last_date = last_trained_map.get(ex_id)
+        days_since_last = None
         if last_date:
+            days_since_last = days_since_date(last_date)
+
+        if days_since_last is None:
+            score += 0.35
+            reasons.append("ingen nylig historik")
+        elif days_since_last >= 14:
             score += 0.3
-            reasons.append("har historik")
-        else:
+            reasons.append("ikke trænet for nylig")
+        elif days_since_last >= 7:
             score += 0.1
+            reasons.append("har lidt afstand")
+        elif days_since_last >= 3:
+            score -= 0.15
+            reasons.append("trænet for nylig")
+        else:
+            score -= 0.35
+            reasons.append("meget nyligt trænet")
 
         progression_mode = str(item.get("progression_mode", "")).strip()
         if progression_mode == "double_progression":
