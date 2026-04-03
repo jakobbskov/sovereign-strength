@@ -2529,16 +2529,33 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         )
 
         if chosen_substitute_id:
-            substituted = dict(ex)
-            substituted["exercise_id"] = chosen_substitute_id
-            substituted["_substituted_from"] = exercise_id
-            filtered_exercises.append(substituted)
-            substitutions_used.append({
-                "from_exercise_id": exercise_id,
-                "to_exercise_id": chosen_substitute_id,
-                "missing_equipment_type": None if allowed else equipment_type,
-                "local_protection_regions": sorted(set(blocked_regions)),
-            })
+            existing_ids = {
+                str(item.get("exercise_id", "")).strip()
+                for item in filtered_exercises
+                if isinstance(item, dict)
+            }
+            duplicate_conservative_fallback = (
+                chosen_substitute_id in {"dead_bug"}
+                and chosen_substitute_id in existing_ids
+            )
+
+            if duplicate_conservative_fallback:
+                excluded_due_to_equipment.append({
+                    "exercise_id": exercise_id,
+                    "equipment_type": equipment_type,
+                    "local_protection_regions": sorted(set(blocked_regions)),
+                })
+            else:
+                substituted = dict(ex)
+                substituted["exercise_id"] = chosen_substitute_id
+                substituted["_substituted_from"] = exercise_id
+                filtered_exercises.append(substituted)
+                substitutions_used.append({
+                    "from_exercise_id": exercise_id,
+                    "to_exercise_id": chosen_substitute_id,
+                    "missing_equipment_type": None if allowed else equipment_type,
+                    "local_protection_regions": sorted(set(blocked_regions)),
+                })
         else:
             excluded_due_to_equipment.append({
                 "exercise_id": exercise_id,
