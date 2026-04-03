@@ -2465,13 +2465,25 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         exercise_id = ex.get("exercise_id", "")
         meta = exercise_map.get(exercise_id, {}) or {}
         equipment_type = str(meta.get("equipment_type", "")).strip()
+        local_targets = get_local_load_targets_for_exercise(exercise_id, exercises=exercises)
+        blocked_regions = []
 
-        if not equipment_type:
+        for region in local_targets:
+            info = local_state.get(region, {}) if isinstance(local_state, dict) else {}
+            if not isinstance(info, dict):
+                continue
+            region_state = str(info.get("state", "")).strip()
+            if region_state == "protect":
+                blocked_regions.append(region)
+
+        local_blocked = bool(blocked_regions)
+
+        if not equipment_type and not local_blocked:
             filtered_exercises.append(ex)
             continue
 
-        allowed = bool(available_equipment.get(equipment_type, True))
-        if allowed:
+        allowed = bool(available_equipment.get(equipment_type, True)) if equipment_type else True
+        if allowed and not local_blocked:
             filtered_exercises.append(ex)
             continue
 
@@ -2496,12 +2508,14 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             substitutions_used.append({
                 "from_exercise_id": exercise_id,
                 "to_exercise_id": chosen_substitute_id,
-                "missing_equipment_type": equipment_type
+                "missing_equipment_type": None if allowed else equipment_type,
+                "local_protection_regions": sorted(set(blocked_regions)),
             })
         else:
             excluded_due_to_equipment.append({
                 "exercise_id": exercise_id,
-                "equipment_type": equipment_type
+                "equipment_type": equipment_type,
+                "local_protection_regions": sorted(set(blocked_regions)),
             })
 
     selected_exercises = filtered_exercises
