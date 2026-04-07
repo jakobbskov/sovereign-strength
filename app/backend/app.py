@@ -5050,20 +5050,78 @@ def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
             continue
 
         cardio_kind = str(item.get("cardio_kind", item.get("cardio_type", "base"))).strip().lower() or "base"
-        cardio_targets_map = {
-            "restitution": ["ankle_calf"],
-            "recovery": ["ankle_calf"],
-            "base": ["ankle_calf", "hip"],
-            "tempo": ["ankle_calf", "hip", "low_back"],
-            "threshold": ["ankle_calf", "hip", "low_back"],
-            "interval": ["ankle_calf", "knee", "hip"],
-            "intervals": ["ankle_calf", "knee", "hip"],
-            "test": ["ankle_calf", "knee", "hip", "low_back"],
-            "benchmark": ["ankle_calf", "knee", "hip", "low_back"],
+
+        cardio_kind_aliases = {
+            "walk": "walking",
+            "walking": "walking",
+            "easy_walk": "walking",
+            "hike": "walking",
+            "easy_run": "easy_run",
+            "run": "easy_run",
+            "jog": "easy_run",
+            "base": "easy_run",
+            "tempo": "tempo_run",
+            "threshold": "tempo_run",
+            "interval": "interval_run",
+            "intervals": "interval_run",
+            "hill": "hill_run",
+            "hills": "hill_run",
+            "incline": "hill_run",
+            "benchmark": "interval_run",
+            "test": "interval_run",
+            "cycling": "cycling",
+            "bike": "cycling",
+            "biking": "cycling",
+            "row": "rowing",
+            "rowing": "rowing",
+            "restitution": "walking",
+            "recovery": "walking",
         }
-        for region in cardio_targets_map.get(cardio_kind, []):
+        normalized_cardio_kind = cardio_kind_aliases.get(cardio_kind, cardio_kind)
+
+        cardio_targets_map = {
+            "walking": ["ankle_calf"],
+            "easy_run": ["ankle_calf", "hip"],
+            "tempo_run": ["ankle_calf", "hip", "low_back"],
+            "interval_run": ["ankle_calf", "knee", "hip"],
+            "hill_run": ["ankle_calf", "knee", "hip", "low_back"],
+            "cycling": ["knee", "hip"],
+            "rowing": ["knee", "hip", "low_back"],
+        }
+
+        duration_min = 0
+        duration_total_sec = item.get("duration_total_sec", None)
+        if duration_total_sec not in (None, "", "null"):
+            try:
+                duration_min = max(duration_min, int(float(duration_total_sec or 0) / 60.0))
+            except Exception:
+                duration_min = duration_min
+
+        raw_duration_min = item.get("duration_min", None)
+        if raw_duration_min not in (None, "", "null"):
+            try:
+                duration_min = max(duration_min, int(float(raw_duration_min or 0)))
+            except Exception:
+                duration_min = duration_min
+
+        avg_rpe = item.get("avg_rpe", None)
+        try:
+            avg_rpe = float(avg_rpe) if avg_rpe not in (None, "", "null") else None
+        except Exception:
+            avg_rpe = None
+
+        extra_hits = 0
+        if duration_min >= 45:
+            extra_hits += 1
+        if avg_rpe is not None and avg_rpe >= 7:
+            extra_hits += 1
+        if normalized_cardio_kind in ("interval_run", "hill_run"):
+            extra_hits += 1
+
+        target_regions = cardio_targets_map.get(normalized_cardio_kind, cardio_targets_map.get("easy_run", []))
+        for region in target_regions:
             if region in out:
-                out[region]["recent_load_count"] += 1
+                out[region]["recent_load_count"] += 1 + extra_hits
 
     for region, info in out.items():
         latest_signal = info.get("latest_signal", "none")
