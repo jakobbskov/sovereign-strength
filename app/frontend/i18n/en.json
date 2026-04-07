@@ -542,7 +542,24 @@
       "flow": "Flow: overview → check-in → today's plan → after training.",
       "setup_reason": "The better your profile and equipment are set up, the more useful your first recommendation becomes.",
       "soft_landing": "Start gently: review the overview, set up profile and equipment, and then take your first check-in.",
-      "continue_checkin": "Continue to check-in"
+      "continue_checkin": "Continue to check-in",
+      "ready": "Ready for a first recommendation.",
+      "missing_setup": "Minimum setup: {done}/{total} core areas ready.",
+      "status_done": "Ready",
+      "status_missing": "Missing",
+      "status_optional": "Optional",
+      "checklist": {
+        "profile": "Basic profile",
+        "profile_help": "Add height and bodyweight for more useful recommendations.",
+        "training_types": "Training types",
+        "training_types_help": "Choose whether you want running, strength, bodyweight, and/or mobility.",
+        "equipment": "Equipment",
+        "equipment_help": "Mark which equipment you actually have access to.",
+        "planning": "Planning preferences",
+        "planning_help": "Choose training days so the app can shape the first plan more intelligently.",
+        "physiology": "Physiology-aware options",
+        "physiology_help": "Menstruation-related considerations are optional and can be configured later."
+      }
     }
   }
-}
+}\n

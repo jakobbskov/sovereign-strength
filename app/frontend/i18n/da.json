@@ -553,7 +553,24 @@
       "flow": "Flow: overblik → check-in → dagens plan → efter træning.",
       "setup_reason": "Jo bedre profil og udstyr er sat op, jo mere brugbar bliver din første anbefaling.",
       "soft_landing": "Start roligt: kig overblikket igennem, sæt profil og udstyr op, og tag derefter din første check-in.",
-      "continue_checkin": "Fortsæt til check-in"
+      "continue_checkin": "Fortsæt til check-in",
+      "ready": "Klar til første anbefaling.",
+      "missing_setup": "Minimum setup: {done}/{total} kerneområder klar.",
+      "status_done": "Klar",
+      "status_missing": "Mangler",
+      "status_optional": "Valgfrit",
+      "checklist": {
+        "profile": "Basisprofil",
+        "profile_help": "Tilføj højde og vægt for mere brugbare anbefalinger.",
+        "training_types": "Træningstyper",
+        "training_types_help": "Vælg om du vil bruge løb, styrke, kropsvægt og/eller mobilitet.",
+        "equipment": "Udstyr",
+        "equipment_help": "Markér hvilket udstyr du faktisk har adgang til.",
+        "planning": "Planlægningspræferencer",
+        "planning_help": "Vælg træningsdage, så appen lettere kan forme første plan.",
+        "physiology": "Fysiologi-hensyn",
+        "physiology_help": "Menstruationsrelaterede hensyn er valgfri og kan sættes op senere."
+      }
     }
   }
-}
+}\n
