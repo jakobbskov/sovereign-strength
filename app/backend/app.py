@@ -2456,6 +2456,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         "barbell_row": ["dumbbell_row", "reverse_snow_angels", "superman_hold"],
         "incline_push_ups": ["bird_dog", "dead_bug", "plank"],
         "dumbbell_row": ["reverse_snow_angels", "bird_dog", "dead_bug"],
+        "dead_bug": ["bird_dog", "plank", "glute_bridge"],
         "romanian_deadlift": ["glute_bridge", "single_leg_glute_bridge", "hamstring_walkouts", "hip_hinge_bw"],
     }
 
@@ -2468,6 +2469,11 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
     knee_info = local_state.get("knee", {}) if isinstance(local_state, dict) else {}
     if isinstance(knee_info, dict):
         knee_protect = str(knee_info.get("state", "")).strip() == "protect"
+
+    hip_protect = False
+    hip_info = local_state.get("hip", {}) if isinstance(local_state, dict) else {}
+    if isinstance(hip_info, dict):
+        hip_protect = str(hip_info.get("state", "")).strip() == "protect"
 
     filtered_exercises = []
     excluded_due_to_equipment = []
@@ -2530,6 +2536,19 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 "step_ups",
                 "split_squat",
             ]
+        elif exercise_id == "squat" and local_blocked and hip_protect:
+            substitute_candidates = [
+                "glute_bridge",
+                "hamstring_walkouts",
+                "bird_dog",
+                "plank",
+            ]
+        elif exercise_id == "dead_bug" and local_blocked and hip_protect:
+            substitute_candidates = [
+                "bird_dog",
+                "plank",
+                "glute_bridge",
+            ]
         if isinstance(substitute_candidates, str):
             substitute_candidates = [substitute_candidates]
 
@@ -2549,7 +2568,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 if isinstance(item, dict)
             }
             duplicate_conservative_fallback = (
-                chosen_substitute_id in {"dead_bug", "bird_dog", "plank", "reverse_snow_angels"}
+                chosen_substitute_id in {"dead_bug", "bird_dog", "plank", "reverse_snow_angels", "glute_bridge", "hamstring_walkouts"}
                 and chosen_substitute_id in existing_ids
             )
 
