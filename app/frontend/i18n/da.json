@@ -545,5 +545,15 @@
   "today_plan.rest_day_acknowledging": "Registrerer hviledag...",
   "today_plan.rest_day_acknowledged_saved": "Hviledag registreret.",
   "today_plan.rest_day_logged_title": "Hviledag registreret",
-  "today_plan.rest_day_logged_text": "Dagens planlagte hviledag er registreret."
+  "today_plan.rest_day_logged_text": "Dagens planlagte hviledag er registreret.",
+  "onboarding": {
+    "first_run": {
+      "title": "Velkommen til SovereignStrength",
+      "intro": "Appen hjælper dig med at vælge dagens træning ud fra check-in, udstyr og dine præferencer.",
+      "flow": "Flow: overblik → check-in → dagens plan → efter træning.",
+      "setup_reason": "Jo bedre profil og udstyr er sat op, jo mere brugbar bliver din første anbefaling.",
+      "soft_landing": "Start roligt: kig overblikket igennem, sæt profil og udstyr op, og tag derefter din første check-in.",
+      "continue_checkin": "Fortsæt til check-in"
+    }
+  }
 }

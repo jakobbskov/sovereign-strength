@@ -368,6 +368,20 @@
           <button type="button" id="forecastPrimaryBtn" class="primary-cta" data-i18n="overview.go_to_checkin">Gå til check-in</button>
         </div>
       </section>
+      <section class="card wizard-step-hidden" id="firstRunOnboardingCard" style="grid-column:1/-1; display:none">
+        <h2 data-i18n="onboarding.first_run.title">Velkommen til SovereignStrength</h2>
+        <p class="small" data-i18n="onboarding.first_run.intro">Appen hjælper dig med at vælge dagens træning ud fra check-in, udstyr og dine præferencer.</p>
+        <div class="overview-status">
+          <div class="stat-line" data-i18n="onboarding.first_run.flow">Flow: overblik → check-in → dagens plan → efter træning.</div>
+          <div class="stat-line" data-i18n="onboarding.first_run.setup_reason">Jo bedre profil og udstyr er sat op, jo mere brugbar bliver din første anbefaling.</div>
+          <div class="stat-line" data-i18n="onboarding.first_run.soft_landing">Start roligt: kig overblikket igennem, sæt profil og udstyr op, og tag derefter din første check-in.</div>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button type="button" id="openInitialSetupBtn" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
+          <button type="button" id="continueToCheckinBtn" class="primary-cta" data-i18n="onboarding.first_run.continue_checkin">Fortsæt til check-in</button>
+        </div>
+      </section>
+
       <section class="card" id="overviewStatusCard" style="grid-column:1/-1">
         <h2 data-i18n="overview.status_right_now">Status lige nu</h2>
         <div class="overview-status">

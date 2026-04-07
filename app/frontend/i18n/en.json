@@ -534,5 +534,15 @@
   "today_plan.rest_day_acknowledging": "Logging rest day...",
   "today_plan.rest_day_acknowledged_saved": "Rest day logged.",
   "today_plan.rest_day_logged_title": "Rest day logged",
-  "today_plan.rest_day_logged_text": "Today's planned rest day has been logged."
+  "today_plan.rest_day_logged_text": "Today's planned rest day has been logged.",
+  "onboarding": {
+    "first_run": {
+      "title": "Welcome to SovereignStrength",
+      "intro": "The app helps you choose today's training based on check-in, equipment, and your preferences.",
+      "flow": "Flow: overview → check-in → today's plan → after training.",
+      "setup_reason": "The better your profile and equipment are set up, the more useful your first recommendation becomes.",
+      "soft_landing": "Start gently: review the overview, set up profile and equipment, and then take your first check-in.",
+      "continue_checkin": "Continue to check-in"
+    }
+  }
 }
