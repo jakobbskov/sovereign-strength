@@ -572,5 +572,26 @@
         "physiology_help": "Menstruationsrelaterede hensyn er valgfri og kan sættes op senere."
       }
     }
-  }
+  },
+  "onboarding.first_run.title": "Velkommen til SovereignStrength",
+  "onboarding.first_run.intro": "Appen hjælper dig med at vælge dagens træning ud fra check-in, udstyr og dine præferencer.",
+  "onboarding.first_run.flow": "Flow: overblik → check-in → dagens plan → efter træning.",
+  "onboarding.first_run.setup_reason": "Jo bedre profil og udstyr er sat op, jo mere brugbar bliver din første anbefaling.",
+  "onboarding.first_run.soft_landing": "Start roligt: kig overblikket igennem, sæt profil og udstyr op, og tag derefter din første check-in.",
+  "onboarding.first_run.continue_checkin": "Fortsæt til check-in",
+  "onboarding.first_run.ready": "Klar til første anbefaling.",
+  "onboarding.first_run.missing_setup": "Minimum setup: {done}/{total} kerneområder klar.",
+  "onboarding.first_run.status_done": "Klar",
+  "onboarding.first_run.status_missing": "Mangler",
+  "onboarding.first_run.status_optional": "Valgfrit",
+  "onboarding.first_run.checklist.profile": "Basisprofil",
+  "onboarding.first_run.checklist.profile_help": "Tilføj højde og vægt for mere brugbare anbefalinger.",
+  "onboarding.first_run.checklist.training_types": "Træningstyper",
+  "onboarding.first_run.checklist.training_types_help": "Vælg om du vil bruge løb, styrke, kropsvægt og/eller mobilitet.",
+  "onboarding.first_run.checklist.equipment": "Udstyr",
+  "onboarding.first_run.checklist.equipment_help": "Markér hvilket udstyr du faktisk har adgang til.",
+  "onboarding.first_run.checklist.planning": "Planlægningspræferencer",
+  "onboarding.first_run.checklist.planning_help": "Vælg træningsdage, så appen lettere kan forme første plan.",
+  "onboarding.first_run.checklist.physiology": "Fysiologi-hensyn",
+  "onboarding.first_run.checklist.physiology_help": "Menstruationsrelaterede hensyn er valgfri og kan sættes op senere."
 }

@@ -561,5 +561,26 @@
         "physiology_help": "Menstruation-related considerations are optional and can be configured later."
       }
     }
-  }
+  },
+  "onboarding.first_run.title": "Welcome to SovereignStrength",
+  "onboarding.first_run.intro": "The app helps you choose today's training based on check-in, equipment, and your preferences.",
+  "onboarding.first_run.flow": "Flow: overview → check-in → today's plan → after training.",
+  "onboarding.first_run.setup_reason": "The better your profile and equipment are set up, the more useful your first recommendation becomes.",
+  "onboarding.first_run.soft_landing": "Start gently: review the overview, set up profile and equipment, and then take your first check-in.",
+  "onboarding.first_run.continue_checkin": "Continue to check-in",
+  "onboarding.first_run.ready": "Ready for a first recommendation.",
+  "onboarding.first_run.missing_setup": "Minimum setup: {done}/{total} core areas ready.",
+  "onboarding.first_run.status_done": "Ready",
+  "onboarding.first_run.status_missing": "Missing",
+  "onboarding.first_run.status_optional": "Optional",
+  "onboarding.first_run.checklist.profile": "Basic profile",
+  "onboarding.first_run.checklist.profile_help": "Add height and bodyweight for more useful recommendations.",
+  "onboarding.first_run.checklist.training_types": "Training types",
+  "onboarding.first_run.checklist.training_types_help": "Choose whether you want running, strength, bodyweight, and/or mobility.",
+  "onboarding.first_run.checklist.equipment": "Equipment",
+  "onboarding.first_run.checklist.equipment_help": "Mark which equipment you actually have access to.",
+  "onboarding.first_run.checklist.planning": "Planning preferences",
+  "onboarding.first_run.checklist.planning_help": "Choose training days so the app can shape the first plan more intelligently.",
+  "onboarding.first_run.checklist.physiology": "Physiology-aware options",
+  "onboarding.first_run.checklist.physiology_help": "Menstruation-related considerations are optional and can be configured later."
 }
