@@ -2316,10 +2316,16 @@ function updateOverviewLayoutForStep(stepId){
   cards.forEach(card => {
     let keepVisible =
       card.id === "forecastHero" ||
+      card.id === "firstRunOnboardingCard" ||
       card.id === "overviewStatusCard" ||
       card.id === "profileEquipmentCard";
 
-    if (stepId === "overview" && dailyUiState === "no_checkin_yet"){
+    if (stepId === "overview" && dailyUiState === "first_run_onboarding"){
+      keepVisible =
+        card.id === "forecastHero" ||
+        card.id === "firstRunOnboardingCard" ||
+        card.id === "profileEquipmentCard";
+    } else if (stepId === "overview" && dailyUiState === "no_checkin_yet"){
       keepVisible =
         card.id === "forecastHero" ||
         card.id === "profileEquipmentCard";
