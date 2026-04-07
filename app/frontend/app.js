@@ -1816,15 +1816,105 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
   });
 }
 
+function buildInitialSetupChecklist(userSettings){
+  const settings = userSettings && typeof userSettings === "object" ? userSettings : {};
+  const profile = settings.profile && typeof settings.profile === "object" ? settings.profile : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  const trainingTypes = preferences.training_types && typeof preferences.training_types === "object" ? preferences.training_types : {};
+  const trainingDays = preferences.training_days && typeof preferences.training_days === "object" ? preferences.training_days : {};
+  const availableEquipment = settings.available_equipment && typeof settings.available_equipment === "object" ? settings.available_equipment : {};
+
+  const hasHeight = profile.height_cm != null && String(profile.height_cm).trim() !== "";
+  const hasBodyweight = profile.bodyweight_kg != null && String(profile.bodyweight_kg).trim() !== "";
+  const hasTrainingType = Object.values(trainingTypes).some(Boolean);
+  const hasTrainingDays = Object.values(trainingDays).some(Boolean);
+  const hasEquipment = Object.values(availableEquipment).some(Boolean);
+  const menstruationConfigured = preferences.menstruation_support_enabled === true || preferences.menstruation_support_enabled === false;
+
+  const items = [
+    {
+      key: "profile",
+      done: hasHeight && hasBodyweight,
+      optional: false,
+      label: tr("onboarding.first_run.checklist.profile"),
+      help: tr("onboarding.first_run.checklist.profile_help")
+    },
+    {
+      key: "training_types",
+      done: hasTrainingType,
+      optional: false,
+      label: tr("onboarding.first_run.checklist.training_types"),
+      help: tr("onboarding.first_run.checklist.training_types_help")
+    },
+    {
+      key: "equipment",
+      done: hasEquipment,
+      optional: false,
+      label: tr("onboarding.first_run.checklist.equipment"),
+      help: tr("onboarding.first_run.checklist.equipment_help")
+    },
+    {
+      key: "planning",
+      done: hasTrainingDays,
+      optional: false,
+      label: tr("onboarding.first_run.checklist.planning"),
+      help: tr("onboarding.first_run.checklist.planning_help")
+    },
+    {
+      key: "physiology",
+      done: menstruationConfigured,
+      optional: true,
+      label: tr("onboarding.first_run.checklist.physiology"),
+      help: tr("onboarding.first_run.checklist.physiology_help")
+    }
+  ];
+
+  const requiredDone = items.filter(x => !x.optional && x.done).length;
+  const requiredTotal = items.filter(x => !x.optional).length;
+  const readyForRecommendation = requiredDone >= requiredTotal;
+
+  return {
+    items,
+    requiredDone,
+    requiredTotal,
+    readyForRecommendation
+  };
+}
+
 function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults } = {}){
   const card = document.getElementById("firstRunOnboardingCard");
   const openSetupBtn = document.getElementById("openInitialSetupBtn");
   const continueBtn = document.getElementById("continueToCheckinBtn");
+  const setupStatus = document.getElementById("firstRunSetupStatus");
+  const checklist = document.getElementById("firstRunChecklist");
   if (!card) return;
 
   const firstRun = isFirstRunUser(planItem || null, latestCheckin || null, sessionResults || []);
   card.classList.toggle("wizard-step-hidden", !firstRun);
   card.style.display = firstRun ? "" : "none";
+
+  const checklistState = buildInitialSetupChecklist(STATE.userSettings || {});
+  if (setupStatus){
+    setupStatus.textContent = checklistState.readyForRecommendation
+      ? tr("onboarding.first_run.ready")
+      : tr("onboarding.first_run.missing_setup", { done: checklistState.requiredDone, total: checklistState.requiredTotal });
+  }
+
+  if (checklist){
+    checklist.innerHTML = checklistState.items.map(item => {
+      const stateLabel = item.done
+        ? tr("onboarding.first_run.status_done")
+        : (item.optional
+          ? tr("onboarding.first_run.status_optional")
+          : tr("onboarding.first_run.status_missing"));
+      return `
+        <div class="stat-line">
+          <strong>${esc(stateLabel)}</strong> · ${esc(item.label)}<br>
+          <span class="small">${esc(item.help)}</span>
+        </div>
+      `;
+    }).join("");
+  }
 
   if (openSetupBtn && !openSetupBtn.dataset.boundOnboarding){
     openSetupBtn.dataset.boundOnboarding = "true";
