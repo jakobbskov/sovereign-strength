@@ -278,6 +278,13 @@ function getTodayCheckin(checkins, latestCheckin, planItem){
   return null;
 }
 
+function isFirstRunUser(planItem, latestCheckin, sessionResults){
+  const hasPlan = !!(planItem && typeof planItem === "object");
+  const hasLatestCheckin = !!(latestCheckin && typeof latestCheckin === "object" && String(latestCheckin.date || "").trim());
+  const hasSessions = Array.isArray(sessionResults) && sessionResults.length > 0;
+  return !hasPlan && !hasLatestCheckin && !hasSessions;
+}
+
 function deriveDailyUiState(planItem, latestCheckin, sessionResults){
   const today = new Date().toISOString().slice(0,10);
   const latestDate = String(latestCheckin?.date || "").slice(0,10);
@@ -287,6 +294,7 @@ function deriveDailyUiState(planItem, latestCheckin, sessionResults){
   const acknowledgedRestDay = Boolean(getAcknowledgedRestDayCheckin(latestCheckin, planItem));
   const plannedRestToday = isPlannedRestDayPlan(planItem);
 
+  if (isFirstRunUser(planItem, latestCheckin, sessionResults)) return "first_run_onboarding";
   if (!hasCheckinToday) return "no_checkin_yet";
   if (completedToday) return "completed_session_today";
   if (acknowledgedRestDay) return "completed_rest_day_today";
@@ -297,6 +305,7 @@ function deriveDailyUiState(planItem, latestCheckin, sessionResults){
 
 function getDefaultWizardStepForDailyState(planItem, latestCheckin, sessionResults){
   const dailyState = deriveDailyUiState(planItem, latestCheckin, sessionResults);
+  if (dailyState === "first_run_onboarding") return "overview";
   if (dailyState === "no_checkin_yet") return "checkin";
   if (dailyState === "planned_rest_today") return "plan";
   if (dailyState === "plan_ready") return "plan";
@@ -1798,6 +1807,44 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     } else {
       overviewWorkoutLine.textContent = tr("overview.no_history_yet");
     }
+  }
+
+  renderFirstRunOnboardingCard({
+    planItem: planItem || null,
+    latestCheckin: latestCheckin || null,
+    sessionResults: STATE.sessionResults || []
+  });
+}
+
+function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults } = {}){
+  const card = document.getElementById("firstRunOnboardingCard");
+  const openSetupBtn = document.getElementById("openInitialSetupBtn");
+  const continueBtn = document.getElementById("continueToCheckinBtn");
+  if (!card) return;
+
+  const firstRun = isFirstRunUser(planItem || null, latestCheckin || null, sessionResults || []);
+  card.classList.toggle("wizard-step-hidden", !firstRun);
+  card.style.display = firstRun ? "" : "none";
+
+  if (openSetupBtn && !openSetupBtn.dataset.boundOnboarding){
+    openSetupBtn.dataset.boundOnboarding = "true";
+    openSetupBtn.addEventListener("click", () => {
+      showWizardStep("overview");
+      requestAnimationFrame(() => {
+        setEquipmentEditorOpen(true);
+      });
+    });
+  }
+
+  if (continueBtn && !continueBtn.dataset.boundOnboarding){
+    continueBtn.dataset.boundOnboarding = "true";
+    continueBtn.addEventListener("click", () => {
+      showWizardStep("checkin");
+      const checkinSection = document.getElementById("checkinSection");
+      if (checkinSection && typeof checkinSection.scrollIntoView === "function"){
+        checkinSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   }
 }
 
@@ -4560,6 +4607,7 @@ function renderWizardNav(){
   const dailyUiState = deriveDailyUiState(STATE.currentTodayPlan || null, STATE.latestCheckin || null, STATE.sessionResults || []);
 
   const clickableByState = {
+    first_run_onboarding: new Set(["checkin"]),
     no_checkin_yet: new Set(["checkin"]),
     plan_ready: new Set(["checkin", "plan"]),
     planned_rest_today: new Set(["checkin", "plan"]),
