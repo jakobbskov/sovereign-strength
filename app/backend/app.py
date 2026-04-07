@@ -1209,7 +1209,7 @@ def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, av
 
     ranked = []
 
-    for candidate_id in (candidate_ids or []):
+    for candidate_index, candidate_id in enumerate(candidate_ids or []):
         candidate_meta = exercise_map.get(candidate_id, {}) or {}
         if not candidate_meta:
             continue
@@ -1245,11 +1245,11 @@ def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, av
         tier_distance = abs(candidate_tier - original_tier)
 
         ranked.append((
-            caution_count,      # fewer caution hits first
-            -same_pattern,      # same pattern first
-            tier_distance,      # closest difficulty next
-            candidate_tier,     # then easier before harder if equal distance
-            str(candidate_id),  # stable tie-break
+            caution_count,       # fewer caution hits first
+            -same_pattern,       # same pattern first
+            tier_distance,       # closest difficulty next
+            candidate_tier,      # then easier before harder if equal distance
+            candidate_index,     # preserve intentional fallback priority
             candidate_id
         ))
 
@@ -2454,8 +2454,8 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         "bench_press": ["push_ups", "incline_push_ups", "diamond_push_ups"],
         "overhead_press": ["pike_push_ups", "push_ups", "incline_push_ups"],
         "barbell_row": ["dumbbell_row", "reverse_snow_angels", "superman_hold"],
-        "incline_push_ups": ["dead_bug"],
-        "dumbbell_row": ["dead_bug"],
+        "incline_push_ups": ["bird_dog", "dead_bug", "plank"],
+        "dumbbell_row": ["reverse_snow_angels", "bird_dog", "dead_bug"],
         "romanian_deadlift": ["glute_bridge", "single_leg_glute_bridge", "hamstring_walkouts", "hip_hinge_bw"],
     }
 
@@ -2500,7 +2500,21 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             continue
 
         substitute_candidates = substitution_map.get(exercise_id, [])
-        if exercise_id == "squat" and local_blocked and ankle_calf_protect:
+        upper_body_protect = local_blocked and any(region in {"shoulder", "elbow", "wrist"} for region in blocked_regions)
+
+        if exercise_id == "incline_push_ups" and upper_body_protect:
+            substitute_candidates = [
+                "bird_dog",
+                "dead_bug",
+                "plank",
+            ]
+        elif exercise_id == "dumbbell_row" and upper_body_protect:
+            substitute_candidates = [
+                "reverse_snow_angels",
+                "bird_dog",
+                "dead_bug",
+            ]
+        elif exercise_id == "squat" and local_blocked and ankle_calf_protect:
             substitute_candidates = [
                 "glute_bridge",
                 "hamstring_walkouts",
@@ -2535,7 +2549,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 if isinstance(item, dict)
             }
             duplicate_conservative_fallback = (
-                chosen_substitute_id in {"dead_bug"}
+                chosen_substitute_id in {"dead_bug", "bird_dog", "plank", "reverse_snow_angels"}
                 and chosen_substitute_id in existing_ids
             )
 
