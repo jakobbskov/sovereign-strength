@@ -53,7 +53,8 @@
     "local_load_targets": [
       "knee",
       "hip",
-      "low_back"
+      "low_back",
+      "ankle_calf"
     ]
   },
   {
@@ -344,7 +345,8 @@
     "notes_en": "Start with bodyweight. Can be increased later.",
     "local_load_targets": [
       "knee",
-      "hip"
+      "hip",
+      "ankle_calf"
     ]
   },
   {
@@ -990,7 +992,8 @@
     "notes_en": "Bodyweight leg exercise, good as a squat substitute.",
     "local_load_targets": [
       "knee",
-      "hip"
+      "hip",
+      "ankle_calf"
     ]
   },
   {
@@ -1030,7 +1033,8 @@
     "notes_en": "Leg exercise focusing on one leg at a time.",
     "local_load_targets": [
       "knee",
-      "hip"
+      "hip",
+      "ankle_calf"
     ]
   },
   {
@@ -1070,7 +1074,8 @@
     "notes_en": "Unilateral leg strength from a chair or bench.",
     "local_load_targets": [
       "knee",
-      "hip"
+      "hip",
+      "ankle_calf"
     ]
   },
   {
