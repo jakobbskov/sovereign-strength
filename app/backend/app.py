@@ -3658,6 +3658,31 @@ def detect_strength_plateau_signal(user_id):
     return None
 
 
+def detect_program_switch_recommendation(today_plan_item):
+    item = today_plan_item if isinstance(today_plan_item, dict) else {}
+    if not item:
+        return None
+
+    session_type = str(item.get("session_type", "")).strip().lower()
+    if session_type != "styrke":
+        return None
+
+    selected_strength_program_id = str(item.get("selected_strength_program_id", "")).strip()
+    weekly_status = item.get("weekly_status", {}) if isinstance(item.get("weekly_status"), dict) else {}
+    target_sessions = int(weekly_status.get("target_sessions", 0) or 0)
+
+    if selected_strength_program_id in ("starter_strength_2x", "base_strength_a") and target_sessions >= 3:
+        return {
+            "switch_recommended": True,
+            "current_program_id": selected_strength_program_id,
+            "recommended_program_id": "strength_full_body_3x_beginner",
+            "switch_reason": "nuværende styrkeprogram er 2-dages, men ugentligt mål peger mod 3+ pas",
+            "guidance_message": "Dit nuværende styrkeprogram er 2-dages orienteret, men dit ugentlige mål peger mod 3 eller flere pas. Du kan overveje et 3-dages styrkeprogram.",
+        }
+
+    return None
+
+
 def build_next_guidance(today_plan_item, completed_today=False):
     item = today_plan_item if isinstance(today_plan_item, dict) else {}
     if not item:
@@ -3680,6 +3705,19 @@ def build_next_guidance(today_plan_item, completed_today=False):
                 "hold_sessions": plateau_signal.get("hold_sessions"),
                 "increase_sessions": plateau_signal.get("increase_sessions"),
             }
+
+    switch_recommendation = detect_program_switch_recommendation(item)
+    if isinstance(switch_recommendation, dict) and switch_recommendation.get("switch_recommended"):
+        return {
+            "kind": "program_switch_recommendation",
+            "next_session_type": session_type or None,
+            "next_date": None,
+            "source": "program_switch_v0_1",
+            "message": switch_recommendation.get("guidance_message"),
+            "current_program_id": switch_recommendation.get("current_program_id"),
+            "recommended_program_id": switch_recommendation.get("recommended_program_id"),
+            "switch_reason": switch_recommendation.get("switch_reason"),
+        }
 
     date_str = _safe_iso_date_string(item.get("date"))
     if not date_str:
@@ -4034,6 +4072,8 @@ def get_today_plan():
         "fatigue_score": fatigue_score,
         "recovery_state": recovery_state,
         "template_id": template_id,
+        "selected_strength_program_id": selected_strength_program_id,
+        "selected_endurance_program_id": selected_endurance_program_id,
         "template_mode": get_autoplan_meta_value(autoplan_meta, "template_mode"),
         "families_selected": get_autoplan_meta_value(autoplan_meta, "families_selected", []),
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
