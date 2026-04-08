@@ -55,7 +55,22 @@
         ]
       }
     ],
-    "name_en": "Getting started (2 days/week)"
+    "name_en": "Getting started (2 days/week)",
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "strength",
+      "general_health",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "minimal_home",
+      "dumbbell_home"
+    ]
   },
   {
     "id": "base_strength_a",
@@ -113,7 +128,22 @@
         ]
       }
     ],
-    "name_en": "Base (2 days/week)"
+    "name_en": "Base (2 days/week)",
+    "recommended_levels": [
+      "novice",
+      "intermediate"
+    ],
+    "supported_goals": [
+      "strength",
+      "general_health"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "gym_basic",
+      "full_gym"
+    ]
   },
   {
     "id": "starter_run_2x",
@@ -141,7 +171,22 @@
         ]
       }
     ],
-    "name_en": "Getting started run (2 days/week)"
+    "name_en": "Getting started run (2 days/week)",
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "performance",
+      "general_health",
+      "fat_loss"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "run_only",
+      "hybrid_home"
+    ]
   },
   {
     "id": "base_run_3x",
@@ -179,7 +224,23 @@
         ]
       }
     ],
-    "name_en": "Base run (3 days/week)"
+    "name_en": "Base run (3 days/week)",
+    "recommended_levels": [
+      "beginner",
+      "novice"
+    ],
+    "supported_goals": [
+      "performance",
+      "general_health",
+      "fat_loss"
+    ],
+    "supported_weekly_sessions": [
+      3
+    ],
+    "equipment_profiles": [
+      "run_only",
+      "hybrid_home"
+    ]
   },
   {
     "id": "mobility_basic",
@@ -227,7 +288,27 @@
         ]
       }
     ],
-    "name_en": "Mobility basics"
+    "name_en": "Mobility basics",
+    "recommended_levels": [
+      "beginner",
+      "novice",
+      "intermediate"
+    ],
+    "supported_goals": [
+      "general_health",
+      "recovery"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "minimal_home",
+      "dumbbell_home",
+      "gym_basic",
+      "full_gym",
+      "run_only",
+      "hybrid_home"
+    ]
   },
   {
     "id": "recovery_day",
@@ -250,6 +331,195 @@
         ]
       }
     ],
-    "name_en": "Recovery day"
+    "name_en": "Recovery day",
+    "recommended_levels": [
+      "beginner",
+      "novice",
+      "intermediate",
+      "advanced"
+    ],
+    "supported_goals": [
+      "recovery",
+      "general_health"
+    ],
+    "supported_weekly_sessions": [
+      1
+    ],
+    "equipment_profiles": [
+      "minimal_home",
+      "dumbbell_home",
+      "gym_basic",
+      "full_gym",
+      "run_only",
+      "hybrid_home"
+    ]
+  },
+  {
+    "id": "strength_full_body_3x_beginner",
+    "name": "Full body beginner (3 days/week)",
+    "name_en": "Full body beginner (3 days/week)",
+    "kind": "strength",
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "strength",
+      "general_health",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      3
+    ],
+    "equipment_profiles": [
+      "minimal_home",
+      "dumbbell_home"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 2,
+            "reps": "6-10"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 2,
+            "reps": "8/side"
+          },
+          {
+            "exercise_id": "dead_bug",
+            "sets": 2,
+            "reps": "6/side"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "glute_bridge",
+            "sets": 2,
+            "reps": "8-12"
+          },
+          {
+            "exercise_id": "overhead_press",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "lunges",
+            "sets": 2,
+            "reps": "6/leg"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 2,
+            "reps": "20-30 sec"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "romanian_deadlift",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 2,
+            "reps": "6-10"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 2,
+            "reps": "8/side"
+          },
+          {
+            "exercise_id": "bird_dog",
+            "sets": 2,
+            "reps": "6/side"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hybrid_run_strength_3x_beginner",
+    "name": "Run + strength beginner (3 days/week)",
+    "name_en": "Run + strength beginner (3 days/week)",
+    "kind": "hybrid",
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "mixed",
+      "general_health",
+      "fat_loss",
+      "performance"
+    ],
+    "supported_weekly_sessions": [
+      3
+    ],
+    "equipment_profiles": [
+      "minimal_home",
+      "dumbbell_home",
+      "hybrid_home"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "20-30 min"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 2,
+            "reps": "6-10"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 2,
+            "reps": "8/side"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 2,
+            "reps": "20-30 sec"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "run_intervals",
+            "sets": 1,
+            "reps": "6 x 1 min hurtigt / 1 min roligt"
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -12,6 +12,49 @@ This is a deliberate design choice:
 - no hidden state in external services
 
 ## Core documented files
+## `programs.json` / seed program definitions
+
+Stores program templates used by the planner as structured multi-day training frameworks.
+
+The current implementation now supports lightweight program-classification metadata in addition to day definitions.
+
+Common documented fields include:
+
+- `id`
+- `name`
+- `name_en`
+- `kind`
+- `recommended_levels`
+- `supported_goals`
+- `supported_weekly_sessions`
+- `equipment_profiles`
+- `days`
+
+Each `days` entry typically contains:
+
+- `label`
+- `exercises`
+
+Each exercise entry typically contains:
+
+- `exercise_id`
+- `sets`
+- `reps`
+
+Purpose:
+
+- define reusable multi-day program structures
+- express which user profiles a program is meant to fit
+- support later program-selection logic
+- keep program templates human-readable and JSON-editable
+
+Important clarification:
+
+The program layer is no longer only a list of day labels with exercises.
+It now also carries lightweight metadata about who a program is for, which is intended to support deterministic program selection later.
+
+---
+
 
 ### `user_settings.json`
 
