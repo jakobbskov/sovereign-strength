@@ -18,7 +18,9 @@ def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_st
     client = backend_app.app.test_client()
 
     auth_user = {"user_id": "1", "username": "jakob", "role": "admin"}
-    date_str = f"2026-04-{day_index + 1:02d}"
+    month = 4 + (day_index // 28)
+    day_of_month = (day_index % 28) + 1
+    date_str = f"2026-{month:02d}-{day_of_month:02d}"
 
     checkins = [{
         "id": f"c{day_index + 1}",
@@ -82,6 +84,30 @@ def run_scenario(days):
         )
         outputs.append(item)
     return outputs
+
+
+def count_session_types(outputs):
+    counts = {}
+    for item in outputs:
+        session_type = item.get("session_type")
+        counts[session_type] = counts.get(session_type, 0) + 1
+    return counts
+
+
+def longest_streak(values):
+    if not values:
+        return 0
+    best = 1
+    current = 1
+    previous = values[0]
+    for value in values[1:]:
+        if value == previous:
+            current += 1
+            best = max(best, current)
+        else:
+            previous = value
+            current = 1
+    return best
 
 
 def test_running_focused_user_14_days():
@@ -148,8 +174,63 @@ def test_recurring_hip_irritation_user_14_days_stays_conservative():
     assert not all(s == "styrke" for s in session_types), session_types
 
 
+def test_mixed_user_28_days_has_distribution_balance():
+    days = []
+    training_day_pattern = {0, 2, 4, 6}
+    for idx in range(28):
+        weekday = idx % 7
+        days.append({
+            "readiness_score": 6 if weekday in (1, 2, 4) else 4,
+            "fatigue_score": 5 if idx in (6, 13, 20, 27) else (3 if weekday == 5 else 1),
+            "timing_state": "early" if idx in (3, 10, 17, 24) else "on_time",
+            "training_day_ctx": {"is_training_day": weekday in training_day_pattern},
+            "weekly_status": {"completed_sessions": idx % 4},
+        })
+
+    outputs = run_scenario(days)
+    session_types = [item["session_type"] for item in outputs]
+    counts = count_session_types(outputs)
+
+    assert len(outputs) == 28
+    assert len(counts) >= 2, counts
+    assert counts.get("restitution", 0) < 20, counts
+    assert counts.get("styrke", 0) + counts.get("cardio", 0) + counts.get("løb", 0) >= 8, counts
+    assert longest_streak(session_types) <= 10, session_types
+
+
+def test_running_focused_user_26_weeks_does_not_drift_into_single_mode():
+    days = []
+    total_days = 26 * 7
+    for idx in range(total_days):
+        weekday = idx % 7
+        is_training_day = weekday in (1, 3, 5)
+        fatigue_score = 4 if weekday == 6 else (3 if weekday in (2, 5) else 1)
+        timing_state = "early" if weekday in (0, 4) else "on_time"
+        readiness_score = 5 if weekday not in (6,) else 4
+
+        days.append({
+            "readiness_score": readiness_score,
+            "fatigue_score": fatigue_score,
+            "timing_state": timing_state,
+            "training_day_ctx": {"is_training_day": is_training_day},
+            "weekly_status": {"completed_sessions": idx % 3},
+        })
+
+    outputs = run_scenario(days)
+    session_types = [item["session_type"] for item in outputs]
+    counts = count_session_types(outputs)
+
+    assert len(outputs) == total_days
+    assert counts.get("cardio", 0) >= 20, counts
+    assert counts.get("styrke", 0) >= 10 or counts.get("løb", 0) >= 10, counts
+    assert counts.get("restitution", 0) < total_days, counts
+    assert longest_streak(session_types) <= 21, counts
+
+
 if __name__ == "__main__":
     test_running_focused_user_14_days()
     test_mixed_user_14_days_has_variation()
     test_recurring_hip_irritation_user_14_days_stays_conservative()
+    test_mixed_user_28_days_has_distribution_balance()
+    test_running_focused_user_26_weeks_does_not_drift_into_single_mode()
     print("All longitudinal scenario tests passed")
