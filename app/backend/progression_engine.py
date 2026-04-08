@@ -97,6 +97,48 @@ def parse_seconds_value(value):
         return None
 
 
+def evaluate_progression_jump_guard(last_load, recommended_next_load, actual_possible_next_load):
+    try:
+        last_load = float(last_load)
+    except Exception:
+        return {
+            "guard_triggered": False,
+            "guard_reason": None,
+        }
+
+    candidate_next = actual_possible_next_load
+    if candidate_next is None:
+        candidate_next = recommended_next_load
+
+    try:
+        candidate_next = float(candidate_next)
+    except Exception:
+        return {
+            "guard_triggered": False,
+            "guard_reason": None,
+        }
+
+    if candidate_next <= last_load:
+        return {
+            "guard_triggered": False,
+            "guard_reason": None,
+        }
+
+    absolute_jump = candidate_next - last_load
+    relative_jump = absolute_jump / last_load if last_load > 0 else 0.0
+
+    if last_load >= 80 and (absolute_jump > 2.5 or relative_jump > 0.05):
+        return {
+            "guard_triggered": True,
+            "guard_reason": "konservativ progression ved høj belastning",
+        }
+
+    return {
+        "guard_triggered": False,
+        "guard_reason": None,
+    }
+
+
 def evaluate_equipment_constraint(last_load, recommended_step, effective_load_increment, candidate_for_progression):
     equipment_constraint = False
     recommended_next_load = None
@@ -621,6 +663,13 @@ def decide_progression_from_context(exercise_id, ctx):
         secondary_constraints = constraint_ctx["secondary_constraints"]
         recommended_next_load = constraint_ctx["recommended_next_load"]
         actual_possible_next_load = constraint_ctx["actual_possible_next_load"]
+        jump_guard_ctx = evaluate_progression_jump_guard(
+            last_load=first_set_load,
+            recommended_next_load=recommended_next_load,
+            actual_possible_next_load=actual_possible_next_load,
+        )
+        jump_guard_triggered = bool(jump_guard_ctx.get("guard_triggered"))
+        jump_guard_reason = jump_guard_ctx.get("guard_reason")
 
         if first_set_load is None:
             next_load = start_weight
@@ -655,6 +704,11 @@ def decide_progression_from_context(exercise_id, ctx):
                 next_load = int(first_set_load)
                 decision = "hold"
                 progression_reason = "næste mulige spring er for stort"
+            elif jump_guard_triggered:
+                next_load = int(first_set_load)
+                decision = "hold"
+                progression_reason = jump_guard_reason or "konservativ progression guard"
+                secondary_constraints = list(secondary_constraints or []) + ["progression_jump_guard"]
             else:
                 next_load = int(actual_possible_next_load)
                 decision = "increase"
