@@ -65,14 +65,21 @@ Why this is dangerous:
 
 Deploy frontend files explicitly and without destructive delete semantics against the live root.
 
-Safer examples:
+Documented safe path:
+- use `scripts/deploy_frontend_safe.sh`
 
-- copy only `index.html`
-- copy only `app.js`
-- copy only `i18n/da.json`
-- copy only `i18n/en.json`
+This script intentionally:
+- deploys only repo-managed frontend files
+- avoids broad destructive sync against the live root
+- checks that runtime-sensitive live directories such as `assets/` and `data/` still exist after deploy
 
-If rsync is used, it should target explicit files or an isolated static-only directory.
+Current managed frontend file list in the safe script:
+- `index.html`
+- `app.js`
+- `i18n/da.json`
+- `i18n/en.json`
+
+If additional frontend-managed files are added later, update the script in the same change.
 Do not use broad `--delete` sync against `/var/www/sovereign-strength/`.
 
 ### Safe backend deploy
