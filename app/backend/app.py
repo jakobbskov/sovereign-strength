@@ -2442,6 +2442,43 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
 
 
 
+def select_endurance_program(programs, user_settings, weekly_target_sessions, prefs):
+    equipment_profile = infer_equipment_profile(user_settings)
+    target_sessions = int(weekly_target_sessions or 2)
+    prefs = prefs if isinstance(prefs, dict) else {}
+
+    running_enabled = bool(prefs.get("running", True))
+    strength_enabled = bool(prefs.get("strength_weights", True)) or bool(prefs.get("bodyweight", True))
+
+    if not running_enabled:
+        return None
+
+    if running_enabled and strength_enabled and target_sessions >= 3:
+        for program in programs:
+            if program.get("id") == "hybrid_run_strength_3x_beginner":
+                return "hybrid_run_strength_3x_beginner"
+
+    if target_sessions >= 3:
+        for program in programs:
+            if program.get("id") == "base_run_3x":
+                return "base_run_3x"
+
+    if target_sessions == 2:
+        for program in programs:
+            if program.get("id") == "starter_run_2x":
+                return "starter_run_2x"
+
+    for program in programs:
+        if str(program.get("kind", "")).strip() != "run":
+            continue
+        supported_sessions = program.get("supported_weekly_sessions", []) or []
+        equipment_profiles = program.get("equipment_profiles", []) or []
+        if target_sessions in supported_sessions and equipment_profile in equipment_profiles:
+            return str(program.get("id"))
+
+    return None
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None, selected_program_id=None):
     program = None
 
@@ -3217,6 +3254,14 @@ def build_today_plan_training_decision(
         weekly_target_sessions=weekly_target_sessions,
     )
 
+    prefs = get_training_type_preferences(user_settings)
+    selected_endurance_program_id = select_endurance_program(
+        programs=programs,
+        user_settings=user_settings,
+        weekly_target_sessions=weekly_target_sessions,
+        prefs=prefs,
+    )
+
     strength_ctx = build_strength_plan(
         programs=programs,
         exercises=exercises,
@@ -3228,7 +3273,6 @@ def build_today_plan_training_decision(
         selected_program_id=selected_strength_program_id,
     )
 
-    prefs = get_training_type_preferences(user_settings)
     training_day_prefs = get_training_day_preferences(user_settings)
     weekly_status = build_weekly_training_status(
         user_id=auth_user.get("user_id"),
@@ -3297,7 +3341,8 @@ def build_today_plan_training_decision(
             if isinstance(cardio_plan, dict):
                 autoplan_meta = {
                     "template_mode": cardio_plan.get("template_mode"),
-                    "families_selected": []
+                    "families_selected": [],
+                    "selected_endurance_program_id": selected_endurance_program_id,
                 }
 
             if not plan_entries:
