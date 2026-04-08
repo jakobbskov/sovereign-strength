@@ -2379,14 +2379,83 @@ def normalize_program_day_label(label):
         return "day_b"
     return value.replace(" ", "_")
 
+def infer_equipment_profile(user_settings):
+    if not isinstance(user_settings, dict):
+        return "minimal_home"
 
-def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
+    available = user_settings.get("available_equipment", {})
+    if not isinstance(available, dict):
+        available = {}
+
+    has_barbell = bool(available.get("barbell"))
+    has_bench = bool(available.get("bench"))
+    has_dumbbell = bool(available.get("dumbbell"))
+    has_machine = bool(available.get("machine"))
+    has_cable = bool(available.get("cable"))
+
+    if has_barbell and has_bench and (has_machine or has_cable):
+        return "full_gym"
+    if has_barbell and has_bench:
+        return "gym_basic"
+    if has_dumbbell:
+        return "dumbbell_home"
+    return "minimal_home"
+
+
+def select_strength_program(programs, user_settings, weekly_target_sessions):
+    equipment_profile = infer_equipment_profile(user_settings)
+    target_sessions = int(weekly_target_sessions or 2)
+
+    candidates = []
+    for program in programs:
+        if str(program.get("kind", "")).strip() != "strength":
+            continue
+
+        supported_sessions = program.get("supported_weekly_sessions", []) or []
+        equipment_profiles = program.get("equipment_profiles", []) or []
+
+        if target_sessions in supported_sessions and equipment_profile in equipment_profiles:
+            candidates.append(program)
+
+    preferred_ids = []
+    if target_sessions >= 3 and equipment_profile in ("minimal_home", "dumbbell_home"):
+        preferred_ids.append("strength_full_body_3x_beginner")
+    if target_sessions == 2 and equipment_profile in ("gym_basic", "full_gym"):
+        preferred_ids.append("base_strength_a")
+    if target_sessions == 2 and equipment_profile in ("minimal_home", "dumbbell_home"):
+        preferred_ids.append("starter_strength_2x")
+
+    for pid in preferred_ids:
+        for program in candidates:
+            if program.get("id") == pid:
+                return pid
+
+    if candidates:
+        return str(candidates[0].get("id"))
+
+    for pid in ("starter_strength_2x", "base_strength_a"):
+        for program in programs:
+            if program.get("id") == pid:
+                return pid
+
+    return None
+
+
+
+def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None, selected_program_id=None):
     program = None
 
-    for p in programs:
-        if p.get("id") == "starter_strength_2x":
-            program = p
-            break
+    if selected_program_id:
+        for p in programs:
+            if p.get("id") == selected_program_id:
+                program = p
+                break
+
+    if not program:
+        for p in programs:
+            if p.get("id") == "starter_strength_2x":
+                program = p
+                break
 
     if not program:
         for p in programs:
@@ -3141,6 +3210,13 @@ def build_today_plan_training_decision(
     exercises,
     latest_strength,
 ):
+    weekly_target_sessions = get_weekly_target_sessions(user_settings)
+    selected_strength_program_id = select_strength_program(
+        programs=programs,
+        user_settings=user_settings,
+        weekly_target_sessions=weekly_target_sessions,
+    )
+
     strength_ctx = build_strength_plan(
         programs=programs,
         exercises=exercises,
@@ -3149,11 +3225,11 @@ def build_today_plan_training_decision(
         fatigue_score=fatigue_score,
         user_settings=user_settings,
         user_id=auth_user.get("user_id"),
+        selected_program_id=selected_strength_program_id,
     )
 
     prefs = get_training_type_preferences(user_settings)
     training_day_prefs = get_training_day_preferences(user_settings)
-    weekly_target_sessions = get_weekly_target_sessions(user_settings)
     weekly_status = build_weekly_training_status(
         user_id=auth_user.get("user_id"),
         checkin_date=checkin_date,
