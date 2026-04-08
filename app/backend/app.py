@@ -3598,10 +3598,88 @@ def find_next_planned_training_date(training_day_ctx, from_date, max_days=14):
 
     return None
 
+def detect_strength_plateau_signal(user_id):
+    user_id = str(user_id or "").strip()
+    if not user_id:
+        return None
+
+    session_results = list_session_results_for_user(user_id)
+    if not isinstance(session_results, list):
+        session_results = []
+
+    strength_sessions = []
+    for item in reversed(session_results):
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("session_type", "")).strip().lower() != "styrke":
+            continue
+        if not bool(item.get("completed", False)):
+            continue
+        strength_sessions.append(item)
+        if len(strength_sessions) >= 6:
+            break
+
+    if len(strength_sessions) < 4:
+        return None
+
+    hold_count = 0
+    increase_count = 0
+
+    for session in strength_sessions:
+        results = session.get("results", [])
+        if not isinstance(results, list):
+            continue
+        session_has_hold = False
+        session_has_increase = False
+        for result in results:
+            if not isinstance(result, dict):
+                continue
+            decision = str(result.get("progression_decision", "")).strip().lower()
+            if decision == "increase":
+                session_has_increase = True
+            elif decision == "hold":
+                session_has_hold = True
+        if session_has_increase:
+            increase_count += 1
+        elif session_has_hold:
+            hold_count += 1
+
+    if hold_count >= 3 and increase_count == 0:
+        return {
+            "plateau_detected": True,
+            "plateau_scope": "strength",
+            "plateau_reason": "flere nylige styrkepas har holdt niveau uden progression",
+            "guidance_message": "Du har ligget stabilt i flere styrkepas. Hvis du vil øge videre, kan du overveje en ekstra ugentlig træningsdag eller et andet program.",
+            "recent_strength_sessions": len(strength_sessions),
+            "hold_sessions": hold_count,
+            "increase_sessions": increase_count,
+        }
+
+    return None
+
+
 def build_next_guidance(today_plan_item, completed_today=False):
     item = today_plan_item if isinstance(today_plan_item, dict) else {}
     if not item:
         return None
+
+    user_id = str(item.get("user_id", "")).strip()
+    session_type = str(item.get("session_type", "")).strip().lower()
+
+    if not completed_today and session_type == "styrke" and user_id:
+        plateau_signal = detect_strength_plateau_signal(user_id)
+        if isinstance(plateau_signal, dict) and plateau_signal.get("plateau_detected"):
+            return {
+                "kind": "plateau_signal",
+                "next_session_type": "styrke",
+                "next_date": None,
+                "source": "plateau_detection_v0_1",
+                "message": plateau_signal.get("guidance_message"),
+                "plateau_reason": plateau_signal.get("plateau_reason"),
+                "recent_strength_sessions": plateau_signal.get("recent_strength_sessions"),
+                "hold_sessions": plateau_signal.get("hold_sessions"),
+                "increase_sessions": plateau_signal.get("increase_sessions"),
+            }
 
     date_str = _safe_iso_date_string(item.get("date"))
     if not date_str:
@@ -3940,6 +4018,7 @@ def get_today_plan():
 
     item = {
         "checkin_id": latest_checkin.get("id"),
+        "user_id": auth_user.get("user_id"),
         "date": checkin_date,
         "recommended_for": recommended_for,
         "decision_mode": "fatigue_primary_v1",
