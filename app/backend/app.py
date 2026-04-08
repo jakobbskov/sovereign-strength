@@ -2371,6 +2371,15 @@ def build_cardio_plan(time_budget_min, user_id=None, readiness=None, recovery_st
         return entries if isinstance(entries, list) else []
     return []
 
+def normalize_program_day_label(label):
+    value = str(label or "").strip().lower()
+    if value in ("dag a", "day a"):
+        return "day_a"
+    if value in ("dag b", "day b"):
+        return "day_b"
+    return value.replace(" ", "_")
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None):
     program = None
 
@@ -2394,16 +2403,16 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             "reason": "missing_program_template"
         }
 
-    latest_day = str(latest_strength.get("program_day_label", "")).strip() if latest_strength else ""
-    next_day_label = "Dag A"
-    if latest_day == "Dag A":
-        next_day_label = "Dag B"
-    elif latest_day == "Dag B":
-        next_day_label = "Dag A"
+    latest_day = normalize_program_day_label(latest_strength.get("program_day_label", "") if latest_strength else "")
+    next_day_key = "day_a"
+    if latest_day == "day_a":
+        next_day_key = "day_b"
+    elif latest_day == "day_b":
+        next_day_key = "day_a"
 
     selected_day = None
     for day in program.get("days", []):
-        if day.get("label") == next_day_label:
+        if normalize_program_day_label(day.get("label")) == next_day_key:
             selected_day = day
             break
 
@@ -2416,7 +2425,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             "reason": "missing_program_day"
         }
 
-    template_id = f"strength_{next_day_label.lower().replace(' ', '_')}"
+    template_id = f"strength_{next_day_key}"
     exercise_map = {e.get("id"): e for e in exercises}
 
     selected_exercises = list(selected_day.get("exercises", []))
