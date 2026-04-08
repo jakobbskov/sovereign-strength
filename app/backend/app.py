@@ -2479,6 +2479,7 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     return None
 
 
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None, selected_program_id=None):
     program = None
 
