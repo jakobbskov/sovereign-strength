@@ -6598,7 +6598,8 @@ def put_checkin(checkin_id):
         payload, status = ensure_error_contract(err_payload, status)
         return jsonify(payload), status
 
-    return jsonify({"ok": True, "item": item})
+    adaptation_state = update_adaptation_state(auth_user.get("user_id"))
+    return jsonify({"ok": True, "item": item, "adaptation_state": adaptation_state})
 
 @app.delete("/api/checkins/<checkin_id>")
 def delete_checkin_by_id(checkin_id):
@@ -6611,7 +6612,8 @@ def delete_checkin_by_id(checkin_id):
     if not isinstance(deleted, dict):
         return jsonify(make_error_payload("not_found", "checkin blev ikke fundet", id=checkin_id)), 404
 
-    return jsonify({"ok": True, "deleted": deleted})
+    adaptation_state = update_adaptation_state(auth_user.get("user_id"))
+    return jsonify({"ok": True, "deleted": deleted, "adaptation_state": adaptation_state})
 
 @app.get("/api/checkin/latest")
 def get_latest_checkin():
