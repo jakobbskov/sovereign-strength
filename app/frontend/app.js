@@ -3324,15 +3324,19 @@ function openExerciseViewer(exerciseId){
     if (category){
       metaParts.push(`Kategori: ${category}`);
     }
-    if (notes){
-      metaParts.push(notes);
-    }
 
     metaEl.textContent = metaParts.join(" · ");
 
+    const notesHtml = notes ? `
+      <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
+        <div style="font-weight:700;margin-bottom:8px">Kort guide</div>
+        <div class="small" style="line-height:1.5">${esc(notes)}</div>
+      </div>
+    ` : "";
+
     const cuesHtml = formCues.length ? `
       <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
-        <div style="font-weight:700;margin-bottom:8px">Form cues</div>
+        <div style="font-weight:700;margin-bottom:8px">Teknikfokus</div>
         <ul style="margin:0;padding-left:18px">
           ${formCues.map(cue => `<li style="margin-bottom:6px">${esc(cue)}</li>`).join("")}
         </ul>
@@ -3340,7 +3344,7 @@ function openExerciseViewer(exerciseId){
     ` : "";
 
     if (!images.length){
-      imagesEl.innerHTML = `<div class="small">${tr("exercise.no_images")}</div>${cuesHtml}`;
+      imagesEl.innerHTML = `<div class="small">${tr("exercise.no_images")}</div>${notesHtml}${cuesHtml}`;
     } else {
       imagesEl.innerHTML = images.map((src, idx) => `
         <div style="margin-top:${idx === 0 ? 0 : 12}px">
@@ -3351,7 +3355,7 @@ function openExerciseViewer(exerciseId){
             style="width:100%;height:auto;border-radius:18px;display:block;background:#111;border:1px solid rgba(255,255,255,0.08)"
           />
         </div>
-      `).join("") + cuesHtml;
+      `).join("") + notesHtml + cuesHtml;
     }
 
     modal.style.display = "block";
