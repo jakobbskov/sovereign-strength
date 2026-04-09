@@ -2809,6 +2809,8 @@ def build_progression_context(exercise_id, user_id=None):
 
     step = None
     start_weight = None
+    recommended_step = None
+    effective_load_increment = None
     for ex in exercises:
         if ex.get("id") == exercise_id:
             exercise = ex
@@ -2824,6 +2826,23 @@ def build_progression_context(exercise_id, user_id=None):
     fatigue_ctx = compute_fatigue_score_from_latest_strength(session_results, workouts, user_id=user_id, latest_checkin=None)
     fatigue_score = fatigue_ctx.get("fatigue_score", 0)
     recent_recovery_ctx = build_recent_recovery_context(user_id, max_items=3)
+
+    local_state = {}
+    if user_id not in (None, ""):
+        state = get_live_adaptation_state_for(user_id)
+        local_state = state.get("local_state", {}) if isinstance(state, dict) else {}
+        if not isinstance(local_state, dict):
+            local_state = {}
+
+    local_load_targets = get_local_load_targets_for_exercise(exercise_id, exercises=exercises)
+    local_protection_regions = []
+    for region in local_load_targets:
+        info = local_state.get(region, {}) if isinstance(local_state, dict) else {}
+        if not isinstance(info, dict):
+            continue
+        region_state = str(info.get("state", "")).strip()
+        if region_state == "protect":
+            local_protection_regions.append(region)
 
     last_load = None
     last_entry = None
@@ -2855,6 +2874,9 @@ def build_progression_context(exercise_id, user_id=None):
         "analysis": analysis,
         "fatigue_score": fatigue_score,
         "recent_recovery_ctx": recent_recovery_ctx,
+        "local_state": local_state,
+        "local_load_targets": local_load_targets,
+        "local_protection_regions": local_protection_regions,
         "last_load": last_load,
         "last_entry": last_entry,
     }
@@ -2865,7 +2887,33 @@ def build_progression_context(exercise_id, user_id=None):
 
 def compute_progression_for_exercise(exercise_id, user_id=None):
     ctx = build_progression_context(exercise_id, user_id=user_id)
-    return decide_progression_from_context(exercise_id, ctx)
+    result = decide_progression_from_context(exercise_id, ctx)
+
+    local_protection_regions = ctx.get("local_protection_regions", []) if isinstance(ctx, dict) else []
+    if not isinstance(local_protection_regions, list):
+        local_protection_regions = []
+
+    progression_decision = str(result.get("progression_decision", "") or "").strip().lower()
+    blocked_progression_decisions = {
+        "increase",
+        "increase_load",
+        "increase_reps",
+        "increase_time",
+        "progress_variation",
+    }
+
+    if local_protection_regions and progression_decision in blocked_progression_decisions:
+        reason = str(result.get("progression_reason", "") or "").strip()
+        local_reason = f"local protection blocks progression in: {', '.join(sorted(set(local_protection_regions)))}"
+        result["progression_decision"] = "hold"
+        result["progression_reason"] = f"{reason} · {local_reason}" if reason else local_reason
+        result["local_protection_blocked_progression"] = True
+        result["local_protection_regions"] = sorted(set(local_protection_regions))
+    else:
+        result["local_protection_blocked_progression"] = False
+        result["local_protection_regions"] = sorted(set(local_protection_regions))
+
+    return result
 
 
 
