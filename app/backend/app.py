@@ -4385,6 +4385,40 @@ def post_reset_catalog():
         }
     })
 
+
+@app.post("/api/admin/reset-exercises-catalog")
+def post_reset_exercises_catalog():
+    auth_user = require_auth_user()
+    if isinstance(auth_user, tuple):
+        return auth_user
+
+    user_id = auth_user.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False, "error": "missing_user"}), 401
+
+    repo_root = Path(__file__).resolve().parents[2]
+    seed_dir = repo_root / "app" / "data" / "seed"
+    seed_exercises = seed_dir / "exercises.json"
+
+    if not seed_exercises.exists():
+        return jsonify({
+            "ok": False,
+            "error": "missing_seed_file",
+            "seed_file": str(seed_exercises),
+        }), 500
+
+    exercises = read_json_file(seed_exercises)
+    write_json_file(FILES["exercises"], exercises)
+
+    return jsonify({
+        "ok": True,
+        "message": "Exercise catalog reset from seed.",
+        "counts": {
+            "exercises": len(exercises) if isinstance(exercises, list) else 0,
+        }
+    })
+
+
 @app.get("/api/admin/today-plan-debug")
 def get_today_plan_debug():
     auth_user, auth_err = require_auth_user()
