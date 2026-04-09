@@ -8,13 +8,17 @@ sys.path.append(str(Path(__file__).resolve().parents[1] / "app" / "backend"))
 import app as backend_app
 
 
-def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_state="on_time", recovery_state=None, training_day_ctx=None, weekly_status=None):
+def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_state="on_time", recovery_state=None, training_day_ctx=None, weekly_status=None, user_settings=None, session_results=None):
     if recovery_state is None:
         recovery_state = {}
     if training_day_ctx is None:
         training_day_ctx = {}
     if weekly_status is None:
         weekly_status = {}
+    if user_settings is None:
+        user_settings = {}
+    if session_results is None:
+        session_results = []
 
     client = backend_app.app.test_client()
 
@@ -34,7 +38,7 @@ def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_st
         "readiness_score": readiness_score,
         "checkin_date": date_str,
         "time_budget_min": 45,
-        "user_settings": {},
+        "user_settings": user_settings,
         "training_day_ctx": training_day_ctx,
         "weekly_target_sessions": 3,
         "weekly_status": weekly_status,
@@ -43,7 +47,7 @@ def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_st
     fatigue_ctx = {
         "latest_strength": None,
         "days_since_last_strength": None,
-        "session_results": [],
+        "session_results": session_results,
         "previous_recommendation": None,
         "latest_strength_session": None,
         "latest_strength_failed": False,
@@ -54,14 +58,28 @@ def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_st
         "fatigue_session_override": None,
     }
 
+    real_read_json_file = backend_app.read_json_file
+
+    def fake_read_json_file(path_value):
+        if path_value == backend_app.FILES["programs"]:
+            return real_read_json_file(path_value)
+        if path_value == backend_app.FILES["exercises"]:
+            return real_read_json_file(path_value)
+        if path_value == backend_app.FILES["session_results"]:
+            return session_results
+        if path_value == backend_app.FILES["recommendations"]:
+            return []
+        return []
+
     with patch.object(backend_app, "require_auth_user", return_value=(auth_user, None)), \
          patch.object(backend_app, "list_user_items", return_value=checkins), \
          patch.object(backend_app, "get_storage_last_error", return_value=None), \
          patch.object(backend_app, "list_workouts_for_user", return_value=[]), \
-         patch.object(backend_app, "read_json_file", return_value=[]), \
+         patch.object(backend_app, "read_json_file", side_effect=fake_read_json_file), \
          patch.object(backend_app, "build_today_plan_context", return_value=today_ctx), \
          patch.object(backend_app, "build_today_plan_fatigue_context", return_value=fatigue_ctx), \
-         patch.object(backend_app, "build_today_plan_timing_state", return_value=timing_state):
+         patch.object(backend_app, "build_today_plan_timing_state", return_value=timing_state), \
+         patch.object(backend_app, "append_today_plan_trace", return_value=None):
         response = client.get("/api/today-plan")
 
     assert response.status_code == 200, response.data.decode("utf-8")
@@ -82,6 +100,8 @@ def run_scenario(days):
             recovery_state=day.get("recovery_state", {}),
             training_day_ctx=day.get("training_day_ctx", {}),
             weekly_status=day.get("weekly_status", {}),
+            user_settings=day.get("user_settings", {}),
+            session_results=day.get("session_results", []),
         )
         outputs.append(item)
     return outputs
@@ -255,6 +275,150 @@ def build_running_focused_user_26_weeks():
             "weekly_status": {"completed_sessions": idx % 3},
         })
     return days
+
+
+def test_strength_program_switch_guidance_when_weekly_target_outgrows_2_day_structure():
+    outputs = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 1,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 1, "weekly_target_sessions": 3},
+            "user_settings": {
+                "available_equipment": {"bodyweight": True, "dumbbell": True},
+                "preferences": {
+                    "training_types": {
+                        "running": False,
+                        "strength_weights": False,
+                        "bodyweight": True,
+                        "mobility": True,
+                    }
+                },
+            },
+        }
+    ])
+
+    assert len(outputs) == 1
+    item = outputs[0]
+    guidance = item.get("next_guidance", {}) or {}
+
+    assert item.get("session_type") == "styrke", item
+    assert item.get("selected_strength_program_id") == "starter_strength_2x", item
+    assert guidance.get("kind") == "program_switch_recommendation", guidance
+    assert guidance.get("source") == "program_switch_v0_1", guidance
+    assert guidance.get("recommended_program_id") == "strength_full_body_3x_beginner", guidance
+
+
+def test_strength_plateau_guidance_requires_repeated_holds_and_no_recent_increase():
+    plateau_history = [
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+    ]
+
+    outputs = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 1,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 2, "weekly_target_sessions": 2},
+            "user_settings": {
+                "available_equipment": {"bodyweight": True, "dumbbell": True},
+                "preferences": {
+                    "training_types": {
+                        "running": False,
+                        "strength_weights": False,
+                        "bodyweight": True,
+                        "mobility": True,
+                    }
+                },
+            },
+            "session_results": plateau_history,
+        }
+    ])
+
+    assert len(outputs) == 1
+    item = outputs[0]
+    guidance = item.get("next_guidance", {}) or {}
+
+    assert item.get("session_type") == "styrke", item
+    assert guidance.get("kind") == "plateau_signal", guidance
+    assert guidance.get("source") == "plateau_detection_v0_1", guidance
+    assert guidance.get("hold_sessions") == 4, guidance
+    assert guidance.get("increase_sessions") == 0, guidance
+
+
+def test_strength_plateau_guidance_does_not_trigger_when_recent_increase_exists():
+    mixed_history = [
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "increase"}],
+        },
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+        {
+            "session_type": "styrke",
+            "completed": True,
+            "results": [{"progression_decision": "hold"}],
+        },
+    ]
+
+    outputs = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 1,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 2, "weekly_target_sessions": 2},
+            "user_settings": {
+                "available_equipment": {"bodyweight": True, "dumbbell": True},
+                "preferences": {
+                    "training_types": {
+                        "running": False,
+                        "strength_weights": False,
+                        "bodyweight": True,
+                        "mobility": True,
+                    }
+                },
+            },
+            "session_results": mixed_history,
+        }
+    ])
+
+    assert len(outputs) == 1
+    item = outputs[0]
+    guidance = item.get("next_guidance", {}) or {}
+
+    assert item.get("session_type") == "styrke", item
+    assert guidance.get("kind") != "plateau_signal", guidance
 
 
 def test_running_focused_user_14_days():
