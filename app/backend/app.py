@@ -3487,6 +3487,65 @@ def build_today_plan_training_decision(
     }
 
 
+def resolve_today_plan_decision_context(
+    auth_user,
+    checkin_date,
+    readiness_score,
+    fatigue_score,
+    timing_state,
+    recovery_state,
+    days_since_last_strength,
+    time_budget_min,
+    training_day_ctx,
+    weekly_status,
+    latest_checkin,
+    user_settings,
+    programs,
+    exercises,
+    latest_strength,
+):
+    priority_decision_ctx = build_today_plan_priority_decision(
+        auth_user=auth_user,
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        timing_state=timing_state,
+        recovery_state=recovery_state,
+        days_since_last_strength=days_since_last_strength,
+        time_budget_min=time_budget_min,
+        training_day_ctx=training_day_ctx,
+        weekly_status=weekly_status,
+        latest_checkin=latest_checkin,
+    )
+
+    if isinstance(priority_decision_ctx, dict):
+        logger.warning(
+            "priority_decision_result session_type=%s plan_variant=%s reason=%s readiness=%s fatigue=%s recovery_state=%s load_status=%s days_since_last_strength=%s",
+            priority_decision_ctx.get("session_type"),
+            priority_decision_ctx.get("plan_variant", "default"),
+            priority_decision_ctx.get("reason"),
+            readiness_score,
+            fatigue_score,
+            recovery_state.get("recovery_state") if isinstance(recovery_state, dict) else None,
+            recovery_state.get("load_status") if isinstance(recovery_state, dict) else None,
+            days_since_last_strength,
+        )
+        return priority_decision_ctx
+
+    return build_today_plan_training_decision(
+        auth_user=auth_user,
+        checkin_date=checkin_date,
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        recovery_state=recovery_state,
+        time_budget_min=time_budget_min,
+        user_settings=user_settings,
+        training_day_ctx=training_day_ctx,
+        programs=programs,
+        exercises=exercises,
+        latest_strength=latest_strength,
+    )
+
+
 def get_autoplan_meta_value(autoplan_meta, key, default=None):
     if isinstance(autoplan_meta, dict):
         return autoplan_meta.get(key, default)
@@ -3980,8 +4039,9 @@ def get_today_plan():
         time_budget_min,
     )
 
-    priority_decision_ctx = build_today_plan_priority_decision(
+    decision_ctx = resolve_today_plan_decision_context(
         auth_user=auth_user,
+        checkin_date=checkin_date,
         readiness_score=readiness_score,
         fatigue_score=fatigue_score,
         timing_state=timing_state,
@@ -3991,55 +4051,21 @@ def get_today_plan():
         training_day_ctx=training_day_ctx,
         weekly_status=weekly_status,
         latest_checkin=latest_checkin,
+        user_settings=user_settings,
+        programs=programs,
+        exercises=exercises,
+        latest_strength=latest_strength,
     )
 
-    selected_strength_program_id = None
-    selected_endurance_program_id = None
-
-    if isinstance(priority_decision_ctx, dict):
-        logger.warning(
-            "priority_decision_result session_type=%s plan_variant=%s reason=%s readiness=%s fatigue=%s recovery_state=%s load_status=%s days_since_last_strength=%s",
-            priority_decision_ctx.get("session_type"),
-            priority_decision_ctx.get("plan_variant", "default"),
-            priority_decision_ctx.get("reason"),
-            readiness_score,
-            fatigue_score,
-            recovery_state.get("recovery_state") if isinstance(recovery_state, dict) else None,
-            recovery_state.get("load_status") if isinstance(recovery_state, dict) else None,
-            days_since_last_strength,
-        )
-        session_type = priority_decision_ctx.get("session_type")
-        template_id = priority_decision_ctx.get("template_id")
-        plan_entries = priority_decision_ctx.get("plan_entries", [])
-        plan_variant = priority_decision_ctx.get("plan_variant", "default")
-        reason = priority_decision_ctx.get("reason")
-        autoplan_meta = priority_decision_ctx.get("autoplan_meta")
-        selected_strength_program_id = priority_decision_ctx.get("selected_strength_program_id")
-        selected_endurance_program_id = priority_decision_ctx.get("selected_endurance_program_id")
-        weekly_status = priority_decision_ctx.get("weekly_status")
-    else:
-        decision_ctx = build_today_plan_training_decision(
-            auth_user=auth_user,
-            checkin_date=checkin_date,
-            readiness_score=readiness_score,
-            fatigue_score=fatigue_score,
-            recovery_state=recovery_state,
-            time_budget_min=time_budget_min,
-            user_settings=user_settings,
-            training_day_ctx=training_day_ctx,
-            programs=programs,
-            exercises=exercises,
-            latest_strength=latest_strength,
-        )
-        session_type = decision_ctx.get("session_type")
-        template_id = decision_ctx.get("template_id")
-        plan_entries = decision_ctx.get("plan_entries", [])
-        plan_variant = decision_ctx.get("plan_variant", "default")
-        reason = decision_ctx.get("reason")
-        autoplan_meta = decision_ctx.get("autoplan_meta")
-        selected_strength_program_id = decision_ctx.get("selected_strength_program_id")
-        selected_endurance_program_id = decision_ctx.get("selected_endurance_program_id")
-        weekly_status = decision_ctx.get("weekly_status")
+    session_type = decision_ctx.get("session_type")
+    template_id = decision_ctx.get("template_id")
+    plan_entries = decision_ctx.get("plan_entries", [])
+    plan_variant = decision_ctx.get("plan_variant", "default")
+    reason = decision_ctx.get("reason")
+    autoplan_meta = decision_ctx.get("autoplan_meta")
+    selected_strength_program_id = decision_ctx.get("selected_strength_program_id")
+    selected_endurance_program_id = decision_ctx.get("selected_endurance_program_id")
+    weekly_status = decision_ctx.get("weekly_status")
 
     recommended_for = checkin_date
 
