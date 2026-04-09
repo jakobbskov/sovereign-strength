@@ -218,6 +218,75 @@
     .overview-status .stat-line strong{
       color:var(--text);
     }
+    .onboarding-checklist{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    .onboarding-checklist-item{
+      width:100%;
+      text-align:left;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#161616;
+      padding:12px;
+      display:grid;
+      gap:6px;
+    }
+    .onboarding-checklist-item .small{
+      color:var(--muted);
+    }
+    .onboarding-checklist-item.is-ready{
+      border-color:rgba(159,211,168,.45);
+      background:rgba(159,211,168,.08);
+    }
+    .onboarding-checklist-item.is-missing{
+      border-color:rgba(231,194,125,.45);
+      background:rgba(231,194,125,.08);
+    }
+    .onboarding-checklist-item.is-optional{
+      border-color:rgba(214,211,201,.2);
+      background:#141414;
+      opacity:.92;
+    }
+    .onboarding-state-badge{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:.8rem;
+      font-weight:700;
+      border:1px solid var(--line);
+    }
+    .onboarding-state-badge.is-ready{
+      color:var(--ok);
+      border-color:rgba(159,211,168,.45);
+      background:rgba(159,211,168,.10);
+    }
+    .onboarding-state-badge.is-missing{
+      color:var(--warn);
+      border-color:rgba(231,194,125,.45);
+      background:rgba(231,194,125,.10);
+    }
+    .onboarding-state-badge.is-optional{
+      color:var(--accent);
+      border-color:rgba(214,211,201,.25);
+      background:rgba(214,211,201,.06);
+    }
+    .onboarding-action-text{
+      font-size:.85rem;
+      font-weight:700;
+    }
+    .onboarding-checklist-item.is-ready .onboarding-action-text{
+      color:var(--ok);
+    }
+    .onboarding-checklist-item.is-missing .onboarding-action-text{
+      color:var(--warn);
+    }
+    .onboarding-checklist-item.is-optional .onboarding-action-text{
+      color:var(--accent);
+    }
     .overview-metric-hidden{
       display:none !important;
     }
