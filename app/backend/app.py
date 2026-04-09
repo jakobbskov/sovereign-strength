@@ -2731,6 +2731,13 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 and chosen_substitute_id in existing_ids
             )
 
+            local_substitution_reason = None
+            if blocked_regions:
+                local_substitution_reason = (
+                    f"lokal beskyttelse i {', '.join(sorted(set(blocked_regions)))} "
+                    f"erstatter {exercise_id} med {chosen_substitute_id}"
+                )
+
             if duplicate_conservative_fallback:
                 excluded_due_to_equipment.append({
                     "exercise_id": exercise_id,
@@ -2741,12 +2748,15 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 substituted = dict(ex)
                 substituted["exercise_id"] = chosen_substitute_id
                 substituted["_substituted_from"] = exercise_id
+                substituted["_local_regression_reason"] = local_substitution_reason
                 filtered_exercises.append(substituted)
                 substitutions_used.append({
                     "from_exercise_id": exercise_id,
                     "to_exercise_id": chosen_substitute_id,
                     "missing_equipment_type": None if allowed else equipment_type,
                     "local_protection_regions": sorted(set(blocked_regions)),
+                    "local_regression_applied": bool(blocked_regions),
+                    "reason": local_substitution_reason,
                 })
         else:
             excluded_due_to_equipment.append({
@@ -2821,6 +2831,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             "secondary_constraints": progression.get("secondary_constraints", []),
             "substituted_from": substituted_from,
             "progression_history_exercise_id": progression_history_exercise_id,
+            "local_regression_reason": ex.get("_local_regression_reason"),
         }
 
         result_entry["decision"] = build_training_decision(
