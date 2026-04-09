@@ -6,7 +6,7 @@
     "default_unit": "kg",
     "progression_step": 10,
     "start_weight": 50,
-    "notes": "Foundational lift. Focus on technique and depth.",
+    "notes": "Grundøvelse for ben og helkropsstyrke. Hold bevægelsen rolig, stabil og så dyb som du kan uden at miste kontrol.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 10,
@@ -49,12 +49,18 @@
     ],
     "name_en": "Squat",
     "category_en": "legs",
-    "notes_en": "Foundational lift. Focus on technique and depth.",
+    "notes_en": "Foundational lower-body lift. Keep the movement stable and controlled, and go as deep as you can without losing position.",
     "local_load_targets": [
       "knee",
       "hip",
       "low_back",
       "ankle_calf"
+    ],
+    "form_cues": [
+      "Spænd maven før du går ned",
+      "Hold vægten over midten af foden",
+      "Lad knæ og tæer pege nogenlunde samme vej",
+      "Pres gulvet væk når du rejser dig"
     ]
   },
   {
@@ -416,7 +422,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Core and control.",
+    "notes": "Kontroløvelse for core og bækkenstilling. Målet er rolig spænding uden at lænden mister kontakt og kontrol.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -461,10 +467,16 @@
     ],
     "name_en": "Dead bug",
     "category_en": "core",
-    "notes_en": "Core and control.",
+    "notes_en": "Core control exercise for trunk stability and pelvic position. The goal is calm tension without losing control of the lower back.",
     "local_load_targets": [
       "hip",
       "low_back"
+    ],
+    "form_cues": [
+      "Hold lænden roligt stabil gennem hele bevægelsen",
+      "Sænk arm og ben langsomt og kontrolleret",
+      "Stop før du mister spænding i kroppen",
+      "Pust roligt ud mens du holder positionen"
     ]
   },
   {
@@ -626,7 +638,7 @@
     "default_unit": "kg",
     "progression_step": 5,
     "start_weight": 10,
-    "notes": "One-arm dumbbell row as an alternative to barbell row.",
+    "notes": "Enarms row til ryg og bagskulder. Træk albuen tilbage med kontrol uden at dreje kroppen unødigt.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 5,
@@ -664,11 +676,17 @@
     ],
     "name_en": "Dumbbell row",
     "category_en": "pull",
-    "notes_en": "One-arm dumbbell row as a substitute for barbell row.",
+    "notes_en": "One-arm row for upper back and rear shoulder. Pull the elbow back with control without rotating the torso too much.",
     "local_load_targets": [
       "shoulder",
       "elbow",
       "low_back"
+    ],
+    "form_cues": [
+      "Hold brystet stolt og ryggen rolig",
+      "Træk albuen mod hoften mere end skulderen mod øret",
+      "Sænk vægten roligt tilbage",
+      "Undgå at vride kroppen for at få vægten op"
     ]
   },
   {
@@ -678,7 +696,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Bro-øvelse for baller og hofteekstension med ryggen i rolig kontrol.",
+    "notes": "Bro-øvelse for baller og hofteekstension. Løft kontrolleret og hold fokus på balder frem for at overstrække lænden.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -706,7 +724,7 @@
     ],
     "name_en": "Glute bridge",
     "category_en": "posterior chain",
-    "notes_en": "Bridge exercise for glutes and hip extension with controlled spinal position.",
+    "notes_en": "Bridge exercise for glutes and hip extension. Lift with control and focus on the glutes rather than overextending the lower back.",
     "local_load_targets": [
       "hip",
       "low_back"
@@ -717,6 +735,7 @@
     ],
     "image_folder": "Butt_Lift_Bridge",
     "form_cues": [
+      "Pres fødderne ned i gulvet",
       "Spænd balderne i toppen",
       "Løft hofterne uden at overstrække lænden",
       "Sænk roligt tilbage igen"
@@ -734,7 +753,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Push-up med hænderne hævet for at gøre bevægelsen lettere og mere kontrolleret.",
+    "notes": "Push-up med hænderne hævet for at gøre bevægelsen lettere og mere kontrolleret. God til at bygge teknik før flade push-ups.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -762,7 +781,7 @@
     ],
     "name_en": "Incline push-ups",
     "category_en": "push",
-    "notes_en": "Push-up with elevated hands to make the movement easier and more controlled.",
+    "notes_en": "Push-up with elevated hands to make the movement easier and more controlled. Useful for building technique before floor push-ups.",
     "local_load_targets": [
       "shoulder",
       "elbow",
@@ -776,6 +795,7 @@
     "form_cues": [
       "Hold kroppen i en lige linje",
       "Sænk brystet roligt mod underlaget",
+      "Hold albuerne under kontrol i stedet for at fladre ud",
       "Pres op uden at lade hofterne hænge"
     ],
     "form_cues_en": [
