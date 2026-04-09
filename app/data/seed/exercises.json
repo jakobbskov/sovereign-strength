@@ -460,10 +460,10 @@
       "dead_bug_long_lever",
       "weighted_dead_bug"
     ],
-    "image_folder": "dead_bug",
+    "image_folder": "Dead_Bug",
     "external_images": [
-      "/images/dead_bug_01.png",
-      "/images/dead_bug_02.png"
+      "/assets/exercise-db/Dead_Bug/0.jpg",
+      "/assets/exercise-db/Dead_Bug/1.jpg"
     ],
     "name_en": "Dead bug",
     "category_en": "core",
