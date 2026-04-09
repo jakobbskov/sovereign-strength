@@ -4430,6 +4430,20 @@ def post_user_settings():
     available_equipment = payload.get("available_equipment", current.get("available_equipment", {}))
     profile = payload.get("profile", current.get("profile", {}))
     preferences = payload.get("preferences", current.get("preferences", {}))
+    local_protection_holds = payload.get("local_protection_holds", current.get("local_protection_holds", {}))
+
+    allowed_regions = {"ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"}
+    allowed_hold_states = {"caution", "protect"}
+    clean_local_protection_holds = {}
+    if isinstance(local_protection_holds, dict):
+        for region, raw_value in local_protection_holds.items():
+            region_key = str(region or "").strip()
+            hold_value = str(raw_value or "").strip().lower()
+            if region_key not in allowed_regions:
+                continue
+            if hold_value not in allowed_hold_states:
+                continue
+            clean_local_protection_holds[region_key] = hold_value
 
     item = {
         "user_id": auth_user.get("user_id"),
@@ -4437,6 +4451,7 @@ def post_user_settings():
         "available_equipment": available_equipment if isinstance(available_equipment, dict) else {},
         "profile": profile if isinstance(profile, dict) else {},
         "preferences": preferences if isinstance(preferences, dict) else {},
+        "local_protection_holds": clean_local_protection_holds,
     }
 
     item = save_user_settings_for(auth_user.get("user_id"), item)
@@ -5245,6 +5260,11 @@ def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
     if not user_id:
         return {}
 
+    user_settings = get_user_settings_for(user_id)
+    manual_holds = user_settings.get("local_protection_holds", {}) if isinstance(user_settings, dict) else {}
+    if not isinstance(manual_holds, dict):
+        manual_holds = {}
+
     region_keys = [
         "ankle_calf",
         "knee",
@@ -5471,7 +5491,20 @@ def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
         else:
             state = "ready"
 
+        manual_hold_state = str(manual_holds.get(region, "") or "").strip().lower()
+        if manual_hold_state == "protect":
+            if state != "protect":
+                reasons.insert(0, "manual protection hold is active")
+            state = "protect"
+        elif manual_hold_state == "caution":
+            if state == "ready":
+                reasons.insert(0, "manual caution hold is active")
+                state = "caution"
+            else:
+                reasons.insert(0, "manual caution hold is active")
+
         info["state"] = state
+        info["manual_hold_state"] = manual_hold_state or None
         info["reasons"] = reasons[:6]
 
     return out
