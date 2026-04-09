@@ -287,7 +287,7 @@
     "default_unit": "kg",
     "progression_step": 5,
     "start_weight": 0,
-    "notes": "Start with bodyweight. Can be progressed later.",
+    "notes": "Unilateral benøvelse, der træner kontrol, balance og benstyrke. Start roligt og hold fokus på stabilt fodfæste.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 5,
@@ -348,11 +348,23 @@
     ],
     "name_en": "Lunges",
     "category_en": "legs",
-    "notes_en": "Start with bodyweight. Can be increased later.",
+    "notes_en": "Unilateral leg exercise for control, balance, and leg strength. Start calmly and focus on a stable stance.",
     "local_load_targets": [
       "knee",
       "hip",
       "ankle_calf"
+    ],
+    "form_cues": [
+      "Tag et roligt og stabilt skridt",
+      "Hold overkroppen oprejst gennem bevægelsen",
+      "Sænk dig kontrolleret ned",
+      "Pres gennem forreste fod når du rejser dig"
+    ],
+    "form_cues_en": [
+      "Take a calm and stable step",
+      "Keep the torso upright through the movement",
+      "Lower with control",
+      "Drive through the front foot as you come up"
     ]
   },
   {
@@ -362,7 +374,7 @@
     "default_unit": "sec",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Isometric core exercise.",
+    "notes": "Isometrisk core-øvelse, hvor målet er spænding og stabilitet. Tænk kvalitet i positionen før længde på tiden.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -409,10 +421,22 @@
     ],
     "name_en": "Plank",
     "category_en": "core",
-    "notes_en": "Isometric core exercise.",
+    "notes_en": "Isometric core exercise focused on tension and stability. Prioritize position quality before duration.",
     "local_load_targets": [
       "shoulder",
       "low_back"
+    ],
+    "form_cues": [
+      "Hold kroppen i en rolig lige linje",
+      "Spænd mave og balder let",
+      "Undgå at hænge i lænden eller løfte hoften for højt",
+      "Træk vejret roligt mens du holder positionen"
+    ],
+    "form_cues_en": [
+      "Keep the body in a calm straight line",
+      "Brace the abs and glutes lightly",
+      "Avoid sagging in the lower back or lifting the hips too high",
+      "Breathe calmly while holding the position"
     ]
   },
   {
@@ -895,7 +919,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Bodyweight back activation on the floor/prone.",
+    "notes": "Let bagskulder- og rygaktivering liggende på maven. Bevægelsen skal føles kontrolleret og glidende, ikke kastet.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -923,9 +947,21 @@
     ],
     "name_en": "Reverse snow angels",
     "category_en": "pull",
-    "notes_en": "Bodyweight back activation on the floor, face down.",
+    "notes_en": "Light rear-shoulder and upper-back activation performed face down. The movement should feel smooth and controlled, not thrown around.",
     "local_load_targets": [
       "shoulder"
+    ],
+    "form_cues": [
+      "Hold panden og kroppen rolig mod underlaget",
+      "Løft armene let uden at spænde unødigt i nakken",
+      "Før armene kontrolleret gennem buen",
+      "Tænk bagskulder og øvre ryg frem for fart"
+    ],
+    "form_cues_en": [
+      "Keep the forehead and body quiet against the floor",
+      "Lift the arms lightly without over-tensing the neck",
+      "Move the arms through the arc with control",
+      "Think rear shoulder and upper back rather than speed"
     ]
   },
   {
@@ -977,7 +1013,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Bodyweight leg exercise, good as a squat substitute.",
+    "notes": "Kontrolleret benøvelse med delt stand. God som squat-erstatning når du vil arbejde mere roligt og stabilt ét ben ad gangen.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1009,11 +1045,23 @@
     ],
     "name_en": "Split squat",
     "category_en": "legs",
-    "notes_en": "Bodyweight leg exercise, good as a squat substitute.",
+    "notes_en": "Controlled split-stance leg exercise. Useful as a squat substitute when you want a calmer and more stable one-leg-at-a-time pattern.",
     "local_load_targets": [
       "knee",
       "hip",
       "ankle_calf"
+    ],
+    "form_cues": [
+      "Find en stabil delt stand før du går ned",
+      "Hold vægten balanceret og rolig",
+      "Sænk dig lodret i stedet for at falde frem",
+      "Pres jævnt op igen uden at miste balance"
+    ],
+    "form_cues_en": [
+      "Set a stable split stance before lowering",
+      "Keep the load balanced and controlled",
+      "Lower vertically instead of falling forward",
+      "Drive back up evenly without losing balance"
     ]
   },
   {
@@ -1023,7 +1071,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Leg exercise focusing on one leg at a time.",
+    "notes": "Benøvelse med fokus på ét ben ad gangen. Brug en højde du kan kontrollere uden at miste balance eller skubbe for meget fra med det bagerste ben.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1050,11 +1098,23 @@
     ],
     "name_en": "Step-ups",
     "category_en": "legs",
-    "notes_en": "Leg exercise focusing on one leg at a time.",
+    "notes_en": "Single-leg focused leg exercise. Use a height you can control without losing balance or pushing too much from the trailing leg.",
     "local_load_targets": [
       "knee",
       "hip",
       "ankle_calf"
+    ],
+    "form_cues": [
+      "Sæt hele foden stabilt på underlaget",
+      "Træk dig op med arbejdsbenet",
+      "Undgå at springe eller skubbe for hårdt fra nedenunder",
+      "Sænk dig roligt tilbage"
+    ],
+    "form_cues_en": [
+      "Place the whole foot firmly on the surface",
+      "Pull yourself up with the working leg",
+      "Avoid jumping or pushing too hard from below",
+      "Lower back down with control"
     ]
   },
   {
@@ -1064,7 +1124,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Unilateral leg strength from a chair/legch.",
+    "notes": "Ensidig benstyrke fra stol eller bænk. Brug højden som støtte, så bevægelsen kan holdes rolig og teknisk ren.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1091,11 +1151,23 @@
     ],
     "name_en": "Single-leg sit-to-stand",
     "category_en": "legs",
-    "notes_en": "Unilateral leg strength from a chair or bench.",
+    "notes_en": "Single-leg strength from a chair or bench. Use the seat height as support so the movement stays controlled and technically clean.",
     "local_load_targets": [
       "knee",
       "hip",
       "ankle_calf"
+    ],
+    "form_cues": [
+      "Placér foden stabilt under dig",
+      "Læn dig let frem uden at kollapse i ryggen",
+      "Rejs dig med kontrol gennem arbejdsbenet",
+      "Sæt dig roligt tilbage uden at falde ned"
+    ],
+    "form_cues_en": [
+      "Set the foot firmly under you",
+      "Lean slightly forward without collapsing the back",
+      "Stand up with control through the working leg",
+      "Sit back down slowly instead of dropping"
     ]
   },
   {
@@ -1145,7 +1217,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Bodyweight hip hinge as a technique and posterior-chain fallback.",
+    "notes": "Teknik- og fallback-øvelse for hoftehængslet. Brug den til at lære at bøje fra hofterne uden at miste rygposition.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1173,10 +1245,22 @@
     ],
     "name_en": "Hip hinge",
     "category_en": "posterior chain",
-    "notes_en": "Bodyweight hip hinge as a technique and posterior-chain fallback.",
+    "notes_en": "Technique and fallback exercise for the hip hinge pattern. Use it to learn how to hinge from the hips without losing spinal position.",
     "local_load_targets": [
       "hip",
       "low_back"
+    ],
+    "form_cues": [
+      "Skub hofterne bagud først",
+      "Hold ryggen lang og rolig",
+      "Mærk spænding i bagkæden uden at jage dybde",
+      "Rejs dig ved at føre hofterne frem igen"
+    ],
+    "form_cues_en": [
+      "Send the hips back first",
+      "Keep the spine long and steady",
+      "Feel tension in the posterior chain without chasing depth",
+      "Stand back up by bringing the hips forward again"
     ]
   },
   {
@@ -1186,7 +1270,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Harder unilateral glute bridge variation.",
+    "notes": "Mere krævende ensidig glute bridge. Hold fokus på baldekontrol og stabil hofteposition frem for at løfte højest muligt.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1214,10 +1298,22 @@
     ],
     "name_en": "Single-leg glute bridge",
     "category_en": "posterior chain",
-    "notes_en": "More challenging unilateral glute bridge variation.",
+    "notes_en": "More demanding unilateral glute bridge. Focus on glute control and hip stability rather than lifting as high as possible.",
     "local_load_targets": [
       "hip",
       "low_back"
+    ],
+    "form_cues": [
+      "Hold bækkenet så lige som muligt",
+      "Pres gennem den arbejdende fod",
+      "Spænd balden i toppen uden at overstrække lænden",
+      "Sænk dig roligt tilbage"
+    ],
+    "form_cues_en": [
+      "Keep the pelvis as level as possible",
+      "Drive through the working foot",
+      "Squeeze the glute at the top without overextending the lower back",
+      "Lower back down with control"
     ]
   },
   {
@@ -1227,7 +1323,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Hamstrings and posterior chain with bodyweight.",
+    "notes": "Bagkædeøvelse med fokus på baglår og hofter. Hold hoften så stabil som muligt, mens fødderne går roligt ud og ind.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1255,10 +1351,22 @@
     ],
     "name_en": "Hamstring walkouts",
     "category_en": "posterior chain",
-    "notes_en": "Hamstrings and posterior chain with bodyweight.",
+    "notes_en": "Posterior-chain exercise focused on hamstrings and hips. Keep the hips as steady as possible while the feet walk out and back.",
     "local_load_targets": [
       "hip",
       "low_back"
+    ],
+    "form_cues": [
+      "Start i en stabil bro-position",
+      "Gå fødderne roligt ud i små skridt",
+      "Hold hofterne så høje og stabile som muligt",
+      "Træk fødderne kontrolleret tilbage igen"
+    ],
+    "form_cues_en": [
+      "Start in a stable bridge position",
+      "Walk the feet out in small controlled steps",
+      "Keep the hips as high and steady as possible",
+      "Bring the feet back in with control"
     ]
   },
   {
@@ -1369,7 +1477,7 @@
     "default_unit": "sec",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Core and back control.",
+    "notes": "Kontroløvelse for core, ryg og hofter. Målet er stabilitet og ro, ikke at nå længst muligt ud.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -1405,7 +1513,7 @@
     "external_images": [],
     "name_en": "Bird dog",
     "category_en": "core",
-    "notes_en": "Core and back control.",
+    "notes_en": "Control exercise for trunk, back, and hips. The goal is stability and calm control, not reaching as far as possible.",
     "local_load_targets": [
       "low_back",
       "hip"
@@ -1416,6 +1524,18 @@
       "40 sek",
       "45 sek",
       "60 sek"
+    ],
+    "form_cues": [
+      "Hold kroppen stille mens arm og ben bevæger sig",
+      "Stræk roligt ud uden at dreje i bækkenet",
+      "Stop før lænden begynder at svaje",
+      "Vend langsomt tilbage og skift side"
+    ],
+    "form_cues_en": [
+      "Keep the body still while the arm and leg move",
+      "Reach out calmly without rotating the pelvis",
+      "Stop before the lower back starts to arch",
+      "Return slowly and switch sides"
     ]
   },
   {
