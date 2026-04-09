@@ -494,3 +494,101 @@ if __name__ == "__main__":
     test_mixed_user_28_days_has_distribution_balance()
     test_running_focused_user_26_weeks_does_not_drift_into_single_mode()
     print("All longitudinal scenario tests passed")
+
+
+def test_local_protection_explanation_is_exposed_when_override_changes_plan():
+    outputs = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 4,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 1, "weekly_target_sessions": 3},
+            "user_settings": {
+                "local_protection_holds": {
+                    "low_back": "protect",
+                }
+            },
+        }
+    ])
+
+    assert len(outputs) == 1
+    item = outputs[0]
+    explanation = str(item.get("local_protection_explanation", "") or "").strip().lower()
+
+    assert item.get("session_type") == "restitution", item
+    assert item.get("plan_variant") == "local_protection_override", item
+    assert explanation, item
+    assert "low_back" in explanation, explanation
+    assert "lokal beskyttelse" in explanation, explanation
+
+
+def test_manual_local_protection_hold_survives_without_new_daily_signal():
+    outputs = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 2,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 0, "weekly_target_sessions": 3},
+            "user_settings": {
+                "local_protection_holds": {
+                    "knee": "caution",
+                }
+            },
+        },
+        {
+            "readiness_score": 5,
+            "fatigue_score": 2,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 1, "weekly_target_sessions": 3},
+            "user_settings": {
+                "local_protection_holds": {
+                    "knee": "caution",
+                }
+            },
+        },
+    ])
+
+    assert len(outputs) == 2
+    for item in outputs:
+        adaptation_state = backend_app.get_live_adaptation_state_for("1")
+        local_state = adaptation_state.get("local_state", {}) if isinstance(adaptation_state, dict) else {}
+        knee = local_state.get("knee", {}) if isinstance(local_state, dict) else {}
+        assert knee.get("manual_hold_state") == "caution", knee
+
+
+def test_local_protection_override_clears_when_manual_hold_is_removed():
+    protected = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 4,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 1, "weekly_target_sessions": 3},
+            "user_settings": {
+                "local_protection_holds": {
+                    "low_back": "protect",
+                }
+            },
+        }
+    ])[0]
+
+    cleared = run_scenario([
+        {
+            "readiness_score": 5,
+            "fatigue_score": 1,
+            "timing_state": "on_time",
+            "training_day_ctx": {"is_training_day": True},
+            "weekly_status": {"completed_sessions": 1, "weekly_target_sessions": 3},
+            "user_settings": {},
+        }
+    ])[0]
+
+    assert protected.get("plan_variant") == "local_protection_override", protected
+    assert protected.get("session_type") == "restitution", protected
+
+    assert cleared.get("plan_variant") != "local_protection_override", cleared
+    assert not cleared.get("local_protection_explanation"), cleared
+

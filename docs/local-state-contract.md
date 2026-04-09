@@ -264,3 +264,151 @@ Keep:
 - planner integration downstream
 
 Do not merge raw input, rolling state, and final decision into one oversized structure.
+
+
+## Current implementation (v0.1)
+
+The current implementation is intentionally narrower than the aspirational contract above.
+
+### Raw local input currently implemented
+Check-in currently accepts:
+
+- `local_signals`
+
+### Current raw input shape
+Each `local_signals` entry currently uses:
+
+- `region`
+- `signal`
+
+Current implementation does **not** yet use `laterality`.
+
+### Current region keys
+The current implementation uses these compact region keys:
+
+- `ankle_calf`
+- `knee`
+- `hip`
+- `low_back`
+- `shoulder`
+- `elbow`
+- `wrist`
+
+### Current signal values
+Supported raw signal values:
+
+- `caution`
+- `irritated`
+
+## Current derived local state shape
+
+`local_state` is currently derived per region key and exposed inside adaptation-oriented state.
+
+Each region currently contains compact fields such as:
+
+- `latest_signal`
+- `signal_persistence`
+- `recent_load_count`
+- `state`
+- `reasons`
+
+Additional fields may appear when relevant, for example:
+
+- `menstrual_pain_signal`
+- `manual_hold_state`
+
+### Current derived state values
+Current protection-oriented state values are:
+
+- `ready`
+- `caution`
+- `protect`
+
+## Current derivation sources
+
+The current local protection layer is derived from:
+
+- recent check-in `local_signals`
+- recent exercise exposure through `local_load_targets`
+- recent cardio exposure through cardio-kind-to-region mapping
+- menstrual pain support logic for `hip` and `low_back`
+- manual local protection holds stored in `user_settings`
+
+## Current special integrations
+
+### Menstrual pain integration
+Moderate and severe menstrual pain currently influence local protection state for:
+
+- `hip`
+- `low_back`
+
+Current behavior:
+
+- `moderate` contributes to `caution`
+- `severe` contributes to `protect`
+
+This is implemented as explicit local-state input, not as a hidden planner-only side path.
+
+### Manual protection holds
+Manual holds can currently be persisted in `user_settings` as:
+
+- `local_protection_holds`
+
+Allowed manual hold values:
+
+- `caution`
+- `protect`
+
+Manual holds act as a floor on computed local state:
+
+- `protect` keeps a region in `protect`
+- `caution` prevents a region from falling back to `ready`
+
+### Planning override
+Local protection currently influences planning through a deterministic override path.
+
+Current protected planning regions are primarily:
+
+- `knee`
+- `ankle_calf`
+- `low_back`
+
+Examples of current effects:
+
+- early cardio can be overridden into restitution
+- higher-fatigue days can be pushed toward restitution
+- today-plan output can expose `local_protection_explanation`
+
+### Progression blocker
+Local protection now also influences progression.
+
+Current conservative rule:
+
+- if an exercise maps to one or more local regions currently in `protect`
+- and progression would otherwise increase load / reps / time / variation
+- progression is blocked to `hold`
+
+This blocker is deterministic and visible in progression output.
+
+## Current boundaries
+
+The current local protection layer does **not** try to:
+
+- diagnose injury
+- infer medical meaning
+- predict tissue damage
+- replace fatigue logic
+- replace progression logic entirely
+- create a hidden probabilistic risk model
+
+It is a deterministic load-management layer only.
+
+## Documentation priority rule
+
+When this file conflicts with implementation, implementation is the source of truth.
+
+This document should describe:
+- what the system actually does now
+- what fields are actually present now
+- what later extensions are still only proposed
+
