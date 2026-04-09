@@ -2767,7 +2767,35 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
 
     selected_exercises = filtered_exercises
 
+    local_protection_substitution_count = sum(
+        1 for item in substitutions_used
+        if isinstance(item, dict) and bool(item.get("local_regression_applied"))
+    )
+    local_protection_exclusion_count = sum(
+        1 for item in excluded_due_to_equipment
+        if isinstance(item, dict) and item.get("local_protection_regions")
+    )
+    local_protection_shaped_session = (local_protection_substitution_count + local_protection_exclusion_count) > 0
+
     if not selected_exercises:
+        if local_protection_exclusion_count:
+            protected_regions = sorted({
+                region
+                for item in excluded_due_to_equipment
+                if isinstance(item, dict)
+                for region in (item.get("local_protection_regions", []) or [])
+            })
+            region_txt = ", ".join(protected_regions) if protected_regions else "lokalt belastede områder"
+            return {
+                "ok": True,
+                "template_id": template_id,
+                "plan_entries": [],
+                "plan_variant": "local_protection_restitution",
+                "reason": f"styrkepasset blev ikke bevaret, fordi lokal beskyttelse i {region_txt} fjernede for meget af indholdet",
+                "excluded_due_to_equipment": excluded_due_to_equipment,
+                "substitutions_used": substitutions_used
+            }
+
         excluded_types = sorted({x.get("equipment_type", "") for x in excluded_due_to_equipment if x.get("equipment_type")})
         missing_txt = ", ".join(excluded_types) if excluded_types else "nødvendigt udstyr"
         return {
@@ -2781,12 +2809,29 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         }
 
     if substitutions_used:
-        reason = f"{reason} · øvelser erstattet pga. udstyr: {len(substitutions_used)}"
+        if local_protection_substitution_count:
+            reason = f"{reason} · lokal beskyttelse omformede {local_protection_substitution_count} øvelse(r)"
+        else:
+            reason = f"{reason} · øvelser erstattet pga. udstyr: {len(substitutions_used)}"
 
     if excluded_due_to_equipment:
+        protected_regions = sorted({
+            region
+            for item in excluded_due_to_equipment
+            if isinstance(item, dict)
+            for region in (item.get("local_protection_regions", []) or [])
+        })
         excluded_types = sorted({x.get("equipment_type", "") for x in excluded_due_to_equipment if x.get("equipment_type")})
-        if excluded_types:
+        if protected_regions:
+            reason = f"{reason} · lokal beskyttelse fjernede belastning i: {', '.join(protected_regions)}"
+        elif excluded_types:
             reason = f"{reason} · filtreret efter udstyr: {', '.join(excluded_types)}"
+
+    if local_protection_shaped_session:
+        if plan_variant == "full":
+            plan_variant = "local_modified_strength"
+        elif plan_variant == "light_strength":
+            plan_variant = "local_light_strength"
 
     plan_entries = []
     for ex in selected_exercises:
