@@ -1925,15 +1925,20 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
   }
 
   if (checklist){
+    checklist.classList.add("onboarding-checklist");
     checklist.innerHTML = checklistState.items.map(item => {
+      const stateKey = item.done
+        ? "ready"
+        : (item.optional ? "optional" : "missing");
       const stateLabel = item.done
         ? tr("onboarding.first_run.status_done")
         : (item.optional
           ? tr("onboarding.first_run.status_optional")
           : tr("onboarding.first_run.status_missing"));
       return `
-        <div class="stat-line">
-          <strong>${esc(stateLabel)}</strong> · ${esc(item.label)}<br>
+        <div class="onboarding-checklist-item is-${esc(stateKey)}">
+          <span class="onboarding-state-badge is-${esc(stateKey)}">${esc(stateLabel)}</span>
+          <strong>${esc(item.label)}</strong>
           <span class="small">${esc(item.help)}</span>
         </div>
       `;
