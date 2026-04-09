@@ -570,7 +570,13 @@
         "planning_help": "Vælg træningsdage, så appen lettere kan forme første plan.",
         "physiology": "Fysiologi-hensyn",
         "physiology_help": "Menstruationsrelaterede hensyn er valgfri og kan sættes op senere."
-      }
+      },
+      "open_setup": "Udfyld profil og udstyr",
+      "review_setup": "Gennemgå profil og udstyr",
+      "continue_to_checkin": "Fortsæt til første check-in",
+      "complete_setup_first": "Fuldfør opsætning først",
+      "next_step_ready": "Du kan nu gå videre til dit første check-in.",
+      "next_step_missing": "Næste anbefalede skridt: {step}."
     }
   },
   "onboarding.first_run.title": "Velkommen til SovereignStrength",
