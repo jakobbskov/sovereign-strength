@@ -576,7 +576,9 @@
       "continue_to_checkin": "Fortsæt til første check-in",
       "complete_setup_first": "Fuldfør opsætning først",
       "next_step_ready": "Du kan nu gå videre til dit første check-in.",
-      "next_step_missing": "Næste anbefalede skridt: {step}."
+      "next_step_missing": "Næste anbefalede skridt: {step}.",
+      "action_fix": "Udfyld dette nu",
+      "action_review": "Gennemgå dette"
     }
   },
   "onboarding.first_run.title": "Velkommen til SovereignStrength",
@@ -599,5 +601,13 @@
   "onboarding.first_run.checklist.planning": "Planlægningspræferencer",
   "onboarding.first_run.checklist.planning_help": "Vælg træningsdage, så appen lettere kan forme første plan.",
   "onboarding.first_run.checklist.physiology": "Fysiologi-hensyn",
-  "onboarding.first_run.checklist.physiology_help": "Menstruationsrelaterede hensyn er valgfri og kan sættes op senere."
+  "onboarding.first_run.checklist.physiology_help": "Menstruationsrelaterede hensyn er valgfri og kan sættes op senere.",
+  "onboarding.first_run.open_setup": "Udfyld profil og udstyr",
+  "onboarding.first_run.review_setup": "Gennemgå profil og udstyr",
+  "onboarding.first_run.continue_to_checkin": "Fortsæt til første check-in",
+  "onboarding.first_run.complete_setup_first": "Fuldfør opsætning først",
+  "onboarding.first_run.next_step_ready": "Du kan nu gå videre til dit første check-in.",
+  "onboarding.first_run.next_step_missing": "Næste anbefalede skridt: {step}.",
+  "onboarding.first_run.action_fix": "Udfyld dette nu",
+  "onboarding.first_run.action_review": "Gennemgå dette"
 }
