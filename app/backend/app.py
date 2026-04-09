@@ -2188,6 +2188,50 @@ def build_local_risk_planning_override(user_id, readiness_score, fatigue_score, 
     return None
 
 
+def build_local_protection_explanation(user_id, autoplan_meta, session_type):
+    if not isinstance(autoplan_meta, dict):
+        return None
+    if not bool(autoplan_meta.get("local_protection_override")):
+        return None
+
+    protected_regions = autoplan_meta.get("protected_regions", [])
+    if not isinstance(protected_regions, list):
+        protected_regions = []
+    protected_regions = [str(x).strip() for x in protected_regions if str(x).strip()]
+    if not protected_regions:
+        return None
+
+    state = get_live_adaptation_state_for(user_id)
+    local_state = state.get("local_state", {}) if isinstance(state, dict) else {}
+    if not isinstance(local_state, dict):
+        local_state = {}
+
+    detail_bits = []
+    for region in protected_regions:
+        info = local_state.get(region, {})
+        if not isinstance(info, dict):
+            continue
+        region_reasons = info.get("reasons", [])
+        if not isinstance(region_reasons, list):
+            region_reasons = []
+        if region_reasons:
+            detail_bits.append(f"{region}: {region_reasons[0]}")
+
+    if str(session_type or "").strip().lower() in ("restitution", "recovery", "rest"):
+        consequence = "Planen blev gjort til restitution for at holde den lokale belastning nede."
+    elif str(session_type or "").strip().lower() in ("løb", "run", "cardio"):
+        consequence = "Planen blev justeret mod mere skånsom cardio for at undgå ekstra lokal belastning."
+    else:
+        consequence = "Planen blev justeret for at beskytte lokalt belastede områder."
+
+    region_text = ", ".join(protected_regions)
+    explanation = f"Lokal beskyttelse er aktiv for {region_text}. {consequence}"
+    if detail_bits:
+        explanation = f"{explanation} Udløsende forhold: {'; '.join(detail_bits[:3])}."
+
+    return explanation
+
+
 def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None):
     user_id = str(user_id or "").strip()
     metrics = compute_cardio_load_metrics(user_id)
@@ -4149,6 +4193,12 @@ def get_today_plan():
         plan_variant=plan_variant,
     )
 
+    local_protection_explanation = build_local_protection_explanation(
+        auth_user.get("user_id"),
+        autoplan_meta,
+        session_type,
+    )
+
     item = {
         "checkin_id": latest_checkin.get("id"),
         "user_id": auth_user.get("user_id"),
@@ -4173,6 +4223,7 @@ def get_today_plan():
         "families_selected": get_autoplan_meta_value(autoplan_meta, "families_selected", []),
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
+        "local_protection_explanation": local_protection_explanation,
         "days_since_last_strength": days_since_last_strength,
         "decision_trace": decision_trace,
         "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
