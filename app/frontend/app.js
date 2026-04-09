@@ -1735,6 +1735,7 @@ function formatOverviewReadinessLabel(value){
 }
 
 function renderOverviewStatus(planItem, latestCheckin, workouts){
+  const card = document.getElementById("overviewStatusCard");
   const readinessValue = document.getElementById("overviewReadinessValue");
   const latestCheckinLine = document.getElementById("overviewLatestCheckinLine");
   const overviewTimeLine = document.getElementById("overviewTimeLine");
@@ -1743,6 +1744,12 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
   const sessionCount = Array.isArray(STATE.sessionResults) ? STATE.sessionResults.length : 0;
   const isFirstTime = !planItem && !latestCheckin && sessionCount === 0;
   const dailyUiState = deriveDailyUiState(planItem || null, latestCheckin || null, STATE.sessionResults || []);
+
+  if (card){
+    const hideForFirstRun = dailyUiState === "first_run_onboarding";
+    card.classList.toggle("overview-metric-hidden", hideForFirstRun);
+    card.style.display = hideForFirstRun ? "none" : "";
+  }
 
   if (readinessValue){
     if (isFirstTime){
