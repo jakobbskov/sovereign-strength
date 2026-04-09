@@ -5254,6 +5254,22 @@ def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
                 out[region]["latest_signal"] = signal
             out[region]["signal_persistence"] += 1
 
+    latest_checkin = checkins[0] if checkins else {}
+    if isinstance(latest_checkin, dict):
+        menstrual_pain = str(latest_checkin.get("menstrual_pain", "none") or "none").strip().lower()
+        if menstrual_pain in ("moderate", "severe"):
+            mapped_signal = "irritated" if menstrual_pain == "severe" else "caution"
+            for region in ("hip", "low_back"):
+                if region not in out:
+                    continue
+                current_signal = str(out[region].get("latest_signal", "none") or "none").strip()
+                if current_signal == "none":
+                    out[region]["latest_signal"] = mapped_signal
+                elif current_signal == "caution" and mapped_signal == "irritated":
+                    out[region]["latest_signal"] = "irritated"
+                out[region]["signal_persistence"] = max(int(out[region].get("signal_persistence", 0) or 0), 1)
+                out[region]["menstrual_pain_signal"] = menstrual_pain
+
     session_items = list_session_results_for_user(user_id)
     if not isinstance(session_items, list):
         session_items = []
@@ -5385,7 +5401,13 @@ def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
         latest_signal = info.get("latest_signal", "none")
         persistence = int(info.get("signal_persistence", 0) or 0)
         recent_load = int(info.get("recent_load_count", 0) or 0)
+        menstrual_pain_signal = str(info.get("menstrual_pain_signal", "") or "").strip().lower()
         reasons = []
+
+        if menstrual_pain_signal == "severe":
+            reasons.append("severe menstrual pain suggests trunk and hip protection")
+        elif menstrual_pain_signal == "moderate":
+            reasons.append("moderate menstrual pain suggests trunk and hip caution")
 
         if latest_signal == "irritated":
             reasons.append("latest local signal is irritated")
@@ -5400,8 +5422,12 @@ def build_local_state(user_id, exercises=None, recent_days=7, max_checkins=4):
         elif recent_load >= 1:
             reasons.append("recent local load is present")
 
-        if latest_signal == "irritated" or (persistence >= 2 and recent_load >= 2):
+        if menstrual_pain_signal == "severe":
             state = "protect"
+        elif latest_signal == "irritated" or (persistence >= 2 and recent_load >= 2):
+            state = "protect"
+        elif menstrual_pain_signal == "moderate":
+            state = "caution"
         elif latest_signal == "caution" or persistence >= 1 or recent_load >= 3:
             state = "caution"
         else:
