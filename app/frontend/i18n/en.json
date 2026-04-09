@@ -565,7 +565,9 @@
       "continue_to_checkin": "Continue to first check-in",
       "complete_setup_first": "Complete setup first",
       "next_step_ready": "You can now continue to your first check-in.",
-      "next_step_missing": "Recommended next step: {step}."
+      "next_step_missing": "Recommended next step: {step}.",
+      "action_fix": "Fill this in now",
+      "action_review": "Review this"
     }
   },
   "onboarding.first_run.title": "Welcome to SovereignStrength",
@@ -588,5 +590,13 @@
   "onboarding.first_run.checklist.planning": "Planning preferences",
   "onboarding.first_run.checklist.planning_help": "Choose training days so the app can shape the first plan more intelligently.",
   "onboarding.first_run.checklist.physiology": "Physiology-aware options",
-  "onboarding.first_run.checklist.physiology_help": "Menstruation-related considerations are optional and can be configured later."
+  "onboarding.first_run.checklist.physiology_help": "Menstruation-related considerations are optional and can be configured later.",
+  "onboarding.first_run.open_setup": "Set up profile and equipment",
+  "onboarding.first_run.review_setup": "Review profile and equipment",
+  "onboarding.first_run.continue_to_checkin": "Continue to first check-in",
+  "onboarding.first_run.complete_setup_first": "Complete setup first",
+  "onboarding.first_run.next_step_ready": "You can now continue to your first check-in.",
+  "onboarding.first_run.next_step_missing": "Recommended next step: {step}.",
+  "onboarding.first_run.action_fix": "Fill this in now",
+  "onboarding.first_run.action_review": "Review this"
 }

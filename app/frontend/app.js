@@ -2372,6 +2372,10 @@ function updateOverviewLayoutForStep(stepId){
         card.id === "firstRunOnboardingCard" ||
         card.id === "profileEquipmentCard" ||
         card.id === "forecastHero";
+
+      if (card.id === "overviewStatusCard"){
+        keepVisible = false;
+      }
     } else if (stepId === "overview" && dailyUiState === "no_checkin_yet"){
       keepVisible =
         card.id === "forecastHero" ||
