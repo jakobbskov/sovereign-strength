@@ -559,7 +559,13 @@
         "planning_help": "Choose training days so the app can shape the first plan more intelligently.",
         "physiology": "Physiology-aware options",
         "physiology_help": "Menstruation-related considerations are optional and can be configured later."
-      }
+      },
+      "open_setup": "Set up profile and equipment",
+      "review_setup": "Review profile and equipment",
+      "continue_to_checkin": "Continue to first check-in",
+      "complete_setup_first": "Complete setup first",
+      "next_step_ready": "You can now continue to your first check-in.",
+      "next_step_missing": "Recommended next step: {step}."
     }
   },
   "onboarding.first_run.title": "Welcome to SovereignStrength",

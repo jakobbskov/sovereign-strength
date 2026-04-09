@@ -1893,11 +1893,35 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
   card.classList.toggle("wizard-step-hidden", !firstRun);
   card.style.display = firstRun ? "" : "none";
 
+  if (!firstRun){
+    if (openSetupBtn){
+      openSetupBtn.onclick = null;
+      openSetupBtn.disabled = false;
+    }
+    if (continueBtn){
+      continueBtn.onclick = null;
+      continueBtn.disabled = false;
+      continueBtn.style.display = "none";
+    }
+    return;
+  }
+
   const checklistState = buildInitialSetupChecklist(STATE.userSettings || {});
+  const missingRequired = checklistState.items.filter(item => !item.optional && !item.done);
+  const nextRecommendedKey = missingRequired.length ? missingRequired[0].key : "planning";
+
   if (setupStatus){
-    setupStatus.textContent = checklistState.readyForRecommendation
+    const headline = checklistState.readyForRecommendation
       ? tr("onboarding.first_run.ready")
       : tr("onboarding.first_run.missing_setup", { done: checklistState.requiredDone, total: checklistState.requiredTotal });
+
+    const nextStepText = checklistState.readyForRecommendation
+      ? tr("onboarding.first_run.next_step_ready")
+      : tr("onboarding.first_run.next_step_missing", {
+          step: tr(`onboarding.first_run.checklist.${nextRecommendedKey}`)
+        });
+
+    setupStatus.textContent = `${headline} · ${nextStepText}`;
   }
 
   if (checklist){
@@ -1914,6 +1938,43 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
         </div>
       `;
     }).join("");
+  }
+
+  if (openSetupBtn){
+    openSetupBtn.textContent = checklistState.readyForRecommendation
+      ? tr("onboarding.first_run.review_setup")
+      : tr("onboarding.first_run.open_setup");
+
+    openSetupBtn.onclick = (ev) => {
+      ev.preventDefault();
+      showWizardStep("overview");
+      requestAnimationFrame(() => {
+        const profileCard = document.getElementById("profileEquipmentCard");
+        if (profileCard && typeof profileCard.scrollIntoView === "function"){
+          profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        setEquipmentEditorOpen(true);
+      });
+    };
+  }
+
+  if (continueBtn){
+    continueBtn.style.display = "";
+    continueBtn.disabled = !checklistState.readyForRecommendation;
+    continueBtn.textContent = checklistState.readyForRecommendation
+      ? tr("onboarding.first_run.continue_to_checkin")
+      : tr("onboarding.first_run.complete_setup_first");
+
+    continueBtn.onclick = (ev) => {
+      ev.preventDefault();
+      if (!checklistState.readyForRecommendation){
+        if (openSetupBtn && typeof openSetupBtn.click === "function"){
+          openSetupBtn.click();
+        }
+        return;
+      }
+      showWizardStep("checkin");
+    };
   }
 
   if (openSetupBtn && !openSetupBtn.dataset.boundOnboarding){
@@ -2322,9 +2383,9 @@ function updateOverviewLayoutForStep(stepId){
 
     if (stepId === "overview" && dailyUiState === "first_run_onboarding"){
       keepVisible =
-        card.id === "forecastHero" ||
         card.id === "firstRunOnboardingCard" ||
-        card.id === "profileEquipmentCard";
+        card.id === "profileEquipmentCard" ||
+        card.id === "forecastHero";
     } else if (stepId === "overview" && dailyUiState === "no_checkin_yet"){
       keepVisible =
         card.id === "forecastHero" ||
@@ -2336,6 +2397,13 @@ function updateOverviewLayoutForStep(stepId){
       stepId === "overview" && !keepVisible
     );
   });
+
+  if (stepId === "overview" && dailyUiState === "first_run_onboarding"){
+    const card = document.getElementById("firstRunOnboardingCard");
+    if (card){
+      card.classList.remove("overview-metric-hidden");
+    }
+  }
 }
 
 
