@@ -598,5 +598,8 @@
   "onboarding.first_run.next_step_ready": "You can now continue to your first check-in.",
   "onboarding.first_run.next_step_missing": "Recommended next step: {step}.",
   "onboarding.first_run.action_fix": "Fill this in now",
-  "onboarding.first_run.action_review": "Review this"
-}
+  "onboarding.first_run.action_review": "Review this",
+  "button.reset_exercises_catalog_from_seed": "Reset exercises only",
+  "status.resetting_exercises_catalog": "Resetting exercise catalog...",
+  "status.exercises_catalog_reset_done": "Exercise catalog reset from seed."
+}\n

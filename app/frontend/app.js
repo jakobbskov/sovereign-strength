@@ -2299,6 +2299,22 @@ async function handleEquipmentSettingsSubmit(ev){
   }
 }
 
+async function handleResetExercisesCatalogFromSeed(){
+  const statusEl = document.getElementById("equipmentSettingsStatus");
+  const btn = document.getElementById("resetExercisesCatalogFromSeedBtn");
+  try{
+    if (btn) btn.disabled = true;
+    if (statusEl) statusEl.textContent = tr("status.resetting_exercises_catalog");
+    await apiPost("/api/admin/reset-exercises-catalog", {});
+    await refreshAll();
+    if (statusEl) statusEl.textContent = tr("status.exercises_catalog_reset_done");
+  }catch(err){
+    if (statusEl) statusEl.textContent = tr("status.error_prefix") + (err?.message || String(err));
+  }finally{
+    if (btn) btn.disabled = false;
+  }
+}
+
 async function handleResetCatalogFromSeed(){
   const statusEl = document.getElementById("equipmentSettingsStatus");
   const btn = document.getElementById("resetCatalogFromSeedBtn");
@@ -2320,6 +2336,7 @@ function bindEquipmentEditor(){
   const openBtn = document.getElementById("openEquipmentSettingsBtn");
   const saveBtn = document.getElementById("saveEquipmentSettingsBtn");
   const cancelBtn = document.getElementById("cancelEquipmentSettingsBtn");
+  const resetExercisesBtn = document.getElementById("resetExercisesCatalogFromSeedBtn");
   const resetBtn = document.getElementById("resetCatalogFromSeedBtn");
   const statusEl = document.getElementById("equipmentSettingsStatus");
 
@@ -2352,6 +2369,11 @@ function bindEquipmentEditor(){
       ev.preventDefault();
       setEquipmentEditorOpen(false);
     };
+  }
+
+  if (resetExercisesBtn && !resetExercisesBtn.dataset.bound){
+    resetExercisesBtn.dataset.bound = "1";
+    resetExercisesBtn.onclick = () => handleResetExercisesCatalogFromSeed();
   }
 
   if (resetBtn && !resetBtn.dataset.bound){
