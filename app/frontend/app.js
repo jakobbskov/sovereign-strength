@@ -1977,27 +1977,8 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
     };
   }
 
-  if (openSetupBtn && !openSetupBtn.dataset.boundOnboarding){
-    openSetupBtn.dataset.boundOnboarding = "true";
-    openSetupBtn.addEventListener("click", () => {
-      showWizardStep("overview");
-      requestAnimationFrame(() => {
-        setEquipmentEditorOpen(true);
-      });
-    });
-  }
-
-  if (continueBtn && !continueBtn.dataset.boundOnboarding){
-    continueBtn.dataset.boundOnboarding = "true";
-    continueBtn.addEventListener("click", () => {
-      showWizardStep("checkin");
-      const checkinSection = document.getElementById("checkinSection");
-      if (checkinSection && typeof checkinSection.scrollIntoView === "function"){
-        checkinSection.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
-  }
 }
+
 
 
 function renderProfileEquipmentCard(){
