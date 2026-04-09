@@ -2739,9 +2739,14 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         exercise_id = ex.get("exercise_id", "")
         sets = ex.get("sets", "")
         reps = ex.get("reps", "")
+        substituted_from = ex.get("_substituted_from")
+        progression_history_exercise_id = substituted_from or exercise_id
 
         meta = exercise_map.get(exercise_id, {})
-        progression = compute_progression_for_exercise(exercise_id, user_id=latest_strength.get("user_id") if isinstance(latest_strength, dict) else None)
+        progression = compute_progression_for_exercise(
+            progression_history_exercise_id,
+            user_id=latest_strength.get("user_id") if isinstance(latest_strength, dict) else None
+        )
         next_load = progression.get("next_load")
 
         target_load = (
@@ -2751,6 +2756,12 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
         )
 
         progression_reason = progression.get("progression_reason", "") or ""
+        if substituted_from:
+            progression_reason = (
+                f"{progression_reason} · history anchored to {progression_history_exercise_id}"
+                if progression_reason
+                else f"history anchored to {progression_history_exercise_id}"
+            )
 
         result_entry = {
             "exercise_id": exercise_id,
@@ -2764,7 +2775,8 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             "actual_possible_next_load": progression.get("actual_possible_next_load"),
             "next_target_reps": progression.get("next_target_reps"),
             "secondary_constraints": progression.get("secondary_constraints", []),
-            "substituted_from": ex.get("_substituted_from"),
+            "substituted_from": substituted_from,
+            "progression_history_exercise_id": progression_history_exercise_id,
         }
 
         result_entry["decision"] = build_training_decision(
