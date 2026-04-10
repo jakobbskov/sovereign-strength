@@ -613,5 +613,13 @@
   "cardio.target.base_talk_variable": "{minutes} min easy run at conversational pace",
   "cardio.target.easy_walk_or_jog_variable": "{minutes} min easy walk or very light jog",
   "after_training.select_time": "(Select time)",
-  "button.back_to_overview": "Back to overview"
+  "button.back_to_overview": "Back to overview",
+  "workout.load_optional_placeholder": "(Empty = bodyweight)",
+  "review.summary_sets_label": "Sets",
+  "review.summary_reps_label": "Reps",
+  "review.summary_tut_label": "TUT",
+  "review.summary_volume_label": "Estimated volume",
+  "review.summary_failure_markers_label": "Failure markers",
+  "status.opening_session_for_edit": "Opening session for editing...",
+  "button.save_changes": "Save changes"
 }

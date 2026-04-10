@@ -624,5 +624,13 @@
   "cardio.target.base_talk_variable": "{minutes} min roligt løb i snakketempo",
   "cardio.target.easy_walk_or_jog_variable": "{minutes} min rolig gang eller meget let jog",
   "after_training.select_time": "(Vælg tid)",
-  "button.back_to_overview": "Til overblik"
+  "button.back_to_overview": "Til overblik",
+  "workout.load_optional_placeholder": "(Tom = kropsvægt)",
+  "review.summary_sets_label": "Sæt",
+  "review.summary_reps_label": "Reps",
+  "review.summary_tut_label": "TUT",
+  "review.summary_volume_label": "Estimeret volumen",
+  "review.summary_failure_markers_label": "Failure-markører",
+  "status.opening_session_for_edit": "Åbner session til redigering...",
+  "button.save_changes": "Gem ændringer"
 }

@@ -558,7 +558,7 @@ function applyEntryInputMode(exerciseId){
 
   if (loadEl.tagName === "SELECT"){
     const loadOptions = Array.isArray(meta.load_options) && meta.load_options.length ? meta.load_options : [];
-    const placeholder = loadOptional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder");
+    const placeholder = loadOptional ? tr("workout.load_optional_placeholder") : tr("workout.load_placeholder");
     fillSimpleSelect(loadEl, loadOptions, loadEl.value, placeholder);
   }
 
@@ -598,7 +598,7 @@ function refreshProgramDaySelect(){
   daySelect.innerHTML =
     `<option value="">${tr("workout.no_day_selected")}</option>` +
     program.days.map((day, idx) =>
-      `<option value="${idx}">${esc(day.label || `Dag ${idx+1}`)}</option>`
+      `<option value="${idx}">${esc(getProgramDayDisplayLabel(day) || `${tr("common.day")} ${idx+1}`)}</option>`
     ).join("");
 }
 
@@ -1054,7 +1054,7 @@ async function loadSessionEditFromUrl(){
 
   const statusEl = document.getElementById("sessionResultStatus");
   try{
-    setText("sessionResultStatus", "Åbner session til redigering...");
+    setText("sessionResultStatus", tr("status.opening_session_for_edit"));
     statusEl?.classList.remove("warn");
     const data = await apiJsonRequest("GET", `/api/session-results/${encodeURIComponent(sessionId)}`);
     const item = data?.item;
@@ -1067,7 +1067,7 @@ async function loadSessionEditFromUrl(){
     prefillSessionReviewFormFromHistoryItem(item);
 
     const submitBtn = document.querySelector('#sessionResultForm button[type="submit"]');
-    if (submitBtn) submitBtn.textContent = "Gem ændringer";
+    if (submitBtn) submitBtn.textContent = tr("button.save_changes");
     const deleteBtn = document.getElementById("deleteSessionResultBtn");
     if (deleteBtn) deleteBtn.classList.remove("wizard-step-hidden");
 
@@ -2490,12 +2490,17 @@ function getProgramKindDisplayLabel(value){
 function getProgramDayDisplayLabel(day){
   const item = day && typeof day === "object" ? day : {};
   const isEnglish = getCurrentLang() === "en";
-  return String(
+  const raw = String(
     (isEnglish ? item.label_en : item.label) ||
     item.label ||
     item.label_en ||
     tr("common.day")
   ).trim();
+  if (isEnglish){
+    const m = raw.match(/^Dag\s+([A-Z0-9]+)$/i);
+    if (m) return `Day ${m[1].toUpperCase()}`;
+  }
+  return raw;
 }
 
 function getExerciseDisplayCopy(item){
@@ -2824,7 +2829,7 @@ function buildReviewSetFields(entry, idx, setIdx){
 
       <label>
         ${esc(tr("load.title"))}
-        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), existingLoad || currentLoad, meta?.load_optional ? "(Tom = kropsvægt)" : tr("workout.load_placeholder"))}
+        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), existingLoad || currentLoad, meta?.load_optional ? tr("workout.load_optional_placeholder") : tr("workout.load_placeholder"))}
       </label>
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
@@ -3233,10 +3238,10 @@ function renderSessionResultSummary(summary){
     </div>
     <div class="small" style="margin-bottom:8px">
       ${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
-      Sæt: ${esc(String(totalSets))}<br>
-      Reps: ${esc(String(totalReps))}<br>
-      Estimeret volumen: ${esc(String(estimatedVolume))}<br>
-      Failure-markører: ${esc(String(hitFailureCount))}
+      ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
+      ${esc(tr("review.summary_reps_label"))}: ${esc(String(totalReps))}<br>
+      ${esc(tr("review.summary_volume_label"))}: ${esc(String(estimatedVolume))}<br>
+      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}
     </div>
     <div class="small" style="margin-bottom:8px">
       ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
