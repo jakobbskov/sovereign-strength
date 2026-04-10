@@ -614,5 +614,9 @@
   "status.resetting_exercises_catalog": "Nulstiller øvelseskatalog...",
   "status.exercises_catalog_reset_done": "Øvelseskatalog nulstillet fra seed.",
   "exercise.viewer_short_guide": "Kort guide",
-  "exercise.viewer_technique_focus": "Teknikfokus"
+  "exercise.viewer_technique_focus": "Teknikfokus",
+  "forecast.completed_today": "Færdig i dag",
+  "forecast.session_saved_today": "Dagens session er gemt.",
+  "button.view_status": "Se status",
+  "session_type.rest_day": "Hviledag"
 }
