@@ -619,5 +619,8 @@
   "forecast.session_saved_today": "Dagens session er gemt.",
   "button.view_status": "Se status",
   "session_type.rest_day": "Hviledag",
-  "button.open_edit": "Åbn / redigér"
+  "button.open_edit": "Åbn / redigér",
+  "button.view_rest_day": "Se hviledag",
+  "cardio.target.base_talk_variable": "{minutes} min roligt løb i snakketempo",
+  "cardio.target.easy_walk_or_jog_variable": "{minutes} min rolig gang eller meget let jog"
 }
