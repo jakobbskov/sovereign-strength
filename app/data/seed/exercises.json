@@ -61,6 +61,12 @@
       "Hold vægten over midten af foden",
       "Lad knæ og tæer pege nogenlunde samme vej",
       "Pres gulvet væk når du rejser dig"
+    ],
+    "form_cues_en": [
+      "Brace the core before lowering",
+      "Keep the weight over the middle of the foot",
+      "Let the knees and toes point roughly the same way",
+      "Drive the floor away as you stand up"
     ]
   },
   {
@@ -501,6 +507,12 @@
       "Sænk arm og ben langsomt og kontrolleret",
       "Stop før du mister spænding i kroppen",
       "Pust roligt ud mens du holder positionen"
+    ],
+    "form_cues_en": [
+      "Keep the lower back calmly stable through the movement",
+      "Lower the arm and leg slowly and with control",
+      "Stop before you lose trunk tension",
+      "Exhale gently while holding position"
     ]
   },
   {
@@ -711,6 +723,12 @@
       "Træk albuen mod hoften mere end skulderen mod øret",
       "Sænk vægten roligt tilbage",
       "Undgå at vride kroppen for at få vægten op"
+    ],
+    "form_cues_en": [
+      "Keep the chest proud and the back steady",
+      "Pull the elbow toward the hip more than the shoulder toward the ear",
+      "Lower the weight back with control",
+      "Avoid twisting the torso to get the weight up"
     ]
   },
   {

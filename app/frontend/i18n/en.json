@@ -608,5 +608,8 @@
   "forecast.session_saved_today": "Today's session has been saved.",
   "button.view_status": "View status",
   "session_type.rest_day": "Rest day",
-  "button.open_edit": "Open / edit"
+  "button.open_edit": "Open / edit",
+  "button.view_rest_day": "View rest day",
+  "cardio.target.base_talk_variable": "{minutes} min easy run at conversational pace",
+  "cardio.target.easy_walk_or_jog_variable": "{minutes} min easy walk or very light jog"
 }

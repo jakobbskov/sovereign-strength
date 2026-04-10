@@ -1731,7 +1731,7 @@ function renderForecastHero(planItem, latestCheckin){
 
   const btn = document.getElementById("forecastPrimaryBtn");
   if (btn){
-    btn.textContent = plannedRestToday ? "Se hviledag" : tr("button.view_today_plan");
+    btn.textContent = plannedRestToday ? tr("button.view_rest_day") : tr("button.view_today_plan");
     btn.onclick = () => showWizardStep("plan");
   }
 }
@@ -2674,6 +2674,16 @@ function formatTarget(value){
     "20 min easy walk or very light jog": tr("cardio.target.easy_walk_or_jog_20")
   };
   if (mappedTargets[v]) return mappedTargets[v];
+
+  const easyRunMatch = v.match(/^(\d+)\s*min\s*roligt løb i snakketempo$/i);
+  if (easyRunMatch){
+    return tr("cardio.target.base_talk_variable", { minutes: easyRunMatch[1] });
+  }
+
+  const easyWalkMatch = v.match(/^(\d+)\s*min\s*rolig gang eller meget let jog$/i);
+  if (easyWalkMatch){
+    return tr("cardio.target.easy_walk_or_jog_variable", { minutes: easyWalkMatch[1] });
+  }
 
   if (v.endsWith("sek") || v.endsWith("sec")){
     const num = v.replace(/\s*(sek|sec)\s*$/, "").trim();
