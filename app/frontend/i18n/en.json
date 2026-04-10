@@ -619,5 +619,7 @@
   "review.summary_reps_label": "Reps",
   "review.summary_tut_label": "TUT",
   "review.summary_volume_label": "Estimated volume",
-  "review.summary_failure_markers_label": "Failure markers"
+  "review.summary_failure_markers_label": "Failure markers",
+  "status.opening_session_for_edit": "Opening session for editing...",
+  "button.save_changes": "Save changes"
 }

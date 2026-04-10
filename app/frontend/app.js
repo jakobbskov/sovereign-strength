@@ -598,7 +598,7 @@ function refreshProgramDaySelect(){
   daySelect.innerHTML =
     `<option value="">${tr("workout.no_day_selected")}</option>` +
     program.days.map((day, idx) =>
-      `<option value="${idx}">${esc(day.label || `Dag ${idx+1}`)}</option>`
+      `<option value="${idx}">${esc(getProgramDayDisplayLabel(day) || `${tr("common.day")} ${idx+1}`)}</option>`
     ).join("");
 }
 
@@ -1054,7 +1054,7 @@ async function loadSessionEditFromUrl(){
 
   const statusEl = document.getElementById("sessionResultStatus");
   try{
-    setText("sessionResultStatus", "Åbner session til redigering...");
+    setText("sessionResultStatus", tr("status.opening_session_for_edit"));
     statusEl?.classList.remove("warn");
     const data = await apiJsonRequest("GET", `/api/session-results/${encodeURIComponent(sessionId)}`);
     const item = data?.item;
@@ -1067,7 +1067,7 @@ async function loadSessionEditFromUrl(){
     prefillSessionReviewFormFromHistoryItem(item);
 
     const submitBtn = document.querySelector('#sessionResultForm button[type="submit"]');
-    if (submitBtn) submitBtn.textContent = "Gem ændringer";
+    if (submitBtn) submitBtn.textContent = tr("button.save_changes");
     const deleteBtn = document.getElementById("deleteSessionResultBtn");
     if (deleteBtn) deleteBtn.classList.remove("wizard-step-hidden");
 

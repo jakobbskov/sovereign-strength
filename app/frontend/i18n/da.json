@@ -630,5 +630,7 @@
   "review.summary_reps_label": "Reps",
   "review.summary_tut_label": "TUT",
   "review.summary_volume_label": "Estimeret volumen",
-  "review.summary_failure_markers_label": "Failure-markører"
+  "review.summary_failure_markers_label": "Failure-markører",
+  "status.opening_session_for_edit": "Åbner session til redigering...",
+  "button.save_changes": "Gem ændringer"
 }
