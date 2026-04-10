@@ -607,5 +607,6 @@
   "forecast.completed_today": "Completed today",
   "forecast.session_saved_today": "Today's session has been saved.",
   "button.view_status": "View status",
-  "session_type.rest_day": "Rest day"
+  "session_type.rest_day": "Rest day",
+  "button.open_edit": "Open / edit"
 }
