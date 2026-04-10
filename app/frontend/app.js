@@ -3500,6 +3500,28 @@ function formatDecisionLabel(decisionObj){
 }
 
 
+function getExerciseLibraryCardCopy(item){
+  const entry = item && typeof item === "object" ? item : {};
+  const lang = getCurrentLang();
+  const isEnglish = lang === "en";
+
+  const name = String(
+    (isEnglish ? entry.name_en : entry.name) ||
+    entry.name ||
+    entry.name_en ||
+    ""
+  ).trim();
+
+  const notes = String(
+    (isEnglish ? entry.notes_en : entry.notes) ||
+    entry.notes ||
+    entry.notes_en ||
+    ""
+  ).trim();
+
+  return { name, notes };
+}
+
 function renderExerciseLibrary(){
   const root = document.getElementById("exerciseLibrary");
   if (!root) return;
@@ -3523,11 +3545,16 @@ function renderExerciseLibrary(){
   root.innerHTML = order.map(category => {
     const rows = grouped[category]
       .slice()
-      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "da"))
+      .sort((a, b) => {
+        const aCopy = getExerciseLibraryCardCopy(a);
+        const bCopy = getExerciseLibraryCardCopy(b);
+        return String(aCopy.name || "").localeCompare(String(bCopy.name || ""), getCurrentLang() === "en" ? "en" : "da");
+      })
       .map(item => {
         const exId = String(item.id || "").trim();
-        const name = String(item.name || exId || "Ukendt øvelse").trim();
-        const notes = String(item.notes || "").trim();
+        const cardCopy = getExerciseLibraryCardCopy(item);
+        const name = String(cardCopy.name || exId || tr("common.unknown_title")).trim();
+        const notes = String(cardCopy.notes || "").trim();
         return `
           <div class="card" style="margin-top:10px;padding:14px">
             <div class="row" style="align-items:flex-start;gap:12px">
