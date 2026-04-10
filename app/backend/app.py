@@ -5054,13 +5054,13 @@ def build_session_summary(session_item):
 
     if fatigue_points >= 4:
         fatigue = "high"
-        next_step_hint = "Tag en lettere næste session."
+        next_step_hint = "Take a lighter next session."
     elif fatigue_points >= 2:
         fatigue = "moderate"
-        next_step_hint = "Hold progressionen rolig næste session."
+        next_step_hint = "Keep progression conservative next session."
     else:
         fatigue = "light"
-        next_step_hint = "Du kan sandsynligvis progressere næste gang."
+        next_step_hint = "You can probably progress next time."
 
     recovery_recommendation = {
         "level": fatigue,
