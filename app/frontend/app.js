@@ -1002,7 +1002,7 @@ function buildSessionPlanFromHistoryItem(item){
   const results = Array.isArray(item?.results) ? item.results : [];
   return {
     date: item?.date || new Date().toISOString().slice(0,10),
-    session_type: item?.session_type || "styrke",
+    session_type: item?.session_type || "strength",
     timing_state: item?.timing_state || "",
     readiness_score: item?.readiness_score ?? null,
     entries: results.map(result => {
@@ -1260,18 +1260,30 @@ function renderExercises(items){
     return;
   }
 
-  const sorted = [...items].sort((a,b) => String(a.name).localeCompare(String(b.name), "da"));
+  const sorted = [...items].sort((a, b) => {
+    const aCopy = getExerciseDisplayCopy(a);
+    const bCopy = getExerciseDisplayCopy(b);
+    return String(aCopy.name || "").localeCompare(
+      String(bCopy.name || ""),
+      getCurrentLang() === "en" ? "en" : "da"
+    );
+  });
 
-  root.innerHTML = sorted.map(item => `
+  root.innerHTML = sorted.map(item => {
+    const display = getExerciseDisplayCopy(item);
+    const name = display.name || tr("common.unknown_lower");
+    const notes = display.notes;
+    return `
     <li data-recovery-id="${esc(String(item.id || ""))}">
       <div class="row">
-        <strong>${esc(item.name || tr("common.unknown_lower"))}</strong>
+        <strong>${esc(name)}</strong>
         <span class="small">${esc(item.default_unit || "")}</span>
       </div>
       <div class="pill">${esc(formatExerciseCategory(item.category || tr("common.unknown_lower")))}</div>
-      ${item.notes ? `<div class="small" style="margin-top:8px">${esc(item.notes)}</div>` : ""}
+      ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
     </li>
-  `).join("");
+  `;
+  }).join("");
 
   setText("exerciseMeta", tr("common.items_count", { count: sorted.length }));
 }
@@ -4617,7 +4629,7 @@ async function handleSessionResultSubmit(ev){
     
 session_type:
   plan.session_type
-  || (Array.isArray(plan.entries) && plan.entries.some(e => String(e.exercise_id||"").includes("cardio")) ? "løb" : "styrke"),
+      || (Array.isArray(plan.entries) && plan.entries.some(e => String(e.exercise_id||"").includes("cardio")) ? "run" : "strength"),
 
     timing_state: plan.timing_state || "",
     readiness_score: plan.readiness_score ?? null,
@@ -5387,12 +5399,12 @@ function buildWeeklyPlanPreview(){
     .map(([, label]) => label);
 
   const selectedTypes = [
-    trainingTypes.strength_weights !== false || trainingTypes.bodyweight !== false ? "styrke" : "",
-    trainingTypes.running === true ? "løb" : "",
-    trainingTypes.mobility === true ? "mobilitet" : ""
+    trainingTypes.strength_weights !== false || trainingTypes.bodyweight !== false ? tr("workout.type.strength") : "",
+    trainingTypes.running === true ? tr("session_type.run") : "",
+    trainingTypes.mobility === true ? tr("session_type.mobility") : ""
   ].filter(Boolean);
 
-  let typeLabel = "træning";
+  let typeLabel = tr("common.training_lower");
   if (selectedTypes.length === 1){
     typeLabel = selectedTypes[0];
   } else if (selectedTypes.length > 1){
