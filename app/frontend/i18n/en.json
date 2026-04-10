@@ -611,5 +611,7 @@
   "button.open_edit": "Open / edit",
   "button.view_rest_day": "View rest day",
   "cardio.target.base_talk_variable": "{minutes} min easy run at conversational pace",
-  "cardio.target.easy_walk_or_jog_variable": "{minutes} min easy walk or very light jog"
+  "cardio.target.easy_walk_or_jog_variable": "{minutes} min easy walk or very light jog",
+  "after_training.select_time": "(Select time)",
+  "button.back_to_overview": "Back to overview"
 }
