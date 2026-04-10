@@ -618,5 +618,6 @@
   "forecast.completed_today": "Færdig i dag",
   "forecast.session_saved_today": "Dagens session er gemt.",
   "button.view_status": "Se status",
-  "session_type.rest_day": "Hviledag"
+  "session_type.rest_day": "Hviledag",
+  "button.open_edit": "Åbn / redigér"
 }

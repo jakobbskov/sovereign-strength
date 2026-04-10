@@ -1155,7 +1155,7 @@ function renderSessionHistory(items){
         </div>
         ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
         <div class="btn-row" style="margin-top:10px">
-          <a href="/?edit_session=${encodeURIComponent(String(item?.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">Åbn / redigér</a>
+          <a href="/?edit_session=${encodeURIComponent(String(item?.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">${esc(tr("button.open_edit"))}</a>
         </div>
       </li>
     `;
@@ -1514,7 +1514,7 @@ function renderRecovery(items){
       ${item.suggestion ? `<div class="small" style="margin-top:8px">${esc(item.suggestion)}</div>` : ""}
       ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
       <div class="btn-row" style="margin-top:10px">
-        <a class="edit-recovery-btn" data-recovery-id="${esc(item.id || "")}" href="/?edit_checkin=${encodeURIComponent(String(item.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">Åbn / redigér</a>
+        <a class="edit-recovery-btn" data-recovery-id="${esc(item.id || "")}" href="/?edit_checkin=${encodeURIComponent(String(item.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">${esc(tr("button.open_edit"))}</a>
       </div>
     </li>
   `).join("");
@@ -3937,7 +3937,7 @@ function renderPrograms(programs, exercises){
                 <li>
                   <div class="row">
                     <strong>${esc(name)}</strong>
-                    <span class="small">${tr("exercise.sets_by_reps", { sets: esc(ex.sets ?? ""), reps: esc(ex.reps ?? "") })}</span>
+                    <span class="small">${tr("exercise.sets_by_reps", { sets: esc(ex.sets ?? ""), reps: esc(formatTarget(String(ex.reps ?? ""))) })}</span>
                   </div>
                 </li>
               `;
