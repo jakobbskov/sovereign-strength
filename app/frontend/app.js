@@ -2454,6 +2454,59 @@ function renderReadiness(item){
 
 
 
+function getProgramDisplayName(program){
+  const item = program && typeof program === "object" ? program : {};
+  const isEnglish = getCurrentLang() === "en";
+  return String(
+    (isEnglish ? item.name_en : item.name) ||
+    item.name ||
+    item.name_en ||
+    tr("common.unknown_title")
+  ).trim();
+}
+
+function getProgramKindDisplayLabel(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
+  if (x === "styrke" || x === "strength") return tr("workout.type.strength");
+  if (x === "løb" || x === "run" || x === "running") return tr("session_type.run");
+  if (x === "mobilitet" || x === "mobility") return tr("session_type.mobility");
+  if (x === "restitution" || x === "recovery") return tr("session_type.mobility");
+  return x;
+}
+
+function getProgramDayDisplayLabel(day){
+  const item = day && typeof day === "object" ? day : {};
+  const isEnglish = getCurrentLang() === "en";
+  return String(
+    (isEnglish ? item.label_en : item.label) ||
+    item.label ||
+    item.label_en ||
+    tr("common.day")
+  ).trim();
+}
+
+function getExerciseDisplayCopy(item){
+  const entry = item && typeof item === "object" ? item : {};
+  const isEnglish = getCurrentLang() === "en";
+
+  const name = String(
+    (isEnglish ? entry.name_en : entry.name) ||
+    entry.name ||
+    entry.name_en ||
+    ""
+  ).trim();
+
+  const notes = String(
+    (isEnglish ? entry.notes_en : entry.notes) ||
+    entry.notes ||
+    entry.notes_en ||
+    ""
+  ).trim();
+
+  return { name, notes };
+}
+
 function formatExerciseCategory(value){
   const x = String(value || "").trim().toLowerCase();
   if (!x) return tr("common.unknown_lower");
@@ -3857,16 +3910,17 @@ function renderPrograms(programs, exercises){
   root.innerHTML = programs.map(program => `
     <div class="card" style="margin-top:12px; background:#141414">
       <div class="row">
-        <h3>${esc(program.name || "Program")}</h3>
-        <span class="pill">${esc(program.kind || "")}</span>
+        <h3>${esc(getProgramDisplayName(program) || "Program")}</h3>
+        <span class="pill">${esc(getProgramKindDisplayLabel(program.kind || ""))}</span>
       </div>
       ${(program.days || []).map(day => `
         <div class="program-day">
-          <strong>${esc(day.label || "Dag")}</strong>
+          <strong>${esc(getProgramDayDisplayLabel(day))}</strong>
           <ul style="margin-top:10px">
             ${(day.exercises || []).map(ex => {
               const found = exerciseMap.get(ex.exercise_id) || {};
-              const name = found.name || formatExerciseName(ex.exercise_id || "") || ex.exercise_id || tr("common.unknown_lower");
+              const display = getExerciseDisplayCopy(found);
+              const name = display.name || formatExerciseName(ex.exercise_id || "") || ex.exercise_id || tr("common.unknown_lower");
               return `
                 <li>
                   <div class="row">
@@ -3931,7 +3985,7 @@ async function refreshAll(){
   });
 
   const visiblePrograms = filteredPrograms.length ? filteredPrograms : (STATE.programs || []);
-  fillSelect("program_id", visiblePrograms, x => x.id, x => x.name, "(Intet program)");
+  fillSelect("program_id", visiblePrograms, x => x.id, x => getProgramDisplayName(x), tr("workout.no_program_selected"));
 
   const programSelectEl = document.getElementById("program_id");
   if (programSelectEl && !programSelectEl.value){
