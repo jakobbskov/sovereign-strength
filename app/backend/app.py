@@ -1302,7 +1302,7 @@ def format_time_progression_target(current_target, increment=5):
     secs = parse_seconds_value(current_target)
     if secs is None:
         return current_target
-    return f"{secs + increment} sek"
+    return f"{secs + increment} sec"
 
 
 def session_has_failure(session):
@@ -1459,13 +1459,13 @@ def build_restitution_plan(time_budget_min):
         time_budget_min = 20
 
     if time_budget_min <= 20:
-        duration = "20 sek"
+        duration = "20 sec"
         rounds = 2
     elif time_budget_min <= 30:
-        duration = "30 sek"
+        duration = "30 sec"
         rounds = 2
     else:
-        duration = "40 sek"
+        duration = "40 sec"
         rounds = 3
 
     return [
@@ -1559,7 +1559,7 @@ def build_reentry_strength_plan(time_budget_min):
         {
             "exercise_id": "bird_dog",
             "sets": rounds,
-            "target_reps": "20 sek",
+            "target_reps": "20 sec",
             "target_load": None,
             "progression_decision": "no_progression",
             "progression_reason": "re-entry strength prioritized",
@@ -5071,19 +5071,19 @@ def build_session_summary(session_item):
 
     session_type_value = str(session_item.get("session_type", "") or "").strip().lower()
     if session_type_value in ("restitution", "recovery", "rest", "mobilitet", "mobility"):
-        post_workout_message = "Dagens restitution er registreret."
+        post_workout_message = "Today's recovery has been logged."
     elif session_type_value in ("løb", "run", "cardio"):
-        post_workout_message = "Dagens konditionssession er gemt."
+        post_workout_message = "Today's cardio session has been saved."
     else:
-        post_workout_message = "Dagens session er gemt."
+        post_workout_message = "Today's session has been saved."
 
     explanation_bits = []
     if fatigue == "high":
-        explanation_bits.append("Høj samlet belastning registreret.")
+        explanation_bits.append("High overall load recorded.")
     elif fatigue == "moderate":
-        explanation_bits.append("Moderat samlet belastning registreret.")
+        explanation_bits.append("Moderate overall load recorded.")
     elif fatigue == "light":
-        explanation_bits.append("Lav samlet belastning registreret.")
+        explanation_bits.append("Light overall load recorded.")
 
     if next_step_hint:
         explanation_bits.append(next_step_hint)

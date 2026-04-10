@@ -2763,9 +2763,10 @@ function getReviewRepOptions(meta){
 }
 
 function getReviewTimeOptions(meta){
-  return Array.isArray(meta?.time_options) && meta.time_options.length
+  const options = Array.isArray(meta?.time_options) && meta.time_options.length
     ? meta.time_options
-    : ["20 sek", "30 sek", "40 sek", "45 sek", "60 sek"];
+    : ["20 sec", "30 sec", "40 sec", "45 sec", "60 sec"];
+  return options.map(x => formatTarget(String(x || "").trim()));
 }
 
 function getReviewLoadOptions(meta){
@@ -2790,8 +2791,8 @@ function buildReviewSetFields(entry, idx, setIdx){
         <div class="small" style="margin-bottom:8px">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
 
         <label>
-          Tid
-          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), existingReps, "(Vælg tid)")}
+          ${tr("input_kind.time")}
+          ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), existingReps, tr("after_training.select_time"))}
         </label>
         <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
       </div>
@@ -3122,7 +3123,7 @@ function renderReviewSummary(item){
 function buildFeedbackFooterHtml(){
   return `
     <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
-      <button type="button" id="finishFeedbackBtn" class="secondary">Til overblik</button>
+      <button type="button" id="finishFeedbackBtn" class="secondary">${tr("button.back_to_overview")}</button>
     </div>
   `;
 }
