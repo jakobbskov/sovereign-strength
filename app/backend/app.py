@@ -5089,7 +5089,7 @@ def build_session_summary(session_item):
         explanation_bits.append(next_step_hint)
 
     if hit_failure_count > 0:
-        explanation_bits.append(f"Failure-markører: {hit_failure_count}")
+        explanation_bits.append(f"Failure markers: {hit_failure_count}")
 
     return {
         "completion_state": "completed_session",
