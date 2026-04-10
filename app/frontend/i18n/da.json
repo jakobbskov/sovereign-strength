@@ -612,5 +612,7 @@
   "onboarding.first_run.action_review": "Gennemgå dette",
   "button.reset_exercises_catalog_from_seed": "Reset kun øvelser",
   "status.resetting_exercises_catalog": "Nulstiller øvelseskatalog...",
-  "status.exercises_catalog_reset_done": "Øvelseskatalog nulstillet fra seed."
+  "status.exercises_catalog_reset_done": "Øvelseskatalog nulstillet fra seed.",
+  "exercise.viewer_short_guide": "Kort guide",
+  "exercise.viewer_technique_focus": "Teknikfokus"
 }
