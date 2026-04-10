@@ -3319,6 +3319,34 @@ function getExerciseImages(exerciseId){
     .filter(Boolean);
 }
 
+function getExerciseViewerCopy(meta){
+  const item = meta && typeof meta === "object" ? meta : {};
+  const lang = getCurrentLang();
+  const isEnglish = lang === "en";
+
+  const name = String(
+    (isEnglish ? item.name_en : item.name) ||
+    item.name ||
+    item.name_en ||
+    ""
+  ).trim();
+
+  const notes = String(
+    (isEnglish ? item.notes_en : item.notes) ||
+    item.notes ||
+    item.notes_en ||
+    ""
+  ).trim();
+
+  const preferredCues = isEnglish ? item.form_cues_en : item.form_cues;
+  const fallbackCues = isEnglish ? item.form_cues : item.form_cues_en;
+  const formCues = Array.isArray(preferredCues) && preferredCues.length
+    ? preferredCues
+    : (Array.isArray(fallbackCues) ? fallbackCues : []);
+
+  return { name, notes, formCues };
+}
+
 function openExerciseViewer(exerciseId){
   try {
     const modal = document.getElementById("exerciseViewerModal");
@@ -3331,11 +3359,12 @@ function openExerciseViewer(exerciseId){
     }
 
     const meta = getExerciseMeta(exerciseId) || {};
-    const name = meta.name || exerciseId || "Øvelse";
+    const viewerCopy = getExerciseViewerCopy(meta);
+    const name = viewerCopy.name || exerciseId || tr("exercise.viewer_title");
     const images = getExerciseImages(exerciseId);
-    const notes = String(meta.notes || "").trim();
+    const notes = viewerCopy.notes;
     const category = String(meta.category || "").trim();
-    const formCues = Array.isArray(meta.form_cues) ? meta.form_cues.filter(Boolean).map(x => String(x).trim()).filter(Boolean) : [];
+    const formCues = Array.isArray(viewerCopy.formCues) ? viewerCopy.formCues.filter(Boolean).map(x => String(x).trim()).filter(Boolean) : [];
 
     titleEl.textContent = name;
 
@@ -3351,14 +3380,14 @@ function openExerciseViewer(exerciseId){
 
     const notesHtml = notes ? `
       <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
-        <div style="font-weight:700;margin-bottom:8px">Kort guide</div>
+        <div style="font-weight:700;margin-bottom:8px">${esc(tr("exercise.viewer_short_guide"))}</div>
         <div class="small" style="line-height:1.5">${esc(notes)}</div>
       </div>
     ` : "";
 
     const cuesHtml = formCues.length ? `
       <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
-        <div style="font-weight:700;margin-bottom:8px">Teknikfokus</div>
+        <div style="font-weight:700;margin-bottom:8px">${esc(tr("exercise.viewer_technique_focus"))}</div>
         <ul style="margin:0;padding-left:18px">
           ${formCues.map(cue => `<li style="margin-bottom:6px">${esc(cue)}</li>`).join("")}
         </ul>

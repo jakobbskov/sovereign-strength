@@ -601,5 +601,7 @@
   "onboarding.first_run.action_review": "Review this",
   "button.reset_exercises_catalog_from_seed": "Reset exercises only",
   "status.resetting_exercises_catalog": "Resetting exercise catalog...",
-  "status.exercises_catalog_reset_done": "Exercise catalog reset from seed."
+  "status.exercises_catalog_reset_done": "Exercise catalog reset from seed.",
+  "exercise.viewer_short_guide": "Short guide",
+  "exercise.viewer_technique_focus": "Technique focus"
 }
