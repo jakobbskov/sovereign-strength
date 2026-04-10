@@ -2354,17 +2354,17 @@ def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recover
     duration = int(picked.get("duration_min", 30) or 30)
 
     if kind == "restitution":
-        target_reps = f"{duration} min rolig gang eller meget let jog"
+        target_reps = f"{duration} min easy walk or very light jog"
         exercise_id = "cardio_restitution"
     elif kind == "interval":
         work_blocks = max(6, min(10, duration // 2))
-        target_reps = f"10 min opvarmning + {work_blocks}x(1 min hurtigt / 1 min roligt) + 5 min nedkøling"
+        target_reps = f"10 min warm-up + {work_blocks}x(1 min fast / 1 min easy) + 5 min cool-down"
         exercise_id = "cardio_intervals"
     elif kind == "tempo":
-        target_reps = "10 min opvarmning + 2 x 8 min kontrolleret hårdt tempo + 2 min roligt mellem + 5 min nedkøling"
+        target_reps = "10 min warm-up + 2 x 8 min controlled hard tempo + 2 min easy between + 5 min cool-down"
         exercise_id = "cardio_tempo"
     else:
-        target_reps = f"{duration} min roligt løb i snakketempo"
+        target_reps = f"{duration} min easy run at conversational pace"
         exercise_id = "cardio_base"
 
     entry = {
@@ -3904,6 +3904,20 @@ def detect_program_switch_recommendation(today_plan_item):
     return None
 
 
+def _session_type_label_en(value):
+    x = str(value or "").strip().lower()
+    if x == "styrke" or x == "strength":
+        return "strength"
+    if x == "løb" or x == "run":
+        return "run"
+    if x == "restitution" or x == "recovery" or x == "rest":
+        return "recovery"
+    if x == "mobilitet" or x == "mobility":
+        return "mobility"
+    if x == "cardio":
+        return "cardio"
+    return x
+
 def build_next_guidance(today_plan_item, completed_today=False):
     item = today_plan_item if isinstance(today_plan_item, dict) else {}
     if not item:
@@ -3952,8 +3966,8 @@ def build_next_guidance(today_plan_item, completed_today=False):
     next_date = find_next_planned_training_date(training_day_ctx, date_str)
     next_session_type = _guess_next_session_type_from_training_day_context(training_day_ctx)
 
-    today_label = _session_type_label_da(session_type)
-    next_label = _session_type_label_da(next_session_type)
+    today_label = _session_type_label_en(session_type)
+    next_label = _session_type_label_en(next_session_type)
 
     if completed_today:
         if next_date:
@@ -3962,14 +3976,14 @@ def build_next_guidance(today_plan_item, completed_today=False):
                 "next_session_type": next_session_type,
                 "next_date": next_date,
                 "source": "after_session",
-                "message": f"Session gemt. Næste forventede træning er {next_label} {next_date}."
+                "message": f"Session saved. Next expected training is {next_label} {next_date}."
             }
         return {
             "kind": "completed_today",
             "next_session_type": None,
             "next_date": None,
             "source": "after_session",
-            "message": "Session gemt. Der er ingen næste træningsdag endnu."
+            "message": "Session saved. There is no next training day yet."
         }
 
     is_training_day = bool(training_day_ctx.get("is_training_day"))
@@ -3980,14 +3994,14 @@ def build_next_guidance(today_plan_item, completed_today=False):
                 "next_session_type": next_session_type,
                 "next_date": next_date,
                 "source": "weekly_plan",
-                "message": f"I dag er {today_label}. Næste forventede træning er {next_label} {next_date}."
+                "message": f"Today is {today_label}. Next expected training is {next_label} {next_date}."
             }
         return {
             "kind": "rest_today",
             "next_session_type": None,
             "next_date": None,
             "source": "weekly_plan",
-            "message": f"I dag er {today_label}. Der er ingen næste træningsdag endnu."
+            "message": f"Today is {today_label}. There is no next training day yet."
         }
 
     if next_date:
@@ -3996,7 +4010,7 @@ def build_next_guidance(today_plan_item, completed_today=False):
             "next_session_type": next_session_type,
             "next_date": next_date,
             "source": "adaptive",
-            "message": f"Dagens fokus er {today_label}. Næste forventede træning efter i dag er {next_label} {next_date}."
+            "message": f"Today's focus is {today_label}. The next expected training after today is {next_label} {next_date}."
         }
 
     return {
@@ -4004,7 +4018,7 @@ def build_next_guidance(today_plan_item, completed_today=False):
         "next_session_type": None,
         "next_date": None,
         "source": "adaptive",
-        "message": f"Dagens fokus er {today_label}. Der er ingen næste træningsdag endnu."
+        "message": f"Today's focus is {today_label}. There is no next training day yet."
     }
 
 
