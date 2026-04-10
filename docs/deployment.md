@@ -19,13 +19,28 @@ SovereignStrength is documented as a self-hosted local-first application with:
 Expected files:
 - `index.html`
 - `app.js`
-- `styles.css`
+- `i18n/da.json`
+- `i18n/en.json`
 
-### Backend
-`/opt/sovereign-strength-api/`
+### Backend runtime
+Gunicorn runs from:
 
-Expected entry point:
-- `app.py`
+`/opt/sovereign-strength-api/app/backend/`
+
+Runtime entry point used by the service:
+- `/opt/sovereign-strength-api/app/backend/app.py`
+
+Python virtual environment:
+- `/opt/sovereign-strength-api/.venv/`
+
+### Backend seed data used by runtime
+Backend catalog reset endpoints read seed files from:
+
+`/opt/sovereign-strength-api/app/data/seed/`
+
+Runtime seed files:
+- `/opt/sovereign-strength-api/app/data/seed/exercises.json`
+- `/opt/sovereign-strength-api/app/data/seed/programs.json`
 
 ### Data
 `/var/www/sovereign-strength/data/`
@@ -84,14 +99,26 @@ Do not use broad `--delete` sync against `/var/www/sovereign-strength/`.
 
 ### Safe backend deploy
 
-Backend deploy should update the live backend entry point directly:
+Backend deploy must target the runtime path actually used by the systemd service.
 
-- source: `app/backend/app.py`
-- target: `/opt/sovereign-strength-api/app.py`
+Source files in repo:
+- `app/backend/app.py`
+- `app/data/seed/exercises.json`
+- `app/data/seed/programs.json` (when changed)
 
-Then restart:
+Runtime targets:
+- `/opt/sovereign-strength-api/app/backend/app.py`
+- `/opt/sovereign-strength-api/app/data/seed/exercises.json`
+- `/opt/sovereign-strength-api/app/data/seed/programs.json`
 
-- `sovereign-strength-api.service`
+Minimum backend deploy steps:
+- sync `app/backend/app.py` to `/opt/sovereign-strength-api/app/backend/app.py`
+- sync changed seed catalog files to `/opt/sovereign-strength-api/app/data/seed/`
+- restart `sovereign-strength-api.service`
+
+Important operational rule:
+Frontend deploy does not deploy backend seed catalog files.
+If exercise or program metadata changes in seed files, those seed files must be deployed explicitly to backend runtime paths.
 
 ### Minimum post-deploy checks
 
@@ -193,4 +220,7 @@ A healthy deployment should allow the following:
 This file should describe actual deployment, not desired deployment.
 
 If the socket path, service name, reverse proxy path, or file locations change, update this document in the same commit.
+
+This document must describe the real systemd WorkingDirectory and runtime import path.
+Do not document `/opt/sovereign-strength-api/app.py` as the live backend entry point unless the service is changed accordingly.
 Because future-you is not a mystical being with telepathic access to old server states.
