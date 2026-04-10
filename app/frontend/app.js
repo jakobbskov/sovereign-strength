@@ -1657,10 +1657,10 @@ function renderForecastHero(planItem, latestCheckin){
   }
 
   if (completedToday || completedRestDayToday){
-    setText("forecastType", "Færdig i dag");
+    setText("forecastType", tr("forecast.completed_today"));
     setText(
       "forecastSummary",
-      completedRestDayToday ? tr("today_plan.rest_day_acknowledged_saved") : "Dagens session er gemt."
+      completedRestDayToday ? tr("today_plan.rest_day_acknowledged_saved") : tr("forecast.session_saved_today")
     );
 
     const bits = [];
@@ -1683,13 +1683,13 @@ function renderForecastHero(planItem, latestCheckin){
 
     const btn = document.getElementById("forecastPrimaryBtn");
     if (btn){
-      btn.textContent = "Se status";
+      btn.textContent = tr("button.view_status");
       btn.onclick = () => showWizardStep(completedRestDayToday ? "overview" : "review");
     }
     return;
   }
 
-  setText("forecastType", plannedRestToday ? "Hviledag" : getForecastTypeLabel(planItem));
+  setText("forecastType", plannedRestToday ? tr("session_type.rest_day") : getForecastTypeLabel(planItem));
 
   const leadText = plannedRestToday
     ? tr("today_plan.rest_day_planned_today")

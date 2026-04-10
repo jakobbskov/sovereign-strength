@@ -603,5 +603,9 @@
   "status.resetting_exercises_catalog": "Resetting exercise catalog...",
   "status.exercises_catalog_reset_done": "Exercise catalog reset from seed.",
   "exercise.viewer_short_guide": "Short guide",
-  "exercise.viewer_technique_focus": "Technique focus"
+  "exercise.viewer_technique_focus": "Technique focus",
+  "forecast.completed_today": "Completed today",
+  "forecast.session_saved_today": "Today's session has been saved.",
+  "button.view_status": "View status",
+  "session_type.rest_day": "Rest day"
 }
