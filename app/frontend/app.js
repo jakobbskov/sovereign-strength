@@ -14,6 +14,7 @@ let STATE = {
   programs: [],
   userSettings: {},
   pendingEntries: [],
+  workouts: [],
   sessionResults: [],
   recoveryHistory: [],
   editingCheckinId: null,
@@ -711,52 +712,43 @@ function renderWorkouts(items){
     return;
   }
 
-  const exerciseMap = new Map((STATE.exercises || []).map(x => [x.id, x.name]));
   const sorted = [...items]
     .sort((a,b) => String(b.created_at || b.date).localeCompare(String(a.created_at || a.date)))
     .slice(0, 5);
 
   root.innerHTML = sorted.map(item => {
-    const summary = item.summary && typeof item.summary === "object"
-      ? item.summary
-      : buildSessionSummaryFromResults(item);
-
-    const results = Array.isArray(item.results) ? item.results : [];
+    const rawEntries = Array.isArray(item.entries) ? item.entries : [];
     const isCardio = String(item?.session_type || "").trim().toLowerCase() === "løb";
     const cardioMeta = buildCardioHistoryMeta(item);
+    const totalSets = rawEntries.reduce((sum, entry) => sum + (Number(entry?.sets || 0) || 0), 0);
+
     const entriesHtml = isCardio
       ? ""
-      : results.length
+      : rawEntries.length
       ? `
-        <div style="margin-top:8px">
-          ${results.map(result => {
-            const sets = Array.isArray(result.sets) ? result.sets : [];
-            const setCount = sets.filter(x => x && typeof x === "object" && (String(x.reps || "").trim() || String(x.load || "").trim())).length;
-            const estimatedLoadLabel = formatEstimatedLoadLabel(result.exercise_id, result.load || "");
-            const loadText = estimatedLoadLabel ? ` · load ${esc(String(estimatedLoadLabel))}` : "";
-            const achievedText = String(result.achieved_reps || "").trim()
-              ? ` · ${tr("exercise.achieved_label", { value: esc(String(result.achieved_reps || "").trim()) })}`
-              : "";
-            const targetText = String(result.target_reps || "").trim()
-              ? ` · ${tr("exercise.target_label", { value: formatTarget(String(result.target_reps || "").trim()) })}`
-              : "";
+          <div style="margin-top:8px">
+            ${rawEntries.map(entry => {
+              const setCount = Number(entry?.sets || 0) || 0;
+              const repsText = String(entry?.reps || "").trim();
+              const achievedText = String(entry?.achieved_reps || "").trim();
+              const loadText = String(entry?.load || "").trim();
 
-            return `
-            <div class="small">
-              • ${esc(formatExerciseName(result.exercise_id))}
-              ${setCount ? ` · ${tr("exercise.sets_count", { count: esc(String(setCount)) })}` : ""}
-              ${targetText}
-              ${achievedText}
-              ${loadText}
-            </div>
-            `;
-          }).join("")}
-        </div>
-      `
+              return `
+                <div class="small">
+                  • ${esc(formatExerciseName(entry.exercise_id))}
+                  ${setCount ? ` · ${tr("exercise.sets_count", { count: esc(String(setCount)) })}` : ""}
+                  ${repsText ? ` · ${tr("exercise.target_label", { value: formatTarget(repsText) })}` : ""}
+                  ${achievedText ? ` · ${tr("exercise.achieved_label", { value: esc(achievedText) })}` : ""}
+                  ${loadText ? ` · load ${esc(loadText)}` : ""}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `
       : "";
 
     return `
-      <li data-recovery-id="${esc(String(item.id || ""))}">
+      <li data-workout-id="${esc(String(item.id || ""))}">
         <div class="row">
           <strong>${esc(formatSessionType(item.session_type || tr("common.unknown_lower")))}</strong>
           <span class="small">${esc(item.date || "")}</span>
@@ -764,18 +756,44 @@ function renderWorkouts(items){
         <div class="small">
           ${isCardio
             ? esc(cardioMeta || "")
-            : `${summary.total_sets != null ? tr("exercise.sets_count", { count: esc(String(summary.total_sets)) }) : ""}${summary.total_reps != null ? ` · ${tr("exercise.reps_count", { count: esc(String(summary.total_reps)) })}` : ""}${summary.estimated_volume != null ? ` · ${tr("exercise.volume_label", { value: esc(String(summary.estimated_volume)) })}` : ""}`}
+            : `${totalSets ? tr("exercise.sets_count", { count: esc(String(totalSets)) }) : ""}`}
         </div>
         ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
         ${entriesHtml}
+        <div class="btn-row" style="margin-top:10px">
+          <button type="button" class="danger" data-delete-workout-id="${esc(String(item.id || ""))}">Slet workout</button>
+        </div>
       </li>
     `;
   }).join("");
 
   setText("listMeta", tr("common.items_count", { count: sorted.length }));
+
+  root.querySelectorAll("[data-delete-workout-id]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const workoutId = String(btn.getAttribute("data-delete-workout-id") || "").trim();
+      if (!workoutId) return;
+      if (!window.confirm("Er du sikker på at du vil slette denne workout? Dette kan påvirke historik, progression og anbefalinger.")){
+        return;
+      }
+
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Sletter...";
+
+      try{
+        await apiJsonRequest("DELETE", `/api/workouts/${encodeURIComponent(workoutId)}`);
+        await refreshAll();
+      }catch(err){
+        console.error(err);
+        window.alert(err?.message || "Kunne ikke slette workout.");
+      }finally{
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  });
 }
-
-
 
 function formatCardioKindLabel(value){
   const x = String(value || "").trim().toLowerCase();
@@ -4258,6 +4276,7 @@ async function refreshAll(){
     ? userSettingsApi.item
     : {};
   STATE.checkins = Array.isArray(recoveryApi && recoveryApi.items) ? recoveryApi.items : [];
+STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.items : [];
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
   STATE.latestCheckin = latestRecoveryApi.item || null;
   STATE.currentTodayPlan = todayPlanApi.item || null;
@@ -4325,7 +4344,7 @@ async function refreshAll(){
   setText("programsCount", STATE.programs.length);
   setText("recoveryCount", Array.isArray(recoveryFile) ? recoveryFile.length : 0);
 
-  renderWorkouts(STATE.sessionResults);
+  renderWorkouts(STATE.workouts);
   renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null, todayPlanApi && todayPlanApi.item ? todayPlanApi.item.recovery_state : null);
   renderSessionHistory(STATE.sessionResults);
   renderExercises(STATE.exercises);

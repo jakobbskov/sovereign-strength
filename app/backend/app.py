@@ -6869,6 +6869,30 @@ def post_workouts():
 
     return jsonify({"ok": True, "item": item, "count": third}), 201
 
+
+@app.delete("/api/workouts/<workout_id>")
+def delete_workout_by_id(workout_id):
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("workouts:delete", auth_err)
+        return auth_err
+
+    deleted = delete_user_item("workouts", auth_user.get("user_id"), workout_id)
+    if not isinstance(deleted, dict):
+        return jsonify({
+            "ok": False,
+            "error": "not_found",
+            "message": "workout blev ikke fundet",
+            "id": workout_id,
+        }), 404
+
+    adaptation_state = update_adaptation_state(auth_user.get("user_id"))
+    return jsonify({
+        "ok": True,
+        "deleted": deleted,
+        "adaptation_state": adaptation_state,
+    })
+
 @app.get("/api/checkins")
 def get_checkins():
     auth_user, auth_err = require_auth_user()
