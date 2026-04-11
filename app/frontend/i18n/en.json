@@ -641,5 +641,6 @@
   "onboarding.first_run.section.physiology_title": "Optional physiology-aware settings",
   "onboarding.first_run.section.physiology_body": "Optional. Only turn this on if you want menstruation-related check-in considerations included.",
   "onboarding.first_run.section.physiology_toggle": "Show optional menstruation fields in check-in",
-  "onboarding.first_run.section.finish_title": "Ready for first recommendation"
+  "onboarding.first_run.section.finish_title": "Ready for first recommendation",
+  "overview.more_profile_details": "More profile details"
 }

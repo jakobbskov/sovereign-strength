@@ -652,5 +652,6 @@
   "onboarding.first_run.section.physiology_title": "Valgfrie fysiologi-hensyn",
   "onboarding.first_run.section.physiology_body": "Valgfrit. Slå kun dette til, hvis du vil have menstruationsrelaterede hensyn med i check-in.",
   "onboarding.first_run.section.physiology_toggle": "Vis valgfri menstruationsfelter i check-in",
-  "onboarding.first_run.section.finish_title": "Klar til første anbefaling"
+  "onboarding.first_run.section.finish_title": "Klar til første anbefaling",
+  "overview.more_profile_details": "Flere profiloplysninger"
 }

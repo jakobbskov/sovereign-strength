@@ -481,19 +481,24 @@
         </div>
         <div class="overview-status">
           <div class="stat-line" id="profileBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
-        <div class="stat-line" id="profileTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
-        <div class="stat-line" id="profileTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
-        <div class="stat-line" id="profileEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
-          <div class="stat-line" id="profileIncrementLine" data-i18n="profile.increment_loading">Vægtspring indlæses...</div>
-          <div class="stat-line" id="profileAccountLine" data-i18n="profile.account_loading">Konto indlæses...</div>
-          <div class="stat-line" id="profileAccountHelpLine" data-i18n="profile.account_help">Profil og adgangskode håndteres centralt via auth.</div>
+          <div class="stat-line" id="profileTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
+          <div class="stat-line" id="profileTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
+          <div class="stat-line" id="profileEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
         </div>
+        <details id="profileEquipmentDetails" style="margin-top:12px">
+          <summary class="small" data-i18n="overview.more_profile_details">Flere profiloplysninger</summary>
+          <div class="overview-status" style="margin-top:10px">
+            <div class="stat-line" id="profileIncrementLine" data-i18n="profile.increment_loading">Vægtspring indlæses...</div>
+            <div class="stat-line" id="profileAccountLine" data-i18n="profile.account_loading">Konto indlæses...</div>
+            <div class="stat-line" id="profileAccountHelpLine" data-i18n="profile.account_help">Profil og adgangskode håndteres centralt via auth.</div>
+          </div>
+        </details>
         <div class="btn-row" style="margin-top:12px">
           <button type="button" id="openEquipmentSettingsBtn" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
           <button type="button" id="openAccountSettingsSecondaryBtn" data-i18n="button.account_password">Konto og adgangskode</button>
         </div>
       </section>
-
+      
       <div id="equipmentEditorWrap" class="card wizard-step-hidden" style="margin-top:14px; display:none"></div>
 
       <div id="equipmentSettingsModal" class="modal-backdrop wizard-step-hidden" style="display:none">
