@@ -2053,6 +2053,7 @@ def compute_cardio_load_metrics(user_id):
     last_cardio_kind = None
     days_since_last_cardio = None
     last_hard_cardio_days_ago = None
+    recent_cardio_kinds = []
 
     def cardio_intensity_factor(kind):
         k = str(kind or "").strip().lower()
@@ -2100,6 +2101,12 @@ def compute_cardio_load_metrics(user_id):
         if last_date:
             days_since_last_cardio = days_between_iso_dates(today_str, last_date)
 
+        recent_cardio_kinds = [
+            str(x.get("cardio_kind", x.get("cardio_type", "base"))).strip().lower() or "base"
+            for x in cardio_items[-3:]
+            if isinstance(x, dict)
+        ]
+
         for item in reversed(cardio_items):
             kind = str(item.get("cardio_kind", item.get("cardio_type", "base"))).strip().lower()
             if kind in ("tempo", "threshold", "interval", "intervals", "test", "benchmark"):
@@ -2123,6 +2130,8 @@ def compute_cardio_load_metrics(user_id):
         "last_cardio_kind": last_cardio_kind,
         "days_since_last_cardio": days_since_last_cardio,
         "last_hard_cardio_days_ago": last_hard_cardio_days_ago,
+        "recent_cardio_kinds": recent_cardio_kinds,
+        "recent_base_count": sum(1 for x in recent_cardio_kinds if x == "base"),
         "load_status": load_status,
     }
 
@@ -2256,6 +2265,7 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
     weekly_cardio_load = float(metrics.get("weekly_cardio_load", 0) or 0)
     last_cardio_kind = str(metrics.get("last_cardio_kind", "")).strip().lower()
     last_hard_days = metrics.get("last_hard_cardio_days_ago")
+    recent_base_count = int(metrics.get("recent_base_count", 0) or 0)
     load_status = str(metrics.get("load_status", "balanced")).strip().lower()
     protect_regions = get_local_protect_regions(user_id, regions=("knee", "ankle_calf", "low_back"))
 
@@ -2317,6 +2327,26 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
             kind = "base"
             duration = min(max(20, time_val), 35)
             reason.append("hård cardio for nylig, nedjusteret til base")
+
+    # avoid repeating the same base choice on stable days
+    if (
+        kind == "base"
+        and recent_base_count >= 2
+        and readiness_val >= 4
+        and load_status in ("underloaded", "balanced")
+        and not protect_regions
+        and (last_hard_days is None or last_hard_days >= 4)
+    ):
+        if time_val <= 20:
+            kind = "interval"
+            duration = 20
+            reason.append("gentaget base-cardio for nylig")
+            reason.append("variation prioriteret inden for sikre guardrails")
+        else:
+            kind = "tempo"
+            duration = min(max(25, time_val), 40)
+            reason.append("gentaget base-cardio for nylig")
+            reason.append("variation prioriteret inden for sikre guardrails")
 
     if protect_regions:
         knee_or_calf = any(x in protect_regions for x in ("knee", "ankle_calf"))
