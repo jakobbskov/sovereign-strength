@@ -17,6 +17,8 @@ let STATE = {
   workouts: [],
   sessionResults: [],
   recoveryHistory: [],
+  workoutInProgress: false,
+  currentWorkoutEntryIndex: 0,
   editingCheckinId: null,
   pendingRecoveryEditId: null,
   lastFocusedRecoveryId: null,
@@ -1771,10 +1773,10 @@ function renderForecastHero(planItem, latestCheckin){
   }
 
   const reasonParts = [bits.join(" · "), formatPlanReason(planItem.reason || "")].filter(Boolean);
-  const forecastReasonText = [
-    reasonParts.join(" · "),
-    nextGuidanceMessage
-  ].filter(Boolean).join("\n");
+    const forecastReasonText = [
+      reasonParts.join(" · "),
+      nextGuidanceMessage
+    ].filter(Boolean).join("\n");
 
   setText("forecastSummary", leadText);
   const forecastReasonEl = document.getElementById("forecastReason");
@@ -3016,18 +3018,22 @@ function formatTimingExplanation(value){
 }
 
 function buildReviewValueSelect(name, options, selectedValue, placeholder){
-  const arr = Array.isArray(options) ? options : [];
+  const raw = Array.isArray(options) ? options : [];
+  const selected = String(selectedValue ?? "").trim();
+  const arr = selected && !raw.some(x => String(x ?? "").trim() === selected)
+    ? [selected, ...raw]
+    : raw;
   const first = placeholder ? `<option value="">${esc(placeholder)}</option>` : `<option value=""></option>`;
   return `
-    <select name="${esc(name)}">
-      ${first}
-      ${arr.map(x => {
-        const value = String(x ?? "");
-        const selected = String(selectedValue ?? "") === value ? ' selected' : '';
-        return `<option value="${esc(value)}"${selected}>${esc(value)}</option>`;
-      }).join("")}
-    </select>
-  `;
+      <select name="${esc(name)}">
+        ${first}
+        ${arr.map(x => {
+          const value = String(x ?? "").trim();
+          const isSelected = selected === value ? ' selected' : '';
+          return `<option value="${esc(value)}"${isSelected}>${esc(value)}</option>`;
+        }).join("")}
+      </select>
+    `;
 }
 
 function getReviewExerciseMeta(exerciseId){
@@ -3358,16 +3364,27 @@ function renderSessionReview(item){
       `;
     }
 
-    const setFields = Array.from({length: setCount}, (_, setIdx) =>
-      buildReviewSetFields(entry, idx, setIdx)
-    ).join("");
+      const setFields = Array.from({length: setCount}, (_, setIdx) =>
+        buildReviewSetFields(entry, idx, setIdx)
+      ).join("");
 
-    return `
-      <li>
-        <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
-        <div class="small" style="margin-bottom:10px">
-          ${tr("exercise.target_colon")} ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}${entry.target_reps ? ` · ${esc(formatTarget(entry.target_reps))}` : ""}${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
-        </div>
+      const existingResult = entry?._existing_result && typeof entry._existing_result === "object" ? entry._existing_result : {};
+      const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
+      const actualReps = existingSets.map(x => String(x?.reps || "").trim()).filter(Boolean);
+      const actualLoads = existingSets.map(x => String(x?.load || "").trim()).filter(Boolean);
+      const actualBits = [];
+      if (entry.sets) actualBits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
+      if (actualReps.length) actualBits.push(actualReps.join(" / "));
+      else if (entry.target_reps) actualBits.push(esc(formatTarget(entry.target_reps)));
+      if (actualLoads.length) actualBits.push(actualLoads.join(" / "));
+      else if (entry.target_load) actualBits.push(esc(entry.target_load));
+
+      return `
+        <li>
+          <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
+          <div class="small" style="margin-bottom:10px">
+            ${tr("exercise.target_colon")} ${actualBits.join(" · ")}
+          </div>
 
         <div class="small" style="margin-bottom:10px">
           ${tr("common.type_label")}: ${esc(formatInputKindLabel(inputKind))}
@@ -3555,12 +3572,26 @@ function renderSessionResultSummary(summary){
 
 
 function formatPlanActionText(entry){
-  const decision = String(entry?.progression_decision || "").trim();
+  const localAdjustment = String(entry?.manual_intensity_adjustment || "").trim();
   const load = String(entry?.target_load || "").trim();
   const nextTarget = String(entry?.next_target_reps || "").trim();
   const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
   const isCardio = exerciseId.startsWith("cardio_") || exerciseId === "cardio_session";
 
+  if (localAdjustment){
+    if (entry?.substituted_from){
+      return `${tr(localAdjustment === "easier" ? "workout.adjustment.easier" : "workout.adjustment.harder")} · ${tr("exercise.substituted_from")}: ${formatExerciseName(entry.substituted_from)}`;
+    }
+    if (load){
+      return tr("plan.action.use_load_today", { load });
+    }
+    if (entry?.target_reps){
+      return tr("exercise.target_label", { value: formatTarget(entry.target_reps) });
+    }
+    return tr(localAdjustment === "easier" ? "workout.adjustment.easier" : "workout.adjustment.harder");
+  }
+
+  const decision = String(entry?.progression_decision || "").trim();
   if (isCardio){
     if (decision === "autoplan_cardio_initial") return tr("plan.action.cardio_easy_today");
     if (decision === "hold") return tr("plan.action.cardio_hold_today");
@@ -3585,6 +3616,73 @@ function formatPlanActionText(entry){
   return load ? tr("plan.action.use_load_today", { load }) : tr("plan.action.follow_plan_today");
 }
 
+function formatPlanEntryBadge(entry){
+  const localAdjustment = String(entry?.manual_intensity_adjustment || "").trim();
+  if (localAdjustment === "easier") return tr("button.make_easier");
+  if (localAdjustment === "harder") return tr("button.make_harder");
+  return formatProgressionDecision(entry?.progression_decision || "");
+}
+
+function getTargetNumberSignature(target){
+  const nums = [...String(target || "").matchAll(/\d+/g)].map(m => Number(m[0])).filter(Number.isFinite);
+  if (!nums.length) return 0;
+  return Math.max(...nums);
+}
+
+function getVariantDirectionFromBaseline(entry){
+  const baseId = String(entry?._base_exercise_id || "").trim().toLowerCase();
+  const currentId = String(entry?.exercise_id || "").trim().toLowerCase();
+  if (!baseId || !currentId || baseId === currentId) return 0;
+  if (getExerciseVariantSwap(baseId, "harder") === currentId) return 1;
+  if (getExerciseVariantSwap(baseId, "easier") === currentId) return -1;
+  return 0;
+}
+
+function getPlanEntryTone(entry){
+  if (!entry || typeof entry !== "object") return { style: "", level: 0, direction: 0 };
+
+  const currentLoad = parseKgNumber(entry.target_load);
+  const baseLoad = parseKgNumber(entry._base_target_load);
+  const step = getEntryLoadStep(entry) || 1;
+  const loadDeltaSteps = currentLoad != null && baseLoad != null
+    ? Math.round((currentLoad - baseLoad) / step)
+    : 0;
+
+  const currentRepSig = getTargetNumberSignature(entry.target_reps);
+  const baseRepSig = getTargetNumberSignature(entry._base_target_reps);
+  const repDeltaUnits = currentRepSig && baseRepSig
+    ? Math.round((currentRepSig - baseRepSig) / 2)
+    : 0;
+
+  const variantDirection = getVariantDirectionFromBaseline(entry);
+  const signedScore = loadDeltaSteps + repDeltaUnits + (variantDirection * 2);
+  const absScore = Math.abs(signedScore);
+
+  let level = 0;
+  if (absScore >= 1) level = 1;
+  if (absScore >= 3) level = 2;
+  if (absScore >= 5) level = 3;
+
+  const direction = signedScore > 0 ? 1 : signedScore < 0 ? -1 : 0;
+
+  const styles = {
+    neutral: "background:#141414; border:1px solid rgba(255,255,255,0.08);",
+    easier1: "background:rgba(34,197,94,0.10); border:1px solid rgba(34,197,94,0.35);",
+    easier2: "background:rgba(34,197,94,0.16); border:1px solid rgba(34,197,94,0.50);",
+    easier3: "background:rgba(34,197,94,0.22); border:1px solid rgba(34,197,94,0.65);",
+    harder1: "background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.38);",
+    harder2: "background:rgba(234,88,12,0.16); border:1px solid rgba(234,88,12,0.52);",
+    harder3: "background:rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.62);",
+  };
+
+  let style = styles.neutral;
+  if (direction < 0 && level > 0) style = styles[`easier${level}`];
+  if (direction > 0 && level > 0) style = styles[`harder${level}`];
+
+  return { style, level, direction };
+}
+
+
 function formatPlanProgressionExtra(entry){
   const bits = [];
 
@@ -3599,6 +3697,298 @@ function formatPlanProgressionExtra(entry){
   }
 
   return bits;
+}
+
+function parseKgNumber(value){
+  const str = String(value || "").trim();
+  const m = str.match(/\d+(?:[.,]\d+)?/);
+  if (!m) return null;
+  const n = Number(String(m[0]).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+function formatKgLabel(value){
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  const rounded = Number.isInteger(n) ? n : Math.round(n * 10) / 10;
+  return `${rounded} kg`;
+}
+
+function getEntryLoadStep(entry){
+  const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const increments = settings.equipment_increments && typeof settings.equipment_increments === "object"
+    ? settings.equipment_increments
+    : {};
+
+  if (["squat", "bench_press", "barbell_row"].includes(exerciseId)){
+    return Number(increments.barbell || 10) || 10;
+  }
+  if (["dumbbell_row"].includes(exerciseId)){
+    return Number(increments.dumbbell || 5) || 5;
+  }
+  return 0;
+}
+
+function getExerciseVariantSwap(exerciseId, direction){
+  const id = String(exerciseId || "").trim().toLowerCase();
+  const dir = String(direction || "").trim().toLowerCase();
+
+  const lighter = {
+    "push_ups": "incline_push_ups",
+    "split_squat": "step_ups",
+  };
+  const harder = {
+    "incline_push_ups": "push_ups",
+    "step_ups": "split_squat",
+  };
+
+  if (dir === "easier") return lighter[id] || "";
+  if (dir === "harder") return harder[id] || "";
+  return "";
+}
+
+function adjustRepsTargetString(target, direction){
+  const str = String(target || "").trim();
+  if (!str) return str;
+
+  const range = str.match(/^(\d+)\s*-\s*(\d+)$/);
+  if (range){
+    let a = Number(range[1]);
+    let b = Number(range[2]);
+    if (direction === "easier"){
+      a = Math.max(1, a - 2);
+      b = Math.max(a, b - 2);
+    } else if (direction === "harder"){
+      a += 2;
+      b += 2;
+    }
+    return `${a}-${b}`;
+  }
+
+  const single = str.match(/^(\d+)$/);
+  if (single){
+    let n = Number(single[1]);
+    n = direction === "easier" ? Math.max(1, n - 2) : n + 2;
+    return String(n);
+  }
+
+  const perSide = str.match(/^(\d+)\s*\/\s*side$/i);
+  if (perSide){
+    let n = Number(perSide[1]);
+    n = direction === "easier" ? Math.max(1, n - 2) : n + 2;
+    return `${n}/side`;
+  }
+
+  const sec = str.match(/^(\d+)\s*sek$/i);
+  if (sec){
+    let n = Number(sec[1]);
+    n = direction === "easier" ? Math.max(5, n - 10) : n + 10;
+    return `${n} sek`;
+  }
+
+  return str;
+}
+
+function getEntryLoadBounds(entry){
+  const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  const bounds = {
+    "squat": { min: 20, max: 200 },
+    "bench_press": { min: 20, max: 160 },
+    "barbell_row": { min: 20, max: 160 },
+    "dumbbell_row": { min: 2, max: 40 },
+  };
+  return bounds[exerciseId] || { min: 1, max: 200 };
+}
+
+function getEntryRepBounds(entry){
+  const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  const bounds = {
+    "push_ups": { min: 4, max: 20 },
+    "incline_push_ups": { min: 4, max: 20 },
+    "dead_bug": { min: 4, max: 16 },
+    "plank": { min: 10, max: 90, kind: "time" },
+    "split_squat": { min: 4, max: 16 },
+    "step_ups": { min: 4, max: 16 },
+  };
+  return bounds[exerciseId] || { min: 1, max: 20 };
+}
+
+function clampTargetRepsString(target, entry){
+  const str = String(target || "").trim();
+  if (!str) return str;
+
+  const bounds = getEntryRepBounds(entry);
+  const min = Number(bounds.min || 1);
+  const max = Number(bounds.max || 20);
+
+  const range = str.match(/^(\d+)\s*-\s*(\d+)$/);
+  if (range){
+    let a = Math.max(min, Math.min(max, Number(range[1])));
+    let b = Math.max(a, Math.min(max, Number(range[2])));
+    return `${a}-${b}`;
+  }
+
+  const single = str.match(/^(\d+)$/);
+  if (single){
+    const n = Math.max(min, Math.min(max, Number(single[1])));
+    return String(n);
+  }
+
+  const perSide = str.match(/^(\d+)\s*\/\s*side$/i);
+  if (perSide){
+    const n = Math.max(min, Math.min(max, Number(perSide[1])));
+    return `${n}/side`;
+  }
+
+  const sec = str.match(/^(\d+)\s*sek$/i);
+  if (sec){
+    const n = Math.max(min, Math.min(max, Number(sec[1])));
+    return `${n} sek`;
+  }
+
+  return str;
+}
+
+function targetRepsAtBound(target, entry, which){
+  const normalized = clampTargetRepsString(target, entry);
+  const bounds = getEntryRepBounds(entry);
+  const min = Number(bounds.min || 1);
+  const max = Number(bounds.max || 20);
+  const str = String(normalized || "").trim();
+
+  const nums = [...str.matchAll(/\d+/g)].map(m => Number(m[0])).filter(Number.isFinite);
+  if (!nums.length) return false;
+  if (which === "min") return Math.min(...nums) <= min;
+  if (which === "max") return Math.max(...nums) >= max;
+  return false;
+}
+
+function removePlanEntryByIndex(item, idx){
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  if (idx < 0 || idx >= entries.length) return;
+  entries.splice(idx, 1);
+  renderTodayPlan(item);
+}
+
+function adjustPlanEntryAtIndex(item, idx, direction){
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  if (idx < 0 || idx >= entries.length) return;
+
+  const entry = entries[idx];
+  if (!entry || typeof entry !== "object") return;
+
+  entry.manual_intensity_adjustment = String(direction || "").trim();
+
+  if (entry._base_exercise_id == null) entry._base_exercise_id = entry.exercise_id || "";
+  if (entry._base_target_reps == null) entry._base_target_reps = entry.target_reps || "";
+  if (entry._base_target_load == null) entry._base_target_load = entry.target_load || "";
+
+  const exerciseId = String(entry.exercise_id || "").trim().toLowerCase();
+  const baseExerciseId = String(entry._base_exercise_id || entry.exercise_id || "").trim().toLowerCase();
+  const currentLoad = parseKgNumber(entry.target_load);
+  const baseLoad = parseKgNumber(entry._base_target_load);
+  const step = getEntryLoadStep(entry);
+  const loadBounds = getEntryLoadBounds(entry);
+  const hasLoadPath = currentLoad != null && step > 0;
+  const prefersRepsFirst = [
+    "push_ups",
+    "incline_push_ups",
+    "dead_bug",
+    "plank",
+    "split_squat",
+    "step_ups"
+  ].includes(exerciseId);
+
+  const currentReps = String(entry.target_reps || "").trim();
+  const baseReps = String(entry._base_target_reps || "").trim();
+  const currentRepsAtMin = targetRepsAtBound(currentReps, entry, "min");
+  const currentRepsAtMax = targetRepsAtBound(currentReps, entry, "max");
+  const repsAboveBase = Boolean(baseReps && currentReps && currentReps !== baseReps);
+  const loadAboveBase = currentLoad != null && baseLoad != null && currentLoad > baseLoad;
+  const loadBelowBase = currentLoad != null && baseLoad != null && currentLoad < baseLoad;
+  const variantChanged = exerciseId !== baseExerciseId;
+
+  const tryLoadAdjust = () => {
+    if (!hasLoadPath) return false;
+    if (direction === "easier"){
+      const nextLoad = currentLoad - step;
+      if (nextLoad >= loadBounds.min){
+        entry.target_load = formatKgLabel(nextLoad);
+        return true;
+      }
+      return false;
+    }
+    if (direction === "harder"){
+      const nextLoad = currentLoad + step;
+      if (nextLoad <= loadBounds.max){
+        entry.target_load = formatKgLabel(nextLoad);
+        return true;
+      }
+      return false;
+    }
+    return false;
+  };
+
+  const tryRepAdjust = () => {
+    if (!entry.target_reps) return false;
+    const nextTarget = clampTargetRepsString(adjustRepsTargetString(entry.target_reps, direction), entry);
+    if (!nextTarget || nextTarget === entry.target_reps) return false;
+    entry.target_reps = nextTarget;
+    return true;
+  };
+
+  const tryRevertVariantToBase = () => {
+    if (!variantChanged || !baseExerciseId) return false;
+    entry.exercise_id = entry._base_exercise_id;
+    entry.substituted_from = "";
+    if (baseReps) entry.target_reps = baseReps;
+    if (entry._base_target_load) entry.target_load = entry._base_target_load;
+    return true;
+  };
+
+  const tryVariantSwap = () => {
+    const variantSwap = getExerciseVariantSwap(entry.exercise_id, direction);
+    if (!variantSwap) return false;
+    entry.substituted_from = entry.exercise_id;
+    entry.exercise_id = variantSwap;
+
+    if (entry.target_reps){
+      entry.target_reps = clampTargetRepsString(
+        adjustRepsTargetString(entry.target_reps, "easier"),
+        entry
+      );
+    }
+    return true;
+  };
+
+  let changed = false;
+
+  if (prefersRepsFirst){
+    if (direction === "harder"){
+      changed = (currentRepsAtMax && tryVariantSwap()) || tryRepAdjust() || tryVariantSwap() || tryLoadAdjust();
+    } else {
+      changed =
+        (variantChanged && tryRevertVariantToBase()) ||
+        (repsAboveBase && tryRepAdjust()) ||
+        tryVariantSwap() ||
+        tryLoadAdjust();
+    }
+  } else {
+    if (direction === "harder"){
+      changed = tryLoadAdjust() || tryRepAdjust() || tryVariantSwap();
+    } else {
+      changed =
+        (repsAboveBase && tryRepAdjust()) ||
+        (loadAboveBase && tryLoadAdjust()) ||
+        (variantChanged && tryRevertVariantToBase()) ||
+        (loadBelowBase && tryLoadAdjust()) ||
+        tryVariantSwap();
+    }
+  }
+
+  renderTodayPlan(item);
+  if (changed) return;
 }
 
 
@@ -3978,6 +4368,193 @@ function formatWeeklyStatusText(weeklyStatus){
   return tr("weekplan.status_summary", { completed, target, remaining: remainingToGoal, days: remainingCalendarDays });
 }
 
+
+function getActiveWorkoutEntry(item){
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  if (!entries.length) return null;
+  const idx = Math.max(0, Math.min(Number(STATE.currentWorkoutEntryIndex || 0), entries.length - 1));
+  return {
+    entry: entries[idx],
+    index: idx,
+    total: entries.length,
+  };
+}
+
+function removeCurrentWorkoutEntry(item){
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  if (!entries.length) return;
+
+  const idx = Math.max(0, Math.min(Number(STATE.currentWorkoutEntryIndex || 0), entries.length - 1));
+  entries.splice(idx, 1);
+
+  if (!entries.length){
+    STATE.workoutInProgress = false;
+    STATE.currentWorkoutEntryIndex = 0;
+    renderTodayPlan(item);
+    showWizardStep("review");
+    return;
+  }
+
+  if (idx >= entries.length){
+    STATE.currentWorkoutEntryIndex = entries.length - 1;
+  }
+
+  renderTodayPlan(item);
+}
+
+function adjustCurrentWorkoutEntry(item, direction){
+  const active = getActiveWorkoutEntry(item);
+  if (!active || !active.entry) return;
+
+  const nextDirection = String(direction || "").trim();
+  active.entry.manual_intensity_adjustment = nextDirection;
+  renderTodayPlan(item);
+}
+
+function saveActiveWorkoutEntryProgress(item){
+  const active = getActiveWorkoutEntry(item);
+  if (!active || !active.entry) return;
+
+  const entry = active.entry;
+  const idx = active.index;
+  const setCount = Math.max(1, Number(entry.sets || 1));
+  const existing = entry._existing_result && typeof entry._existing_result === "object"
+    ? entry._existing_result
+    : {};
+  const scope = document.getElementById("todayPlanList") || document;
+
+  const meta = getReviewExerciseMeta(entry.exercise_id);
+  const inputKind = String(meta?.input_kind || "");
+  const isTime = inputKind === "time" || inputKind === "cardio_time";
+  const isBodyweight = inputKind === "bodyweight_reps";
+  const isCardioEntry = String(item?.session_type || "").trim().toLowerCase() === "løb"
+    || String(entry?.exercise_id || "").trim().toLowerCase().startsWith("cardio_");
+
+  if (isCardioEntry){
+    entry._existing_result = {
+      ...existing,
+      notes: scope.querySelector(`[name="review_notes_${idx}"]`)?.value?.trim() || "",
+      sets: [],
+      achieved_reps: "",
+    };
+    return;
+  }
+
+  const sets = Array.from({length: setCount}, (_, setIdx) => {
+    const repsVal = scope.querySelector(`[name="review_set_reps_${idx}_${setIdx}"]`)?.value?.trim() || "";
+    let loadVal = scope.querySelector(`[name="review_set_load_${idx}_${setIdx}"]`)?.value?.trim() || "";
+    if (isTime || isBodyweight){
+      loadVal = "";
+    }
+    return {
+      reps: repsVal,
+      load: loadVal,
+    };
+  });
+
+  const nonEmptySets = sets.filter(x => x.reps || x.load);
+  entry._existing_result = {
+    ...existing,
+    achieved_reps: nonEmptySets[0]?.reps || "",
+    sets,
+    hit_failure: String(scope.querySelector(`[name="review_hit_failure_${idx}"]`)?.value || "false") === "true",
+    notes: scope.querySelector(`[name="review_notes_${idx}"]`)?.value?.trim() || "",
+  };
+}
+
+function renderActiveWorkoutCard(item){
+  const root = document.getElementById("todayPlanList");
+  if (!root) return;
+
+  const active = getActiveWorkoutEntry(item);
+  if (!active || !active.entry){
+    STATE.workoutInProgress = false;
+    STATE.currentWorkoutEntryIndex = 0;
+    showWizardStep("review");
+    return;
+  }
+
+  const entry = active.entry;
+  const idx = active.index;
+  const total = active.total;
+  const extras = formatPlanProgressionExtra(entry);
+  const isLast = idx >= total - 1;
+  const setCount = Math.max(1, Number(entry.sets || 1));
+  const meta = getReviewExerciseMeta(entry.exercise_id);
+  const inputKind = String(meta?.input_kind || "");
+  const isTime = inputKind === "time" || inputKind === "cardio_time";
+  const isBodyweight = inputKind === "bodyweight_reps";
+  const isCardioEntry = String(item?.session_type || "").trim().toLowerCase() === "løb"
+    || String(entry?.exercise_id || "").trim().toLowerCase().startsWith("cardio_");
+
+  let loggingHtml = "";
+  if (isCardioEntry){
+    loggingHtml = `
+      <label style="display:block; margin-top:12px">
+        ${esc(tr("after_training.session_note_label"))}
+        <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("after_training.short_note_placeholder_cardio"))}">
+      </label>
+    `;
+  } else {
+    const setFields = Array.from({length: setCount}, (_, setIdx) => buildReviewSetFields(entry, idx, setIdx)).join("");
+    loggingHtml = `
+      <div style="margin-top:12px">
+        ${setFields}
+      </div>
+      <label>
+        ${esc(tr("after_training.fail_label"))}
+        <select name="review_hit_failure_${idx}">
+          <option value="false" ${entry?._existing_result?.hit_failure ? "" : "selected"}>${esc(tr("common.no"))}</option>
+          <option value="true" ${entry?._existing_result?.hit_failure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
+        </select>
+      </label>
+      <label>
+        ${esc(tr("exercise.note_label"))}
+        <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
+      </label>
+    `;
+  }
+
+  root.innerHTML = `
+    <li>
+      <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
+        ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
+      </div>
+      <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">
+        ${esc(formatExerciseName(entry.exercise_id))}
+      </div>
+      <div style="font-weight:600; margin-bottom:8px">
+        ${esc(formatPlanActionText(entry))}
+      </div>
+      <div class="small" style="line-height:1.5">
+        ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
+          ${entry.target_reps ? `${entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
+          ${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
+        </div>
+        ${extras.length ? `<div class="small" style="margin-top:10px; line-height:1.45">${extras.map(x => esc(x)).join("<br>")}</div>` : ""}
+        ${entry.equipment_constraint ? `<div class="small" style="margin-top:8px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
+        ${loggingHtml}
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
+          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:10px 14px">${esc(tr("button.view_exercise"))}</button>
+          <button type="button" id="nextWorkoutEntryBtn">${esc(isLast ? tr("button.finish_workout") : tr("button.next_exercise"))}</button>
+        </div>
+      </li>
+    `;
+      document.getElementById("nextWorkoutEntryBtn")?.addEventListener("click", () => {
+        saveActiveWorkoutEntryProgress(item);
+        if (isLast){
+          STATE.workoutInProgress = false;
+          STATE.currentWorkoutEntryIndex = 0;
+          renderReviewSummary(item);
+          renderSessionReview(item);
+          showWizardStep("review");
+          return;
+        }
+        STATE.currentWorkoutEntryIndex = idx + 1;
+        renderTodayPlan(item);
+      });
+}
+
 function renderTodayPlan(item){
   STATE.currentTodayPlan = item || null;
   const root = document.getElementById("todayPlanList");
@@ -4118,102 +4695,136 @@ function renderTodayPlan(item){
     compactSummaryLead
   );
 
-  if (!Array.isArray(item.entries) || item.entries.length === 0){
-    root.innerHTML = `<li><div class="small">${esc(tr("plan.no_concrete_exercises"))}</div></li>`;
+    if (STATE.workoutInProgress){
+      setText("todayPlanTiming", "");
+      setText("todayPlanSummary", "");
+      renderActiveWorkoutCard(item);
       renderReviewSummary(item);
       renderSessionReview(item);
       return;
-  }
+    }
 
-  const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
-  const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
-  const showPlannedRestChoiceCard = isPlannedRestDay;
-  const showRestitutionChoice = showPlannedRestChoiceCard && hasEntries && isRestitutionPlan;
+    const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
+    const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
+    const showPlannedRestChoiceCard = isPlannedRestDay;
+    const showRestitutionChoice = showPlannedRestChoiceCard && hasEntries && isRestitutionPlan;
 
-  const heroTitle = showPlannedRestChoiceCard
-    ? tr("today_plan.rest_day_title")
-    : formatSessionType(item.session_type || "unknown");
-  const heroLead = showPlannedRestChoiceCard
-    ? tr("today_plan.rest_day_lead")
-    : "";
+    const heroTitle = showPlannedRestChoiceCard
+      ? tr("today_plan.rest_day_title")
+      : formatSessionType(item.session_type || "unknown");
+    const heroLead = showPlannedRestChoiceCard
+      ? tr("today_plan.rest_day_lead")
+      : "";
 
-  const heroActions = showPlannedRestChoiceCard
-    ? `
-    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-      <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
-      ${showRestitutionChoice ? `<button type="button" id="startRestitutionBtn">${esc(tr("button.start_workout"))}</button>` : ""}
-      <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
-    </div>
-    `
-    : `
-    <div style="margin-top:12px">
-      <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
-    </div>
-    `;
-
-  const heroCard = `
-  <li>
-    <div style="font-weight:700; font-size:1.1rem">${esc(heroTitle)}</div>
-    <div class="small" style="margin-top:6px">
-      ${esc([
-        !isPlannedRestDay ? (variantLabel || "") : "",
-        item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
-      ].filter(Boolean).join(" · "))}
-    </div>
-    ${heroLead ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(heroLead)}</div>` : ""}
-    ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
-    ${heroActions}
-  </li>
-`;
-  
-  const recoveryCard = recovery ? `
-  <li>
-    <div class="small" style="font-weight:700">${tr("today_plan.recovery_label", { value: `${formatRecoveryState(recovery.recovery_state || "")}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}</div>
-    ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px; line-height:1.45">${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
-  </li>
-  ` : "";
-
-  const entryCards = isPlannedRestDay
-    ? `
-      <li>
-        <div class="small" style="line-height:1.5">
-          ${esc(tr("today_plan.rest_day_entries_hidden"))}
-        </div>
-      </li>
-    `
-    : item.entries.map(entry => {
-      const extras = formatPlanProgressionExtra(entry);
-      return `
-      <li>
-        <div class="row">
-          <strong>${esc(formatExerciseName(entry.exercise_id))}</strong>
-          <span class="small">${esc(formatProgressionDecision(entry.progression_decision || ""))}</span>
-        </div>
-        <div style="margin-top:6px; font-weight:600">${esc(formatPlanActionText(entry))}</div>
-        <div class="small">
-          ${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
-          ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
-        </div>
-        ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
-        <div style="margin-top:10px">
-          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
-        </div>
-        ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
-      </li>
+    const heroActions = showPlannedRestChoiceCard
+      ? `
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+        <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
+        ${showRestitutionChoice ? `<button type="button" id="startRestitutionBtn">${esc(tr("button.start_workout"))}</button>` : ""}
+        <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
+      </div>
+      `
+      : `
+      <div style="margin-top:12px">
+        <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
+      </div>
       `;
-    }).join("");
 
-  root.innerHTML = heroCard + recoveryCard + entryCards;
+    const heroCard = `
+    <li>
+      <div style="font-weight:700; font-size:1.1rem">${esc(heroTitle)}</div>
+      <div class="small" style="margin-top:6px">
+        ${esc([
+          !isPlannedRestDay ? (variantLabel || "") : "",
+          item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
+        ].filter(Boolean).join(" · "))}
+      </div>
+      ${heroLead ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(heroLead)}</div>` : ""}
+      ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
+      ${heroActions}
+    </li>
+  `;
+
+    const recoveryCard = recovery ? `
+    <li>
+      <div class="small" style="font-weight:700">${tr("today_plan.recovery_label", { value: `${formatRecoveryState(recovery.recovery_state || "")}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}</div>
+      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px; line-height:1.45">${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
+    </li>
+    ` : "";
+
+    const entryCards = isPlannedRestDay
+      ? `
+        <li>
+          <div class="small" style="line-height:1.5">
+            ${esc(tr("today_plan.rest_day_entries_hidden"))}
+          </div>
+        </li>
+      `
+      : item.entries.map((entry, index) => {
+        const extras = formatPlanProgressionExtra(entry);
+        const tone = getPlanEntryTone(entry);
+        return `
+        <li style="padding:12px; border-radius:14px; ${tone.style}">
+          <div class="row">
+            <strong>${esc(formatExerciseName(entry.exercise_id))}</strong>
+            <span class="small">${esc(formatPlanEntryBadge(entry))}</span>
+          </div>
+          <div style="margin-top:6px; font-weight:600">${esc(formatPlanActionText(entry))}</div>
+          <div class="small">
+            ${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
+            ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
+          </div>
+          ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+              <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
+              <button type="button" class="secondary" data-plan-entry-easier="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_easier"))}</button>
+              <button type="button" class="secondary" data-plan-entry-harder="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_harder"))}</button>
+              <button type="button" class="secondary" data-plan-entry-remove="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.remove_exercise"))}</button>
+            </div>
+          ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
+        </li>
+        `;
+      }).join("");
+
+    root.innerHTML = heroCard + recoveryCard + entryCards;
 
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
-    showWizardStep("review");
+    STATE.workoutInProgress = true;
+    STATE.currentWorkoutEntryIndex = 0;
+    renderTodayPlan(item);
+    showWizardStep("plan");
   });
   document.getElementById("startRestitutionBtn")?.addEventListener("click", () => {
-    showWizardStep("review");
+    STATE.workoutInProgress = true;
+    STATE.currentWorkoutEntryIndex = 0;
+    renderTodayPlan(item);
+    showWizardStep("plan");
   });
   document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
   document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
     showWizardStep("manual");
+  });
+
+  document.querySelectorAll("[data-plan-entry-easier]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-plan-entry-easier"));
+      adjustPlanEntryAtIndex(item, idx, "easier");
+    });
+  });
+  document.querySelectorAll("[data-plan-entry-harder]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-plan-entry-harder"));
+      adjustPlanEntryAtIndex(item, idx, "harder");
+    });
+  });
+  document.querySelectorAll("[data-plan-entry-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-plan-entry-remove"));
+      if (!window.confirm(tr("workout.remove_current_confirm"))){
+        return;
+      }
+      removePlanEntryByIndex(item, idx);
+    });
   });
 
   renderReviewSummary(item);
@@ -4961,9 +5572,15 @@ session_type:
       const isTime = inputKind === "time" || inputKind === "cardio_time";
       const isBodyweight = inputKind === "bodyweight_reps";
 
+      const existingResult = entry?._existing_result && typeof entry._existing_result === "object"
+        ? entry._existing_result
+        : {};
+
       const sets = Array.from({length: setCount}, (_, setIdx) => {
-        const repsVal = form[`review_set_reps_${idx}_${setIdx}`]?.value?.trim() || "";
-        let loadVal = form[`review_set_load_${idx}_${setIdx}`]?.value?.trim() || "";
+        const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
+        const existingSet = existingSets[setIdx] && typeof existingSets[setIdx] === "object" ? existingSets[setIdx] : {};
+        const repsVal = form[`review_set_reps_${idx}_${setIdx}`]?.value?.trim() || String(existingSet.reps || "").trim();
+        let loadVal = form[`review_set_load_${idx}_${setIdx}`]?.value?.trim() || String(existingSet.load || "").trim();
 
         if (isTime || isBodyweight){
           loadVal = "";
@@ -4977,6 +5594,9 @@ session_type:
 
       const nonEmptySets = sets.filter(x => x.reps || x.load);
       let firstLoad = nonEmptySets[0]?.load || "";
+      if (!firstLoad && existingResult.load){
+        firstLoad = String(existingResult.load || "").trim();
+      }
 
       if (isTime || isBodyweight){
         firstLoad = "";
@@ -4986,11 +5606,11 @@ session_type:
         exercise_id: entry.exercise_id || "",
         completed: String(form.session_completed.value) === "true",
         target_reps: entry.target_reps || "",
-        achieved_reps: nonEmptySets[0]?.reps || "",
+        achieved_reps: nonEmptySets[0]?.reps || String(existingResult.achieved_reps || "").trim(),
         load: firstLoad,
         sets: nonEmptySets,
-        hit_failure: String(form[`review_hit_failure_${idx}`]?.value || "false") === "true",
-        notes: form[`review_notes_${idx}`]?.value?.trim() || ""
+        hit_failure: String(form[`review_hit_failure_${idx}`]?.value || String(Boolean(existingResult.hit_failure))) === "true",
+        notes: form[`review_notes_${idx}`]?.value?.trim() || String(existingResult.notes || "").trim()
       };
     }) : []
   };
@@ -5318,11 +5938,11 @@ function showWizardStep(stepId){
   }
 
   if (todayPlanTiming){
-    todayPlanTiming.classList.toggle("wizard-step-hidden", stepId === "review");
+    todayPlanTiming.classList.toggle("wizard-step-hidden", stepId === "review" || (stepId === "plan" && STATE.workoutInProgress));
   }
 
   if (todayPlanSummary){
-    todayPlanSummary.classList.toggle("wizard-step-hidden", stepId === "review");
+    todayPlanSummary.classList.toggle("wizard-step-hidden", stepId === "review" || (stepId === "plan" && STATE.workoutInProgress));
   }
 
   if (reviewSummary){
@@ -6121,7 +6741,7 @@ function getNextPlannedSessionOverviewText(planItem){
     lines.push(nextBits.join(": ").replace(": ", ": ").replace(/: ([^:]+): /, ": $1 · "));
   }
 
-  return lines.filter(Boolean).join("\n");
+    return lines.filter(Boolean).join("\n");
 }
 
 function renderWeekPlanPreview(planItem){
