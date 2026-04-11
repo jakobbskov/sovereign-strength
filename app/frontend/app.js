@@ -20,7 +20,8 @@ let STATE = {
   pendingRecoveryEditId: null,
   lastFocusedRecoveryId: null,
   editingSessionResultId: null,
-  lastAutoLoad: ""
+  lastAutoLoad: "",
+  firstRunSetupStep: "basic_profile"
 };
 
 function tr(key, vars = {}){
@@ -1646,12 +1647,39 @@ function renderForecastHero(planItem, latestCheckin){
 
   if (!planItem){
     setText("forecastType", "");
-    setText("forecastSummary", tr("forecast.welcome_no_history"));
-    setText("forecastReason", latestCheckin ? tr("forecast.latest_readiness", { value: latestCheckin.readiness_score ?? "-" }) : tr("forecast.no_readiness_data"));
+    const isFirstRun = dailyUiState === "first_run_onboarding";
+    setText(
+      "forecastSummary",
+      isFirstRun
+        ? tr("onboarding.first_run.soft_landing")
+        : tr("forecast.welcome_no_history")
+    );
+    setText(
+      "forecastReason",
+      isFirstRun
+        ? tr("onboarding.first_run.setup_reason")
+        : (latestCheckin
+            ? tr("forecast.latest_readiness", { value: latestCheckin.readiness_score ?? "-" })
+            : tr("forecast.no_readiness_data"))
+    );
     const btn = document.getElementById("forecastPrimaryBtn");
     if (btn){
-      btn.textContent = tr("overview.go_to_checkin");
-      btn.onclick = () => showWizardStep("checkin");
+      if (isFirstRun){
+        btn.textContent = tr("onboarding.first_run.open_setup");
+        btn.onclick = () => {
+          showWizardStep("overview");
+          requestAnimationFrame(() => {
+            const profileCard = document.getElementById("profileEquipmentCard");
+            if (profileCard && typeof profileCard.scrollIntoView === "function"){
+              profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+            setEquipmentEditorOpen(true);
+          });
+        };
+      } else {
+        btn.textContent = tr("overview.go_to_checkin");
+        btn.onclick = () => showWizardStep("checkin");
+      }
     }
     return;
   }
@@ -1847,8 +1875,12 @@ function buildInitialSetupChecklist(userSettings){
   const hasBodyweight = profile.bodyweight_kg != null && String(profile.bodyweight_kg).trim() !== "";
   const hasTrainingType = Object.values(trainingTypes).some(Boolean);
   const hasTrainingDays = Object.values(trainingDays).some(Boolean);
-  const hasEquipment = Object.values(availableEquipment).some(Boolean);
-  const menstruationConfigured = preferences.menstruation_support_enabled === true || preferences.menstruation_support_enabled === false;
+
+  const equipmentKeys = ["barbell", "dumbbell", "bodyweight"];
+  const hasAnyEquipmentValue = equipmentKeys.some(key => typeof availableEquipment[key] === "boolean");
+  const hasEquipment = hasAnyEquipmentValue && equipmentKeys.some(key => availableEquipment[key] === true);
+
+  const menstruationConfigured = preferences.menstruation_support_enabled === true;
 
   const items = [
     {
@@ -1900,6 +1932,52 @@ function buildInitialSetupChecklist(userSettings){
   };
 }
 
+const FIRST_RUN_SETUP_STEPS = [
+  "basic_profile",
+  "training_types",
+  "equipment",
+  "planning",
+  "physiology",
+  "finish"
+];
+
+function isFirstRunSetupFlowActive(){
+  const dailyUiState = deriveDailyUiState(
+    STATE.currentTodayPlan || null,
+    STATE.latestCheckin || null,
+    STATE.sessionResults || []
+  );
+  return dailyUiState === "first_run_onboarding";
+}
+
+function getFirstRunSetupCurrentStep(){
+  const value = String(STATE.firstRunSetupStep || "").trim();
+  return FIRST_RUN_SETUP_STEPS.includes(value) ? value : FIRST_RUN_SETUP_STEPS[0];
+}
+
+function setFirstRunSetupCurrentStep(step){
+  const next = String(step || "").trim();
+  STATE.firstRunSetupStep = FIRST_RUN_SETUP_STEPS.includes(next)
+    ? next
+    : FIRST_RUN_SETUP_STEPS[0];
+}
+
+function getFirstRunSetupStepIndex(step){
+  return FIRST_RUN_SETUP_STEPS.indexOf(String(step || "").trim());
+}
+
+function getNextFirstRunSetupStep(step){
+  const idx = getFirstRunSetupStepIndex(step);
+  if (idx === -1 || idx >= FIRST_RUN_SETUP_STEPS.length - 1) return FIRST_RUN_SETUP_STEPS[FIRST_RUN_SETUP_STEPS.length - 1];
+  return FIRST_RUN_SETUP_STEPS[idx + 1];
+}
+
+function getPreviousFirstRunSetupStep(step){
+  const idx = getFirstRunSetupStepIndex(step);
+  if (idx <= 0) return FIRST_RUN_SETUP_STEPS[0];
+  return FIRST_RUN_SETUP_STEPS[idx - 1];
+}
+
 function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults } = {}){
   const card = document.getElementById("firstRunOnboardingCard");
   const openSetupBtn = document.getElementById("openInitialSetupBtn");
@@ -1925,7 +2003,7 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
     return;
   }
 
-  const checklistState = buildInitialSetupChecklist(STATE.userSettings || {});
+  const checklistState = buildInitialSetupChecklist(getInitialSetupChecklistSourceSettings());
   const missingRequired = checklistState.items.filter(item => !item.optional && !item.done);
   const nextRecommendedKey = missingRequired.length ? missingRequired[0].key : "planning";
 
@@ -1971,6 +2049,8 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
 
     openSetupBtn.onclick = (ev) => {
       ev.preventDefault();
+      const mappedStep = nextRecommendedKey === "profile" ? "basic_profile" : nextRecommendedKey;
+      setFirstRunSetupCurrentStep(mappedStep);
       showWizardStep("overview");
       requestAnimationFrame(() => {
         const profileCard = document.getElementById("profileEquipmentCard");
@@ -2161,6 +2241,92 @@ function mountEquipmentEditorInline(){
   }
 }
 
+
+function getInitialSetupSettingsSnapshot(){
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const profile = settings.profile && typeof settings.profile === "object" ? { ...settings.profile } : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? { ...settings.preferences } : {};
+  const availableEquipment = settings.available_equipment && typeof settings.available_equipment === "object"
+    ? { ...settings.available_equipment }
+    : {};
+  const equipmentIncrements = settings.equipment_increments && typeof settings.equipment_increments === "object"
+    ? { ...settings.equipment_increments }
+    : {};
+
+  return {
+    profile,
+    preferences: {
+      ...preferences,
+      training_types: preferences.training_types && typeof preferences.training_types === "object"
+        ? { ...preferences.training_types }
+        : {},
+      training_days: preferences.training_days && typeof preferences.training_days === "object"
+        ? { ...preferences.training_days }
+        : {}
+    },
+    available_equipment: availableEquipment,
+    equipment_increments: equipmentIncrements
+  };
+}
+
+function getInitialSetupChecklistSourceSettings(){
+  const snapshot = getInitialSetupSettingsSnapshot();
+  const form = document.getElementById("equipmentSettingsForm");
+  if (!form || !isFirstRunSetupFlowActive()){
+    return snapshot;
+  }
+
+  const readChecked = (id) => Boolean(document.getElementById(id)?.checked);
+  const readSelectBool = (id) => document.getElementById(id)?.value === "true";
+  const readOptionalNumber = (id) => {
+    const raw = String(document.getElementById(id)?.value ?? "").trim();
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+  const readNumber = (id, fallback = 0) => {
+    const raw = String(document.getElementById(id)?.value ?? "").trim();
+    if (!raw) return fallback;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+  };
+
+  snapshot.profile.height_cm = readOptionalNumber("profile_height_cm");
+  snapshot.profile.bodyweight_kg = readOptionalNumber("profile_bodyweight_kg");
+
+  snapshot.preferences.training_types = {
+    running: readChecked("pref_running"),
+    strength_weights: readChecked("pref_strength_weights"),
+    bodyweight: readChecked("pref_bodyweight"),
+    mobility: readChecked("pref_mobility")
+  };
+  snapshot.preferences.training_days = {
+    mon: readChecked("day_mon"),
+    tue: readChecked("day_tue"),
+    wed: readChecked("day_wed"),
+    thu: readChecked("day_thu"),
+    fri: readChecked("day_fri"),
+    sat: readChecked("day_sat"),
+    sun: readChecked("day_sun")
+  };
+  snapshot.preferences.menstruation_support_enabled = readChecked("pref_menstruation_support_enabled");
+  snapshot.preferences.weekly_target_sessions = readNumber("weekly_target_sessions", 3);
+
+  snapshot.available_equipment = {
+    barbell: readSelectBool("eq_barbell_enabled"),
+    dumbbell: readSelectBool("eq_dumbbell_enabled"),
+    bodyweight: readSelectBool("eq_bodyweight_enabled")
+  };
+  snapshot.equipment_increments = {
+    ...snapshot.equipment_increments,
+    barbell: readNumber("eq_barbell_increment", 10),
+    dumbbell: readNumber("eq_dumbbell_increment", 5)
+  };
+
+  return snapshot;
+}
+
+
 function populateEquipmentEditor(){
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
   const profile = settings.profile && typeof settings.profile === "object"
@@ -2220,6 +2386,103 @@ function populateEquipmentEditor(){
   setVal("eq_dumbbell_increment", increments.dumbbell ?? 5);
 }
 
+function renderFirstRunSetupEditorState(){
+  const intro = document.getElementById("firstRunSetupIntro");
+  const nav = document.getElementById("firstRunSetupNav");
+  const backBtn = document.getElementById("firstRunSetupBackBtn");
+  const nextBtn = document.getElementById("firstRunSetupNextBtn");
+  const saveBtn = document.getElementById("saveEquipmentSettingsBtn");
+  const cancelBtn = document.getElementById("cancelEquipmentSettingsBtn");
+  const resetExercisesBtn = document.getElementById("resetExercisesCatalogFromSeedBtn");
+  const resetCatalogBtn = document.getElementById("resetCatalogFromSeedBtn");
+  const finishText = document.getElementById("firstRunSetupFinishText");
+  const sections = Array.from(document.querySelectorAll(".first-run-setup-section[data-first-run-step]"));
+
+  const firstRunActive = isFirstRunSetupFlowActive();
+  const currentStep = getFirstRunSetupCurrentStep();
+  const currentIndex = getFirstRunSetupStepIndex(currentStep);
+  const isLastStep = currentStep === "finish";
+
+  sections.forEach(section => {
+    const step = String(section.getAttribute("data-first-run-step") || "").trim();
+    const visible = !firstRunActive || step === currentStep;
+    section.classList.toggle("wizard-step-hidden", !visible);
+    section.style.display = visible ? "" : "none";
+  });
+
+  if (intro){
+    if (firstRunActive){
+      intro.classList.remove("wizard-step-hidden");
+      intro.style.display = "";
+      intro.textContent = tr("onboarding.first_run.step_progress", { current: Math.max(currentIndex + 1, 1), total: FIRST_RUN_SETUP_STEPS.length });
+    } else {
+      intro.classList.add("wizard-step-hidden");
+      intro.style.display = "none";
+      intro.textContent = "";
+    }
+  }
+
+  if (nav){
+    nav.classList.toggle("wizard-step-hidden", !firstRunActive);
+    nav.style.display = firstRunActive ? "" : "none";
+  }
+
+  if (backBtn){
+    backBtn.style.display = firstRunActive ? "" : "none";
+    backBtn.disabled = !firstRunActive || currentIndex <= 0;
+  }
+
+  if (nextBtn){
+    nextBtn.style.display = firstRunActive && !isLastStep ? "" : "none";
+    nextBtn.disabled = !firstRunActive || isLastStep;
+  }
+
+  if (saveBtn){
+    saveBtn.textContent = firstRunActive
+      ? (isLastStep ? tr("onboarding.first_run.save_setup") : tr("onboarding.first_run.save_progress"))
+      : tr("button.save_profile_equipment");
+  }
+
+  if (cancelBtn){
+    cancelBtn.style.display = firstRunActive ? "none" : "";
+  }
+
+  [resetExercisesBtn, resetCatalogBtn].forEach(btn => {
+    if (!btn) return;
+    btn.style.display = firstRunActive ? "none" : "";
+  });
+
+  if (finishText){
+    const checklistState = buildInitialSetupChecklist(STATE.userSettings || {});
+    finishText.textContent = checklistState.readyForRecommendation
+      ? tr("onboarding.first_run.finish_ready")
+      : tr("onboarding.first_run.finish_missing", { count: checklistState.requiredTotal - checklistState.requiredDone });
+  }
+}
+
+function bindFirstRunSetupNavigation(){
+  const backBtn = document.getElementById("firstRunSetupBackBtn");
+  const nextBtn = document.getElementById("firstRunSetupNextBtn");
+
+  if (backBtn && !backBtn.dataset.bound){
+    backBtn.dataset.bound = "1";
+    backBtn.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      setFirstRunSetupCurrentStep(getPreviousFirstRunSetupStep(getFirstRunSetupCurrentStep()));
+      renderFirstRunSetupEditorState();
+    });
+  }
+
+  if (nextBtn && !nextBtn.dataset.bound){
+    nextBtn.dataset.bound = "1";
+    nextBtn.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      setFirstRunSetupCurrentStep(getNextFirstRunSetupStep(getFirstRunSetupCurrentStep()));
+      renderFirstRunSetupEditorState();
+    });
+  }
+}
+
 function setEquipmentEditorOpen(isOpen){
   const wrap = document.getElementById("equipmentEditorWrap");
   const modal = document.getElementById("equipmentSettingsModal");
@@ -2233,10 +2496,16 @@ function setEquipmentEditorOpen(isOpen){
   }
   if (isOpen){
     populateEquipmentEditor();
+    bindFirstRunSetupNavigation();
+    renderFirstRunSetupEditorState();
     const status = document.getElementById("equipmentSettingsStatus");
     if (status) status.textContent = tr("profile.edit_and_save_when_ready");
-    const firstField = document.getElementById("profile_height_cm");
+    const firstField =
+      document.querySelector('.first-run-setup-section[data-first-run-step]:not([style*="display: none"]) input, .first-run-setup-section[data-first-run-step]:not([style*="display: none"]) select')
+      || document.getElementById("profile_height_cm");
     if (firstField && typeof firstField.focus === "function") firstField.focus();
+  } else {
+    renderFirstRunSetupEditorState();
   }
 }
 
