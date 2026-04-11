@@ -582,9 +582,9 @@
     }
   },
   "onboarding.first_run.title": "Velkommen til SovereignStrength",
-  "onboarding.first_run.intro": "Appen hjælper dig med at vælge dagens træning ud fra check-in, udstyr og dine præferencer.",
-  "onboarding.first_run.flow": "Flow: overblik → check-in → dagens plan → efter træning.",
-  "onboarding.first_run.setup_reason": "Jo bedre profil og udstyr er sat op, jo mere brugbar bliver din første anbefaling.",
+  "onboarding.first_run.intro": "Her får du et roligt første overblik over, hvordan appen bruges.",
+  "onboarding.first_run.flow": "Flowet er enkelt: opsætning først, derefter check-in, plan og efter træning.",
+  "onboarding.first_run.setup_reason": "Begynd med profil og udstyr, så din første anbefaling passer bedre til dig.",
   "onboarding.first_run.soft_landing": "Start roligt: kig overblikket igennem, sæt profil og udstyr op, og tag derefter din første check-in.",
   "onboarding.first_run.continue_checkin": "Fortsæt til check-in",
   "onboarding.first_run.ready": "Klar til første anbefaling.",

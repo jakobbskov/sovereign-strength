@@ -571,9 +571,9 @@
     }
   },
   "onboarding.first_run.title": "Welcome to SovereignStrength",
-  "onboarding.first_run.intro": "The app helps you choose today's training based on check-in, equipment, and your preferences.",
-  "onboarding.first_run.flow": "Flow: overview → check-in → today's plan → after training.",
-  "onboarding.first_run.setup_reason": "The better your profile and equipment are set up, the more useful your first recommendation becomes.",
+  "onboarding.first_run.intro": "This is your calm first overview of how the app works.",
+  "onboarding.first_run.flow": "The flow is simple: setup first, then check-in, plan, and after training.",
+  "onboarding.first_run.setup_reason": "Start with profile and equipment so your first recommendation fits you better.",
   "onboarding.first_run.soft_landing": "Start gently: review the overview, set up profile and equipment, and then take your first check-in.",
   "onboarding.first_run.continue_checkin": "Continue to check-in",
   "onboarding.first_run.ready": "Ready for a first recommendation.",
