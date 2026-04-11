@@ -1876,6 +1876,7 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     } else if (dailyUiState === "completed_session_today"){
       const nextOverviewText = getNextPlannedSessionOverviewText(planItem || null);
       overviewWorkoutLine.textContent = nextOverviewText || tr("overview.completed_today_review_hint");
+      overviewWorkoutLine.style.whiteSpace = nextOverviewText ? "pre-line" : "";
     } else if (sessionCount > 0){
       overviewWorkoutLine.textContent = tr("overview.logged_sessions_count", { count: sessionCount });
     } else {
@@ -6104,17 +6105,23 @@ function getNextPlannedSessionOverviewText(planItem){
   const tomorrow = info.tomorrow;
   const nextTraining = info.nextTraining;
 
+  const lines = [];
+
   if (tomorrow && tomorrow.kind === "rest"){
-    return `${tr("review.tomorrow_rest_label")} · ${tomorrow.dateLabel || ""}`;
+    lines.push(`${tr("review.tomorrow_rest_label")} · ${tomorrow.dateLabel || ""}`);
   }
 
-  const bits = [
+  const nextBits = [
     tr("review.next_planned_session_label"),
     nextTraining.kindLabel || "",
     nextTraining.dateLabel || nextTraining.date || "",
   ].filter(Boolean);
 
-  return bits.join(": ").replace(": ", ": ").replace(/: ([^:]+): /, ": $1 · ");
+  if (nextBits.length){
+    lines.push(nextBits.join(": ").replace(": ", ": ").replace(/: ([^:]+): /, ": $1 · "));
+  }
+
+  return lines.filter(Boolean).join("\n");
 }
 
 function renderWeekPlanPreview(planItem){
