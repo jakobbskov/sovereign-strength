@@ -179,6 +179,8 @@
   "overview.latest_time_budget": "Senest angivet tid: {minutes} min",
   "overview.no_history_first_point": "Ingen historik endnu. Du bygger første datapunkt nu.",
   "overview.logged_sessions_count": "Registrerede sessioner: {count}",
+  "overview.completed_today_status": "Dagens session er gemt.",
+  "overview.completed_today_review_hint": "Se review af dagens pas.",
   "overview.no_history_yet": "Ingen historik endnu.",
   "overview.time_today_short": "Tid i dag: {minutes} min",
   "profile.height_value": "Højde: {value}",
