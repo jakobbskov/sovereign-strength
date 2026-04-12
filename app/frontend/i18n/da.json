@@ -671,5 +671,8 @@
   "workout.set_progress": "Sæt {current} af {total}",
   "workout.rest.resting": "Hvile",
   "workout.rest.ready_next_set": "Klar til næste sæt",
-  "plan.rest_day_default_summary": "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit."
+  "plan.rest_day_default_summary": "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit.",
+  "button.start_next_exercise": "Start næste øvelse",
+  "workout.rest.ready_next_exercise": "Klar til næste øvelse",
+  "workout.rest.next_exercise_label": "Næste øvelse"
 }

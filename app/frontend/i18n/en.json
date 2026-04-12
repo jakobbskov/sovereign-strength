@@ -660,5 +660,8 @@
   "workout.set_progress": "Set {current} of {total}",
   "workout.rest.resting": "Rest",
   "workout.rest.ready_next_set": "Ready for next set",
-  "plan.rest_day_default_summary": "Rest is the default today. Light movement or manual training is optional."
+  "plan.rest_day_default_summary": "Rest is the default today. Light movement or manual training is optional.",
+  "button.start_next_exercise": "Start next exercise",
+  "workout.rest.ready_next_exercise": "Ready for next exercise",
+  "workout.rest.next_exercise_label": "Next exercise"
 }
