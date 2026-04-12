@@ -240,6 +240,11 @@
       "shoulder",
       "elbow",
       "wrist"
+    ],
+    "image_folder": "Barbell_Shoulder_Press",
+    "external_images": [
+      "Barbell_Shoulder_Press/0.jpg",
+      "Barbell_Shoulder_Press/1.jpg"
     ]
   },
   {
@@ -291,6 +296,11 @@
     "local_load_targets": [
       "hip",
       "low_back"
+    ],
+    "image_folder": "Barbell_Deadlift",
+    "external_images": [
+      "Barbell_Deadlift/0.jpg",
+      "Barbell_Deadlift/1.jpg"
     ]
   },
   {
@@ -756,6 +766,11 @@
       10,
       11,
       12
+    ],
+    "image_folder": "Bent_Over_Two-Dumbbell_Row",
+    "external_images": [
+      "Bent_Over_Two-Dumbbell_Row/0.jpg",
+      "Bent_Over_Two-Dumbbell_Row/1.jpg"
     ]
   },
   {
@@ -1171,6 +1186,11 @@
       "Pull yourself up with the working leg",
       "Avoid jumping or pushing too hard from below",
       "Lower back down with control"
+    ],
+    "image_folder": "Dumbbell_Step_Ups",
+    "external_images": [
+      "Dumbbell_Step_Ups/0.jpg",
+      "Dumbbell_Step_Ups/1.jpg"
     ]
   },
   {
@@ -1264,6 +1284,11 @@
     "notes_en": "Bodyweight calf training.",
     "local_load_targets": [
       "ankle_calf"
+    ],
+    "image_folder": "Calf_Raise_On_A_Dumbbell",
+    "external_images": [
+      "Calf_Raise_On_A_Dumbbell/0.jpg",
+      "Calf_Raise_On_A_Dumbbell/1.jpg"
     ]
   },
   {
@@ -1317,6 +1342,11 @@
       "Keep the spine long and steady",
       "Feel tension in the posterior chain without chasing depth",
       "Stand back up by bringing the hips forward again"
+    ],
+    "image_folder": "Good_Morning",
+    "external_images": [
+      "Good_Morning/0.jpg",
+      "Good_Morning/1.jpg"
     ]
   },
   {
@@ -1370,6 +1400,11 @@
       "Drive through the working foot",
       "Squeeze the glute at the top without overextending the lower back",
       "Lower back down with control"
+    ],
+    "image_folder": "Butt_Lift_Bridge",
+    "external_images": [
+      "Butt_Lift_Bridge/0.jpg",
+      "Butt_Lift_Bridge/1.jpg"
     ]
   },
   {
