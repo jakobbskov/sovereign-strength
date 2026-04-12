@@ -3754,25 +3754,46 @@ function getPlanEntryTone(entry){
 
   const currentLoad = parseKgNumber(entry.target_load);
   const baseLoad = parseKgNumber(entry._base_target_load);
-  const step = getEntryLoadStep(entry) || 1;
-  const loadDeltaSteps = currentLoad != null && baseLoad != null
-    ? Math.round((currentLoad - baseLoad) / step)
-    : 0;
-
   const currentRepSig = getTargetNumberSignature(entry.target_reps);
   const baseRepSig = getTargetNumberSignature(entry._base_target_reps);
-  const repDeltaUnits = currentRepSig && baseRepSig
-    ? Math.round((currentRepSig - baseRepSig) / 2)
+  const currentSets = Math.max(1, Number(entry.sets || 1) || 1);
+  const hasBaseSets = entry._base_sets != null && entry._base_sets !== "";
+  const baseSets = hasBaseSets ? Math.max(1, Number(entry._base_sets || 1) || 1) : currentSets;
+
+  const hasLoadVolumeBaseline =
+    currentLoad != null &&
+    baseLoad != null &&
+    currentRepSig > 0 &&
+    baseRepSig > 0;
+
+  const currentVolume = hasLoadVolumeBaseline
+    ? currentLoad * currentRepSig * currentSets
+    : 0;
+  const baseVolume = hasLoadVolumeBaseline
+    ? baseLoad * baseRepSig * baseSets
     : 0;
 
   const variantDirection = getVariantDirectionFromBaseline(entry);
-  const signedScore = loadDeltaSteps + repDeltaUnits + (variantDirection * 2);
+  const signedScore = hasLoadVolumeBaseline
+    ? currentVolume - baseVolume
+    : (
+        (currentRepSig && baseRepSig ? Math.round((currentRepSig - baseRepSig) / 2) : 0) +
+        (currentSets - baseSets) +
+        (variantDirection * 2)
+      );
+
   const absScore = Math.abs(signedScore);
 
   let level = 0;
-  if (absScore >= 1) level = 1;
-  if (absScore >= 3) level = 2;
-  if (absScore >= 5) level = 3;
+  if (hasLoadVolumeBaseline){
+    if (absScore >= Math.max(1, baseVolume * 0.10)) level = 1;
+    if (absScore >= Math.max(1, baseVolume * 0.25)) level = 2;
+    if (absScore >= Math.max(1, baseVolume * 0.45)) level = 3;
+  } else {
+    if (absScore >= 1) level = 1;
+    if (absScore >= 3) level = 2;
+    if (absScore >= 5) level = 3;
+  }
 
   const direction = signedScore > 0 ? 1 : signedScore < 0 ? -1 : 0;
 
@@ -4281,6 +4302,8 @@ function adjustPlanEntryAtIndex(item, idx, direction){
   const loadBounds = getEntryLoadBounds(entry);
   const loadOptions = Array.isArray(loadBounds.options) ? loadBounds.options : [];
   const hasLoadChannel = currentLoad != null && (loadOptions.length > 0 || getEntryLoadStep(entry) > 0);
+  const currentTargetAtMin = targetRepsAtBound(currentTarget, entry, "min");
+  const currentTargetAtMax = targetRepsAtBound(currentTarget, entry, "max");
 
   let changed = false;
 
@@ -4319,13 +4342,7 @@ function adjustPlanEntryAtIndex(item, idx, direction){
     if (nextLoad === currentLoad) return false;
 
     entry.target_load = formatKgLabel(nextLoad);
-
-    if (isLoadFirstProgressionExercise(entry)){
-      const softerSetFloor = Math.max(setBounds.min, Math.min(currentSets, Math.max(setBounds.min, currentSets - 1)));
-      entry.sets = dir === "harder" ? softerSetFloor : Math.min(setBounds.max, currentSets + 1);
-    } else {
-      entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
-    }
+    entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
 
     if (currentTarget){
       entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
@@ -4335,18 +4352,33 @@ function adjustPlanEntryAtIndex(item, idx, direction){
     return true;
   };
 
+  const tryVolumeCycleSetStep = () => {
+    if (!isLoadFirstProgressionExercise(entry)) return false;
+    const nextSets = getAdjacentNumericOption(setBounds.options, currentSets, dir);
+    if (nextSets == null || nextSets === currentSets) return false;
+
+    entry.sets = nextSets;
+    if (currentTarget){
+      entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
+    }
+    entry.manual_adjustment_reason = dir === "harder"
+      ? "set_step_up_and_reset_target"
+      : "set_step_down_and_expand_target";
+    return true;
+  };
+
   if (isLoadFirstProgressionExercise(entry)){
     if (dir === "harder"){
       changed =
+        (!currentTargetAtMax && tryTargetStep()) ||
+        (currentTargetAtMax && tryVolumeCycleSetStep()) ||
         tryLoadStep() ||
-        tryTargetStep() ||
-        trySetStep() ||
         applyVariantSwap(entry, "harder");
     } else {
       changed =
+        (!currentTargetAtMin && tryTargetStep()) ||
+        (currentTargetAtMin && currentSets > setBounds.min && tryVolumeCycleSetStep()) ||
         tryLoadStep() ||
-        tryTargetStep() ||
-        trySetStep() ||
         applyVariantSwap(entry, "easier");
     }
   } else if (dir === "harder"){
@@ -4369,9 +4401,6 @@ function adjustPlanEntryAtIndex(item, idx, direction){
 
   renderTodayPlan(item);
 }
-
-
-
 
 function formatRecoveryExplanationBit(value){
   const x = String(value || "").trim().toLowerCase();
