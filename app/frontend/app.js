@@ -478,7 +478,10 @@ function getSelectedProgram(){
 }
 
 function getExerciseMeta(exerciseId){
-  return (STATE.exercises || []).find(x => x.id === exerciseId) || null;
+  const normalized = String(exerciseId || "").trim();
+  return (STATE.exercises || []).find(
+    x => String(x.id || "").trim() === normalized
+  ) || null;
 }
 
 function fillSimpleSelect(el, options, selectedValue, placeholder){
@@ -3046,6 +3049,50 @@ function getReviewExerciseMeta(exerciseId){
   return getExerciseMeta(exerciseId) || {};
 }
 
+function buildWorkoutRepChoiceButtons(name, choices, selectedValue){
+  const arr = Array.isArray(choices) ? choices : [];
+  const selected = String(selectedValue ?? "").trim();
+
+  return `
+    <input type="hidden" name="${esc(name)}" value="${esc(selected)}">
+    <div class="btn-row" data-workout-rep-buttons="${esc(name)}" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+      ${arr.map(choice => {
+        const value = String(choice ?? "").trim();
+        const isActive = selected === value;
+        return `<button type="button" class="${isActive ? "" : "secondary"}" data-workout-rep-value="${esc(value)}" style="width:auto; min-width:48px; padding:10px 12px; ${isActive ? "box-shadow:0 0 0 2px rgba(255,255,255,0.12) inset;" : ""}">${esc(value)}</button>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+function wireWorkoutRepChoiceButtons(scope){
+  const root = scope || document;
+  root.querySelectorAll("[data-workout-rep-buttons]").forEach(group => {
+    const inputName = String(group.getAttribute("data-workout-rep-buttons") || "").trim();
+    if (!inputName) return;
+
+    const hidden = root.querySelector(`input[type="hidden"][name="${inputName}"]`);
+    if (!hidden) return;
+
+    group.querySelectorAll("[data-workout-rep-value]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const nextValue = String(btn.getAttribute("data-workout-rep-value") || "").trim();
+        hidden.value = nextValue;
+
+        group.querySelectorAll("[data-workout-rep-value]").forEach(other => {
+          const isActive = other === btn;
+          other.classList.toggle("secondary", !isActive);
+          if (isActive){
+            other.style.boxShadow = "0 0 0 2px rgba(255,255,255,0.12) inset";
+          } else {
+            other.style.boxShadow = "";
+          }
+        });
+      });
+    });
+  });
+}
+
 function getReviewRepOptions(meta){
   const explicit = Array.isArray(meta?.review_rep_options) && meta.review_rep_options.length
     ? meta.review_rep_options
@@ -3142,6 +3189,64 @@ function buildReviewSetFields(entry, idx, setIdx){
       </label>
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
+    </div>
+  `;
+}
+
+function buildWorkoutSetFields(entry, idx, setIdx){
+  const meta = getReviewExerciseMeta(entry?.exercise_id);
+  const inputKind = String(meta?.input_kind || "");
+  const currentLoad = String(entry?.target_load || "").trim();
+  const existingResult = entry?._existing_result && typeof entry._existing_result === "object" ? entry._existing_result : {};
+  const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
+  const existingSet = existingSets[setIdx] && typeof existingSets[setIdx] === "object" ? existingSets[setIdx] : {};
+  const existingReps = String(existingSet.reps || (setIdx === 0 ? existingResult.achieved_reps || "" : "")).trim();
+  const existingLoad = String(existingSet.load || "").trim();
+
+  if (inputKind === "time" || inputKind === "cardio_time"){
+    return `
+      <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
+        <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+        <label style="margin-bottom:0">
+          ${tr("input_kind.time")}
+          ${Array.isArray(meta?.workout_rep_choices) && meta.workout_rep_choices.length
+            ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, meta.workout_rep_choices, existingReps)
+            : buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), existingReps, tr("after_training.select_time"))}
+        </label>
+        <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
+      </div>
+    `;
+  }
+
+  if (inputKind === "bodyweight_reps"){
+    return `
+      <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
+        <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+        <label style="margin-bottom:0">
+          Reps
+          ${Array.isArray(meta?.workout_rep_choices) && meta.workout_rep_choices.length
+            ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, meta.workout_rep_choices, existingReps)
+            : buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
+        </label>
+        <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
+      <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+      <label style="margin-bottom:10px">
+        Reps
+        ${Array.isArray(meta?.workout_rep_choices) && meta.workout_rep_choices.length
+          ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, meta.workout_rep_choices, existingReps)
+          : buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
+      </label>
+      <label style="margin-bottom:0">
+        ${esc(tr("load.title"))}
+        ${buildReviewValueSelect(`review_set_load_${idx}_${setIdx}`, getReviewLoadOptions(meta), existingLoad || currentLoad, meta?.load_optional ? tr("workout.load_optional_placeholder") : tr("workout.load_placeholder"))}
+      </label>
+      ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px; opacity:0.72">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
     </div>
   `;
 }
@@ -4551,21 +4656,27 @@ function renderWorkoutRestState(item, active){
     ? formatPlanActionText(nextEntry)
     : formatPlanActionText(entry);
 
+
+    const shellBackground = restDone ? "#0f1f14" : "#1c1710";
+    const shellBorder = restDone ? "1px solid rgba(87, 214, 116, 0.32)" : "1px solid rgba(224, 170, 73, 0.26)";
+    const statusColor = restDone ? "#8ff0a4" : "#f3c96b";
+    const timerColor = restDone ? "#b8ffcb" : "#ffd88a";
+    const progressOpacity = restDone ? "0.86" : "0.8";
   root.innerHTML = `
-    <li>
-      <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
+      <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:center; border-radius:20px; background:${shellBackground}; border:${shellBorder}; box-shadow:0 18px 48px rgba(0,0,0,0.28)">
+        <div style="font-size:0.95rem; opacity:${progressOpacity}; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">
         ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
       </div>
       ${nextExerciseLabel}
-      <div class="small" style="margin-bottom:8px">${esc(setProgressLabel)}</div>
-      <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">${esc(exerciseName)}</div>
-      <div style="font-weight:600; margin-bottom:8px">${esc(statusLabel)}</div>
-      <div style="font-size:2rem; font-weight:700; margin:10px 0 14px 0">${esc(String(remainingSec))} s</div>
-      <div class="small" style="line-height:1.5; margin-bottom:12px">
+      <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(setProgressLabel)}</div>
+      <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(exerciseName)}</div>
+        <div style="font-weight:700; font-size:1.05rem; margin-bottom:12px; color:${statusColor}">${esc(statusLabel)}</div>
+        <div style="font-size:3.2rem; line-height:1; font-weight:800; color:${timerColor}; margin:8px 0 18px 0">${esc(String(remainingSec))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
+      <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">
         ${esc(actionText)}
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" id="resumeWorkoutRestBtn">${esc(primaryActionLabel)}</button>
+      <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
+        <button type="button" id="resumeWorkoutRestBtn" style="padding:16px 18px; font-size:1.05rem; font-weight:700; width:100%">${esc(primaryActionLabel)}</button>
       </div>
     </li>
   `;
@@ -4630,7 +4741,7 @@ function renderActiveWorkoutCard(item){
       </label>
     `;
   } else {
-      const setFields = Array.from({length: plannedSetCount}, (_, setIdx) => buildReviewSetFields(entry, idx, setIdx)).join("");
+      const setFields = Array.from({length: plannedSetCount}, (_, setIdx) => buildWorkoutSetFields(entry, idx, setIdx)).join("");
     loggingHtml = `
       <div style="margin-top:12px">
         ${setFields}
@@ -4653,32 +4764,37 @@ function renderActiveWorkoutCard(item){
       ? tr("button.next_set")
       : (isLast ? tr("button.finish_workout") : tr("button.next_exercise"));
 
+
+      const activeShellBackground = "#101722";
+      const activeShellBorder = "1px solid rgba(86, 145, 255, 0.28)";
+      const actionColor = "#bcd3ff";
     root.innerHTML = `
-      <li>
-        <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
+        <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:flex-start; border-radius:20px; background:${activeShellBackground}; border:${activeShellBorder}; box-shadow:0 18px 48px rgba(0,0,0,0.28)">
+          <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">
           ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
         </div>
-        ${!isCardioEntry ? `<div class="small" style="margin-bottom:8px">${esc(tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) }))}</div>` : ""}
-      <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">
-        ${esc(formatExerciseName(entry.exercise_id))}
-      </div>
-      <div style="font-weight:600; margin-bottom:8px">
-        ${esc(formatPlanActionText(entry))}
-      </div>
-      <div class="small" style="line-height:1.5">
-        ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
+        ${!isCardioEntry ? `<div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) }))}</div>` : ""}
+        <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">
+          ${esc(formatExerciseName(entry.exercise_id))}
+        </div>
+          <div style="font-weight:700; font-size:1.05rem; margin-bottom:12px; color:${actionColor}">
+          ${esc(formatPlanActionText(entry))}
+        </div>
+          <div class="small" style="line-height:1.5; margin-bottom:14px; opacity:0.8">
+          ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
           ${entry.target_reps ? `${entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
           ${entry.target_load ? ` · ${esc(entry.target_load)}` : ""}
         </div>
-        ${extras.length ? `<div class="small" style="margin-top:10px; line-height:1.45">${extras.map(x => esc(x)).join("<br>")}</div>` : ""}
-        ${entry.equipment_constraint ? `<div class="small" style="margin-top:8px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
-        ${loggingHtml}
-        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
-          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:10px 14px">${esc(tr("button.view_exercise"))}</button>
-            <button type="button" id="nextWorkoutEntryBtn">${esc(nextActionLabel)}</button>
+          ${extras.length ? `<div class="small" style="margin-bottom:14px; line-height:1.45; opacity:0.74">${extras.map(x => esc(x)).join("<br>")}</div>` : ""}
+          ${entry.equipment_constraint ? `<div class="small" style="margin-bottom:14px; opacity:0.74">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
+        <div style="margin-bottom:18px">${loggingHtml}</div>
+        <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
+          <button type="button" id="nextWorkoutEntryBtn" style="padding:18px 18px; font-size:1.1rem; font-weight:800; width:100%">${esc(nextActionLabel)}</button>
+          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.view_exercise"))}</button>
         </div>
       </li>
     `;
+      wireWorkoutRepChoiceButtons(root);
       document.getElementById("nextWorkoutEntryBtn")?.addEventListener("click", () => {
         saveActiveWorkoutEntryProgress(item);
 
@@ -6115,8 +6231,66 @@ function showWizardStep(stepId){
   const todayPlanSummary = document.getElementById("todayPlanSummary");
   const reviewSummary = document.getElementById("reviewPlanSummary");
 
+  const isWorkoutPlanStep = stepId === "plan" && STATE.workoutInProgress;
+
   if (todayPlanSection){
     todayPlanSection.classList.toggle("wizard-step-hidden", !(stepId === "plan" || stepId === "review"));
+    todayPlanSection.classList.toggle("workout-mode-active", isWorkoutPlanStep);
+
+    if (isWorkoutPlanStep){
+      todayPlanSection.style.maxWidth = "none";
+      todayPlanSection.style.width = "100%";
+      todayPlanSection.style.background = "#050505";
+      todayPlanSection.style.border = "1px solid rgba(255,255,255,0.06)";
+      todayPlanSection.style.borderRadius = "24px";
+      todayPlanSection.style.padding = "12px";
+      todayPlanSection.style.boxShadow = "0 18px 48px rgba(0,0,0,0.35)";
+    } else {
+      todayPlanSection.style.maxWidth = "";
+      todayPlanSection.style.width = "";
+      todayPlanSection.style.background = "";
+      todayPlanSection.style.border = "";
+      todayPlanSection.style.borderRadius = "";
+      todayPlanSection.style.padding = "";
+      todayPlanSection.style.boxShadow = "";
+    }
+  }
+
+  document.body.classList.toggle("workout-mode-active", isWorkoutPlanStep);
+
+  const overviewStatusCard = document.getElementById("overviewStatusCard");
+  if (overviewStatusCard){
+    overviewStatusCard.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
+  }
+
+  const systemStatusCard = document.getElementById("systemStatusCard");
+  if (systemStatusCard){
+    systemStatusCard.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
+  }
+
+  const authBar = document.getElementById("authBar");
+  if (authBar){
+    authBar.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
+  }
+
+  const appHeaderBar = document.getElementById("appHeaderBar");
+  if (appHeaderBar){
+    appHeaderBar.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
+  }
+
+  const appTagline = document.getElementById("appTagline");
+  if (appTagline){
+    appTagline.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
+  }
+
+  const wizardNav = document.getElementById("wizardNav");
+  if (wizardNav){
+    wizardNav.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
+  }
+
+  const utilityNav = document.getElementById("utilityNav");
+  if (utilityNav){
+    utilityNav.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
   }
 
   if (todayPlanList){

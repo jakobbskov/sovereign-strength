@@ -67,6 +67,13 @@
       "Keep the weight over the middle of the foot",
       "Let the knees and toes point roughly the same way",
       "Drive the floor away as you stand up"
+    ],
+    "workout_rep_choices": [
+      4,
+      5,
+      6,
+      7,
+      8
     ]
   },
   {
@@ -513,6 +520,17 @@
       "Lower the arm and leg slowly and with control",
       "Stop before you lose trunk tension",
       "Exhale gently while holding position"
+    ],
+    "workout_rep_choices": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
     ]
   },
   {
@@ -729,6 +747,15 @@
       "Pull the elbow toward the hip more than the shoulder toward the ear",
       "Lower the weight back with control",
       "Avoid twisting the torso to get the weight up"
+    ],
+    "workout_rep_choices": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
     ]
   },
   {
@@ -844,6 +871,17 @@
       "Keep the body in a straight line",
       "Lower the chest under control toward the support",
       "Press up without letting the hips sag"
+    ],
+    "workout_rep_choices": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
     ]
   },
   {

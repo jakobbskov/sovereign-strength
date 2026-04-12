@@ -421,7 +421,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <div id="appHeaderBar" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <h1 style="margin:0">SovereignStrength</h1>
       <div id="languageMenuWrap" style="position:relative">
         <button type="button" id="languageToggleBtn" class="secondary" style="width:auto;padding:8px 12px">🇩🇰 Dansk ▾</button>
@@ -431,7 +431,7 @@
         </div>
       </div>
     </div>
-    <p data-i18n="app.tagline">Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
+    <p id="appTagline" data-i18n="app.tagline">Styrke, løb og restitution. Lokal-first, forklarbar og uden cloud-afhængighed.</p>
     <div id="wizardNav" class="wizard-nav"></div>
     <div id="utilityNav" class="utility-nav"></div>
 
@@ -1309,7 +1309,7 @@
       </section>
     </div>
 
-    <section class="card" style="margin-top:18px">
+    <section class="card" id="systemStatusCard" style="margin-top:18px">
       <h2 data-i18n="system.status">Status</h2>
       <div class="card" style="margin-top:16px">
   <div class="row" style="justify-content:space-between;align-items:center">
