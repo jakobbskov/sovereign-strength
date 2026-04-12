@@ -4693,6 +4693,88 @@ function buildTodayPlanHeroCardHtml({
   `;
 }
 
+function deriveTodayPlanDisplayState(item){
+  const variantLabel = formatPlanVariant(item?.plan_variant || "");
+  const recovery = item && item.recovery_state && typeof item.recovery_state === "object" ? item.recovery_state : null;
+
+  const familiesSelectedText = formatFamiliesSelected(item?.families_selected || []);
+  const familiesSummary = familiesSelectedText ? tr("plan.selected_families", { value: familiesSelectedText }) : "";
+
+  const todayWeekPlanItem = getTodayWeekPlanItem(item);
+  const todayWeekKind = String(todayWeekPlanItem?.kind || "").trim().toLowerCase();
+  const actualKind = String(item?.session_type || "").trim().toLowerCase();
+  const isPlannedRestDay = todayWeekKind === "rest";
+
+  let trainingAllowedSummary = "";
+  if (todayWeekKind === "rest"){
+    trainingAllowedSummary = tr("plan.weekplan_rest_today");
+  } else if (todayWeekKind && todayWeekKind !== actualKind){
+    const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
+    trainingAllowedSummary = tr("plan.weekplan_adjusted_today", { value: plannedLabel });
+  } else if (todayWeekKind){
+    const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
+    trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
+  }
+
+  let nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
+  if (isPlannedRestDay && nextGuidanceMessage){
+    const lowered = nextGuidanceMessage.toLowerCase();
+    if (
+      lowered.includes("i dag er styrke") ||
+      lowered.includes("today is strength") ||
+      lowered.includes("i dag er restitution") ||
+      lowered.includes("today is recovery") ||
+      lowered.includes("today is restitution")
+    ){
+      nextGuidanceMessage = "";
+    }
+  }
+
+  const shouldSuppressTrainingAllowedSummary =
+    Boolean(nextGuidanceMessage) &&
+    (
+      (todayWeekKind === "rest" && String(item?.session_type || "").trim().toLowerCase() === "restitution") ||
+      trainingAllowedSummary === nextGuidanceMessage
+    );
+
+  if (shouldSuppressTrainingAllowedSummary){
+    trainingAllowedSummary = "";
+  }
+
+  const recoveryDaySummary = isPlannedRestDay
+    ? "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit."
+    : String(item?.session_type || "").trim().toLowerCase() === "restitution"
+      ? tr("plan.light_movement_today")
+      : "";
+
+  const decisionTrace = item?.decision_trace && typeof item.decision_trace === "object" ? item.decision_trace : null;
+  const planVariantKey = String(item?.plan_variant || "").trim();
+  const hasHighImpactOverride = Boolean(
+    decisionTrace?.override ||
+    planVariantKey === "local_protection_override" ||
+    planVariantKey === "menstruation_support_override" ||
+    planVariantKey === "reentry_strength"
+  );
+
+  const rawReason = String(item?.reason || "").trim();
+  const overrideReasonText = rawReason ? formatPlanReason(rawReason) : "";
+  const planContextBits = hasHighImpactOverride
+    ? [
+        overrideReasonText ? `${tr("common.why_label")}: ${overrideReasonText}` : "",
+        familiesSummary,
+      ].filter(Boolean)
+    : [];
+
+  return {
+    variantLabel,
+    recovery,
+    isPlannedRestDay,
+    trainingAllowedSummary,
+    recoveryDaySummary,
+    planContextBits,
+  };
+}
+
 function renderTodayPlan(item){
   STATE.currentTodayPlan = item || null;
   const root = document.getElementById("todayPlanList");
@@ -4708,130 +4790,26 @@ function renderTodayPlan(item){
       return;
   }
 
-  setText("todayPlanMeta", "");
-  const variantLabel = formatPlanVariant(item.plan_variant || "");
-  const timingLabel = formatTimingState(item.timing_state || "");
-  const timingExplanation = formatTimingExplanation(item.timing_state || "");
-  const timeLabel = item.time_budget_min ? ` · ${tr("overview.time_today_short", { minutes: item.time_budget_min })}` : "";
-  const variantText = variantLabel ? ` · ${tr("plan.variant_label", { value: variantLabel })}` : "";
-
-  setText(
-    "todayPlanTiming",
-    ""
-  );
-
-  const recovery = item && item.recovery_state && typeof item.recovery_state === "object" ? item.recovery_state : null;
-  const recoveryLabel = recovery ? formatRecoveryState(recovery.recovery_state || "") : "";
-  const recoveryText = recoveryLabel ? ` · ${tr("today_plan.recovery_label", { value: `${recoveryLabel}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}` : "";
-
-  const templateMode = String(item?.template_mode || "").trim();
-  const planMotorLabel =
-    templateMode === "autoplan_v0_1" || templateMode === "autoplan_cardio_v0_1"
-      ? tr("plan.motor.autoplan")
-      : templateMode === "weekly_goal_cap_v0_1"
-        ? formatPlanMotor("weekly_goal_cap")
-        : templateMode === "manual_override_v0_1"
-          ? tr("plan.motor.manual_override")
-          : templateMode === "completed_today_v0_1"
-            ? tr("plan.motor.completed_today")
-            : tr("plan.motor.fixed_plan");
-  const familiesSelectedText = formatFamiliesSelected(item?.families_selected || []);
-  const trainingCtx = item?.training_day_context && typeof item.training_day_context === "object" ? item.training_day_context : {};
-  const trainingDaysText = formatTrainingDays(trainingCtx.training_days || []);
-  const trainingDaySummary = trainingDaysText ? tr("plan.training_days_summary", { value: trainingDaysText }) : "";
-  const todayWeekPlanItem = getTodayWeekPlanItem(item);
-  const todayWeekKind = String(todayWeekPlanItem?.kind || "").trim().toLowerCase();
-  const actualKind = String(item?.session_type || "").trim().toLowerCase();
-
-  let trainingAllowedSummary = "";
-  if (todayWeekKind === "rest"){
-    trainingAllowedSummary = tr("plan.weekplan_rest_today");
-  } else if (todayWeekKind && todayWeekKind !== actualKind){
-    const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
-    trainingAllowedSummary = tr("plan.weekplan_adjusted_today", { value: plannedLabel });
-  } else if (todayWeekKind){
-    const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
-    trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
-  }
-
-  const ws = item?.weekly_status || {};
-  const weeklyStatusSummary = formatWeeklyStatusText(item?.weekly_status);
-  const isPlannedRestDay = todayWeekKind === "rest";
-  let nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
-  if (isPlannedRestDay && nextGuidanceMessage){
-    const lowered = nextGuidanceMessage.toLowerCase();
-    if (
-      lowered.includes("i dag er styrke") ||
-      lowered.includes("today is strength") ||
-      lowered.includes("i dag er restitution") ||
-      lowered.includes("today is recovery") ||
-      lowered.includes("today is restitution")
-    ){
-      nextGuidanceMessage = "";
-    }
-  }
-  const shouldSuppressTrainingAllowedSummary =
-    Boolean(nextGuidanceMessage) &&
-    (
-      (todayWeekKind === "rest" && String(item?.session_type || "").trim().toLowerCase() === "restitution") ||
-      trainingAllowedSummary === nextGuidanceMessage
+    setText("todayPlanMeta", "");
+    setText(
+      "todayPlanTiming",
+      ""
     );
 
-  if (shouldSuppressTrainingAllowedSummary){
-    trainingAllowedSummary = "";
-  }
-  const baseSummary = isPlannedRestDay
-    ? `Planlagt hviledag · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${recoveryText}`
-    : `${tr("common.type")}: ${formatSessionType(item.session_type || "unknown")} · ${tr("overview.readiness")}: ${item.readiness_score ?? "-"}${timeLabel}${variantText}${recoveryText}`;
-  const recoveryDaySummary = isPlannedRestDay
-    ? "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit."
-    : String(item?.session_type || "").trim().toLowerCase() === "restitution"
-      ? tr("plan.light_movement_today")
-      : "";
-  const motorSummary = tr("plan.motor_summary", { value: planMotorLabel });
-  const familiesSummary = familiesSelectedText ? tr("plan.selected_families", { value: familiesSelectedText }) : "";
+    const {
+      variantLabel,
+      recovery,
+      isPlannedRestDay,
+      trainingAllowedSummary,
+      recoveryDaySummary,
+      planContextBits,
+    } = deriveTodayPlanDisplayState(item);
 
-  const decisionTrace = item?.decision_trace && typeof item.decision_trace === "object" ? item.decision_trace : null;
-  const decisionBits = [];
-  if (decisionTrace?.rule_applied) {
-    decisionBits.push(tr("decision_trace.rule", { value: decisionTrace.rule_applied }));
-  }
-  if (decisionTrace?.readiness_bucket) {
-    decisionBits.push(tr("decision_trace.readiness_bucket", { value: decisionTrace.readiness_bucket }));
-  }
-  if (decisionTrace?.fatigue_bucket) {
-    decisionBits.push(tr("decision_trace.fatigue_bucket", { value: decisionTrace.fatigue_bucket }));
-  }
-  if (decisionTrace?.timing) {
-    decisionBits.push(tr("decision_trace.timing", { value: decisionTrace.timing }));
-  }
-  if (decisionTrace?.override) {
-    decisionBits.push(tr("decision_trace.override", { value: decisionTrace.override }));
-  }
-  const decisionTraceSummary = decisionBits.length ? decisionBits.join(" · ") : "";
-  const planVariantKey = String(item?.plan_variant || "").trim();
-  const hasHighImpactOverride = Boolean(
-    decisionTrace?.override ||
-    planVariantKey === "local_protection_override" ||
-    planVariantKey === "menstruation_support_override" ||
-    planVariantKey === "reentry_strength"
-  );
-  const rawReason = String(item?.reason || "").trim();
-  const overrideReasonText = rawReason
-    ? formatPlanReason(rawReason)
-    : "";
-  const planContextBits = hasHighImpactOverride
-    ? [
-        overrideReasonText ? `${tr("common.why_label")}: ${overrideReasonText}` : "",
-        familiesSummary,
-      ].filter(Boolean)
-    : [];
-
-  const compactSummaryLead = trainingAllowedSummary || recoveryDaySummary || "";
-  setText(
-    "todayPlanSummary",
-    compactSummaryLead
-  );
+    const compactSummaryLead = trainingAllowedSummary || recoveryDaySummary || "";
+    setText(
+      "todayPlanSummary",
+      compactSummaryLead
+    );
 
     if (STATE.workoutInProgress){
       setText("todayPlanTiming", "");
