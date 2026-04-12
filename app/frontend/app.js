@@ -3841,9 +3841,42 @@ function getEntryLoadStep(entry){
   return 0;
 }
 
+function getProgressionLadderForExercise(exerciseId){
+  const id = String(exerciseId || "").trim().toLowerCase();
+  if (!id) return [];
+
+  const ownMeta = getExerciseMeta(id) || {};
+  const ownLadder = Array.isArray(ownMeta.progression_ladder) ? ownMeta.progression_ladder : [];
+  if (ownLadder.map(x => String(x || "").trim().toLowerCase()).includes(id)){
+    return ownLadder.map(x => String(x || "").trim()).filter(Boolean);
+  }
+
+  const allExercises = Array.isArray(STATE.exercises) ? STATE.exercises : [];
+  for (const item of allExercises){
+    const ladder = Array.isArray(item?.progression_ladder) ? item.progression_ladder : [];
+    const normalized = ladder.map(x => String(x || "").trim().toLowerCase()).filter(Boolean);
+    if (normalized.includes(id)){
+      return ladder.map(x => String(x || "").trim()).filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
 function getExerciseVariantSwap(exerciseId, direction){
   const id = String(exerciseId || "").trim().toLowerCase();
   const dir = String(direction || "").trim().toLowerCase();
+  if (!id || !dir) return "";
+
+  const ladder = getProgressionLadderForExercise(id);
+  if (ladder.length){
+    const normalized = ladder.map(x => String(x || "").trim().toLowerCase());
+    const currentIdx = normalized.indexOf(id);
+    if (currentIdx !== -1){
+      if (dir === "easier" && currentIdx > 0) return ladder[currentIdx - 1] || "";
+      if (dir === "harder" && currentIdx < ladder.length - 1) return ladder[currentIdx + 1] || "";
+    }
+  }
 
   const lighter = {
     "push_ups": "incline_push_ups",
@@ -3859,61 +3892,146 @@ function getExerciseVariantSwap(exerciseId, direction){
   return "";
 }
 
-function adjustRepsTargetString(target, direction){
+function parseTargetPattern(target){
   const str = String(target || "").trim();
-  if (!str) return str;
+  if (!str) return null;
 
-  const range = str.match(/^(\d+)\s*-\s*(\d+)$/);
-  if (range){
-    let a = Number(range[1]);
-    let b = Number(range[2]);
-    if (direction === "easier"){
-      a = Math.max(1, a - 2);
-      b = Math.max(a, b - 2);
-    } else if (direction === "harder"){
-      a += 2;
-      b += 2;
-    }
-    return `${a}-${b}`;
+  let m = str.match(/^(\d+)\s*-\s*(\d+)$/);
+  if (m){
+    return {
+      kind: "range",
+      a: Number(m[1]),
+      b: Number(m[2]),
+      suffix: ""
+    };
   }
 
-  const single = str.match(/^(\d+)$/);
-  if (single){
-    let n = Number(single[1]);
-    n = direction === "easier" ? Math.max(1, n - 2) : n + 2;
-    return String(n);
+  m = str.match(/^(\d+)$/);
+  if (m){
+    return {
+      kind: "single",
+      value: Number(m[1]),
+      suffix: ""
+    };
   }
 
-  const perSide = str.match(/^(\d+)\s*\/\s*side$/i);
-  if (perSide){
-    let n = Number(perSide[1]);
-    n = direction === "easier" ? Math.max(1, n - 2) : n + 2;
-    return `${n}/side`;
+  m = str.match(/^(\d+)\s*\/\s*(side|leg)$/i);
+  if (m){
+    return {
+      kind: "per_side",
+      value: Number(m[1]),
+      suffix: `/${String(m[2] || "side").toLowerCase()}`
+    };
   }
 
-  const sec = str.match(/^(\d+)\s*sek$/i);
-  if (sec){
-    let n = Number(sec[1]);
-    n = direction === "easier" ? Math.max(5, n - 10) : n + 10;
-    return `${n} sek`;
+  m = str.match(/^(\d+)\s*(sek|sec)$/i);
+  if (m){
+    return {
+      kind: "time",
+      value: Number(m[1]),
+      suffix: String(m[2] || "sec").toLowerCase()
+    };
   }
 
-  return str;
+  return null;
+}
+
+function formatTargetPattern(pattern){
+  if (!pattern || typeof pattern !== "object") return "";
+  if (pattern.kind === "range"){
+    return `${pattern.a}-${pattern.b}`;
+  }
+  if (pattern.kind === "single"){
+    return String(pattern.value);
+  }
+  if (pattern.kind === "per_side"){
+    return `${pattern.value}${pattern.suffix || "/side"}`;
+  }
+  if (pattern.kind === "time"){
+    return `${pattern.value} ${pattern.suffix || "sec"}`;
+  }
+  return "";
+}
+
+function getNumericOptions(list){
+  const arr = Array.isArray(list) ? list : [];
+  return [...new Set(
+    arr
+      .map(value => parseNumericToken(value))
+      .filter(value => Number.isFinite(value) && value > 0)
+  )].sort((a, b) => a - b);
 }
 
 function getEntryLoadBounds(entry){
   const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  const meta = getExerciseMeta(exerciseId) || {};
+  const loadOptions = getNumericOptions(meta.load_options);
+  if (loadOptions.length){
+    return {
+      min: loadOptions[0],
+      max: loadOptions[loadOptions.length - 1],
+      options: loadOptions
+    };
+  }
+
   const bounds = {
     "squat": { min: 20, max: 200 },
     "bench_press": { min: 20, max: 160 },
     "barbell_row": { min: 20, max: 160 },
     "dumbbell_row": { min: 2, max: 40 },
   };
-  return bounds[exerciseId] || { min: 1, max: 200 };
+  const fallback = bounds[exerciseId] || { min: 1, max: 200 };
+  return { ...fallback, options: [] };
+}
+
+function getEntrySetBounds(entry){
+  const meta = getExerciseMeta(entry?.exercise_id) || {};
+  const rawOptions = Array.isArray(meta.set_options) ? meta.set_options : [];
+  const currentSets = Math.max(1, Number(entry?.sets || 1) || 1);
+
+  const options = [...new Set(
+    [...rawOptions, currentSets]
+      .map(value => Number(value))
+      .filter(Number.isFinite)
+      .map(value => Math.max(1, Math.trunc(value)))
+  )].sort((a, b) => a - b);
+
+  return {
+    min: options[0] || currentSets,
+    max: options[options.length - 1] || currentSets,
+    options: options.length ? options : [currentSets]
+  };
 }
 
 function getEntryRepBounds(entry){
   const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  const meta = getExerciseMeta(exerciseId) || {};
+  const inputKind = String(meta.input_kind || "").trim().toLowerCase();
+
+  if (inputKind === "time" || inputKind === "cardio_time"){
+    const timeOptions = getNumericOptions(meta.time_options);
+    if (timeOptions.length){
+      return {
+        min: timeOptions[0],
+        max: timeOptions[timeOptions.length - 1],
+        kind: "time",
+        options: timeOptions
+      };
+    }
+  } else {
+    const workoutChoices = getNumericOptions(meta.workout_rep_choices);
+    const repOptions = getNumericOptions(meta.rep_options);
+    const options = workoutChoices.length ? workoutChoices : repOptions;
+    if (options.length){
+      return {
+        min: options[0],
+        max: options[options.length - 1],
+        kind: "reps",
+        options
+      };
+    }
+  }
+
   const bounds = {
     "push_ups": { min: 4, max: 20 },
     "incline_push_ups": { min: 4, max: 20 },
@@ -3922,7 +4040,8 @@ function getEntryRepBounds(entry){
     "split_squat": { min: 4, max: 16 },
     "step_ups": { min: 4, max: 16 },
   };
-  return bounds[exerciseId] || { min: 1, max: 20 };
+  const fallback = bounds[exerciseId] || { min: 1, max: 20 };
+  return { ...fallback, options: [] };
 }
 
 function clampTargetRepsString(target, entry){
@@ -3932,30 +4051,32 @@ function clampTargetRepsString(target, entry){
   const bounds = getEntryRepBounds(entry);
   const min = Number(bounds.min || 1);
   const max = Number(bounds.max || 20);
+  const parsed = parseTargetPattern(str);
+  if (!parsed) return str;
 
-  const range = str.match(/^(\d+)\s*-\s*(\d+)$/);
-  if (range){
-    let a = Math.max(min, Math.min(max, Number(range[1])));
-    let b = Math.max(a, Math.min(max, Number(range[2])));
+  if (parsed.kind === "range"){
+    const width = Math.max(0, parsed.b - parsed.a);
+    let a = Math.max(min, Math.min(max, parsed.a));
+    let b = Math.max(a, Math.min(max, a + width));
+    if (b > max){
+      b = max;
+      a = Math.max(min, b - width);
+    }
     return `${a}-${b}`;
   }
 
-  const single = str.match(/^(\d+)$/);
-  if (single){
-    const n = Math.max(min, Math.min(max, Number(single[1])));
-    return String(n);
+  if (parsed.kind === "single"){
+    return String(Math.max(min, Math.min(max, parsed.value)));
   }
 
-  const perSide = str.match(/^(\d+)\s*\/\s*side$/i);
-  if (perSide){
-    const n = Math.max(min, Math.min(max, Number(perSide[1])));
-    return `${n}/side`;
+  if (parsed.kind === "per_side"){
+    const value = Math.max(min, Math.min(max, parsed.value));
+    return `${value}${parsed.suffix || "/side"}`;
   }
 
-  const sec = str.match(/^(\d+)\s*sek$/i);
-  if (sec){
-    const n = Math.max(min, Math.min(max, Number(sec[1])));
-    return `${n} sek`;
+  if (parsed.kind === "time"){
+    const value = Math.max(min, Math.min(max, parsed.value));
+    return `${value} ${parsed.suffix || "sec"}`;
   }
 
   return str;
@@ -3975,6 +4096,136 @@ function targetRepsAtBound(target, entry, which){
   return false;
 }
 
+function getAdjacentNumericOption(options, currentValue, direction){
+  const values = Array.isArray(options) ? options : [];
+  const current = Number(currentValue);
+  if (!Number.isFinite(current) || !values.length) return null;
+
+  if (direction === "harder"){
+    return values.find(value => value > current) ?? null;
+  }
+  if (direction === "easier"){
+    for (let i = values.length - 1; i >= 0; i -= 1){
+      if (values[i] < current) return values[i];
+    }
+  }
+  return null;
+}
+
+function shiftTargetPatternOneStep(target, entry, direction){
+  const parsed = parseTargetPattern(target);
+  if (!parsed) return "";
+
+  const bounds = getEntryRepBounds(entry);
+  const min = Number(bounds.min || 1);
+  const max = Number(bounds.max || 20);
+  const options = Array.isArray(bounds.options) ? bounds.options : [];
+
+  if (parsed.kind === "range"){
+    const width = Math.max(0, parsed.b - parsed.a);
+    let nextA = direction === "harder" ? parsed.a + 1 : parsed.a - 1;
+    let nextB = direction === "harder" ? parsed.b + 1 : parsed.b - 1;
+
+    if (nextA < min){
+      nextA = min;
+      nextB = Math.min(max, min + width);
+    }
+    if (nextB > max){
+      nextB = max;
+      nextA = Math.max(min, max - width);
+    }
+
+    const nextText = `${nextA}-${nextB}`;
+    return nextText === String(target || "").trim() ? "" : nextText;
+  }
+
+  if (parsed.kind === "single" || parsed.kind === "per_side" || parsed.kind === "time"){
+    const currentValue = Number(parsed.value || 0);
+    const stepped = getAdjacentNumericOption(options, currentValue, direction);
+    let nextValue = stepped;
+
+    if (nextValue == null){
+      const delta = parsed.kind === "time" ? (direction === "harder" ? 5 : -5) : (direction === "harder" ? 1 : -1);
+      nextValue = currentValue + delta;
+    }
+
+    nextValue = Math.max(min, Math.min(max, nextValue));
+    if (nextValue === currentValue) return "";
+
+    const nextPattern = { ...parsed, value: nextValue };
+    return formatTargetPattern(nextPattern);
+  }
+
+  return "";
+}
+
+function buildBoundaryTargetFromCurrentShape(entry, which){
+  const current = String(entry?.target_reps || "").trim();
+  const parsed = parseTargetPattern(current);
+  const bounds = getEntryRepBounds(entry);
+  const min = Number(bounds.min || 1);
+  const max = Number(bounds.max || 20);
+
+  if (!parsed){
+    if (bounds.kind === "time"){
+      return `${which === "min" ? min : max} sec`;
+    }
+    return String(which === "min" ? min : max);
+  }
+
+  if (parsed.kind === "range"){
+    const width = Math.max(0, parsed.b - parsed.a);
+    if (which === "min"){
+      const a = min;
+      const b = Math.min(max, a + width);
+      return `${a}-${b}`;
+    }
+    const b = max;
+    const a = Math.max(min, b - width);
+    return `${a}-${b}`;
+  }
+
+  if (parsed.kind === "single"){
+    return String(which === "min" ? min : max);
+  }
+
+  if (parsed.kind === "per_side"){
+    return `${which === "min" ? min : max}${parsed.suffix || "/side"}`;
+  }
+
+  if (parsed.kind === "time"){
+    return `${which === "min" ? min : max} ${parsed.suffix || "sec"}`;
+  }
+
+  return current;
+}
+
+function applyVariantSwap(entry, direction){
+  const currentExerciseId = String(entry?.exercise_id || "").trim();
+  const nextExerciseId = getExerciseVariantSwap(currentExerciseId, direction);
+  if (!nextExerciseId) return false;
+
+  entry.substituted_from = currentExerciseId;
+  entry.exercise_id = nextExerciseId;
+
+  const setBounds = getEntrySetBounds(entry);
+  entry.sets = direction === "harder" ? setBounds.min : setBounds.max;
+
+  const meta = getExerciseMeta(nextExerciseId) || {};
+  const inputKind = String(meta.input_kind || "").trim().toLowerCase();
+  if (entry.target_reps){
+    entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
+  } else if (inputKind === "time" || inputKind === "cardio_time" || inputKind === "bodyweight_reps" || inputKind === "load_reps"){
+    entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
+  }
+
+  if (meta.supports_load !== true){
+    entry.target_load = "";
+  }
+
+  return true;
+}
+
 function removePlanEntryByIndex(item, idx){
   const entries = Array.isArray(item?.entries) ? item.entries : [];
   if (idx < 0 || idx >= entries.length) return;
@@ -3989,117 +4240,89 @@ function adjustPlanEntryAtIndex(item, idx, direction){
   const entry = entries[idx];
   if (!entry || typeof entry !== "object") return;
 
-  entry.manual_intensity_adjustment = String(direction || "").trim();
+  const dir = String(direction || "").trim().toLowerCase();
+  if (dir !== "easier" && dir !== "harder") return;
+
+  entry.manual_intensity_adjustment = dir;
 
   if (entry._base_exercise_id == null) entry._base_exercise_id = entry.exercise_id || "";
   if (entry._base_target_reps == null) entry._base_target_reps = entry.target_reps || "";
   if (entry._base_target_load == null) entry._base_target_load = entry.target_load || "";
+  if (entry._base_sets == null) entry._base_sets = entry.sets || "";
 
-  const exerciseId = String(entry.exercise_id || "").trim().toLowerCase();
-  const baseExerciseId = String(entry._base_exercise_id || entry.exercise_id || "").trim().toLowerCase();
+  const setBounds = getEntrySetBounds(entry);
+  const currentSets = Math.max(1, Number(entry.sets || setBounds.min || 1) || 1);
+
+  const currentTarget = String(entry.target_reps || "").trim();
   const currentLoad = parseKgNumber(entry.target_load);
-  const baseLoad = parseKgNumber(entry._base_target_load);
-  const step = getEntryLoadStep(entry);
   const loadBounds = getEntryLoadBounds(entry);
-  const hasLoadPath = currentLoad != null && step > 0;
-  const prefersRepsFirst = [
-    "push_ups",
-    "incline_push_ups",
-    "dead_bug",
-    "plank",
-    "split_squat",
-    "step_ups"
-  ].includes(exerciseId);
-
-  const currentReps = String(entry.target_reps || "").trim();
-  const baseReps = String(entry._base_target_reps || "").trim();
-  const currentRepsAtMin = targetRepsAtBound(currentReps, entry, "min");
-  const currentRepsAtMax = targetRepsAtBound(currentReps, entry, "max");
-  const repsAboveBase = Boolean(baseReps && currentReps && currentReps !== baseReps);
-  const loadAboveBase = currentLoad != null && baseLoad != null && currentLoad > baseLoad;
-  const loadBelowBase = currentLoad != null && baseLoad != null && currentLoad < baseLoad;
-  const variantChanged = exerciseId !== baseExerciseId;
-
-  const tryLoadAdjust = () => {
-    if (!hasLoadPath) return false;
-    if (direction === "easier"){
-      const nextLoad = currentLoad - step;
-      if (nextLoad >= loadBounds.min){
-        entry.target_load = formatKgLabel(nextLoad);
-        return true;
-      }
-      return false;
-    }
-    if (direction === "harder"){
-      const nextLoad = currentLoad + step;
-      if (nextLoad <= loadBounds.max){
-        entry.target_load = formatKgLabel(nextLoad);
-        return true;
-      }
-      return false;
-    }
-    return false;
-  };
-
-  const tryRepAdjust = () => {
-    if (!entry.target_reps) return false;
-    const nextTarget = clampTargetRepsString(adjustRepsTargetString(entry.target_reps, direction), entry);
-    if (!nextTarget || nextTarget === entry.target_reps) return false;
-    entry.target_reps = nextTarget;
-    return true;
-  };
-
-  const tryRevertVariantToBase = () => {
-    if (!variantChanged || !baseExerciseId) return false;
-    entry.exercise_id = entry._base_exercise_id;
-    entry.substituted_from = "";
-    if (baseReps) entry.target_reps = baseReps;
-    if (entry._base_target_load) entry.target_load = entry._base_target_load;
-    return true;
-  };
-
-  const tryVariantSwap = () => {
-    const variantSwap = getExerciseVariantSwap(entry.exercise_id, direction);
-    if (!variantSwap) return false;
-    entry.substituted_from = entry.exercise_id;
-    entry.exercise_id = variantSwap;
-
-    if (entry.target_reps){
-      entry.target_reps = clampTargetRepsString(
-        adjustRepsTargetString(entry.target_reps, "easier"),
-        entry
-      );
-    }
-    return true;
-  };
+  const loadOptions = Array.isArray(loadBounds.options) ? loadBounds.options : [];
+  const hasLoadChannel = currentLoad != null && (loadOptions.length > 0 || getEntryLoadStep(entry) > 0);
 
   let changed = false;
 
-  if (prefersRepsFirst){
-    if (direction === "harder"){
-      changed = (currentRepsAtMax && tryVariantSwap()) || tryRepAdjust() || tryVariantSwap() || tryLoadAdjust();
+  const tryTargetStep = () => {
+    if (!currentTarget) return false;
+    const nextTarget = clampTargetRepsString(shiftTargetPatternOneStep(currentTarget, entry, dir), entry);
+    if (!nextTarget || nextTarget === currentTarget) return false;
+    entry.target_reps = nextTarget;
+    entry.manual_adjustment_reason = dir === "harder" ? "target_step_up" : "target_step_down";
+    return true;
+  };
+
+  const trySetStep = () => {
+    const nextSets = getAdjacentNumericOption(setBounds.options, currentSets, dir);
+    if (nextSets == null || nextSets === currentSets) return false;
+    entry.sets = nextSets;
+    entry.manual_adjustment_reason = dir === "harder" ? "set_step_up" : "set_step_down";
+    return true;
+  };
+
+  const tryLoadStep = () => {
+    if (!hasLoadChannel) return false;
+
+    let nextLoad = null;
+    if (loadOptions.length){
+      nextLoad = getAdjacentNumericOption(loadOptions, currentLoad, dir);
     } else {
-      changed =
-        (variantChanged && tryRevertVariantToBase()) ||
-        (repsAboveBase && tryRepAdjust()) ||
-        tryVariantSwap() ||
-        tryLoadAdjust();
+      const step = getEntryLoadStep(entry);
+      if (!step || currentLoad == null) return false;
+      nextLoad = dir === "harder" ? currentLoad + step : currentLoad - step;
+      if (nextLoad < loadBounds.min || nextLoad > loadBounds.max) return false;
     }
+
+    if (nextLoad == null || nextLoad === currentLoad) return false;
+
+    entry.target_load = formatKgLabel(nextLoad);
+    entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
+
+    if (currentTarget){
+      entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
+    }
+
+    entry.manual_adjustment_reason = dir === "harder" ? "load_step_up_and_reset" : "load_step_down_and_reset";
+    return true;
+  };
+
+  if (dir === "harder"){
+    changed =
+      tryTargetStep() ||
+      trySetStep() ||
+      tryLoadStep() ||
+      applyVariantSwap(entry, "harder");
   } else {
-    if (direction === "harder"){
-      changed = tryLoadAdjust() || tryRepAdjust() || tryVariantSwap();
-    } else {
-      changed =
-        (repsAboveBase && tryRepAdjust()) ||
-        (loadAboveBase && tryLoadAdjust()) ||
-        (variantChanged && tryRevertVariantToBase()) ||
-        (loadBelowBase && tryLoadAdjust()) ||
-        tryVariantSwap();
-    }
+    changed =
+      tryTargetStep() ||
+      trySetStep() ||
+      tryLoadStep() ||
+      applyVariantSwap(entry, "easier");
+  }
+
+  if (!changed){
+    entry.manual_adjustment_reason = "no_local_adjustment_available";
   }
 
   renderTodayPlan(item);
-  if (changed) return;
 }
 
 
