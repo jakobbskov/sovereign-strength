@@ -19,6 +19,10 @@ let STATE = {
   recoveryHistory: [],
   workoutInProgress: false,
   currentWorkoutEntryIndex: 0,
+  currentWorkoutSetIndex: 0,
+  workoutRestTimerActive: false,
+  workoutRestTimerEndsAt: 0,
+  workoutRestTimerDurationSec: 90,
   editingCheckinId: null,
   pendingRecoveryEditId: null,
   lastFocusedRecoveryId: null,
@@ -4369,6 +4373,46 @@ function formatWeeklyStatusText(weeklyStatus){
 }
 
 
+function getCurrentWorkoutSetIndex(entry){
+  const plannedSets = Math.max(1, Number(entry?.sets || 1));
+  const current = Math.max(0, Number(STATE.currentWorkoutSetIndex || 0));
+  return Math.min(current, plannedSets - 1);
+}
+
+function getWorkoutPlannedSetCount(entry){
+  return Math.max(1, Number(entry?.sets || 1));
+}
+
+function hasMoreWorkoutSets(entry){
+  return getCurrentWorkoutSetIndex(entry) < (getWorkoutPlannedSetCount(entry) - 1);
+}
+
+function clearWorkoutRestTimer(){
+  STATE.workoutRestTimerActive = false;
+  STATE.workoutRestTimerEndsAt = 0;
+}
+
+function startWorkoutRestTimer(durationSec){
+  const seconds = Math.max(5, Number(durationSec || STATE.workoutRestTimerDurationSec || 90));
+  STATE.workoutRestTimerDurationSec = seconds;
+  STATE.workoutRestTimerEndsAt = Date.now() + (seconds * 1000);
+  STATE.workoutRestTimerActive = true;
+}
+
+function getRemainingWorkoutRestSeconds(){
+  if (!STATE.workoutRestTimerActive || !STATE.workoutRestTimerEndsAt) return 0;
+  const remainingMs = Number(STATE.workoutRestTimerEndsAt) - Date.now();
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+}
+
+function isWorkoutRestTimerRunning(){
+  return getRemainingWorkoutRestSeconds() > 0;
+}
+
+function isWorkoutRestState(){
+  return Boolean(STATE.workoutInProgress && STATE.workoutRestTimerActive);
+}
+
 function getActiveWorkoutEntry(item){
   const entries = Array.isArray(item?.entries) ? item.entries : [];
   if (!entries.length) return null;
@@ -4462,6 +4506,55 @@ function saveActiveWorkoutEntryProgress(item){
   };
 }
 
+function renderWorkoutRestState(item, active){
+  const root = document.getElementById("todayPlanList");
+  if (!root) return;
+
+  const entry = active.entry;
+  const idx = active.index;
+  const total = active.total;
+  const remainingSec = getRemainingWorkoutRestSeconds();
+  const restDone = remainingSec <= 0;
+
+  root.innerHTML = `
+    <li>
+      <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
+        ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
+      </div>
+      <div class="small" style="margin-bottom:8px">${esc(tr("workout.set_progress", { current: String(getCurrentWorkoutSetIndex(entry) + 1), total: String(getWorkoutPlannedSetCount(entry)) }))}</div>
+      <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
+      <div style="font-weight:600; margin-bottom:8px">${esc(restDone ? tr("workout.rest.ready_next_set") : tr("workout.rest.resting"))}</div>
+      <div style="font-size:2rem; font-weight:700; margin:10px 0 14px 0">${esc(String(remainingSec))} s</div>
+      <div class="small" style="line-height:1.5; margin-bottom:12px">
+        ${esc(formatPlanActionText(entry))}
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button type="button" class="secondary" id="skipWorkoutRestBtn">${esc(tr("button.skip_rest"))}</button>
+        <button type="button" id="resumeWorkoutSetBtn">${esc(tr("button.start_next_set"))}</button>
+      </div>
+    </li>
+  `;
+
+  document.getElementById("skipWorkoutRestBtn")?.addEventListener("click", () => {
+    clearWorkoutRestTimer();
+    renderTodayPlan(item);
+  });
+
+  document.getElementById("resumeWorkoutSetBtn")?.addEventListener("click", () => {
+    clearWorkoutRestTimer();
+    renderTodayPlan(item);
+  });
+
+  if (STATE.workoutRestTimerActive){
+    window.clearTimeout(window.__ssWorkoutRestTick || 0);
+    if (!restDone){
+      window.__ssWorkoutRestTick = window.setTimeout(() => {
+        renderTodayPlan(item);
+      }, 1000);
+    }
+  }
+}
+
 function renderActiveWorkoutCard(item){
   const root = document.getElementById("todayPlanList");
   if (!root) return;
@@ -4474,12 +4567,19 @@ function renderActiveWorkoutCard(item){
     return;
   }
 
+  if (isWorkoutRestState()){
+    renderWorkoutRestState(item, active);
+    return;
+  }
+
   const entry = active.entry;
   const idx = active.index;
   const total = active.total;
   const extras = formatPlanProgressionExtra(entry);
   const isLast = idx >= total - 1;
-  const setCount = Math.max(1, Number(entry.sets || 1));
+  const plannedSetCount = getWorkoutPlannedSetCount(entry);
+  const currentSetIndex = getCurrentWorkoutSetIndex(entry);
+  const hasMoreSetsRemaining = hasMoreWorkoutSets(entry);
   const meta = getReviewExerciseMeta(entry.exercise_id);
   const inputKind = String(meta?.input_kind || "");
   const isTime = inputKind === "time" || inputKind === "cardio_time";
@@ -4496,7 +4596,7 @@ function renderActiveWorkoutCard(item){
       </label>
     `;
   } else {
-    const setFields = Array.from({length: setCount}, (_, setIdx) => buildReviewSetFields(entry, idx, setIdx)).join("");
+      const setFields = Array.from({length: plannedSetCount}, (_, setIdx) => buildReviewSetFields(entry, idx, setIdx)).join("");
     loggingHtml = `
       <div style="margin-top:12px">
         ${setFields}
@@ -4515,11 +4615,16 @@ function renderActiveWorkoutCard(item){
     `;
   }
 
-  root.innerHTML = `
-    <li>
-      <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
-        ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
-      </div>
+    const nextActionLabel = hasMoreSetsRemaining
+      ? tr("button.next_set")
+      : (isLast ? tr("button.finish_workout") : tr("button.next_exercise"));
+
+    root.innerHTML = `
+      <li>
+        <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
+          ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
+        </div>
+        ${!isCardioEntry ? `<div class="small" style="margin-bottom:8px">${esc(tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) }))}</div>` : ""}
       <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">
         ${esc(formatExerciseName(entry.exercise_id))}
       </div>
@@ -4536,12 +4641,22 @@ function renderActiveWorkoutCard(item){
         ${loggingHtml}
         <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
           <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:10px 14px">${esc(tr("button.view_exercise"))}</button>
-          <button type="button" id="nextWorkoutEntryBtn">${esc(isLast ? tr("button.finish_workout") : tr("button.next_exercise"))}</button>
+            <button type="button" id="nextWorkoutEntryBtn">${esc(nextActionLabel)}</button>
         </div>
       </li>
     `;
       document.getElementById("nextWorkoutEntryBtn")?.addEventListener("click", () => {
         saveActiveWorkoutEntryProgress(item);
+
+        if (hasMoreSetsRemaining && !isCardioEntry){
+          STATE.currentWorkoutSetIndex = currentSetIndex + 1;
+          startWorkoutRestTimer();
+          renderTodayPlan(item);
+          return;
+        }
+
+        STATE.currentWorkoutSetIndex = 0;
+
         if (isLast){
           STATE.workoutInProgress = false;
           STATE.currentWorkoutEntryIndex = 0;
@@ -4550,6 +4665,7 @@ function renderActiveWorkoutCard(item){
           showWizardStep("review");
           return;
         }
+
         STATE.currentWorkoutEntryIndex = idx + 1;
         renderTodayPlan(item);
       });
@@ -4742,7 +4858,7 @@ function deriveTodayPlanDisplayState(item){
   }
 
   const recoveryDaySummary = isPlannedRestDay
-    ? "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit."
+    ? tr("plan.rest_day_default_summary")
     : String(item?.session_type || "").trim().toLowerCase() === "restitution"
       ? tr("plan.light_movement_today")
       : "";

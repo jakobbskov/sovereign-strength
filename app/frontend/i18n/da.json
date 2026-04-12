@@ -664,5 +664,12 @@
   "onboarding.first_run.section.physiology_body": "Valgfrit. Slå kun dette til, hvis du vil have menstruationsrelaterede hensyn med i check-in.",
   "onboarding.first_run.section.physiology_toggle": "Vis valgfri menstruationsfelter i check-in",
   "onboarding.first_run.section.finish_title": "Klar til første anbefaling",
-  "overview.more_profile_details": "Flere profiloplysninger"
+  "overview.more_profile_details": "Flere profiloplysninger",
+  "button.next_set": "Næste sæt",
+  "button.skip_rest": "Spring hvile over",
+  "button.start_next_set": "Start næste sæt",
+  "workout.set_progress": "Sæt {current} af {total}",
+  "workout.rest.resting": "Hvile",
+  "workout.rest.ready_next_set": "Klar til næste sæt",
+  "plan.rest_day_default_summary": "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit."
 }
