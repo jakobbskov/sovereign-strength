@@ -3962,11 +3962,41 @@ function getNumericOptions(list){
   )].sort((a, b) => a - b);
 }
 
+function isLoadFirstProgressionExercise(entry){
+  const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
+  return [
+    "squat",
+    "bench_press",
+    "overhead_press",
+    "barbell_row",
+    "romanian_deadlift",
+    "dumbbell_row"
+  ].includes(exerciseId);
+}
+
 function getEntryLoadBounds(entry){
   const exerciseId = String(entry?.exercise_id || "").trim().toLowerCase();
   const meta = getExerciseMeta(exerciseId) || {};
   const loadOptions = getNumericOptions(meta.load_options);
+
+  const bounds = {
+    "squat": { min: 20, max: 200 },
+    "bench_press": { min: 20, max: 160 },
+    "overhead_press": { min: 20, max: 120 },
+    "barbell_row": { min: 20, max: 160 },
+    "romanian_deadlift": { min: 20, max: 220 },
+    "dumbbell_row": { min: 2, max: 40 },
+  };
+  const fallback = bounds[exerciseId] || { min: 1, max: 200 };
+
   if (loadOptions.length){
+    if (isLoadFirstProgressionExercise(entry)){
+      return {
+        min: Math.max(fallback.min, loadOptions[0]),
+        max: fallback.max,
+        options: loadOptions
+      };
+    }
     return {
       min: loadOptions[0],
       max: loadOptions[loadOptions.length - 1],
@@ -3974,13 +4004,6 @@ function getEntryLoadBounds(entry){
     };
   }
 
-  const bounds = {
-    "squat": { min: 20, max: 200 },
-    "bench_press": { min: 20, max: 160 },
-    "barbell_row": { min: 20, max: 160 },
-    "dumbbell_row": { min: 2, max: 40 },
-  };
-  const fallback = bounds[exerciseId] || { min: 1, max: 200 };
   return { ...fallback, options: [] };
 }
 
@@ -4284,17 +4307,25 @@ function adjustPlanEntryAtIndex(item, idx, direction){
     let nextLoad = null;
     if (loadOptions.length){
       nextLoad = getAdjacentNumericOption(loadOptions, currentLoad, dir);
-    } else {
+    }
+
+    if (nextLoad == null){
       const step = getEntryLoadStep(entry);
       if (!step || currentLoad == null) return false;
       nextLoad = dir === "harder" ? currentLoad + step : currentLoad - step;
-      if (nextLoad < loadBounds.min || nextLoad > loadBounds.max) return false;
     }
 
-    if (nextLoad == null || nextLoad === currentLoad) return false;
+    if (nextLoad < loadBounds.min || nextLoad > loadBounds.max) return false;
+    if (nextLoad === currentLoad) return false;
 
     entry.target_load = formatKgLabel(nextLoad);
-    entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
+
+    if (isLoadFirstProgressionExercise(entry)){
+      const softerSetFloor = Math.max(setBounds.min, Math.min(currentSets, Math.max(setBounds.min, currentSets - 1)));
+      entry.sets = dir === "harder" ? softerSetFloor : Math.min(setBounds.max, currentSets + 1);
+    } else {
+      entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
+    }
 
     if (currentTarget){
       entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
@@ -4304,7 +4335,21 @@ function adjustPlanEntryAtIndex(item, idx, direction){
     return true;
   };
 
-  if (dir === "harder"){
+  if (isLoadFirstProgressionExercise(entry)){
+    if (dir === "harder"){
+      changed =
+        tryLoadStep() ||
+        tryTargetStep() ||
+        trySetStep() ||
+        applyVariantSwap(entry, "harder");
+    } else {
+      changed =
+        tryLoadStep() ||
+        tryTargetStep() ||
+        trySetStep() ||
+        applyVariantSwap(entry, "easier");
+    }
+  } else if (dir === "harder"){
     changed =
       tryTargetStep() ||
       trySetStep() ||
