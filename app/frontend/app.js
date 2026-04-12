@@ -4555,6 +4555,144 @@ function renderActiveWorkoutCard(item){
       });
 }
 
+function wireTodayPlanActions(item){
+  document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
+    STATE.workoutInProgress = true;
+    STATE.currentWorkoutEntryIndex = 0;
+    renderTodayPlan(item);
+    showWizardStep("plan");
+  });
+
+  document.getElementById("startRestitutionBtn")?.addEventListener("click", () => {
+    STATE.workoutInProgress = true;
+    STATE.currentWorkoutEntryIndex = 0;
+    renderTodayPlan(item);
+    showWizardStep("plan");
+  });
+
+  document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
+  document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
+    showWizardStep("manual");
+  });
+
+  document.querySelectorAll("[data-plan-entry-easier]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-plan-entry-easier"));
+      adjustPlanEntryAtIndex(item, idx, "easier");
+    });
+  });
+
+  document.querySelectorAll("[data-plan-entry-harder]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-plan-entry-harder"));
+      adjustPlanEntryAtIndex(item, idx, "harder");
+    });
+  });
+
+  document.querySelectorAll("[data-plan-entry-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-plan-entry-remove"));
+      if (!window.confirm(tr("workout.remove_current_confirm"))){
+        return;
+      }
+      removePlanEntryByIndex(item, idx);
+    });
+  });
+}
+
+function buildTodayPlanEntryCardsHtml(item, isPlannedRestDay){
+  if (isPlannedRestDay){
+    return `
+      <li>
+        <div class="small" style="line-height:1.5">
+          ${esc(tr("today_plan.rest_day_entries_hidden"))}
+        </div>
+      </li>
+    `;
+  }
+
+  return item.entries.map((entry, index) => {
+    const extras = formatPlanProgressionExtra(entry);
+    const tone = getPlanEntryTone(entry);
+    return `
+      <li style="padding:12px; border-radius:14px; ${tone.style}">
+        <div class="row">
+          <strong>${esc(formatExerciseName(entry.exercise_id))}</strong>
+          <span class="small">${esc(formatPlanEntryBadge(entry))}</span>
+        </div>
+        <div style="margin-top:6px; font-weight:600">${esc(formatPlanActionText(entry))}</div>
+        <div class="small">
+          ${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
+          ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
+        </div>
+        ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+          <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
+          <button type="button" class="secondary" data-plan-entry-easier="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_easier"))}</button>
+          <button type="button" class="secondary" data-plan-entry-harder="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_harder"))}</button>
+          <button type="button" class="secondary" data-plan-entry-remove="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.remove_exercise"))}</button>
+        </div>
+        ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
+      </li>
+    `;
+  }).join("");
+}
+
+function buildTodayPlanRecoveryCardHtml(recovery){
+  if (!recovery) return "";
+
+  return `
+    <li>
+      <div class="small" style="font-weight:700">${tr("today_plan.recovery_label", { value: `${formatRecoveryState(recovery.recovery_state || "")}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}</div>
+      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px; line-height:1.45">${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
+    </li>
+  `;
+}
+
+function buildTodayPlanHeroActionsHtml({
+  showPlannedRestChoiceCard,
+  showRestitutionChoice,
+}){
+  return showPlannedRestChoiceCard
+    ? `
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+        <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
+        ${showRestitutionChoice ? `<button type="button" id="startRestitutionBtn">${esc(tr("button.start_workout"))}</button>` : ""}
+        <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
+      </div>
+    `
+    : `
+      <div style="margin-top:12px">
+        <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
+      </div>
+    `;
+}
+
+function buildTodayPlanHeroCardHtml({
+  heroTitle,
+  heroLead,
+  heroActions,
+  isPlannedRestDay,
+  variantLabel,
+  timeBudgetMin,
+  planContextBits,
+}){
+  return `
+    <li>
+      <div style="font-weight:700; font-size:1.1rem">${esc(heroTitle)}</div>
+      <div class="small" style="margin-top:6px">
+        ${esc([
+          !isPlannedRestDay ? (variantLabel || "") : "",
+          timeBudgetMin ? tr("overview.time_today_short", { minutes: timeBudgetMin }) : ""
+        ].filter(Boolean).join(" · "))}
+      </div>
+      ${heroLead ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(heroLead)}</div>` : ""}
+      ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
+      ${heroActions}
+    </li>
+  `;
+}
+
 function renderTodayPlan(item){
   STATE.currentTodayPlan = item || null;
   const root = document.getElementById("todayPlanList");
@@ -4716,116 +4854,28 @@ function renderTodayPlan(item){
       ? tr("today_plan.rest_day_lead")
       : "";
 
-    const heroActions = showPlannedRestChoiceCard
-      ? `
-      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" id="acknowledgeRestDayBtn">${esc(tr("today_plan.acknowledge_rest_day"))}</button>
-        ${showRestitutionChoice ? `<button type="button" id="startRestitutionBtn">${esc(tr("button.start_workout"))}</button>` : ""}
-        <button type="button" class="secondary" id="openManualTrainingBtn">${esc(tr("wizard.manual"))}</button>
-      </div>
-      `
-      : `
-      <div style="margin-top:12px">
-        <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
-      </div>
-      `;
+    const heroActions = buildTodayPlanHeroActionsHtml({
+      showPlannedRestChoiceCard,
+      showRestitutionChoice,
+    });
 
-    const heroCard = `
-    <li>
-      <div style="font-weight:700; font-size:1.1rem">${esc(heroTitle)}</div>
-      <div class="small" style="margin-top:6px">
-        ${esc([
-          !isPlannedRestDay ? (variantLabel || "") : "",
-          item.time_budget_min ? tr("overview.time_today_short", { minutes: item.time_budget_min }) : ""
-        ].filter(Boolean).join(" · "))}
-      </div>
-      ${heroLead ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(heroLead)}</div>` : ""}
-      ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
-      ${heroActions}
-    </li>
-  `;
+    const heroCard = buildTodayPlanHeroCardHtml({
+      heroTitle,
+      heroLead,
+      heroActions,
+      isPlannedRestDay,
+      variantLabel,
+      timeBudgetMin: item.time_budget_min,
+      planContextBits,
+    });
 
-    const recoveryCard = recovery ? `
-    <li>
-      <div class="small" style="font-weight:700">${tr("today_plan.recovery_label", { value: `${formatRecoveryState(recovery.recovery_state || "")}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })}</div>
-      ${Array.isArray(recovery.explanation) && recovery.explanation.length ? `<div class="small" style="margin-top:6px; line-height:1.45">${esc(recovery.explanation.map(formatRecoveryExplanationBit).join(" · "))}</div>` : ""}
-    </li>
-    ` : "";
+    const recoveryCard = buildTodayPlanRecoveryCardHtml(recovery);
 
-    const entryCards = isPlannedRestDay
-      ? `
-        <li>
-          <div class="small" style="line-height:1.5">
-            ${esc(tr("today_plan.rest_day_entries_hidden"))}
-          </div>
-        </li>
-      `
-      : item.entries.map((entry, index) => {
-        const extras = formatPlanProgressionExtra(entry);
-        const tone = getPlanEntryTone(entry);
-        return `
-        <li style="padding:12px; border-radius:14px; ${tone.style}">
-          <div class="row">
-            <strong>${esc(formatExerciseName(entry.exercise_id))}</strong>
-            <span class="small">${esc(formatPlanEntryBadge(entry))}</span>
-          </div>
-          <div style="margin-top:6px; font-weight:600">${esc(formatPlanActionText(entry))}</div>
-          <div class="small">
-            ${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
-            ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
-          </div>
-          ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
-          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
-              <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
-              <button type="button" class="secondary" data-plan-entry-easier="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_easier"))}</button>
-              <button type="button" class="secondary" data-plan-entry-harder="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_harder"))}</button>
-              <button type="button" class="secondary" data-plan-entry-remove="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.remove_exercise"))}</button>
-            </div>
-          ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
-        </li>
-        `;
-      }).join("");
+    const entryCards = buildTodayPlanEntryCardsHtml(item, isPlannedRestDay);
 
     root.innerHTML = heroCard + recoveryCard + entryCards;
 
-  document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
-    STATE.workoutInProgress = true;
-    STATE.currentWorkoutEntryIndex = 0;
-    renderTodayPlan(item);
-    showWizardStep("plan");
-  });
-  document.getElementById("startRestitutionBtn")?.addEventListener("click", () => {
-    STATE.workoutInProgress = true;
-    STATE.currentWorkoutEntryIndex = 0;
-    renderTodayPlan(item);
-    showWizardStep("plan");
-  });
-  document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
-  document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
-    showWizardStep("manual");
-  });
-
-  document.querySelectorAll("[data-plan-entry-easier]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const idx = Number(btn.getAttribute("data-plan-entry-easier"));
-      adjustPlanEntryAtIndex(item, idx, "easier");
-    });
-  });
-  document.querySelectorAll("[data-plan-entry-harder]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const idx = Number(btn.getAttribute("data-plan-entry-harder"));
-      adjustPlanEntryAtIndex(item, idx, "harder");
-    });
-  });
-  document.querySelectorAll("[data-plan-entry-remove]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const idx = Number(btn.getAttribute("data-plan-entry-remove"));
-      if (!window.confirm(tr("workout.remove_current_confirm"))){
-        return;
-      }
-      removePlanEntryByIndex(item, idx);
-    });
-  });
+    wireTodayPlanActions(item);
 
   renderReviewSummary(item);
   renderSessionReview(item);
