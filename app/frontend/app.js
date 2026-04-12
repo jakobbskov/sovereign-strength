@@ -23,6 +23,8 @@ let STATE = {
   workoutRestTimerActive: false,
   workoutRestTimerEndsAt: 0,
   workoutRestTimerDurationSec: 90,
+  workoutRestTargetKind: "",
+  workoutRestNextEntryIndex: -1,
   editingCheckinId: null,
   pendingRecoveryEditId: null,
   lastFocusedRecoveryId: null,
@@ -4390,13 +4392,17 @@ function hasMoreWorkoutSets(entry){
 function clearWorkoutRestTimer(){
   STATE.workoutRestTimerActive = false;
   STATE.workoutRestTimerEndsAt = 0;
+  STATE.workoutRestTargetKind = "";
+  STATE.workoutRestNextEntryIndex = -1;
 }
 
-function startWorkoutRestTimer(durationSec){
+function startWorkoutRestTimer(durationSec, options = {}){
   const seconds = Math.max(5, Number(durationSec || STATE.workoutRestTimerDurationSec || 90));
   STATE.workoutRestTimerDurationSec = seconds;
   STATE.workoutRestTimerEndsAt = Date.now() + (seconds * 1000);
   STATE.workoutRestTimerActive = true;
+  STATE.workoutRestTargetKind = String(options?.targetKind || "").trim();
+  STATE.workoutRestNextEntryIndex = Number.isInteger(options?.nextEntryIndex) ? options.nextEntryIndex : -1;
 }
 
 function getRemainingWorkoutRestSeconds(){
@@ -4513,35 +4519,63 @@ function renderWorkoutRestState(item, active){
   const entry = active.entry;
   const idx = active.index;
   const total = active.total;
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
   const remainingSec = getRemainingWorkoutRestSeconds();
   const restDone = remainingSec <= 0;
+  const targetKind = String(STATE.workoutRestTargetKind || "").trim();
+  const nextEntryIndex = Number(STATE.workoutRestNextEntryIndex);
+  const nextEntry = nextEntryIndex >= 0 && nextEntryIndex < entries.length ? entries[nextEntryIndex] : null;
+  const isNextExerciseRest = targetKind === "next_exercise";
+
+  const statusLabel = restDone
+    ? tr(isNextExerciseRest ? "workout.rest.ready_next_exercise" : "workout.rest.ready_next_set")
+    : tr("workout.rest.resting");
+
+  const primaryActionLabel = !restDone
+    ? tr("button.skip_rest")
+    : tr(isNextExerciseRest ? "button.start_next_exercise" : "button.start_next_set");
+
+  const nextExerciseLabel = isNextExerciseRest && nextEntry
+    ? `<div class="small" style="margin-bottom:8px">${esc(tr("workout.rest.next_exercise_label"))}</div>`
+    : "";
+
+  const setProgressLabel = isNextExerciseRest && nextEntry
+    ? tr("workout.set_progress", { current: "1", total: String(getWorkoutPlannedSetCount(nextEntry)) })
+    : tr("workout.set_progress", { current: String(getCurrentWorkoutSetIndex(entry) + 1), total: String(getWorkoutPlannedSetCount(entry)) });
+
+  const exerciseName = isNextExerciseRest && nextEntry
+    ? formatExerciseName(nextEntry.exercise_id)
+    : formatExerciseName(entry.exercise_id);
+
+  const actionText = isNextExerciseRest && nextEntry
+    ? formatPlanActionText(nextEntry)
+    : formatPlanActionText(entry);
 
   root.innerHTML = `
     <li>
       <div style="font-size:0.9rem; opacity:0.8; margin-bottom:8px">
         ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
       </div>
-      <div class="small" style="margin-bottom:8px">${esc(tr("workout.set_progress", { current: String(getCurrentWorkoutSetIndex(entry) + 1), total: String(getWorkoutPlannedSetCount(entry)) }))}</div>
-      <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
-      <div style="font-weight:600; margin-bottom:8px">${esc(restDone ? tr("workout.rest.ready_next_set") : tr("workout.rest.resting"))}</div>
+      ${nextExerciseLabel}
+      <div class="small" style="margin-bottom:8px">${esc(setProgressLabel)}</div>
+      <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px">${esc(exerciseName)}</div>
+      <div style="font-weight:600; margin-bottom:8px">${esc(statusLabel)}</div>
       <div style="font-size:2rem; font-weight:700; margin:10px 0 14px 0">${esc(String(remainingSec))} s</div>
       <div class="small" style="line-height:1.5; margin-bottom:12px">
-        ${esc(formatPlanActionText(entry))}
+        ${esc(actionText)}
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" class="secondary" id="skipWorkoutRestBtn">${esc(tr("button.skip_rest"))}</button>
-        <button type="button" id="resumeWorkoutSetBtn">${esc(tr("button.start_next_set"))}</button>
+        <button type="button" id="resumeWorkoutRestBtn">${esc(primaryActionLabel)}</button>
       </div>
     </li>
   `;
 
-  document.getElementById("skipWorkoutRestBtn")?.addEventListener("click", () => {
+  document.getElementById("resumeWorkoutRestBtn")?.addEventListener("click", () => {
     clearWorkoutRestTimer();
-    renderTodayPlan(item);
-  });
-
-  document.getElementById("resumeWorkoutSetBtn")?.addEventListener("click", () => {
-    clearWorkoutRestTimer();
+    if (isNextExerciseRest && nextEntryIndex >= 0){
+      STATE.currentWorkoutEntryIndex = nextEntryIndex;
+      STATE.currentWorkoutSetIndex = 0;
+    }
     renderTodayPlan(item);
   });
 
@@ -4650,7 +4684,10 @@ function renderActiveWorkoutCard(item){
 
         if (hasMoreSetsRemaining && !isCardioEntry){
           STATE.currentWorkoutSetIndex = currentSetIndex + 1;
-          startWorkoutRestTimer();
+          startWorkoutRestTimer(undefined, {
+            targetKind: "next_set",
+            nextEntryIndex: idx,
+          });
           renderTodayPlan(item);
           return;
         }
@@ -4660,6 +4697,7 @@ function renderActiveWorkoutCard(item){
         if (isLast){
           STATE.workoutInProgress = false;
           STATE.currentWorkoutEntryIndex = 0;
+          clearWorkoutRestTimer();
           renderReviewSummary(item);
           renderSessionReview(item);
           showWizardStep("review");
@@ -4667,6 +4705,10 @@ function renderActiveWorkoutCard(item){
         }
 
         STATE.currentWorkoutEntryIndex = idx + 1;
+        startWorkoutRestTimer(undefined, {
+          targetKind: "next_exercise",
+          nextEntryIndex: idx + 1,
+        });
         renderTodayPlan(item);
       });
 }
