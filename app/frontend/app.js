@@ -5281,11 +5281,12 @@ function buildProgramContextBits(programContext){
   const activeStrengthName = activeStrength ? getProgramDisplayName(activeStrength) : activeStrengthId;
 
   const activeStrengthSource = formatProgramSourceLabel(ctx.active_strength_program_source);
-  if (activeStrengthName){
+  if (activeStrengthName || activeStrengthId){
+    const label = activeStrengthName || activeStrengthId;
     bits.push(
       activeStrengthSource
-        ? `Aktivt styrkeprogram: ${activeStrengthName} · ${activeStrengthSource}`
-        : `Aktivt styrkeprogram: ${activeStrengthName}`
+        ? `Dagens styrkepas er bygget fra: ${label} · ${activeStrengthSource}`
+        : `Dagens styrkepas er bygget fra: ${label}`
     );
   }
 
@@ -5294,11 +5295,12 @@ function buildProgramContextBits(programContext){
   const activeEnduranceName = activeEndurance ? getProgramDisplayName(activeEndurance) : activeEnduranceId;
 
   const activeEnduranceSource = formatProgramSourceLabel(ctx.active_endurance_program_source);
-  if (activeEnduranceName){
+  if (activeEnduranceId){
+    const label = activeEnduranceName || activeEnduranceId;
     bits.push(
       activeEnduranceSource
-        ? `Aktivt løbeprogram: ${activeEnduranceName} · ${activeEnduranceSource}`
-        : `Aktivt løbeprogram: ${activeEnduranceName}`
+        ? `Dagens løbepas er bygget fra: ${label} · ${activeEnduranceSource}`
+        : `Dagens løbepas er bygget fra: ${label}`
     );
   }
 
@@ -5307,8 +5309,8 @@ function buildProgramContextBits(programContext){
   const recommendedName = recommendedProgram ? getProgramDisplayName(recommendedProgram) : recommendedId;
   const recommendationReason = String(ctx.recommendation_reason || "").trim();
 
-  if (recommendedName){
-    bits.push(`Anbefalet program: ${recommendedName}`);
+  if (recommendedName || recommendedId){
+    bits.push(`Anbefalet program: ${recommendedName || recommendedId}`);
     if (recommendationReason){
       bits.push(`Hvorfor: ${recommendationReason}`);
     }

@@ -4214,11 +4214,18 @@ def build_next_guidance(today_plan_item, completed_today=False):
 
 
 
+def normalize_program_id(value):
+    raw = str(value or "").strip()
+    if not raw or raw.lower() == "none":
+        return None
+    return raw
+
+
 def build_program_context(item):
     item = item if isinstance(item, dict) else {}
 
-    active_strength_program_id = str(item.get("selected_strength_program_id", "")).strip() or None
-    active_endurance_program_id = str(item.get("selected_endurance_program_id", "")).strip() or None
+    active_strength_program_id = normalize_program_id(item.get("selected_strength_program_id"))
+    active_endurance_program_id = normalize_program_id(item.get("selected_endurance_program_id"))
 
     program_context = {
         "active_strength_program_id": active_strength_program_id,
@@ -4233,8 +4240,8 @@ def build_program_context(item):
 
     switch_recommendation = detect_program_switch_recommendation(item)
     if isinstance(switch_recommendation, dict) and switch_recommendation.get("switch_recommended"):
-        recommended_program_id = str(switch_recommendation.get("recommended_program_id", "")).strip() or None
-        current_program_id = str(switch_recommendation.get("current_program_id", "")).strip() or None
+        recommended_program_id = normalize_program_id(switch_recommendation.get("recommended_program_id"))
+        current_program_id = normalize_program_id(switch_recommendation.get("current_program_id"))
 
         if recommended_program_id and recommended_program_id != current_program_id:
             program_context["recommended_program_id"] = recommended_program_id
