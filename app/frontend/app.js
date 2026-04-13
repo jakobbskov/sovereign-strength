@@ -5254,6 +5254,70 @@ function buildTodayPlanEntryCardsHtml(item, isPlannedRestDay){
   }).join("");
 }
 
+
+function getProgramById(programId){
+  const id = String(programId || "").trim();
+  if (!id) return null;
+  return (Array.isArray(STATE.programs) ? STATE.programs : []).find(
+    item => String(item?.id || "").trim() === id
+  ) || null;
+}
+
+function formatProgramSourceLabel(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
+  if (x === "auto_selected") return "automatisk valgt";
+  if (x === "explicit") return "valgt af dig";
+  if (x === "fallback") return "fallback";
+  return x;
+}
+
+function buildProgramContextBits(programContext){
+  const ctx = programContext && typeof programContext === "object" ? programContext : {};
+  const bits = [];
+
+  const activeStrengthId = String(ctx.active_strength_program_id || "").trim();
+  const activeStrength = getProgramById(activeStrengthId);
+  const activeStrengthName = activeStrength ? getProgramDisplayName(activeStrength) : activeStrengthId;
+
+  const activeStrengthSource = formatProgramSourceLabel(ctx.active_strength_program_source);
+  if (activeStrengthName){
+    bits.push(
+      activeStrengthSource
+        ? `Aktivt styrkeprogram: ${activeStrengthName} · ${activeStrengthSource}`
+        : `Aktivt styrkeprogram: ${activeStrengthName}`
+    );
+  }
+
+  const activeEnduranceId = String(ctx.active_endurance_program_id || "").trim();
+  const activeEndurance = getProgramById(activeEnduranceId);
+  const activeEnduranceName = activeEndurance ? getProgramDisplayName(activeEndurance) : activeEnduranceId;
+
+  const activeEnduranceSource = formatProgramSourceLabel(ctx.active_endurance_program_source);
+  if (activeEnduranceName){
+    bits.push(
+      activeEnduranceSource
+        ? `Aktivt løbeprogram: ${activeEnduranceName} · ${activeEnduranceSource}`
+        : `Aktivt løbeprogram: ${activeEnduranceName}`
+    );
+  }
+
+  const recommendedId = String(ctx.recommended_program_id || "").trim();
+  const recommendedProgram = getProgramById(recommendedId);
+  const recommendedName = recommendedProgram ? getProgramDisplayName(recommendedProgram) : recommendedId;
+  const recommendationReason = String(ctx.recommendation_reason || "").trim();
+
+  if (recommendedName){
+    bits.push(`Anbefalet program: ${recommendedName}`);
+    if (recommendationReason){
+      bits.push(`Hvorfor: ${recommendationReason}`);
+    }
+  }
+
+  return bits;
+}
+
+
 function buildTodayPlanRecoveryCardHtml(recovery){
   if (!recovery) return "";
 
@@ -5421,6 +5485,8 @@ function renderTodayPlan(item){
       planContextBits,
     } = deriveTodayPlanDisplayState(item);
 
+    const programContextBits = buildProgramContextBits(item?.program_context || null);
+
     const compactSummaryLead = trainingAllowedSummary || recoveryDaySummary || "";
     setText(
       "todayPlanSummary",
@@ -5460,7 +5526,7 @@ function renderTodayPlan(item){
       isPlannedRestDay,
       variantLabel,
       timeBudgetMin: item.time_budget_min,
-      planContextBits,
+      planContextBits: [...planContextBits, ...programContextBits],
     });
 
     const recoveryCard = buildTodayPlanRecoveryCardHtml(recovery);

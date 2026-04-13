@@ -4213,6 +4213,40 @@ def build_next_guidance(today_plan_item, completed_today=False):
 
 
 
+
+def build_program_context(item):
+    item = item if isinstance(item, dict) else {}
+
+    active_strength_program_id = str(item.get("selected_strength_program_id", "")).strip() or None
+    active_endurance_program_id = str(item.get("selected_endurance_program_id", "")).strip() or None
+
+    program_context = {
+        "active_strength_program_id": active_strength_program_id,
+        "active_strength_program_source": "auto_selected" if active_strength_program_id else None,
+        "active_endurance_program_id": active_endurance_program_id,
+        "active_endurance_program_source": "auto_selected" if active_endurance_program_id else None,
+        "recommended_program_id": None,
+        "recommended_program_kind": None,
+        "recommendation_reason": None,
+        "can_switch_to_recommended": False,
+    }
+
+    switch_recommendation = detect_program_switch_recommendation(item)
+    if isinstance(switch_recommendation, dict) and switch_recommendation.get("switch_recommended"):
+        recommended_program_id = str(switch_recommendation.get("recommended_program_id", "")).strip() or None
+        current_program_id = str(switch_recommendation.get("current_program_id", "")).strip() or None
+
+        if recommended_program_id and recommended_program_id != current_program_id:
+            program_context["recommended_program_id"] = recommended_program_id
+            program_context["recommended_program_kind"] = "strength"
+            program_context["recommendation_reason"] = str(
+                switch_recommendation.get("switch_reason", "")
+            ).strip() or None
+            program_context["can_switch_to_recommended"] = True
+
+    return program_context
+
+
 def validate_today_plan_item(item):
     if not isinstance(item, dict):
         return {
@@ -4491,6 +4525,7 @@ def get_today_plan():
     }
 
     item = validate_today_plan_item(item)
+    item["program_context"] = build_program_context(item)
     item["next_guidance"] = build_next_guidance(
         item,
         completed_today=already_logged_today,
