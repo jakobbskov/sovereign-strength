@@ -1133,6 +1133,10 @@
       "Keep the load balanced and controlled",
       "Lower vertically instead of falling forward",
       "Drive back up evenly without losing balance"
+    ],
+    "progression_ladder": [
+      "step_ups",
+      "split_squat"
     ]
   },
   {
@@ -1191,6 +1195,10 @@
     "external_images": [
       "Dumbbell_Step_Ups/0.jpg",
       "Dumbbell_Step_Ups/1.jpg"
+    ],
+    "progression_ladder": [
+      "step_ups",
+      "split_squat"
     ]
   },
   {

@@ -1198,6 +1198,73 @@ def get_local_load_targets_for_exercise(exercise_id, exercises=None):
 
     return []
 
+def get_local_substitute_candidates(exercise_id, local_state=None):
+    exercise_id = str(exercise_id or "").strip()
+    local_state = local_state if isinstance(local_state, dict) else {}
+
+    substitution_map = {
+        "squat": ["lunges", "split_squat", "step_ups", "single_leg_sit_to_stand"],
+        "bench_press": ["push_ups", "incline_push_ups", "diamond_push_ups"],
+        "overhead_press": ["pike_push_ups", "push_ups", "incline_push_ups"],
+        "barbell_row": ["dumbbell_row", "reverse_snow_angels", "superman_hold"],
+        "incline_push_ups": ["bird_dog", "dead_bug", "plank"],
+        "dumbbell_row": ["reverse_snow_angels", "bird_dog", "dead_bug"],
+        "dead_bug": ["bird_dog", "plank", "glute_bridge"],
+        "romanian_deadlift": ["glute_bridge", "single_leg_glute_bridge", "hamstring_walkouts", "hip_hinge_bw"],
+    }
+
+    blocked_regions = []
+    for region, info in local_state.items():
+        if not isinstance(info, dict):
+            continue
+        if str(info.get("state", "")).strip() == "protect":
+            blocked_regions.append(str(region).strip())
+
+    blocked_regions = sorted(set(x for x in blocked_regions if x))
+
+    ankle_calf_protect = "ankle_calf" in blocked_regions
+    knee_protect = "knee" in blocked_regions
+    hip_protect = "hip" in blocked_regions
+    upper_body_protect = any(region in {"shoulder", "elbow", "wrist"} for region in blocked_regions)
+
+    substitute_candidates = substitution_map.get(exercise_id, [])
+
+    if exercise_id == "incline_push_ups" and upper_body_protect:
+        substitute_candidates = ["bird_dog", "dead_bug", "plank"]
+    elif exercise_id == "dumbbell_row" and upper_body_protect:
+        substitute_candidates = ["reverse_snow_angels", "bird_dog", "dead_bug"]
+    elif exercise_id == "squat" and ankle_calf_protect:
+        substitute_candidates = ["glute_bridge", "hamstring_walkouts", "hip_hinge_bw", "split_squat", "step_ups"]
+    elif exercise_id == "squat" and knee_protect:
+        substitute_candidates = ["glute_bridge", "hip_hinge_bw", "hamstring_walkouts", "step_ups", "split_squat"]
+    elif exercise_id == "squat" and hip_protect:
+        substitute_candidates = ["glute_bridge", "hamstring_walkouts", "bird_dog", "plank"]
+    elif exercise_id == "dead_bug" and hip_protect:
+        substitute_candidates = ["bird_dog", "plank", "glute_bridge"]
+
+    if isinstance(substitute_candidates, str):
+        substitute_candidates = [substitute_candidates]
+
+    cleaned = []
+    seen = set()
+    for candidate_id in substitute_candidates or []:
+        cid = str(candidate_id or "").strip()
+        if not cid or cid in seen:
+            continue
+        seen.add(cid)
+        cleaned.append(cid)
+
+    return {
+        "candidate_ids": cleaned,
+        "blocked_regions": blocked_regions,
+        "upper_body_protect": upper_body_protect,
+        "ankle_calf_protect": ankle_calf_protect,
+        "knee_protect": knee_protect,
+        "hip_protect": hip_protect,
+    }
+
+
+
 def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment, local_state=None, exercises=None):
     original_meta = exercise_map.get(original_exercise_id, {}) or {}
     original_pattern = str(original_meta.get("movement_pattern", "")).strip()
@@ -2638,32 +2705,6 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
     if not isinstance(local_state, dict):
         local_state = {}
 
-    substitution_map = {
-        "squat": ["lunges", "split_squat", "step_ups", "single_leg_sit_to_stand"],
-        "bench_press": ["push_ups", "incline_push_ups", "diamond_push_ups"],
-        "overhead_press": ["pike_push_ups", "push_ups", "incline_push_ups"],
-        "barbell_row": ["dumbbell_row", "reverse_snow_angels", "superman_hold"],
-        "incline_push_ups": ["bird_dog", "dead_bug", "plank"],
-        "dumbbell_row": ["reverse_snow_angels", "bird_dog", "dead_bug"],
-        "dead_bug": ["bird_dog", "plank", "glute_bridge"],
-        "romanian_deadlift": ["glute_bridge", "single_leg_glute_bridge", "hamstring_walkouts", "hip_hinge_bw"],
-    }
-
-    ankle_calf_protect = False
-    ankle_info = local_state.get("ankle_calf", {}) if isinstance(local_state, dict) else {}
-    if isinstance(ankle_info, dict):
-        ankle_calf_protect = str(ankle_info.get("state", "")).strip() == "protect"
-
-    knee_protect = False
-    knee_info = local_state.get("knee", {}) if isinstance(local_state, dict) else {}
-    if isinstance(knee_info, dict):
-        knee_protect = str(knee_info.get("state", "")).strip() == "protect"
-
-    hip_protect = False
-    hip_info = local_state.get("hip", {}) if isinstance(local_state, dict) else {}
-    if isinstance(hip_info, dict):
-        hip_protect = str(hip_info.get("state", "")).strip() == "protect"
-
     filtered_exercises = []
     excluded_due_to_equipment = []
     substitutions_used = []
@@ -2694,52 +2735,11 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             filtered_exercises.append(ex)
             continue
 
-        substitute_candidates = substitution_map.get(exercise_id, [])
-        upper_body_protect = local_blocked and any(region in {"shoulder", "elbow", "wrist"} for region in blocked_regions)
-
-        if exercise_id == "incline_push_ups" and upper_body_protect:
-            substitute_candidates = [
-                "bird_dog",
-                "dead_bug",
-                "plank",
-            ]
-        elif exercise_id == "dumbbell_row" and upper_body_protect:
-            substitute_candidates = [
-                "reverse_snow_angels",
-                "bird_dog",
-                "dead_bug",
-            ]
-        elif exercise_id == "squat" and local_blocked and ankle_calf_protect:
-            substitute_candidates = [
-                "glute_bridge",
-                "hamstring_walkouts",
-                "hip_hinge_bw",
-                "split_squat",
-                "step_ups",
-            ]
-        elif exercise_id == "squat" and local_blocked and knee_protect:
-            substitute_candidates = [
-                "glute_bridge",
-                "hip_hinge_bw",
-                "hamstring_walkouts",
-                "step_ups",
-                "split_squat",
-            ]
-        elif exercise_id == "squat" and local_blocked and hip_protect:
-            substitute_candidates = [
-                "glute_bridge",
-                "hamstring_walkouts",
-                "bird_dog",
-                "plank",
-            ]
-        elif exercise_id == "dead_bug" and local_blocked and hip_protect:
-            substitute_candidates = [
-                "bird_dog",
-                "plank",
-                "glute_bridge",
-            ]
-        if isinstance(substitute_candidates, str):
-            substitute_candidates = [substitute_candidates]
+        substitute_ctx = get_local_substitute_candidates(
+            exercise_id=exercise_id,
+            local_state=local_state,
+        )
+        substitute_candidates = substitute_ctx.get("candidate_ids", [])
 
         chosen_substitute_id = choose_best_substitute(
             original_exercise_id=exercise_id,
@@ -3048,6 +3048,166 @@ def compute_progression_for_exercise(exercise_id, user_id=None):
 
 
 
+
+
+def resolve_local_plan_entry_substitute(entry, direction, user_id=None, exercises=None, user_settings=None):
+    entry = entry if isinstance(entry, dict) else {}
+    direction = str(direction or "").strip().lower()
+    if direction not in {"easier", "harder"}:
+        return {
+            "ok": False,
+            "error": "invalid_direction",
+            "message": "direction must be easier or harder",
+        }
+
+    exercise_id = str(entry.get("exercise_id", "")).strip()
+    if not exercise_id:
+        return {
+            "ok": False,
+            "error": "missing_exercise_id",
+            "message": "entry.exercise_id is required",
+        }
+
+    exercises = exercises if isinstance(exercises, list) else read_json_file(FILES["exercises"])
+    exercise_map = {
+        str(item.get("id", "")).strip(): item
+        for item in exercises
+        if isinstance(item, dict) and str(item.get("id", "")).strip()
+    }
+
+    current_meta = exercise_map.get(exercise_id, {}) or {}
+    current_pattern = str(current_meta.get("movement_pattern", "")).strip()
+    try:
+        current_tier = int(current_meta.get("difficulty_tier", 1) or 1)
+    except Exception:
+        current_tier = 1
+
+    if not isinstance(user_settings, dict):
+        user_settings = get_user_settings_for(user_id) if user_id not in (None, "") else {}
+    available_equipment = user_settings.get("available_equipment", {}) if isinstance(user_settings, dict) else {}
+    if not isinstance(available_equipment, dict):
+        available_equipment = {}
+
+    state = get_live_adaptation_state_for(user_id) if user_id not in (None, "") else {}
+    local_state = state.get("local_state", {}) if isinstance(state, dict) else {}
+    if not isinstance(local_state, dict):
+        local_state = {}
+
+    ladder_candidate_id = get_adjacent_variation(
+        exercise_id=exercise_id,
+        direction=direction,
+        exercise_map=exercise_map,
+    )
+    chosen_substitute_id = None
+    chosen_source = None
+    blocked_regions = []
+    caution_regions = []
+
+    if ladder_candidate_id:
+        allowed, ladder_blocked_regions, ladder_caution_regions = is_candidate_allowed_for_local_adjustment(
+            candidate_id=ladder_candidate_id,
+            exercise_map=exercise_map,
+            available_equipment=available_equipment,
+            local_state=local_state,
+            exercises=exercises,
+        )
+        if allowed:
+            chosen_substitute_id = ladder_candidate_id
+            chosen_source = "progression_ladder"
+            caution_regions = ladder_caution_regions
+
+    if not chosen_substitute_id and direction == "easier":
+        substitute_ctx = get_local_substitute_candidates(
+            exercise_id=exercise_id,
+            local_state=local_state,
+        )
+        ordered_candidate_ids = substitute_ctx.get("candidate_ids", [])
+
+        chosen_substitute_id = choose_best_substitute(
+            original_exercise_id=exercise_id,
+            candidate_ids=ordered_candidate_ids,
+            exercise_map=exercise_map,
+            available_equipment=available_equipment,
+            local_state=local_state,
+            exercises=exercises,
+        )
+        if chosen_substitute_id:
+            chosen_source = "substitution_fallback"
+
+    if not chosen_substitute_id:
+        return {
+            "ok": True,
+            "changed": False,
+            "exercise_id": exercise_id,
+            "direction": direction,
+            "reason": "no_valid_substitute",
+        }
+
+    chosen_meta = exercise_map.get(chosen_substitute_id, {}) or {}
+    _, blocked_regions, caution_regions = is_candidate_allowed_for_local_adjustment(
+        candidate_id=chosen_substitute_id,
+        exercise_map=exercise_map,
+        available_equipment=available_equipment,
+        local_state=local_state,
+        exercises=exercises,
+    )
+
+    reason_bits = [f"{exercise_id} -> {chosen_substitute_id}", f"source={chosen_source}"]
+
+    return {
+        "ok": True,
+        "changed": True,
+        "direction": direction,
+        "exercise_id": chosen_substitute_id,
+        "substituted_from": exercise_id,
+        "reason": " | ".join(reason_bits),
+        "missing_equipment_type": None,
+        "local_protection_regions": sorted(set(blocked_regions)),
+        "caution_regions": sorted(set(caution_regions)),
+        "movement_pattern": str(chosen_meta.get("movement_pattern", "")).strip(),
+        "difficulty_tier": chosen_meta.get("difficulty_tier"),
+        "source": chosen_source,
+    }
+
+
+@app.post("/api/resolve-local-adjustment")
+def api_resolve_local_adjustment():
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("resolve-local-adjustment", auth_err)
+        return auth_err
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "ok": False,
+            "error": "invalid_payload",
+            "message": "JSON object required",
+        }), 400
+
+    entry = payload.get("entry", {})
+    direction = payload.get("direction", "")
+
+    if not isinstance(entry, dict):
+        return jsonify({
+            "ok": False,
+            "error": "invalid_entry",
+            "message": "entry must be an object",
+        }), 400
+
+    exercises = read_json_file(FILES["exercises"])
+    user_settings = get_user_settings_for(auth_user.get("user_id"))
+
+    result = resolve_local_plan_entry_substitute(
+        entry=entry,
+        direction=direction,
+        user_id=auth_user.get("user_id"),
+        exercises=exercises,
+        user_settings=user_settings,
+    )
+
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
 
 @app.get("/api/health")
 def api_health():
@@ -5939,6 +6099,87 @@ def _is_bodyweight_like(result_item, exercise_meta):
         if not raw_load:
             return True
     return False
+
+
+
+def get_progression_ladder_for_exercise(exercise_id, exercise_map):
+    exercise_id = str(exercise_id or "").strip()
+    exercise_map = exercise_map if isinstance(exercise_map, dict) else {}
+    if not exercise_id:
+        return []
+
+    own_meta = exercise_map.get(exercise_id, {}) or {}
+    own_ladder = own_meta.get("progression_ladder", [])
+    if isinstance(own_ladder, list):
+        normalized = [str(x).strip() for x in own_ladder if str(x).strip()]
+        if exercise_id in normalized:
+            return normalized
+
+    for _, item in exercise_map.items():
+        if not isinstance(item, dict):
+            continue
+        ladder = item.get("progression_ladder", [])
+        if not isinstance(ladder, list):
+            continue
+        normalized = [str(x).strip() for x in ladder if str(x).strip()]
+        if exercise_id in normalized:
+            return normalized
+
+    return []
+
+
+def get_adjacent_variation(exercise_id, direction, exercise_map):
+    exercise_id = str(exercise_id or "").strip()
+    direction = str(direction or "").strip().lower()
+    ladder = get_progression_ladder_for_exercise(exercise_id, exercise_map)
+    if not ladder or direction not in {"easier", "harder"}:
+        return None
+
+    try:
+        idx = ladder.index(exercise_id)
+    except ValueError:
+        return None
+
+    if direction == "easier" and idx > 0:
+        return ladder[idx - 1]
+    if direction == "harder" and idx < len(ladder) - 1:
+        return ladder[idx + 1]
+    return None
+
+
+def is_candidate_allowed_for_local_adjustment(candidate_id, exercise_map, available_equipment, local_state=None, exercises=None):
+    candidate_id = str(candidate_id or "").strip()
+    exercise_map = exercise_map if isinstance(exercise_map, dict) else {}
+    available_equipment = available_equipment if isinstance(available_equipment, dict) else {}
+    local_state = local_state if isinstance(local_state, dict) else {}
+    exercises = exercises if isinstance(exercises, list) else []
+
+    candidate_meta = exercise_map.get(candidate_id, {}) or {}
+    if not candidate_meta:
+        return False, [], []
+
+    equipment_type = str(candidate_meta.get("equipment_type", "")).strip()
+    allowed = (not equipment_type) or bool(available_equipment.get(equipment_type, True))
+    if not allowed:
+        return False, [], []
+
+    blocked_regions = []
+    caution_regions = []
+    local_targets = get_local_load_targets_for_exercise(candidate_id, exercises=exercises)
+    for region in local_targets:
+        info = local_state.get(region, {}) if isinstance(local_state, dict) else {}
+        if not isinstance(info, dict):
+            continue
+        region_state = str(info.get("state", "")).strip()
+        if region_state == "protect":
+            blocked_regions.append(region)
+        elif region_state == "caution":
+            caution_regions.append(region)
+
+    if blocked_regions:
+        return False, sorted(set(blocked_regions)), sorted(set(caution_regions))
+
+    return True, [], sorted(set(caution_regions))
 
 
 
