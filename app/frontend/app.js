@@ -1386,6 +1386,19 @@ async function apiJsonRequest(method, path, payload){
   return data;
 }
 
+async function resolveLocalAdjustmentVariant(entry, direction){
+  const payload = {
+    entry: {
+      exercise_id: entry?.exercise_id || "",
+      sets: entry?.sets || "",
+      target_reps: entry?.target_reps || "",
+      target_load: entry?.target_load || ""
+    },
+    direction
+  };
+  return apiJsonRequest("POST", "/api/resolve-local-adjustment", payload);
+}
+
 function resetRecoveryFormLocalSignals(form){
   ["knee", "low_back", "shoulder", "elbow", "hip", "ankle_calf", "wrist"].forEach((region) => {
     if (form[`local_signal_${region}`]) form[`local_signal_${region}`].value = "";
@@ -4244,13 +4257,45 @@ function buildBoundaryTargetFromCurrentShape(entry, which){
   return current;
 }
 
-function applyVariantSwap(entry, direction){
+async function applyVariantSwap(entry, direction){
   const currentExerciseId = String(entry?.exercise_id || "").trim();
+  if (!currentExerciseId) return false;
+
+  try{
+    const resolved = await resolveLocalAdjustmentVariant(entry, direction);
+    if (resolved?.changed && resolved?.exercise_id){
+      const nextExerciseId = String(resolved.exercise_id || "").trim();
+      entry.substituted_from = resolved.substituted_from || currentExerciseId;
+      entry.exercise_id = nextExerciseId;
+      entry.local_regression_reason = resolved.reason || "";
+      entry.manual_adjustment_reason = direction === "harder" ? "variant_step_up_backend" : "variant_step_down_backend";
+
+      const setBounds = getEntrySetBounds(entry);
+      entry.sets = direction === "harder" ? setBounds.min : setBounds.max;
+
+      const meta = getExerciseMeta(nextExerciseId) || {};
+      const inputKind = String(meta.input_kind || "").trim().toLowerCase();
+      if (entry.target_reps){
+        entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
+      } else if (inputKind === "time" || inputKind === "cardio_time" || inputKind === "bodyweight_reps" || inputKind === "load_reps"){
+        entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
+      }
+
+      if (meta.supports_load !== true){
+        entry.target_load = "";
+      }
+
+      return true;
+    }
+  }catch(err){
+  }
+
   const nextExerciseId = getExerciseVariantSwap(currentExerciseId, direction);
   if (!nextExerciseId) return false;
 
   entry.substituted_from = currentExerciseId;
   entry.exercise_id = nextExerciseId;
+  entry.manual_adjustment_reason = direction === "harder" ? "variant_step_up_frontend_fallback" : "variant_step_down_frontend_fallback";
 
   const setBounds = getEntrySetBounds(entry);
   entry.sets = direction === "harder" ? setBounds.min : setBounds.max;
@@ -4277,7 +4322,7 @@ function removePlanEntryByIndex(item, idx){
   renderTodayPlan(item);
 }
 
-function adjustPlanEntryAtIndex(item, idx, direction){
+async function adjustPlanEntryAtIndex(item, idx, direction){
   const entries = Array.isArray(item?.entries) ? item.entries : [];
   if (idx < 0 || idx >= entries.length) return;
 
@@ -4373,26 +4418,26 @@ function adjustPlanEntryAtIndex(item, idx, direction){
         (!currentTargetAtMax && tryTargetStep()) ||
         (currentTargetAtMax && tryVolumeCycleSetStep()) ||
         tryLoadStep() ||
-        applyVariantSwap(entry, "harder");
+        await applyVariantSwap(entry, "harder");
     } else {
       changed =
         (!currentTargetAtMin && tryTargetStep()) ||
         (currentTargetAtMin && currentSets > setBounds.min && tryVolumeCycleSetStep()) ||
         tryLoadStep() ||
-        applyVariantSwap(entry, "easier");
+        await applyVariantSwap(entry, "easier");
     }
   } else if (dir === "harder"){
     changed =
       tryTargetStep() ||
       trySetStep() ||
       tryLoadStep() ||
-      applyVariantSwap(entry, "harder");
+      await applyVariantSwap(entry, "harder");
   } else {
     changed =
       tryTargetStep() ||
       trySetStep() ||
       tryLoadStep() ||
-      applyVariantSwap(entry, "easier");
+      await applyVariantSwap(entry, "easier");
   }
 
   if (!changed){
@@ -5147,16 +5192,16 @@ function wireTodayPlanActions(item){
   });
 
   document.querySelectorAll("[data-plan-entry-easier]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const idx = Number(btn.getAttribute("data-plan-entry-easier"));
-      adjustPlanEntryAtIndex(item, idx, "easier");
+      await adjustPlanEntryAtIndex(item, idx, "easier");
     });
   });
 
   document.querySelectorAll("[data-plan-entry-harder]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const idx = Number(btn.getAttribute("data-plan-entry-harder"));
-      adjustPlanEntryAtIndex(item, idx, "harder");
+      await adjustPlanEntryAtIndex(item, idx, "harder");
     });
   });
 
