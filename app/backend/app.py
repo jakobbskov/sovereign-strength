@@ -4221,17 +4221,26 @@ def normalize_program_id(value):
     return raw
 
 
-def build_program_context(item):
+def build_program_context(item, user_settings=None):
     item = item if isinstance(item, dict) else {}
+    user_settings = user_settings if isinstance(user_settings, dict) else {}
 
-    active_strength_program_id = normalize_program_id(item.get("selected_strength_program_id"))
-    active_endurance_program_id = normalize_program_id(item.get("selected_endurance_program_id"))
+    selected_strength_program_id = normalize_program_id(item.get("selected_strength_program_id"))
+    selected_endurance_program_id = normalize_program_id(item.get("selected_endurance_program_id"))
+
+    explicit_strength_program_id = normalize_program_id(user_settings.get("active_strength_program_id"))
+    explicit_endurance_program_id = normalize_program_id(user_settings.get("active_endurance_program_id"))
+
+    active_strength_program_id = explicit_strength_program_id or selected_strength_program_id
+    active_endurance_program_id = explicit_endurance_program_id or selected_endurance_program_id
 
     program_context = {
         "active_strength_program_id": active_strength_program_id,
-        "active_strength_program_source": "auto_selected" if active_strength_program_id else None,
+        "active_strength_program_source": "explicit" if explicit_strength_program_id else ("auto_selected" if selected_strength_program_id else None),
         "active_endurance_program_id": active_endurance_program_id,
-        "active_endurance_program_source": "auto_selected" if active_endurance_program_id else None,
+        "active_endurance_program_source": "explicit" if explicit_endurance_program_id else ("auto_selected" if selected_endurance_program_id else None),
+        "selected_strength_program_id": selected_strength_program_id,
+        "selected_endurance_program_id": selected_endurance_program_id,
         "recommended_program_id": None,
         "recommended_program_kind": None,
         "recommendation_reason": None,
@@ -4241,7 +4250,7 @@ def build_program_context(item):
     switch_recommendation = detect_program_switch_recommendation(item)
     if isinstance(switch_recommendation, dict) and switch_recommendation.get("switch_recommended"):
         recommended_program_id = normalize_program_id(switch_recommendation.get("recommended_program_id"))
-        current_program_id = normalize_program_id(switch_recommendation.get("current_program_id"))
+        current_program_id = active_strength_program_id or normalize_program_id(switch_recommendation.get("current_program_id"))
 
         if recommended_program_id and recommended_program_id != current_program_id:
             program_context["recommended_program_id"] = recommended_program_id
@@ -4532,7 +4541,7 @@ def get_today_plan():
     }
 
     item = validate_today_plan_item(item)
-    item["program_context"] = build_program_context(item)
+    item["program_context"] = build_program_context(item, user_settings=user_settings)
     item["next_guidance"] = build_next_guidance(
         item,
         completed_today=already_logged_today,
@@ -4867,6 +4876,8 @@ def post_user_settings():
     profile = payload.get("profile", current.get("profile", {}))
     preferences = payload.get("preferences", current.get("preferences", {}))
     local_protection_holds = payload.get("local_protection_holds", current.get("local_protection_holds", {}))
+    active_strength_program_id = normalize_program_id(payload.get("active_strength_program_id", current.get("active_strength_program_id")))
+    active_endurance_program_id = normalize_program_id(payload.get("active_endurance_program_id", current.get("active_endurance_program_id")))
 
     allowed_regions = {"ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"}
     allowed_hold_states = {"caution", "protect"}
@@ -4888,6 +4899,8 @@ def post_user_settings():
         "profile": profile if isinstance(profile, dict) else {},
         "preferences": preferences if isinstance(preferences, dict) else {},
         "local_protection_holds": clean_local_protection_holds,
+        "active_strength_program_id": active_strength_program_id,
+        "active_endurance_program_id": active_endurance_program_id,
     }
 
     item = save_user_settings_for(auth_user.get("user_id"), item)

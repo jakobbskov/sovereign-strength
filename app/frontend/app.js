@@ -5171,12 +5171,47 @@ function renderActiveWorkoutCard(item){
       });
 }
 
+async function switchToRecommendedProgram(item){
+  const ctx = item?.program_context && typeof item.program_context === "object" ? item.program_context : null;
+  const recommendedProgramId = String(ctx?.recommended_program_id || "").trim();
+  const recommendedProgramKind = String(ctx?.recommended_program_kind || "").trim().toLowerCase();
+
+  if (!recommendedProgramId || recommendedProgramKind !== "strength"){
+    return;
+  }
+
+  const current = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const payload = {
+    equipment_increments: current.equipment_increments || {},
+    available_equipment: current.available_equipment || {},
+    profile: current.profile || {},
+    preferences: current.preferences || {},
+    local_protection_holds: current.local_protection_holds || {},
+    active_strength_program_id: recommendedProgramId,
+    active_endurance_program_id: current.active_endurance_program_id || null,
+  };
+
+  try{
+    const res = await apiPost("/api/user-settings", payload);
+    if (!res || res.ok === false){
+      throw new Error(res?.error || "could_not_save_program_selection");
+    }
+    await refreshAll();
+  }catch(err){
+    setText("status", "Kunne ikke skifte til anbefalet program: " + (err?.message || String(err)));
+  }
+}
+
 function wireTodayPlanActions(item){
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
     STATE.workoutInProgress = true;
     STATE.currentWorkoutEntryIndex = 0;
     renderTodayPlan(item);
     showWizardStep("plan");
+  });
+
+  document.getElementById("switchRecommendedProgramBtn")?.addEventListener("click", async () => {
+    await switchToRecommendedProgram(item);
   });
 
   document.getElementById("startRestitutionBtn")?.addEventListener("click", () => {
@@ -5334,6 +5369,7 @@ function buildTodayPlanRecoveryCardHtml(recovery){
 function buildTodayPlanHeroActionsHtml({
   showPlannedRestChoiceCard,
   showRestitutionChoice,
+  showRecommendedProgramSwitch,
 }){
   return showPlannedRestChoiceCard
     ? `
@@ -5344,8 +5380,9 @@ function buildTodayPlanHeroActionsHtml({
       </div>
     `
     : `
-      <div style="margin-top:12px">
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
         <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
+        ${showRecommendedProgramSwitch ? `<button type="button" class="secondary" id="switchRecommendedProgramBtn">Skift til anbefalet program</button>` : ""}
       </div>
     `;
 }
@@ -5516,9 +5553,17 @@ function renderTodayPlan(item){
       ? tr("today_plan.rest_day_lead")
       : "";
 
+    const showRecommendedProgramSwitch = Boolean(
+      item?.program_context &&
+      item.program_context.can_switch_to_recommended === true &&
+      String(item.program_context.recommended_program_kind || "").trim().toLowerCase() === "strength" &&
+      String(item.program_context.recommended_program_id || "").trim()
+    );
+
     const heroActions = buildTodayPlanHeroActionsHtml({
       showPlannedRestChoiceCard,
       showRestitutionChoice,
+      showRecommendedProgramSwitch,
     });
 
     const heroCard = buildTodayPlanHeroCardHtml({
