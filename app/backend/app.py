@@ -2620,6 +2620,26 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     return None
 
 
+def build_active_programs_by_domain(programs, user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    prefs = get_training_type_preferences(settings)
+    weekly_target_sessions = get_weekly_target_sessions(settings)
+
+    return {
+        "strength": select_strength_program(
+            programs=programs,
+            user_settings=settings,
+            weekly_target_sessions=weekly_target_sessions,
+        ),
+        "endurance": select_endurance_program(
+            programs=programs,
+            user_settings=settings,
+            weekly_target_sessions=weekly_target_sessions,
+            prefs=prefs,
+        ),
+    }
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None, selected_program_id=None):
     program = None
 
@@ -4809,7 +4829,19 @@ def get_user_settings():
         return auth_err
 
     current = get_user_settings_for(auth_user.get("user_id"))
-    return jsonify({"ok": True, "item": current})
+    programs = read_json_file(FILES["programs"])
+    if not isinstance(programs, list):
+        programs = []
+
+    item = current if isinstance(current, dict) else {}
+    item = {
+        **item,
+        "active_programs_by_domain": build_active_programs_by_domain(
+            programs=programs,
+            user_settings=item,
+        ),
+    }
+    return jsonify({"ok": True, "item": item})
 
 @app.post("/api/user-settings")
 def post_user_settings():
