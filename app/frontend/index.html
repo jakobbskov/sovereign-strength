@@ -578,6 +578,15 @@
                 <option value="6" data-i18n="profile.weekly_target_6">6 pas</option>
               </select>
             </label>
+
+            <label>
+              <span data-i18n="profile.strength_starting_profile">Styrke-startniveau</span>
+              <select id="strength_starting_profile" name="strength_starting_profile">
+                <option value="conservative_beginner" data-i18n="profile.strength_starting_profile_conservative">Forsigtig / genopstart</option>
+                <option value="beginner" selected data-i18n="profile.strength_starting_profile_beginner">Begynder</option>
+                <option value="novice" data-i18n="profile.strength_starting_profile_novice">Let øvet</option>
+              </select>
+            </label>
             </div>
 
             <div class="first-run-setup-section" data-first-run-step="equipment">
@@ -603,6 +612,30 @@
             <label>
               <span data-i18n="profile.bodyweight_available">Kropsvægtøvelser til rådighed</span>
               <select id="eq_bodyweight_enabled" name="eq_bodyweight_enabled">
+                <option value="true" data-i18n="common.yes">Ja</option>
+                <option value="false" data-i18n="common.no">Nej</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="profile.bench_available">Bænk til rådighed</span>
+              <select id="eq_bench_enabled" name="eq_bench_enabled">
+                <option value="true" data-i18n="common.yes">Ja</option>
+                <option value="false" data-i18n="common.no">Nej</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="profile.machine_available">Maskiner til rådighed</span>
+              <select id="eq_machine_enabled" name="eq_machine_enabled">
+                <option value="true" data-i18n="common.yes">Ja</option>
+                <option value="false" data-i18n="common.no">Nej</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="profile.cable_available">Kabel / pulley til rådighed</span>
+              <select id="eq_cable_enabled" name="eq_cable_enabled">
                 <option value="true" data-i18n="common.yes">Ja</option>
                 <option value="false" data-i18n="common.no">Nej</option>
               </select>
