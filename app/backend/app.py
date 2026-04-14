@@ -2544,7 +2544,20 @@ def infer_equipment_profile(user_settings):
 
 
 def select_strength_program(programs, user_settings, weekly_target_sessions):
-    equipment_profile = infer_equipment_profile(user_settings)
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
+    overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+
+    override_id = str(overrides.get("strength", "")).strip()
+    if override_id:
+        for program in programs:
+            if str(program.get("id", "")).strip() != override_id:
+                continue
+            if str(program.get("kind", "")).strip().lower() != "strength":
+                break
+            return override_id
+
+    equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
 
     candidates = []
@@ -2584,7 +2597,20 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
 
 
 def select_endurance_program(programs, user_settings, weekly_target_sessions, prefs):
-    equipment_profile = infer_equipment_profile(user_settings)
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
+    overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+
+    override_id = str(overrides.get("run", "")).strip()
+    if override_id:
+        for program in programs:
+            if str(program.get("id", "")).strip() != override_id:
+                continue
+            if str(program.get("kind", "")).strip().lower() not in ("run", "løb", "running"):
+                break
+            return override_id
+
+    equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
     prefs = prefs if isinstance(prefs, dict) else {}
 
@@ -2631,7 +2657,7 @@ def build_active_programs_by_domain(programs, user_settings):
             user_settings=settings,
             weekly_target_sessions=weekly_target_sessions,
         ),
-        "endurance": select_endurance_program(
+        "run": select_endurance_program(
             programs=programs,
             user_settings=settings,
             weekly_target_sessions=weekly_target_sessions,
@@ -4858,6 +4884,23 @@ def post_user_settings():
     preferences = payload.get("preferences", current.get("preferences", {}))
     local_protection_holds = payload.get("local_protection_holds", current.get("local_protection_holds", {}))
 
+    clean_preferences = preferences if isinstance(preferences, dict) else {}
+    raw_overrides = clean_preferences.get("active_program_overrides", {}) if isinstance(clean_preferences.get("active_program_overrides", {}), dict) else {}
+    clean_overrides = {}
+
+    if isinstance(raw_overrides, dict):
+        raw_strength = str(raw_overrides.get("strength", "")).strip()
+        raw_run = str(raw_overrides.get("run", "")).strip()
+        if raw_strength:
+            clean_overrides["strength"] = raw_strength
+        if raw_run:
+            clean_overrides["run"] = raw_run
+
+    if clean_overrides:
+        clean_preferences = {**clean_preferences, "active_program_overrides": clean_overrides}
+    elif "active_program_overrides" in clean_preferences:
+        clean_preferences = {k: v for k, v in clean_preferences.items() if k != "active_program_overrides"}
+
     allowed_regions = {"ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"}
     allowed_hold_states = {"caution", "protect"}
     clean_local_protection_holds = {}
@@ -4876,11 +4919,23 @@ def post_user_settings():
         "equipment_increments": equipment_increments if isinstance(equipment_increments, dict) else {},
         "available_equipment": available_equipment if isinstance(available_equipment, dict) else {},
         "profile": profile if isinstance(profile, dict) else {},
-        "preferences": preferences if isinstance(preferences, dict) else {},
+        "preferences": clean_preferences,
         "local_protection_holds": clean_local_protection_holds,
     }
 
     item = save_user_settings_for(auth_user.get("user_id"), item)
+
+    programs = read_json_file(FILES["programs"])
+    if not isinstance(programs, list):
+        programs = []
+
+    item = {
+        **item,
+        "active_programs_by_domain": build_active_programs_by_domain(
+            programs=programs,
+            user_settings=item,
+        ),
+    }
     return jsonify({"ok": True, "item": item})
 
 

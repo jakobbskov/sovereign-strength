@@ -2144,6 +2144,9 @@ function renderProfileEquipmentCard(){
   const trainingDaysLineEl = document.getElementById("profileTrainingDaysLine");
   const activeProgramsLineEl = document.getElementById("profileActiveProgramsLine");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
+  const strengthProgramSelectEl = document.getElementById("profileStrengthProgramSelect");
+  const runProgramSelectEl = document.getElementById("profileRunProgramSelect");
+  const saveProfileProgramsBtn = document.getElementById("saveProfileProgramsBtn");
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
   const accountHelpLineEl = document.getElementById("profileAccountHelpLine");
@@ -2163,6 +2166,9 @@ function renderProfileEquipmentCard(){
     : {};
   const trainingTypes = preferences.training_types && typeof preferences.training_types === "object"
     ? preferences.training_types
+    : {};
+  const activeProgramOverrides = preferences.active_program_overrides && typeof preferences.active_program_overrides === "object"
+    ? preferences.active_program_overrides
     : {};
   const menstruationSupportEnabled = preferences.menstruation_support_enabled === true;
   const trainingDays = preferences.training_days && typeof preferences.training_days === "object"
@@ -2201,6 +2207,30 @@ function renderProfileEquipmentCard(){
     return found ? getProgramDisplayName(found) : id;
   };
 
+  const fillProgramOverrideSelect = (selectEl, kind, selectedValue) => {
+    if (!selectEl) return;
+    const normalizedKind = String(kind || "").trim().toLowerCase();
+    const programs = Array.isArray(STATE.programs)
+      ? STATE.programs.filter(program => {
+          const x = String(program?.kind || "").trim().toLowerCase();
+          if (normalizedKind === "strength") return x === "strength" || x === "styrke";
+          if (normalizedKind === "run") return x === "run" || x === "løb" || x === "running";
+          return false;
+        })
+      : [];
+
+    const options = [
+      `<option value="">${esc(tr("profile.active_program_auto"))}</option>`,
+      ...programs.map(program => `<option value="${esc(String(program.id || ""))}">${esc(getProgramDisplayName(program))}</option>`)
+    ];
+
+    selectEl.innerHTML = options.join("");
+    selectEl.value = String(selectedValue || "").trim();
+    if (selectEl.value !== String(selectedValue || "").trim()){
+      selectEl.value = "";
+    }
+  };
+
   const profileBits = [];
   if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(tr("profile.height_value", { value: `${profile.height_cm} cm` }));
   if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(tr("profile.bodyweight_value", { value: `${profile.bodyweight_kg} kg` }));
@@ -2210,7 +2240,7 @@ function renderProfileEquipmentCard(){
   if (activeStrengthProgramName){
     activeProgramBits.push(tr("profile.active_program_strength_value", { value: activeStrengthProgramName }));
   }
-  const activeEnduranceProgramName = getProgramNameById(activeProgramsByDomain.endurance);
+  const activeEnduranceProgramName = getProgramNameById(activeProgramsByDomain.run);
   if (activeEnduranceProgramName){
     activeProgramBits.push(tr("profile.active_program_endurance_value", { value: activeEnduranceProgramName }));
   }
@@ -2255,6 +2285,46 @@ function renderProfileEquipmentCard(){
     activeProgramsLineEl.textContent = activeProgramBits.length
       ? tr("profile.active_programs_value", { value: activeProgramBits.join(" · ") })
       : tr("profile.active_programs_none");
+  }
+
+  fillProgramOverrideSelect(strengthProgramSelectEl, "strength", activeProgramOverrides.strength);
+  fillProgramOverrideSelect(runProgramSelectEl, "run", activeProgramOverrides.run);
+
+  if (saveProfileProgramsBtn && !saveProfileProgramsBtn.dataset.bound){
+    saveProfileProgramsBtn.dataset.bound = "1";
+    saveProfileProgramsBtn.addEventListener("click", async () => {
+      const currentSettings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+      const currentPreferences = currentSettings.preferences && typeof currentSettings.preferences === "object"
+        ? currentSettings.preferences
+        : {};
+      const nextOverrides = {};
+      const selectedStrength = String(strengthProgramSelectEl?.value || "").trim();
+      const selectedRun = String(runProgramSelectEl?.value || "").trim();
+
+      if (selectedStrength) nextOverrides.strength = selectedStrength;
+      if (selectedRun) nextOverrides.run = selectedRun;
+
+      const nextPreferences = { ...currentPreferences };
+      if (Object.keys(nextOverrides).length){
+        nextPreferences.active_program_overrides = nextOverrides;
+      } else {
+        delete nextPreferences.active_program_overrides;
+      }
+
+      const payload = {
+        ...currentSettings,
+        preferences: nextPreferences
+      };
+
+      const res = await apiPost("/api/user-settings", payload);
+      STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
+
+      const todayPlanRes = await apiGet("/api/today-plan");
+      STATE.currentTodayPlan = todayPlanRes?.item || null;
+
+      renderProfileEquipmentCard();
+      renderTodayPlan(STATE.currentTodayPlan || null);
+    });
   }
 
   if (equipmentLineEl){
