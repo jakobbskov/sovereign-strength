@@ -2524,6 +2524,23 @@ def infer_equipment_profile(user_settings):
     if not isinstance(user_settings, dict):
         return "minimal_home"
 
+    explicit_profile = str(user_settings.get("equipment_profile", "")).strip()
+    valid_profiles = {"minimal_home", "dumbbell_home", "gym_basic", "full_gym", "run_only", "hybrid_home"}
+    if explicit_profile in valid_profiles:
+        return explicit_profile
+
+    profile = user_settings.get("profile", {})
+    if isinstance(profile, dict):
+        explicit_profile = str(profile.get("equipment_profile", "")).strip()
+        if explicit_profile in valid_profiles:
+            return explicit_profile
+
+    preferences = user_settings.get("preferences", {})
+    if isinstance(preferences, dict):
+        explicit_profile = str(preferences.get("equipment_profile", "")).strip()
+        if explicit_profile in valid_profiles:
+            return explicit_profile
+
     available = user_settings.get("available_equipment", {})
     if not isinstance(available, dict):
         available = {}
@@ -2575,7 +2592,11 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     if target_sessions >= 3 and equipment_profile in ("minimal_home", "dumbbell_home"):
         preferred_ids.append("strength_full_body_3x_beginner")
     if target_sessions == 2 and equipment_profile in ("gym_basic", "full_gym"):
-        preferred_ids.append("base_strength_a")
+        preferred_ids.extend(["starter_strength_gym_2x", "base_strength_a"])
+    if target_sessions == 3 and equipment_profile in ("gym_basic", "full_gym"):
+        preferred_ids.append("starter_strength_gym_3x")
+    if target_sessions == 4 and equipment_profile in ("gym_basic", "full_gym"):
+        preferred_ids.append("base_strength_gym_4x")
     if target_sessions == 2 and equipment_profile in ("minimal_home", "dumbbell_home"):
         preferred_ids.append("starter_strength_2x")
 
@@ -4128,13 +4149,34 @@ def detect_program_switch_recommendation(today_plan_item):
     weekly_status = item.get("weekly_status", {}) if isinstance(item.get("weekly_status"), dict) else {}
     target_sessions = int(weekly_status.get("weekly_target_sessions", weekly_status.get("target_sessions", 0)) or 0)
 
-    if selected_strength_program_id in ("starter_strength_2x", "base_strength_a") and target_sessions >= 3:
+    home_2x_programs = {"starter_strength_2x", "reentry_strength_2x"}
+    gym_2x_programs = {"starter_strength_gym_2x", "base_strength_a"}
+
+    if selected_strength_program_id in home_2x_programs and target_sessions >= 3:
         return {
             "switch_recommended": True,
             "current_program_id": selected_strength_program_id,
             "recommended_program_id": "strength_full_body_3x_beginner",
-            "switch_reason": "nuværende styrkeprogram er 2-dages, men ugentligt mål peger mod 3+ pas",
-            "guidance_message": "Dit nuværende styrkeprogram er 2-dages orienteret, men dit ugentlige mål peger mod 3 eller flere pas. Du kan overveje et 3-dages styrkeprogram.",
+            "switch_reason": "nuværende styrkeprogram er 2-dages hjemmeorienteret, men ugentligt mål peger mod 3+ pas",
+            "guidance_message": "Dit nuværende styrkeprogram er 2-dages orienteret, men dit ugentlige mål peger mod 3 eller flere pas. Du kan overveje et 3-dages hjemmeprogram.",
+        }
+
+    if selected_strength_program_id in gym_2x_programs and target_sessions == 3:
+        return {
+            "switch_recommended": True,
+            "current_program_id": selected_strength_program_id,
+            "recommended_program_id": "starter_strength_gym_3x",
+            "switch_reason": "nuværende styrkeprogram er 2-dages gym-orienteret, men ugentligt mål peger mod 3 pas",
+            "guidance_message": "Dit nuværende gymprogram er 2-dages orienteret, men dit ugentlige mål peger mod 3 pas. Du kan overveje et 3-dages gymprogram.",
+        }
+
+    if selected_strength_program_id in gym_2x_programs and target_sessions >= 4:
+        return {
+            "switch_recommended": True,
+            "current_program_id": selected_strength_program_id,
+            "recommended_program_id": "base_strength_gym_4x",
+            "switch_reason": "nuværende styrkeprogram er 2-dages gym-orienteret, men ugentligt mål peger mod 4+ pas",
+            "guidance_message": "Dit nuværende gymprogram er 2-dages orienteret, men dit ugentlige mål peger mod 4 eller flere pas. Du kan overveje et 4-dages upper/lower-program.",
         }
 
     return None
