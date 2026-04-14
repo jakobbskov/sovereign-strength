@@ -2576,6 +2576,9 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
 
     equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
+    strength_starting_profile = str(preferences.get("strength_starting_profile", "beginner") or "beginner").strip()
+    if strength_starting_profile not in ("conservative_beginner", "beginner", "novice"):
+        strength_starting_profile = "beginner"
 
     candidates = []
     for program in programs:
@@ -2589,16 +2592,34 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
             candidates.append(program)
 
     preferred_ids = []
-    if target_sessions >= 3 and equipment_profile in ("minimal_home", "dumbbell_home"):
-        preferred_ids.append("strength_full_body_3x_beginner")
-    if target_sessions == 2 and equipment_profile in ("gym_basic", "full_gym"):
-        preferred_ids.extend(["starter_strength_gym_2x", "base_strength_a"])
-    if target_sessions == 3 and equipment_profile in ("gym_basic", "full_gym"):
-        preferred_ids.append("starter_strength_gym_3x")
-    if target_sessions == 4 and equipment_profile in ("gym_basic", "full_gym"):
-        preferred_ids.append("base_strength_gym_4x")
-    if target_sessions == 2 and equipment_profile in ("minimal_home", "dumbbell_home"):
-        preferred_ids.append("starter_strength_2x")
+
+    if equipment_profile in ("gym_basic", "full_gym"):
+        if strength_starting_profile == "novice":
+            if target_sessions >= 4:
+                preferred_ids.append("base_strength_gym_4x")
+            if target_sessions >= 3:
+                preferred_ids.append("base_strength_gym_3x")
+            if target_sessions == 2:
+                preferred_ids.append("base_strength_a")
+        elif strength_starting_profile == "beginner":
+            if target_sessions >= 3:
+                preferred_ids.append("starter_strength_gym_3x")
+            if target_sessions == 2:
+                preferred_ids.append("starter_strength_gym_2x")
+        else:
+            preferred_ids.append("reentry_strength_2x")
+            if target_sessions >= 3:
+                preferred_ids.append("starter_strength_gym_3x")
+            if target_sessions == 2:
+                preferred_ids.append("starter_strength_gym_2x")
+
+    if equipment_profile in ("minimal_home", "dumbbell_home"):
+        if strength_starting_profile == "conservative_beginner":
+            preferred_ids.append("reentry_strength_2x")
+        if target_sessions >= 3:
+            preferred_ids.append("strength_full_body_3x_beginner")
+        if target_sessions == 2:
+            preferred_ids.append("starter_strength_2x")
 
     for pid in preferred_ids:
         for program in candidates:
@@ -2608,7 +2629,16 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     if candidates:
         return str(candidates[0].get("id"))
 
-    for pid in ("starter_strength_2x", "base_strength_a"):
+    for pid in (
+        "reentry_strength_2x",
+        "starter_strength_2x",
+        "starter_strength_gym_2x",
+        "strength_full_body_3x_beginner",
+        "starter_strength_gym_3x",
+        "base_strength_a",
+        "base_strength_gym_3x",
+        "base_strength_gym_4x",
+    ):
         for program in programs:
             if program.get("id") == pid:
                 return pid
@@ -4942,6 +4972,11 @@ def post_user_settings():
         clean_preferences = {**clean_preferences, "active_program_overrides": clean_overrides}
     elif "active_program_overrides" in clean_preferences:
         clean_preferences = {k: v for k, v in clean_preferences.items() if k != "active_program_overrides"}
+
+    strength_starting_profile = str(clean_preferences.get("strength_starting_profile", "beginner") or "beginner").strip()
+    if strength_starting_profile not in {"conservative_beginner", "beginner", "novice"}:
+        strength_starting_profile = "beginner"
+    clean_preferences = {**clean_preferences, "strength_starting_profile": strength_starting_profile}
 
     allowed_regions = {"ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"}
     allowed_hold_states = {"caution", "protect"}
