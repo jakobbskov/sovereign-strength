@@ -2593,6 +2593,8 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
 
     preferred_ids = []
 
+    preferred_ids = []
+
     if equipment_profile in ("gym_basic", "full_gym"):
         if strength_starting_profile == "novice":
             if target_sessions >= 4:
