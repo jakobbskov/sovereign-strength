@@ -1928,7 +1928,7 @@ function buildInitialSetupChecklist(userSettings){
   const hasTrainingType = Object.values(trainingTypes).some(Boolean);
   const hasTrainingDays = Object.values(trainingDays).some(Boolean);
 
-  const equipmentKeys = ["barbell", "dumbbell", "bodyweight"];
+  const equipmentKeys = ["barbell", "dumbbell", "bodyweight", "bench", "machine", "cable"];
   const hasAnyEquipmentValue = equipmentKeys.some(key => typeof availableEquipment[key] === "boolean");
   const hasEquipment = hasAnyEquipmentValue && equipmentKeys.some(key => availableEquipment[key] === true);
 
@@ -2466,7 +2466,10 @@ function getInitialSetupChecklistSourceSettings(){
   snapshot.available_equipment = {
     barbell: readSelectBool("eq_barbell_enabled"),
     dumbbell: readSelectBool("eq_dumbbell_enabled"),
-    bodyweight: readSelectBool("eq_bodyweight_enabled")
+    bodyweight: readSelectBool("eq_bodyweight_enabled"),
+    bench: readSelectBool("eq_bench_enabled"),
+    machine: readSelectBool("eq_machine_enabled"),
+    cable: readSelectBool("eq_cable_enabled")
   };
   snapshot.equipment_increments = {
     ...snapshot.equipment_increments,
@@ -2532,6 +2535,9 @@ function populateEquipmentEditor(){
   setVal("eq_barbell_enabled", available.barbell === false ? "false" : "true");
   setVal("eq_dumbbell_enabled", available.dumbbell === false ? "false" : "true");
   setVal("eq_bodyweight_enabled", available.bodyweight === false ? "false" : "true");
+  setVal("eq_bench_enabled", available.bench === false ? "false" : "true");
+  setVal("eq_machine_enabled", available.machine === false ? "false" : "true");
+  setVal("eq_cable_enabled", available.cable === false ? "false" : "true");
 
   setVal("eq_barbell_increment", increments.barbell ?? 10);
   setVal("eq_dumbbell_increment", increments.dumbbell ?? 5);
@@ -2709,6 +2715,9 @@ async function handleEquipmentSettingsSubmit(ev){
       barbell: readBool("eq_barbell_enabled"),
       dumbbell: readBool("eq_dumbbell_enabled"),
       bodyweight: readBool("eq_bodyweight_enabled"),
+      bench: readBool("eq_bench_enabled"),
+      machine: readBool("eq_machine_enabled"),
+      cable: readBool("eq_cable_enabled"),
     },
     equipment_increments: {
       barbell: readNum("eq_barbell_increment", 10),
