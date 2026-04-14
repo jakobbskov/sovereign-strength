@@ -2142,6 +2142,7 @@ function renderProfileEquipmentCard(){
   const bodyLineEl = document.getElementById("profileBodyLine");
   const trainingTypesLineEl = document.getElementById("profileTrainingTypesLine");
   const trainingDaysLineEl = document.getElementById("profileTrainingDaysLine");
+  const activeProgramsLineEl = document.getElementById("profileActiveProgramsLine");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
@@ -2176,6 +2177,9 @@ function renderProfileEquipmentCard(){
   const increments = settings.equipment_increments && typeof settings.equipment_increments === "object"
     ? settings.equipment_increments
     : {};
+  const activeProgramsByDomain = settings.active_programs_by_domain && typeof settings.active_programs_by_domain === "object"
+    ? settings.active_programs_by_domain
+    : {};
 
   const enabledEquipment = Object.entries(available)
     .filter(([, enabled]) => Boolean(enabled))
@@ -2188,9 +2192,28 @@ function renderProfileEquipmentCard(){
     displayNameEl.textContent = username;
   }
 
+  const getProgramNameById = (programId) => {
+    const id = String(programId || "").trim();
+    if (!id) return null;
+    const found = Array.isArray(STATE.programs)
+      ? STATE.programs.find(program => String(program?.id || "").trim() === id)
+      : null;
+    return found ? getProgramDisplayName(found) : id;
+  };
+
   const profileBits = [];
   if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(tr("profile.height_value", { value: `${profile.height_cm} cm` }));
   if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(tr("profile.bodyweight_value", { value: `${profile.bodyweight_kg} kg` }));
+
+  const activeProgramBits = [];
+  const activeStrengthProgramName = getProgramNameById(activeProgramsByDomain.strength);
+  if (activeStrengthProgramName){
+    activeProgramBits.push(tr("profile.active_program_strength_value", { value: activeStrengthProgramName }));
+  }
+  const activeEnduranceProgramName = getProgramNameById(activeProgramsByDomain.endurance);
+  if (activeEnduranceProgramName){
+    activeProgramBits.push(tr("profile.active_program_endurance_value", { value: activeEnduranceProgramName }));
+  }
 
   const selectedTraining = [
     trainingTypes.running ? tr("training_type.run") : "",
@@ -2226,6 +2249,12 @@ function renderProfileEquipmentCard(){
       ? tr("profile.training_days_value", { value: selectedDays.join(", ") })
       : tr("checkin.possible_days_none");
     trainingDaysLineEl.textContent = `${dayText} · ${tr("profile.week_goal_value", { count: weeklyTargetSessions })}`;
+  }
+
+  if (activeProgramsLineEl){
+    activeProgramsLineEl.textContent = activeProgramBits.length
+      ? tr("profile.active_programs_value", { value: activeProgramBits.join(" · ") })
+      : tr("profile.active_programs_none");
   }
 
   if (equipmentLineEl){
