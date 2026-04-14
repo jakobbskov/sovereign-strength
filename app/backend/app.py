@@ -2666,6 +2666,9 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
     prefs = prefs if isinstance(prefs, dict) else {}
+    run_starting_profile = str(preferences.get("run_starting_profile", "beginner") or "beginner").strip()
+    if run_starting_profile not in ("conservative_beginner", "beginner", "novice"):
+        run_starting_profile = "beginner"
 
     running_enabled = bool(prefs.get("running", True))
     strength_enabled = bool(prefs.get("strength_weights", True)) or bool(prefs.get("bodyweight", True))
@@ -2673,20 +2676,32 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     if not running_enabled:
         return None
 
-    if running_enabled and strength_enabled and target_sessions >= 3:
-        for program in programs:
-            if program.get("id") == "hybrid_run_strength_3x_beginner":
-                return "hybrid_run_strength_3x_beginner"
+    preferred_ids = []
 
-    if target_sessions >= 3:
-        for program in programs:
-            if program.get("id") == "base_run_3x":
-                return "base_run_3x"
+    if running_enabled and strength_enabled:
+        if target_sessions >= 3:
+            preferred_ids.append("hybrid_run_strength_3x_beginner")
+        if target_sessions == 2:
+            preferred_ids.append("hybrid_run_strength_2x_beginner")
 
-    if target_sessions == 2:
+    if run_starting_profile == "conservative_beginner" and target_sessions == 2:
+        preferred_ids.append("reentry_run_2x")
+
+    if target_sessions >= 4:
+        preferred_ids.append("base_run_4x")
+    elif target_sessions == 3:
+        if run_starting_profile == "novice":
+            preferred_ids.append("base_run_3x")
+        else:
+            preferred_ids.append("starter_run_3x_beginner")
+            preferred_ids.append("base_run_3x")
+    elif target_sessions == 2:
+        preferred_ids.append("starter_run_2x")
+
+    for pid in preferred_ids:
         for program in programs:
-            if program.get("id") == "starter_run_2x":
-                return "starter_run_2x"
+            if program.get("id") == pid:
+                return pid
 
     for program in programs:
         if str(program.get("kind", "")).strip() != "run":

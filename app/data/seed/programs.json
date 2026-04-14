@@ -987,5 +987,206 @@
         ]
       }
     ]
+  },
+  {
+    "id": "reentry_run_2x",
+    "name": "Return to running (2 days/week)",
+    "name_en": "Return to running (2 days/week)",
+    "kind": "run",
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "15-20 min roligt"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "run_intervals",
+            "sets": 1,
+            "reps": "4 x 1 min roligt / 1 min gang"
+          }
+        ]
+      }
+    ],
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "general_health",
+      "fat_loss",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "run_only",
+      "hybrid_home"
+    ]
+  },
+  {
+    "id": "starter_run_3x_beginner",
+    "name": "Getting started run (3 days/week)",
+    "name_en": "Getting started run (3 days/week)",
+    "kind": "run",
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "20-25 min"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "run_intervals",
+            "sets": 1,
+            "reps": "6 x 1 min hurtigt / 1 min roligt"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "25-30 min"
+          }
+        ]
+      }
+    ],
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "performance",
+      "general_health",
+      "fat_loss"
+    ],
+    "supported_weekly_sessions": [
+      3
+    ],
+    "equipment_profiles": [
+      "run_only",
+      "hybrid_home"
+    ]
+  },
+  {
+    "id": "base_run_4x",
+    "name": "Base run (4 days/week)",
+    "name_en": "Base run (4 days/week)",
+    "kind": "run",
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "25-30 min"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "run_intervals",
+            "sets": 1,
+            "reps": "10 x 1 min hurtigt / 1 min roligt"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "30-35 min"
+          }
+        ]
+      },
+      {
+        "label": "Day D",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "40-50 min"
+          }
+        ]
+      }
+    ],
+    "recommended_levels": [
+      "novice"
+    ],
+    "supported_goals": [
+      "performance",
+      "general_health",
+      "fat_loss"
+    ],
+    "supported_weekly_sessions": [
+      4
+    ],
+    "equipment_profiles": [
+      "run_only",
+      "hybrid_home"
+    ]
+  },
+  {
+    "id": "hybrid_run_strength_2x_beginner",
+    "name": "Hybrid run + strength foundation (2 sessions/week)",
+    "name_en": "Hybrid run + strength foundation (2 sessions/week)",
+    "kind": "run",
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "run_easy",
+            "sets": 1,
+            "reps": "20-25 min"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "run_intervals",
+            "sets": 1,
+            "reps": "5 x 1 min hurtigt / 1 min roligt"
+          }
+        ]
+      }
+    ],
+    "recommended_levels": [
+      "beginner"
+    ],
+    "supported_goals": [
+      "performance",
+      "general_health",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "hybrid_home"
+    ]
   }
 ]
