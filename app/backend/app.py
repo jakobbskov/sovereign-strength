@@ -2755,6 +2755,33 @@ def build_active_programs_by_domain(programs, user_settings):
     }
 
 
+def build_active_program_status_by_domain(programs, user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
+    overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+
+    active_programs = build_active_programs_by_domain(programs, settings)
+    status = {}
+
+    for domain in ("strength", "run"):
+        program_id = str(active_programs.get(domain, "") or "").strip()
+        override_id = str(overrides.get(domain, "") or "").strip()
+        if not program_id:
+            status[domain] = {
+                "program_id": None,
+                "selection_source": None,
+            }
+            continue
+
+        selection_source = "manual_override" if override_id and override_id == program_id else "automatic"
+        status[domain] = {
+            "program_id": program_id,
+            "selection_source": selection_source,
+        }
+
+    return status
+
+
 def build_strength_plan(programs, exercises, latest_strength, time_budget_min, fatigue_score, user_settings=None, user_id=None, selected_program_id=None):
     program = None
 
@@ -4976,6 +5003,10 @@ def get_user_settings():
             programs=programs,
             user_settings=item,
         ),
+        "active_program_status_by_domain": build_active_program_status_by_domain(
+            programs=programs,
+            user_settings=item,
+        ),
     }
     return jsonify({"ok": True, "item": item})
 
@@ -5056,6 +5087,10 @@ def post_user_settings():
     item = {
         **item,
         "active_programs_by_domain": build_active_programs_by_domain(
+            programs=programs,
+            user_settings=item,
+        ),
+        "active_program_status_by_domain": build_active_program_status_by_domain(
             programs=programs,
             user_settings=item,
         ),
