@@ -496,14 +496,18 @@
         </details>
         <div class="overview-status" style="margin-top:12px">
           <div class="stat-line"><strong data-i18n="profile.active_program_controls_title">Aktive programmer</strong></div>
-          <label class="small" for="profileStrengthProgramSelect" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
-          <select id="profileStrengthProgramSelect" style="margin-bottom:10px">
-            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
-          </select>
-          <label class="small" for="profileRunProgramSelect" data-i18n="profile.active_program_run_label">Løbeprogram</label>
-          <select id="profileRunProgramSelect">
-            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
-          </select>
+          <div id="profileStrengthProgramControlWrap">
+            <label class="small" for="profileStrengthProgramSelect" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
+            <select id="profileStrengthProgramSelect" style="margin-bottom:10px">
+              <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
+            </select>
+          </div>
+          <div id="profileRunProgramControlWrap">
+            <label class="small" for="profileRunProgramSelect" data-i18n="profile.active_program_run_label">Løbeprogram</label>
+            <select id="profileRunProgramSelect">
+              <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
+            </select>
+          </div>
           <div class="small" id="profileProgramOverrideHelp" style="margin-top:8px" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
         <div id="profileRecommendedProgramWrap" class="overview-status wizard-step-hidden" style="margin-top:12px; display:none">
           <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>

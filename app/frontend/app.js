@@ -2144,7 +2144,9 @@ function renderProfileEquipmentCard(){
   const trainingDaysLineEl = document.getElementById("profileTrainingDaysLine");
   const activeProgramsLineEl = document.getElementById("profileActiveProgramsLine");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
+  const strengthProgramControlWrapEl = document.getElementById("profileStrengthProgramControlWrap");
   const strengthProgramSelectEl = document.getElementById("profileStrengthProgramSelect");
+  const runProgramControlWrapEl = document.getElementById("profileRunProgramControlWrap");
   const runProgramSelectEl = document.getElementById("profileRunProgramSelect");
   const saveProfileProgramsBtn = document.getElementById("saveProfileProgramsBtn");
   const recommendedProgramWrapEl = document.getElementById("profileRecommendedProgramWrap");
@@ -2258,16 +2260,19 @@ function renderProfileEquipmentCard(){
     return "";
   };
 
+  const strengthTrainingEnabled = Boolean(trainingTypes.strength_weights) || Boolean(trainingTypes.bodyweight);
+  const runTrainingEnabled = Boolean(trainingTypes.running);
+
   const activeProgramBits = [];
   const activeStrengthProgramName = getProgramNameById(activeProgramsByDomain.strength);
   const activeStrengthSource = formatProgramSelectionSource(activeProgramStatusByDomain?.strength?.selection_source);
-  if (activeStrengthProgramName){
+  if (strengthTrainingEnabled && activeStrengthProgramName){
     const strengthLabel = tr("profile.active_program_strength_value", { value: activeStrengthProgramName });
     activeProgramBits.push([strengthLabel, activeStrengthSource].filter(Boolean).join(" · "));
   }
   const activeEnduranceProgramName = getProgramNameById(activeProgramsByDomain.run);
   const activeEnduranceSource = formatProgramSelectionSource(activeProgramStatusByDomain?.run?.selection_source);
-  if (activeEnduranceProgramName){
+  if (runTrainingEnabled && activeEnduranceProgramName){
     const enduranceLabel = tr("profile.active_program_endurance_value", { value: activeEnduranceProgramName });
     activeProgramBits.push([enduranceLabel, activeEnduranceSource].filter(Boolean).join(" · "));
   }
@@ -2315,7 +2320,7 @@ function renderProfileEquipmentCard(){
   }
 
   if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){
-    const hasRecommendation = Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName);
+    const hasRecommendation = strengthTrainingEnabled && Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName);
     recommendedProgramWrapEl.classList.toggle("wizard-step-hidden", !hasRecommendation);
     recommendedProgramWrapEl.style.display = hasRecommendation ? "" : "none";
 
@@ -2334,8 +2339,31 @@ function renderProfileEquipmentCard(){
     }
   }
 
-  fillProgramOverrideSelect(strengthProgramSelectEl, "strength", activeProgramOverrides.strength);
-  fillProgramOverrideSelect(runProgramSelectEl, "run", activeProgramOverrides.run);
+  if (strengthProgramControlWrapEl){
+    strengthProgramControlWrapEl.style.display = strengthTrainingEnabled ? "" : "none";
+  }
+  if (runProgramControlWrapEl){
+    runProgramControlWrapEl.style.display = runTrainingEnabled ? "" : "none";
+  }
+  if (saveProfileProgramsBtn){
+    saveProfileProgramsBtn.style.display = (strengthTrainingEnabled || runTrainingEnabled) ? "" : "none";
+  }
+  const overrideHelpEl = document.getElementById("profileProgramOverrideHelp");
+  if (overrideHelpEl){
+    overrideHelpEl.style.display = (strengthTrainingEnabled || runTrainingEnabled) ? "" : "none";
+  }
+
+  if (strengthTrainingEnabled){
+    fillProgramOverrideSelect(strengthProgramSelectEl, "strength", activeProgramOverrides.strength);
+  } else if (strengthProgramSelectEl){
+    strengthProgramSelectEl.value = "";
+  }
+
+  if (runTrainingEnabled){
+    fillProgramOverrideSelect(runProgramSelectEl, "run", activeProgramOverrides.run);
+  } else if (runProgramSelectEl){
+    runProgramSelectEl.value = "";
+  }
 
   if (applyRecommendedStrengthProgramBtn && !applyRecommendedStrengthProgramBtn.dataset.bound){
     applyRecommendedStrengthProgramBtn.dataset.bound = "1";
