@@ -274,12 +274,23 @@ def get_training_day_context(user_settings, date_str):
     if not isinstance(user_settings, dict):
         user_settings = {}
 
-    training_days = user_settings.get("training_days", [])
-    if not isinstance(training_days, list):
-        training_days = []
+    preferences = user_settings.get("preferences", {})
+    if not isinstance(preferences, dict):
+        preferences = {}
 
-    training_days = [str(x).strip().lower() for x in training_days if str(x).strip()]
-    preferred_sessions = user_settings.get("preferred_sessions_per_week", 3)
+    raw_training_days = preferences.get("training_days", {})
+    training_days = []
+
+    if isinstance(raw_training_days, dict):
+        training_days = [
+            str(day_key).strip().lower()
+            for day_key, enabled in raw_training_days.items()
+            if bool(enabled) and str(day_key).strip()
+        ]
+    elif isinstance(raw_training_days, list):
+        training_days = [str(x).strip().lower() for x in raw_training_days if str(x).strip()]
+
+    preferred_sessions = preferences.get("weekly_target_sessions", 3)
     try:
         preferred_sessions = int(preferred_sessions)
     except Exception:
@@ -294,8 +305,6 @@ def get_training_day_context(user_settings, date_str):
         "preferred_sessions_per_week": preferred_sessions,
         "is_training_day": is_training_day,
     }
-
-
 def get_user_settings_for(user_id):
     return get_storage().get_user_settings_for(user_id)
 
