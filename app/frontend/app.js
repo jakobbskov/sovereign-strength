@@ -2147,6 +2147,10 @@ function renderProfileEquipmentCard(){
   const strengthProgramSelectEl = document.getElementById("profileStrengthProgramSelect");
   const runProgramSelectEl = document.getElementById("profileRunProgramSelect");
   const saveProfileProgramsBtn = document.getElementById("saveProfileProgramsBtn");
+  const recommendedProgramWrapEl = document.getElementById("profileRecommendedProgramWrap");
+  const recommendedStrengthLineEl = document.getElementById("profileRecommendedStrengthLine");
+  const recommendedStrengthReasonEl = document.getElementById("profileRecommendedStrengthReason");
+  const applyRecommendedStrengthProgramBtn = document.getElementById("applyRecommendedStrengthProgramBtn");
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
   const accountHelpLineEl = document.getElementById("profileAccountHelpLine");
@@ -2186,6 +2190,13 @@ function renderProfileEquipmentCard(){
   const activeProgramsByDomain = settings.active_programs_by_domain && typeof settings.active_programs_by_domain === "object"
     ? settings.active_programs_by_domain
     : {};
+  const nextGuidance = STATE.currentTodayPlan?.next_guidance && typeof STATE.currentTodayPlan.next_guidance === "object"
+    ? STATE.currentTodayPlan.next_guidance
+    : null;
+  const recommendedStrengthProgramId = nextGuidance?.kind === "program_switch_recommendation"
+    ? String(nextGuidance?.recommended_program_id || "").trim()
+    : "";
+  const recommendedStrengthReason = String(nextGuidance?.switch_reason || nextGuidance?.message || "").trim();
 
   const enabledEquipment = Object.entries(available)
     .filter(([, enabled]) => Boolean(enabled))
@@ -2206,6 +2217,8 @@ function renderProfileEquipmentCard(){
       : null;
     return found ? getProgramDisplayName(found) : id;
   };
+
+  const recommendedStrengthProgramName = getProgramNameById(recommendedStrengthProgramId);
 
   const fillProgramOverrideSelect = (selectEl, kind, selectedValue) => {
     if (!selectEl) return;
@@ -2287,8 +2300,38 @@ function renderProfileEquipmentCard(){
       : tr("profile.active_programs_none");
   }
 
+  if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){
+    const hasRecommendation = Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName);
+    recommendedProgramWrapEl.classList.toggle("wizard-step-hidden", !hasRecommendation);
+    recommendedProgramWrapEl.style.display = hasRecommendation ? "" : "none";
+
+    if (applyRecommendedStrengthProgramBtn){
+      applyRecommendedStrengthProgramBtn.dataset.recommendedProgramId = hasRecommendation ? recommendedStrengthProgramId : "";
+    }
+
+    if (hasRecommendation){
+      recommendedStrengthLineEl.textContent = tr("profile.recommended_strength_program_value", {
+        value: recommendedStrengthProgramName
+      });
+      recommendedStrengthReasonEl.textContent = recommendedStrengthReason || tr("profile.recommended_strength_program_default_reason");
+    } else {
+      recommendedStrengthLineEl.textContent = "";
+      recommendedStrengthReasonEl.textContent = "";
+    }
+  }
+
   fillProgramOverrideSelect(strengthProgramSelectEl, "strength", activeProgramOverrides.strength);
   fillProgramOverrideSelect(runProgramSelectEl, "run", activeProgramOverrides.run);
+
+  if (applyRecommendedStrengthProgramBtn && !applyRecommendedStrengthProgramBtn.dataset.bound){
+    applyRecommendedStrengthProgramBtn.dataset.bound = "1";
+    applyRecommendedStrengthProgramBtn.addEventListener("click", async () => {
+      const recommendedProgramId = String(applyRecommendedStrengthProgramBtn.dataset.recommendedProgramId || "").trim();
+      if (!recommendedProgramId || !strengthProgramSelectEl) return;
+      strengthProgramSelectEl.value = recommendedProgramId;
+      saveProfileProgramsBtn?.click();
+    });
+  }
 
   if (saveProfileProgramsBtn && !saveProfileProgramsBtn.dataset.bound){
     saveProfileProgramsBtn.dataset.bound = "1";
@@ -5285,6 +5328,41 @@ function renderActiveWorkoutCard(item){
       });
 }
 
+async function applyRecommendedStrengthProgram(programId){
+  const recommendedProgramId = String(programId || "").trim();
+  if (!recommendedProgramId) return;
+
+  const currentSettings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const currentPreferences = currentSettings.preferences && typeof currentSettings.preferences === "object"
+    ? currentSettings.preferences
+    : {};
+  const currentOverrides = currentPreferences.active_program_overrides && typeof currentPreferences.active_program_overrides === "object"
+    ? currentPreferences.active_program_overrides
+    : {};
+
+  const nextPreferences = {
+    ...currentPreferences,
+    active_program_overrides: {
+      ...currentOverrides,
+      strength: recommendedProgramId,
+    },
+  };
+
+  const payload = {
+    ...currentSettings,
+    preferences: nextPreferences,
+  };
+
+  const res = await apiPost("/api/user-settings", payload);
+  STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
+
+  const todayPlanRes = await apiGet("/api/today-plan");
+  STATE.currentTodayPlan = todayPlanRes?.item || null;
+
+  renderProfileEquipmentCard();
+  renderTodayPlan(STATE.currentTodayPlan || null);
+}
+
 function wireTodayPlanActions(item){
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
     STATE.workoutInProgress = true;
@@ -5303,6 +5381,14 @@ function wireTodayPlanActions(item){
   document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
   document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
     showWizardStep("manual");
+  });
+
+  document.querySelectorAll("[data-apply-recommended-strength-program]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const programId = String(btn.getAttribute("data-apply-recommended-strength-program") || "").trim();
+      if (!programId) return;
+      await applyRecommendedStrengthProgram(programId);
+    });
   });
 
   document.querySelectorAll("[data-plan-entry-easier]").forEach(btn => {
@@ -5366,6 +5452,37 @@ function buildTodayPlanEntryCardsHtml(item, isPlannedRestDay){
       </li>
     `;
   }).join("");
+}
+
+function buildTodayPlanProgramRecommendationCardHtml(item){
+  const guidance = item?.next_guidance && typeof item.next_guidance === "object"
+    ? item.next_guidance
+    : null;
+  if (!guidance || guidance.kind !== "program_switch_recommendation") return "";
+
+  const recommendedProgramId = String(guidance.recommended_program_id || "").trim();
+  if (!recommendedProgramId) return "";
+
+  const found = Array.isArray(STATE.programs)
+    ? STATE.programs.find(program => String(program?.id || "").trim() === recommendedProgramId)
+    : null;
+  const recommendedProgramName = found ? getProgramDisplayName(found) : recommendedProgramId;
+  const reason = String(guidance.switch_reason || guidance.message || "").trim();
+
+  return `
+    <li>
+      <div style="font-weight:700">${esc(tr("today_plan.recommended_program_title"))}</div>
+      <div class="small" style="margin-top:8px; line-height:1.45">
+        ${esc(tr("today_plan.recommended_strength_program_value", { value: recommendedProgramName }))}
+      </div>
+      ${reason ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(reason)}</div>` : ""}
+      <div style="margin-top:10px">
+        <button type="button" class="secondary" data-apply-recommended-strength-program="${esc(recommendedProgramId)}">
+          ${esc(tr("button.switch_to_recommended_program"))}
+        </button>
+      </div>
+    </li>
+  `;
 }
 
 function buildTodayPlanRecoveryCardHtml(recovery){
@@ -5578,10 +5695,11 @@ function renderTodayPlan(item){
     });
 
     const recoveryCard = buildTodayPlanRecoveryCardHtml(recovery);
+    const recommendationCard = buildTodayPlanProgramRecommendationCardHtml(item);
 
     const entryCards = buildTodayPlanEntryCardsHtml(item, isPlannedRestDay);
 
-    root.innerHTML = heroCard + recoveryCard + entryCards;
+    root.innerHTML = heroCard + recoveryCard + recommendationCard + entryCards;
 
     wireTodayPlanActions(item);
 
