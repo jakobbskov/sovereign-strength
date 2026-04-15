@@ -3798,7 +3798,9 @@ def build_today_plan_training_decision(
 
     planning_mode = "fixed"
     if isinstance(user_settings, dict):
-        planning_mode = str(user_settings.get("planning_mode", "fixed")).strip() or "fixed"
+        preferences = user_settings.get("preferences", {}) if isinstance(user_settings.get("preferences", {}), dict) else {}
+        raw_planning_mode = str(preferences.get("planning_mode", "")).strip() or str(user_settings.get("planning_mode", "")).strip() or "fixed"
+        planning_mode = raw_planning_mode if raw_planning_mode in {"fixed", "autoplan"} else "fixed"
 
     autoplan_meta = None
 
