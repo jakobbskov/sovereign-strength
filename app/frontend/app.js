@@ -2190,6 +2190,9 @@ function renderProfileEquipmentCard(){
   const activeProgramsByDomain = settings.active_programs_by_domain && typeof settings.active_programs_by_domain === "object"
     ? settings.active_programs_by_domain
     : {};
+  const activeProgramStatusByDomain = settings.active_program_status_by_domain && typeof settings.active_program_status_by_domain === "object"
+    ? settings.active_program_status_by_domain
+    : {};
   const nextGuidance = STATE.currentTodayPlan?.next_guidance && typeof STATE.currentTodayPlan.next_guidance === "object"
     ? STATE.currentTodayPlan.next_guidance
     : null;
@@ -2248,14 +2251,25 @@ function renderProfileEquipmentCard(){
   if (profile.height_cm != null && profile.height_cm !== "") profileBits.push(tr("profile.height_value", { value: `${profile.height_cm} cm` }));
   if (profile.bodyweight_kg != null && profile.bodyweight_kg !== "") profileBits.push(tr("profile.bodyweight_value", { value: `${profile.bodyweight_kg} kg` }));
 
+  const formatProgramSelectionSource = (source) => {
+    const normalized = String(source || "").trim().toLowerCase();
+    if (normalized === "manual_override") return tr("profile.active_program_selected_by_user");
+    if (normalized === "automatic") return tr("profile.active_program_selected_automatically");
+    return "";
+  };
+
   const activeProgramBits = [];
   const activeStrengthProgramName = getProgramNameById(activeProgramsByDomain.strength);
+  const activeStrengthSource = formatProgramSelectionSource(activeProgramStatusByDomain?.strength?.selection_source);
   if (activeStrengthProgramName){
-    activeProgramBits.push(tr("profile.active_program_strength_value", { value: activeStrengthProgramName }));
+    const strengthLabel = tr("profile.active_program_strength_value", { value: activeStrengthProgramName });
+    activeProgramBits.push([strengthLabel, activeStrengthSource].filter(Boolean).join(" · "));
   }
   const activeEnduranceProgramName = getProgramNameById(activeProgramsByDomain.run);
+  const activeEnduranceSource = formatProgramSelectionSource(activeProgramStatusByDomain?.run?.selection_source);
   if (activeEnduranceProgramName){
-    activeProgramBits.push(tr("profile.active_program_endurance_value", { value: activeEnduranceProgramName }));
+    const enduranceLabel = tr("profile.active_program_endurance_value", { value: activeEnduranceProgramName });
+    activeProgramBits.push([enduranceLabel, activeEnduranceSource].filter(Boolean).join(" · "));
   }
 
   const selectedTraining = [

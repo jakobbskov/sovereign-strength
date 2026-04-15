@@ -688,5 +688,7 @@
   "profile.recommended_strength_program_default_reason": "This program is a better fit for your current weekly target and setup.",
   "button.switch_to_recommended_program": "Switch to recommended program",
   "today_plan.recommended_program_title": "Recommended program",
-  "today_plan.recommended_strength_program_value": "Recommended strength program: {value}"
+  "today_plan.recommended_strength_program_value": "Recommended strength program: {value}",
+  "profile.active_program_selected_by_user": "Selected by you",
+  "profile.active_program_selected_automatically": "Chosen automatically"
 }
