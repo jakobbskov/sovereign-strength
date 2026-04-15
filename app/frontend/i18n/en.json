@@ -691,4 +691,5 @@
   "today_plan.recommended_strength_program_value": "Recommended strength program: {value}",
   "profile.active_program_selected_by_user": "Selected by you",
   "profile.active_program_selected_automatically": "Chosen automatically"
+  "today_plan.recommended_strength_program_value": "Recommended strength program: {value}"
 }
