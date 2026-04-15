@@ -4993,7 +4993,16 @@ def post_user_settings():
     strength_starting_profile = str(clean_preferences.get("strength_starting_profile", "beginner") or "beginner").strip()
     if strength_starting_profile not in {"conservative_beginner", "beginner", "novice"}:
         strength_starting_profile = "beginner"
-    clean_preferences = {**clean_preferences, "strength_starting_profile": strength_starting_profile}
+
+    run_starting_profile = str(clean_preferences.get("run_starting_profile", "beginner") or "beginner").strip()
+    if run_starting_profile not in {"conservative_beginner", "beginner", "novice"}:
+        run_starting_profile = "beginner"
+
+    clean_preferences = {
+        **clean_preferences,
+        "strength_starting_profile": strength_starting_profile,
+        "run_starting_profile": run_starting_profile,
+    }
 
     allowed_regions = {"ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"}
     allowed_hold_states = {"caution", "protect"}
