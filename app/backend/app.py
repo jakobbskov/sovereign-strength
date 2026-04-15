@@ -2569,6 +2569,28 @@ def infer_equipment_profile(user_settings):
     return "minimal_home"
 
 
+
+
+def _program_recommended_levels(program):
+    levels = program.get("recommended_levels", []) if isinstance(program, dict) else []
+    if not isinstance(levels, list):
+        return []
+    return [str(x).strip().lower() for x in levels if str(x).strip()]
+
+
+def _sort_strength_candidates(candidates, target_level, preferred_ids):
+    preferred_order = {pid: idx for idx, pid in enumerate(preferred_ids)}
+    target = str(target_level or "").strip().lower()
+
+    def key(program):
+        pid = str(program.get("id", "")).strip()
+        levels = _program_recommended_levels(program)
+        level_match = 0 if target and target in levels else 1
+        preferred_rank = preferred_order.get(pid, 999)
+        return (level_match, preferred_rank, pid)
+
+    return sorted(candidates, key=key)
+
 def select_strength_program(programs, user_settings, weekly_target_sessions):
     settings = user_settings if isinstance(user_settings, dict) else {}
     preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
@@ -2589,9 +2611,11 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     if strength_starting_profile not in ("conservative_beginner", "beginner", "novice"):
         strength_starting_profile = "beginner"
 
+    target_level = "novice" if strength_starting_profile == "novice" else "beginner"
+
     candidates = []
     for program in programs:
-        if str(program.get("kind", "")).strip() != "strength":
+        if str(program.get("kind", "")).strip().lower() != "strength":
             continue
 
         supported_sessions = program.get("supported_weekly_sessions", []) or []
@@ -2602,45 +2626,34 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
 
     preferred_ids = []
 
-    preferred_ids = []
+    if strength_starting_profile == "conservative_beginner":
+        preferred_ids.append("reentry_strength_2x")
 
     if equipment_profile in ("gym_basic", "full_gym"):
-        if strength_starting_profile == "novice":
+        if target_level == "novice":
             if target_sessions >= 4:
                 preferred_ids.append("base_strength_gym_4x")
             if target_sessions >= 3:
                 preferred_ids.append("base_strength_gym_3x")
             if target_sessions == 2:
                 preferred_ids.append("base_strength_a")
-        elif strength_starting_profile == "beginner":
-            if target_sessions >= 3:
-                preferred_ids.append("starter_strength_gym_3x")
-            if target_sessions == 2:
-                preferred_ids.append("starter_strength_gym_2x")
         else:
-            preferred_ids.append("reentry_strength_2x")
             if target_sessions >= 3:
                 preferred_ids.append("starter_strength_gym_3x")
             if target_sessions == 2:
                 preferred_ids.append("starter_strength_gym_2x")
 
     if equipment_profile in ("minimal_home", "dumbbell_home"):
-        if strength_starting_profile == "conservative_beginner":
-            preferred_ids.append("reentry_strength_2x")
         if target_sessions >= 3:
             preferred_ids.append("strength_full_body_3x_beginner")
         if target_sessions == 2:
             preferred_ids.append("starter_strength_2x")
 
-    for pid in preferred_ids:
-        for program in candidates:
-            if program.get("id") == pid:
-                return pid
+    sorted_candidates = _sort_strength_candidates(candidates, target_level, preferred_ids)
+    if sorted_candidates:
+        return str(sorted_candidates[0].get("id"))
 
-    if candidates:
-        return str(candidates[0].get("id"))
-
-    for pid in (
+    fallback_ids = (
         "reentry_strength_2x",
         "starter_strength_2x",
         "starter_strength_gym_2x",
@@ -2649,14 +2662,13 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
         "base_strength_a",
         "base_strength_gym_3x",
         "base_strength_gym_4x",
-    ):
+    )
+    for pid in fallback_ids:
         for program in programs:
             if program.get("id") == pid:
                 return pid
 
     return None
-
-
 
 def select_endurance_program(programs, user_settings, weekly_target_sessions, prefs):
     settings = user_settings if isinstance(user_settings, dict) else {}
