@@ -682,5 +682,11 @@
   "plan.rest_day_default_summary": "Rest is the default today. Light movement or manual training is optional.",
   "button.start_next_exercise": "Start next exercise",
   "workout.rest.ready_next_exercise": "Ready for next exercise",
-  "workout.rest.next_exercise_label": "Next exercise"
+  "workout.rest.next_exercise_label": "Next exercise",
+  "profile.recommended_program_title": "Recommended program",
+  "profile.recommended_strength_program_value": "Recommended strength program: {value}",
+  "profile.recommended_strength_program_default_reason": "This program is a better fit for your current weekly target and setup.",
+  "button.switch_to_recommended_program": "Switch to recommended program",
+  "today_plan.recommended_program_title": "Recommended program",
+  "today_plan.recommended_strength_program_value": "Recommended strength program: {value}"
 }

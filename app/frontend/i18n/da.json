@@ -698,5 +698,11 @@
   "plan.rest_day_default_summary": "Hvile er dagens standard. Let bevægelse eller manuel træning er valgfrit.",
   "button.start_next_exercise": "Start næste øvelse",
   "workout.rest.ready_next_exercise": "Klar til næste øvelse",
-  "workout.rest.next_exercise_label": "Næste øvelse"
+  "workout.rest.next_exercise_label": "Næste øvelse",
+  "profile.recommended_program_title": "Anbefalet program",
+  "profile.recommended_strength_program_value": "Anbefalet styrkeprogram: {value}",
+  "profile.recommended_strength_program_default_reason": "Dette program passer bedre til dit nuværende ugemål og din opsætning.",
+  "button.switch_to_recommended_program": "Skift til anbefalet program",
+  "today_plan.recommended_program_title": "Anbefalet program",
+  "today_plan.recommended_strength_program_value": "Anbefalet styrkeprogram: {value}"
 }
