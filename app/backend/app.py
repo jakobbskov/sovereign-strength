@@ -2595,6 +2595,7 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     settings = user_settings if isinstance(user_settings, dict) else {}
     preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
     overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+    auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
 
     override_id = str(overrides.get("strength", "")).strip()
     if override_id:
@@ -2604,6 +2605,15 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
             if str(program.get("kind", "")).strip().lower() != "strength":
                 break
             return override_id
+
+    auto_assigned_id = str(auto_assigned.get("strength", "")).strip()
+    if auto_assigned_id:
+        for program in programs:
+            if str(program.get("id", "")).strip() != auto_assigned_id:
+                continue
+            if str(program.get("kind", "")).strip().lower() != "strength":
+                break
+            return auto_assigned_id
 
     equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
@@ -2674,6 +2684,7 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     settings = user_settings if isinstance(user_settings, dict) else {}
     preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
     overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+    auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
 
     override_id = str(overrides.get("run", "")).strip()
     if override_id:
@@ -2683,6 +2694,15 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
             if str(program.get("kind", "")).strip().lower() not in ("run", "løb", "running"):
                 break
             return override_id
+
+    auto_assigned_id = str(auto_assigned.get("run", "")).strip()
+    if auto_assigned_id:
+        for program in programs:
+            if str(program.get("id", "")).strip() != auto_assigned_id:
+                continue
+            if str(program.get("kind", "")).strip().lower() not in ("run", "løb", "running"):
+                break
+            return auto_assigned_id
 
     equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
@@ -2755,10 +2775,64 @@ def build_active_programs_by_domain(programs, user_settings):
     }
 
 
+def ensure_initial_auto_assigned_programs(programs, user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
+    prefs = get_training_type_preferences(settings)
+    weekly_target_sessions = get_weekly_target_sessions(settings)
+
+    overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+    auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
+
+    next_auto_assigned = dict(auto_assigned)
+    changed = False
+
+    if (bool(prefs.get("strength_weights", True)) or bool(prefs.get("bodyweight", True))):
+        override_strength = str(overrides.get("strength", "")).strip()
+        auto_strength = str(auto_assigned.get("strength", "")).strip()
+        if not override_strength and not auto_strength:
+            selected_strength = select_strength_program(
+                programs=programs,
+                user_settings=settings,
+                weekly_target_sessions=weekly_target_sessions,
+            )
+            if selected_strength:
+                next_auto_assigned["strength"] = selected_strength
+                changed = True
+
+    if bool(prefs.get("running", True)):
+        override_run = str(overrides.get("run", "")).strip()
+        auto_run = str(auto_assigned.get("run", "")).strip()
+        if not override_run and not auto_run:
+            selected_run = select_endurance_program(
+                programs=programs,
+                user_settings=settings,
+                weekly_target_sessions=weekly_target_sessions,
+                prefs=prefs,
+            )
+            if selected_run:
+                next_auto_assigned["run"] = selected_run
+                changed = True
+
+    if not changed:
+        return settings, False
+
+    next_preferences = {
+        **preferences,
+        "auto_assigned_programs": next_auto_assigned,
+    }
+    next_settings = {
+        **settings,
+        "preferences": next_preferences,
+    }
+    return next_settings, True
+
+
 def build_active_program_status_by_domain(programs, user_settings):
     settings = user_settings if isinstance(user_settings, dict) else {}
     preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
     overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+    auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
 
     active_programs = build_active_programs_by_domain(programs, settings)
     status = {}
@@ -2766,6 +2840,7 @@ def build_active_program_status_by_domain(programs, user_settings):
     for domain in ("strength", "run"):
         program_id = str(active_programs.get(domain, "") or "").strip()
         override_id = str(overrides.get(domain, "") or "").strip()
+        auto_assigned_id = str(auto_assigned.get(domain, "") or "").strip()
         if not program_id:
             status[domain] = {
                 "program_id": None,
@@ -2773,7 +2848,13 @@ def build_active_program_status_by_domain(programs, user_settings):
             }
             continue
 
-        selection_source = "manual_override" if override_id and override_id == program_id else "automatic"
+        if override_id and override_id == program_id:
+            selection_source = "manual_override"
+        elif auto_assigned_id and auto_assigned_id == program_id:
+            selection_source = "auto_assigned"
+        else:
+            selection_source = "automatic_recommendation"
+
         status[domain] = {
             "program_id": program_id,
             "selection_source": selection_source,
@@ -4999,6 +5080,13 @@ def get_user_settings():
         programs = []
 
     item = current if isinstance(current, dict) else {}
+    item, did_assign_initial_programs = ensure_initial_auto_assigned_programs(
+        programs=programs,
+        user_settings=item,
+    )
+    if did_assign_initial_programs:
+        item = save_user_settings_for(auth_user.get("user_id"), item)
+
     item = {
         **item,
         "active_programs_by_domain": build_active_programs_by_domain(
@@ -5043,6 +5131,20 @@ def post_user_settings():
         clean_preferences = {**clean_preferences, "active_program_overrides": clean_overrides}
     elif "active_program_overrides" in clean_preferences:
         clean_preferences = {k: v for k, v in clean_preferences.items() if k != "active_program_overrides"}
+
+    raw_auto_assigned = clean_preferences.get("auto_assigned_programs", {}) if isinstance(clean_preferences.get("auto_assigned_programs", {}), dict) else {}
+    clean_auto_assigned = {}
+    if isinstance(raw_auto_assigned, dict):
+        raw_strength_auto = str(raw_auto_assigned.get("strength", "")).strip()
+        raw_run_auto = str(raw_auto_assigned.get("run", "")).strip()
+        if raw_strength_auto:
+            clean_auto_assigned["strength"] = raw_strength_auto
+        if raw_run_auto:
+            clean_auto_assigned["run"] = raw_run_auto
+    if clean_auto_assigned:
+        clean_preferences = {**clean_preferences, "auto_assigned_programs": clean_auto_assigned}
+    elif "auto_assigned_programs" in clean_preferences:
+        clean_preferences = {k: v for k, v in clean_preferences.items() if k != "auto_assigned_programs"}
 
     strength_starting_profile = str(clean_preferences.get("strength_starting_profile", "beginner") or "beginner").strip()
     if strength_starting_profile not in {"conservative_beginner", "beginner", "novice"}:

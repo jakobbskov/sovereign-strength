@@ -2256,7 +2256,8 @@ function renderProfileEquipmentCard(){
   const formatProgramSelectionSource = (source) => {
     const normalized = String(source || "").trim().toLowerCase();
     if (normalized === "manual_override") return tr("profile.active_program_selected_by_user");
-    if (normalized === "automatic") return tr("profile.active_program_selected_automatically");
+    if (normalized === "auto_assigned") return tr("profile.active_program_auto_assigned");
+    if (normalized === "automatic" || normalized === "automatic_recommendation") return tr("profile.active_program_selected_automatically");
     return "";
   };
 

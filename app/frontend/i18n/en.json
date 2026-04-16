@@ -690,5 +690,6 @@
   "today_plan.recommended_program_title": "Recommended program",
   "today_plan.recommended_strength_program_value": "Recommended strength program: {value}",
   "profile.active_program_selected_by_user": "Selected by you",
-  "profile.active_program_selected_automatically": "Chosen automatically"
+  "profile.active_program_selected_automatically": "Chosen automatically",
+  "profile.active_program_auto_assigned": "Auto-assigned initially"
 }
