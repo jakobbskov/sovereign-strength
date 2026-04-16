@@ -2181,6 +2181,7 @@ function renderProfileEquipmentCard(){
   const runProgramSelectEl = document.getElementById("profileRunProgramSelect");
   const saveProfileProgramsBtn = document.getElementById("saveProfileProgramsBtn");
   const recommendedProgramWrapEl = document.getElementById("profileRecommendedProgramWrap");
+  const recommendedCurrentStrengthLineEl = document.getElementById("profileRecommendedCurrentStrengthLine");
   const recommendedStrengthLineEl = document.getElementById("profileRecommendedStrengthLine");
   const recommendedStrengthReasonEl = document.getElementById("profileRecommendedStrengthReason");
   const applyRecommendedStrengthProgramBtn = document.getElementById("applyRecommendedStrengthProgramBtn");
@@ -2436,7 +2437,10 @@ function renderProfileEquipmentCard(){
   }
 
   if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){
-    const hasRecommendation = strengthTrainingEnabled && Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName);
+    const hasRecommendation = strengthTrainingEnabled
+      && Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName)
+      && recommendedStrengthProgramId !== String(activeProgramsByDomain.strength || "").trim();
+
     recommendedProgramWrapEl.classList.toggle("wizard-step-hidden", !hasRecommendation);
     recommendedProgramWrapEl.style.display = hasRecommendation ? "" : "none";
 
@@ -2445,11 +2449,19 @@ function renderProfileEquipmentCard(){
     }
 
     if (hasRecommendation){
+      if (recommendedCurrentStrengthLineEl){
+        recommendedCurrentStrengthLineEl.textContent = activeStrengthProgramName
+          ? tr("profile.recommended_current_strength_program_value", { value: activeStrengthProgramName })
+          : tr("profile.recommended_current_strength_program_missing");
+      }
       recommendedStrengthLineEl.textContent = tr("profile.recommended_strength_program_value", {
         value: recommendedStrengthProgramName
       });
       recommendedStrengthReasonEl.textContent = recommendedStrengthReason || tr("profile.recommended_strength_program_default_reason");
     } else {
+      if (recommendedCurrentStrengthLineEl){
+        recommendedCurrentStrengthLineEl.textContent = "";
+      }
       recommendedStrengthLineEl.textContent = "";
       recommendedStrengthReasonEl.textContent = "";
     }

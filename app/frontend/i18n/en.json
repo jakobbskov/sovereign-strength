@@ -684,7 +684,7 @@
   "workout.rest.ready_next_exercise": "Ready for next exercise",
   "workout.rest.next_exercise_label": "Next exercise",
   "profile.recommended_program_title": "Recommended program",
-  "profile.recommended_strength_program_value": "Recommended strength program: {value}",
+  "profile.recommended_strength_program_value": "{value}",
   "profile.recommended_strength_program_default_reason": "This program is a better fit for your current weekly target and setup.",
   "button.switch_to_recommended_program": "Switch to recommended program",
   "today_plan.recommended_program_title": "Recommended program",
@@ -715,5 +715,9 @@
   "forecast.missing_training_types_cta": "Open profile and equipment",
   "today_plan.missing_training_types_title": "Setup needed",
   "today_plan.missing_training_types_lead": "Choose at least one training type in profile and equipment before the app can build your first plan.",
-  "today_plan.missing_training_types_cta": "Open profile and equipment"
+  "today_plan.missing_training_types_cta": "Open profile and equipment",
+  "profile.recommended_program_current_label": "You are currently using",
+  "profile.recommended_program_suggested_label": "The app recommends",
+  "profile.recommended_current_strength_program_value": "{value}",
+  "profile.recommended_current_strength_program_missing": "No active strength program is selected yet"
 }
