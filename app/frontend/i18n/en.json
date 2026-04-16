@@ -708,5 +708,12 @@
   "profile.program_why_run": "The running program was chosen from {week_goal} and {starting_level}.",
   "profile.domain_strength_title": "Strength",
   "profile.domain_run_title": "Running",
-  "profile.program_selection_title": "Program selection"
+  "profile.program_selection_title": "Program selection",
+  "forecast.missing_training_types_title": "Setup needed",
+  "forecast.missing_training_types_summary": "Choose at least one training type to get your first plan.",
+  "forecast.missing_training_types_reason": "The app can only make a real recommendation once you have chosen strength, running, or both.",
+  "forecast.missing_training_types_cta": "Open profile and equipment",
+  "today_plan.missing_training_types_title": "Setup needed",
+  "today_plan.missing_training_types_lead": "Choose at least one training type in profile and equipment before the app can build your first plan.",
+  "today_plan.missing_training_types_cta": "Open profile and equipment"
 }
