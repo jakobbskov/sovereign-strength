@@ -7,6 +7,7 @@ TARGET_ROOT="/var/www/sovereign-strength"
 FILES=(
   "index.html"
   "app.js"
+  "styles.css"
   "i18n/da.json"
   "i18n/en.json"
 )

@@ -1,3 +1,137 @@
+:root{
+  --bg:#111111;
+  --surface-1:#171717;
+  --surface-2:#1b1b1b;
+  --surface-3:#141414;
+  --text-primary:#f3f3f3;
+  --text-secondary:#b9b9b9;
+  --border-subtle:#2c2c2c;
+  --accent:#d6d3c9;
+  --accent-contrast:#111111;
+  --success:#9fd3a8;
+  --caution:#e7c27d;
+
+  --space-1:6px;
+  --space-2:10px;
+  --space-3:16px;
+  --space-4:24px;
+  --space-5:32px;
+
+  --radius-sm:10px;
+  --radius-md:12px;
+  --radius-lg:16px;
+  --radius-pill:999px;
+
+  --text-title:2rem;
+  --text-section:1.1rem;
+  --text-body:1rem;
+  --text-meta:.95rem;
+  --text-label:.85rem;
+
+  --screen-max-width:1000px;
+  --screen-padding-x:16px;
+  --screen-padding-top:24px;
+  --screen-padding-bottom:48px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text-primary);
+}
+
+.wrap{
+  max-width:var(--screen-max-width);
+  padding:var(--screen-padding-top) var(--screen-padding-x) var(--screen-padding-bottom);
+}
+
+.card,
+.entry-box,
+li{
+  border-color:var(--border-subtle);
+}
+
+.card{
+  background:var(--surface-2);
+  border-radius:var(--radius-lg);
+  padding:var(--space-3);
+}
+
+.entry-box,
+li{
+  background:var(--surface-3);
+  border-radius:var(--radius-md);
+}
+
+.metric{
+  color:var(--accent);
+  font-size:var(--text-title);
+}
+
+.small,
+.overview-status .stat-line,
+label{
+  color:var(--text-secondary);
+  font-size:var(--text-meta);
+}
+
+.overview-status .stat-line strong{
+  color:var(--text-primary);
+}
+
+input,
+select,
+textarea,
+button{
+  border-color:var(--border-subtle);
+  border-radius:var(--radius-sm);
+}
+
+input,
+select,
+textarea{
+  background:var(--surface-1);
+  color:var(--text-primary);
+}
+
+button{
+  background:#242424;
+  color:var(--text-primary);
+}
+
+.primary-cta{
+  background:var(--accent);
+  color:var(--accent-contrast);
+  border-color:var(--accent);
+  font-weight:700;
+}
+
+.pill{
+  border-color:var(--border-subtle);
+  border-radius:var(--radius-pill);
+  color:var(--text-secondary);
+  font-size:var(--text-label);
+}
+
+.btn-row,
+.row,
+.grid,
+.two-col,
+.overview-status{
+  gap:var(--space-2);
+}
+
+.grid,
+.two-col{
+  margin-top:var(--space-4);
+}
+
+.wizard-nav button,
+.utility-nav button{
+  border-radius:var(--radius-pill);
+}
+
+.ok{ color:var(--success); }
+.warn{ color:var(--caution); }
 
 /* training options layout */
 .training-option{
@@ -15,4 +149,3 @@
 .training-option span{
   flex:1;
 }
-
