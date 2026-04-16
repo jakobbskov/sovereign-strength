@@ -6,68 +6,23 @@
   <title>SovereignStrength</title>
   <meta name="theme-color" content="#111111">
   <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/styles.css">
   <style>
-    :root{
-      --bg:#111;
-      --card:#1b1b1b;
-      --text:#f3f3f3;
-      --muted:#b9b9b9;
-      --line:#2c2c2c;
-      --accent:#d6d3c9;
-      --ok:#9fd3a8;
-      --warn:#e7c27d;
-    }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      background:var(--bg);
-      color:var(--text);
       line-height:1.45;
     }
-    .wrap{
-      max-width:1000px;
-      margin:0 auto;
-      padding:24px 16px 48px;
-    }
     h1,h2,h3{margin:0 0 12px}
-    p{margin:0 0 10px;color:var(--muted)}
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:14px;
-      margin-top:18px;
-    }
-    .two-col{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-      gap:18px;
-      margin-top:18px;
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:16px;
-    }
-    .metric{
-      font-size:2rem;
-      font-weight:700;
-      color:var(--accent);
-    }
-    .small{
-      font-size:.95rem;
-      color:var(--muted);
-    }
-    .ok{color:var(--ok)}
-    .warn{color:var(--warn)}
+    p{margin:0 0 10px;color:var(--text-secondary)}
     pre{
       white-space:pre-wrap;
       word-break:break-word;
       background:#0d0d0d;
       padding:12px;
       border-radius:12px;
-      border:1px solid var(--line);
+      border:1px solid var(--border-subtle);
       color:#ddd;
       overflow:auto;
     }
@@ -78,22 +33,15 @@
     label{
       display:grid;
       gap:6px;
-      font-size:.95rem;
-      color:var(--muted);
     }
     input, select, textarea, button{
       width:100%;
-      border-radius:10px;
-      border:1px solid var(--line);
-      background:#151515;
-      color:var(--text);
       padding:10px 12px;
       font:inherit;
     }
     textarea{min-height:90px; resize:vertical}
     button{
       cursor:pointer;
-      background:#242424;
       font-weight:600;
     }
     ul{
@@ -103,47 +51,29 @@
       display:grid;
       gap:10px;
     }
-    li{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:12px;
-      background:#141414;
-    }
     .row{
       display:flex;
       justify-content:space-between;
-      gap:12px;
       flex-wrap:wrap;
     }
     .pill{
       display:inline-block;
       padding:4px 8px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      font-size:.85rem;
-      color:var(--muted);
       margin-top:8px;
       margin-right:6px;
     }
     .program-day{
       margin-top:12px;
       padding-top:12px;
-      border-top:1px solid var(--line);
+      border-top:1px solid var(--border-subtle);
     }
     .program-day:first-of-type{
       margin-top:0;
       padding-top:0;
       border-top:none;
     }
-    .entry-box{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:12px;
-      background:#141414;
-    }
     .btn-row{
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
     }
     .btn-row button{
