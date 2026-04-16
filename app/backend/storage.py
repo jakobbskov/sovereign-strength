@@ -511,17 +511,21 @@ class SQLiteStorage:
         with self._conn() as conn:
             conn.execute(
                 """
-                INSERT INTO user_settings (user_id, equipment_increments, available_equipment, updated_at)
-                VALUES (?, ?, ?, datetime('now'))
+                INSERT INTO user_settings (user_id, equipment_increments, available_equipment, profile, preferences, updated_at)
+                VALUES (?, ?, ?, ?, ?, datetime('now'))
                 ON CONFLICT(user_id) DO UPDATE SET
                     equipment_increments = excluded.equipment_increments,
                     available_equipment = excluded.available_equipment,
+                    profile = excluded.profile,
+                    preferences = excluded.preferences,
                     updated_at = datetime('now')
                 """,
                 (
                     str(user_id),
                     json.dumps(clean["equipment_increments"], ensure_ascii=False),
                     json.dumps(clean["available_equipment"], ensure_ascii=False),
+                    json.dumps(clean["profile"], ensure_ascii=False),
+                    json.dumps(clean["preferences"], ensure_ascii=False),
                 )
             )
             conn.commit()
