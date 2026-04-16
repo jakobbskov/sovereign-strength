@@ -2184,6 +2184,7 @@ function renderProfileEquipmentCard(){
   const recommendedCurrentStrengthLineEl = document.getElementById("profileRecommendedCurrentStrengthLine");
   const recommendedStrengthLineEl = document.getElementById("profileRecommendedStrengthLine");
   const recommendedStrengthReasonEl = document.getElementById("profileRecommendedStrengthReason");
+  const profileProgramActionStatusEl = document.getElementById("profileProgramActionStatus");
   const applyRecommendedStrengthProgramBtn = document.getElementById("applyRecommendedStrengthProgramBtn");
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
@@ -2436,6 +2437,22 @@ function renderProfileEquipmentCard(){
     profileActiveProgramCardsWrapEl.style.display = hasCards ? "" : "none";
   }
 
+  if (profileProgramActionStatusEl){
+    profileProgramActionStatusEl.classList.remove("ok", "warn");
+    if (PROFILE_PROGRAM_SWITCH_STATUS && PROFILE_PROGRAM_SWITCH_STATUS.kind === "ok"){
+      profileProgramActionStatusEl.textContent = PROFILE_PROGRAM_SWITCH_STATUS.message || "";
+      profileProgramActionStatusEl.style.display = PROFILE_PROGRAM_SWITCH_STATUS.message ? "" : "none";
+      profileProgramActionStatusEl.classList.add("ok");
+      requestAnimationFrame(() => {
+        profileProgramActionStatusEl.style.opacity = PROFILE_PROGRAM_SWITCH_STATUS.message ? "1" : "0";
+      });
+    } else {
+      profileProgramActionStatusEl.textContent = "";
+      profileProgramActionStatusEl.style.opacity = "0";
+      profileProgramActionStatusEl.style.display = "none";
+    }
+  }
+
   if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){
     const hasRecommendation = strengthTrainingEnabled
       && Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName)
@@ -2498,8 +2515,33 @@ function renderProfileEquipmentCard(){
     applyRecommendedStrengthProgramBtn.addEventListener("click", async () => {
       const recommendedProgramId = String(applyRecommendedStrengthProgramBtn.dataset.recommendedProgramId || "").trim();
       if (!recommendedProgramId || !strengthProgramSelectEl) return;
+
+      const recommendedProgramName = getProgramNameById(recommendedProgramId) || recommendedProgramId;
+
+      PROFILE_PROGRAM_SWITCH_STATUS = {
+        kind: "ok",
+        message: tr("profile.recommended_program_switch_success", { value: recommendedProgramName })
+      };
+
+      if (PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT){
+        clearTimeout(PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT);
+        PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = null;
+      }
+
       strengthProgramSelectEl.value = recommendedProgramId;
       saveProfileProgramsBtn?.click();
+
+      PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = setTimeout(() => {
+        const statusEl = document.getElementById("profileProgramActionStatus");
+        if (statusEl){
+          statusEl.style.opacity = "0";
+        }
+        setTimeout(() => {
+          PROFILE_PROGRAM_SWITCH_STATUS = null;
+          PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = null;
+          renderProfileEquipmentCard();
+        }, 260);
+      }, 2200);
     });
   }
 
@@ -6723,6 +6765,8 @@ session_type:
 const AUTH_BASE = "https://auth.innosocia.dk";
 const AUTH_RETURN_TO = "https://strength.innosocia.dk";
 let AUTH_USER = null;
+let PROFILE_PROGRAM_SWITCH_STATUS = null;
+let PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = null;
 
 function showAuthMessage(msg){
   const statusEl = document.getElementById("status");
