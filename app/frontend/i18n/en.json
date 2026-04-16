@@ -691,5 +691,11 @@
   "today_plan.recommended_strength_program_value": "Recommended strength program: {value}",
   "profile.active_program_selected_by_user": "Selected by you",
   "profile.active_program_selected_automatically": "Chosen automatically",
-  "profile.active_program_auto_assigned": "Auto-assigned initially"
+  "profile.active_program_auto_assigned": "Auto-assigned initially",
+  "profile.strength_starting_profile_help": "Choose how conservative or ambitious the strength side should start. This affects your first program choice.",
+  "profile.strength_starting_profile_help_levels": "Conservative / re-entry = start gently or return after a break · Beginner = new or only a little recent training · Novice = a bit more habit and load tolerance.",
+  "profile.run_starting_profile_help": "Choose how conservative or ambitious the running side should start. This affects your first program choice.",
+  "profile.run_starting_profile_help_levels": "Conservative / re-entry = start gently or return after a break · Beginner = new or only a little recent running · Novice = a bit more habit and capacity.",
+  "onboarding.first_run.section.planning_level_hint": "Your starting level helps the app choose how conservative or ambitious the first program recommendation should be.",
+  "onboarding.first_run.finish_selection_hint": "Your first program is chosen from your training types, weekly target, equipment, and starting level."
 }
