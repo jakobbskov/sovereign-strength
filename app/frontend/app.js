@@ -2143,9 +2143,13 @@ function renderProfileEquipmentCard(){
   const trainingTypesLineEl = document.getElementById("profileTrainingTypesLine");
   const trainingDaysLineEl = document.getElementById("profileTrainingDaysLine");
   const activeProgramsLineEl = document.getElementById("profileActiveProgramsLine");
-  const profileProgramWhyWrapEl = document.getElementById("profileProgramWhyWrap");
-  const profileProgramWhyStrengthLineEl = document.getElementById("profileProgramWhyStrengthLine");
-  const profileProgramWhyRunLineEl = document.getElementById("profileProgramWhyRunLine");
+  const profileActiveProgramCardsWrapEl = document.getElementById("profileActiveProgramCardsWrap");
+  const profileStrengthProgramCardEl = document.getElementById("profileStrengthProgramCard");
+  const profileStrengthProgramSummaryEl = document.getElementById("profileStrengthProgramSummary");
+  const profileStrengthProgramWhyEl = document.getElementById("profileStrengthProgramWhy");
+  const profileRunProgramCardEl = document.getElementById("profileRunProgramCard");
+  const profileRunProgramSummaryEl = document.getElementById("profileRunProgramSummary");
+  const profileRunProgramWhyEl = document.getElementById("profileRunProgramWhy");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
   const strengthProgramControlWrapEl = document.getElementById("profileStrengthProgramControlWrap");
   const strengthProgramSelectEl = document.getElementById("profileStrengthProgramSelect");
@@ -2366,6 +2370,7 @@ function renderProfileEquipmentCard(){
     activeProgramsLineEl.textContent = activeProgramBits.length
       ? tr("profile.active_programs_value", { value: activeProgramBits.join(" · ") })
       : tr("profile.active_programs_none");
+    activeProgramsLineEl.style.display = activeProgramBits.length ? "none" : "";
   }
 
   const strengthWhy = strengthTrainingEnabled && activeStrengthProgramName
@@ -2375,16 +2380,35 @@ function renderProfileEquipmentCard(){
     ? buildProgramWhyReason("run")
     : "";
 
-  if (profileProgramWhyStrengthLineEl){
-    profileProgramWhyStrengthLineEl.textContent = strengthWhy;
-    profileProgramWhyStrengthLineEl.style.display = strengthWhy ? "" : "none";
+  if (profileStrengthProgramSummaryEl){
+    profileStrengthProgramSummaryEl.textContent = activeStrengthProgramName
+      ? [activeStrengthProgramName, activeStrengthSource].filter(Boolean).join(" · ")
+      : "";
   }
-  if (profileProgramWhyRunLineEl){
-    profileProgramWhyRunLineEl.textContent = runWhy;
-    profileProgramWhyRunLineEl.style.display = runWhy ? "" : "none";
+  if (profileStrengthProgramWhyEl){
+    profileStrengthProgramWhyEl.textContent = strengthWhy;
+    profileStrengthProgramWhyEl.style.display = strengthWhy ? "" : "none";
   }
-  if (profileProgramWhyWrapEl){
-    profileProgramWhyWrapEl.style.display = (strengthWhy || runWhy) ? "" : "none";
+  if (profileStrengthProgramCardEl){
+    profileStrengthProgramCardEl.style.display = strengthTrainingEnabled && activeStrengthProgramName ? "" : "none";
+  }
+
+  if (profileRunProgramSummaryEl){
+    profileRunProgramSummaryEl.textContent = activeEnduranceProgramName
+      ? [activeEnduranceProgramName, activeEnduranceSource].filter(Boolean).join(" · ")
+      : "";
+  }
+  if (profileRunProgramWhyEl){
+    profileRunProgramWhyEl.textContent = runWhy;
+    profileRunProgramWhyEl.style.display = runWhy ? "" : "none";
+  }
+  if (profileRunProgramCardEl){
+    profileRunProgramCardEl.style.display = runTrainingEnabled && activeEnduranceProgramName ? "" : "none";
+  }
+
+  if (profileActiveProgramCardsWrapEl){
+    const hasCards = (strengthTrainingEnabled && activeStrengthProgramName) || (runTrainingEnabled && activeEnduranceProgramName);
+    profileActiveProgramCardsWrapEl.style.display = hasCards ? "" : "none";
   }
 
   if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){

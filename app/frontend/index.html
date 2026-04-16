@@ -483,10 +483,18 @@
           <div class="stat-line" id="profileBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
           <div class="stat-line" id="profileTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
           <div class="stat-line" id="profileTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
-          <div class="stat-line" id="profileActiveProgramsLine" data-i18n="profile.active_programs_loading">Aktive programmer indlæses...</div>
-          <div id="profileProgramWhyWrap" style="margin-top:6px; display:none">
-            <div class="small" id="profileProgramWhyStrengthLine" style="display:none"></div>
-            <div class="small" id="profileProgramWhyRunLine" style="display:none; margin-top:4px"></div>
+          <div class="stat-line" id="profileActiveProgramsLine" data-i18n="profile.active_programs_loading" style="display:none">Aktive programmer indlæses...</div>
+          <div id="profileActiveProgramCardsWrap" style="margin-top:6px; display:none">
+            <div id="profileStrengthProgramCard" class="small" style="display:none; padding:10px 12px; border-radius:12px; border:1px solid var(--line); margin-bottom:8px">
+              <div style="font-weight:700" data-i18n="profile.domain_strength_title">Styrke</div>
+              <div id="profileStrengthProgramSummary" style="margin-top:4px"></div>
+              <div id="profileStrengthProgramWhy" style="margin-top:4px; opacity:0.85"></div>
+            </div>
+            <div id="profileRunProgramCard" class="small" style="display:none; padding:10px 12px; border-radius:12px; border:1px solid var(--line)">
+              <div style="font-weight:700" data-i18n="profile.domain_run_title">Løb</div>
+              <div id="profileRunProgramSummary" style="margin-top:4px"></div>
+              <div id="profileRunProgramWhy" style="margin-top:4px; opacity:0.85"></div>
+            </div>
           </div>
           <div class="stat-line" id="profileEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
         </div>
@@ -499,7 +507,7 @@
           </div>
         </details>
         <div class="overview-status" style="margin-top:12px">
-          <div class="stat-line"><strong data-i18n="profile.active_program_controls_title">Aktive programmer</strong></div>
+          <div class="stat-line"><strong data-i18n="profile.program_selection_title">Programvalg</strong></div>
           <div id="profileStrengthProgramControlWrap">
             <label class="small" for="profileStrengthProgramSelect" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
             <select id="profileStrengthProgramSelect" style="margin-bottom:10px">
