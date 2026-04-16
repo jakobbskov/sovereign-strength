@@ -2143,6 +2143,9 @@ function renderProfileEquipmentCard(){
   const trainingTypesLineEl = document.getElementById("profileTrainingTypesLine");
   const trainingDaysLineEl = document.getElementById("profileTrainingDaysLine");
   const activeProgramsLineEl = document.getElementById("profileActiveProgramsLine");
+  const profileProgramWhyWrapEl = document.getElementById("profileProgramWhyWrap");
+  const profileProgramWhyStrengthLineEl = document.getElementById("profileProgramWhyStrengthLine");
+  const profileProgramWhyRunLineEl = document.getElementById("profileProgramWhyRunLine");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
   const strengthProgramControlWrapEl = document.getElementById("profileStrengthProgramControlWrap");
   const strengthProgramSelectEl = document.getElementById("profileStrengthProgramSelect");
@@ -2261,6 +2264,51 @@ function renderProfileEquipmentCard(){
     return "";
   };
 
+  const getEquipmentReasonText = () => {
+    const hasBarbell = available.barbell !== false;
+    const hasBench = available.bench !== false;
+    const hasDumbbell = available.dumbbell !== false;
+    const hasBodyweight = available.bodyweight !== false;
+    if (hasBarbell && hasBench) return tr("profile.program_why_equipment_barbell_bench");
+    if (hasDumbbell) return tr("profile.program_why_equipment_dumbbell");
+    if (hasBodyweight) return tr("profile.program_why_equipment_bodyweight");
+    return tr("profile.program_why_equipment_basic");
+  };
+
+  const getStartingProfileLabel = (domain) => {
+    if (String(domain) === "strength"){
+      const value = String(preferences.strength_starting_profile || "beginner").trim() || "beginner";
+      if (value === "conservative_beginner") return tr("profile.strength_starting_profile_conservative");
+      if (value === "novice") return tr("profile.strength_starting_profile_novice");
+      return tr("profile.strength_starting_profile_beginner");
+    }
+    const value = String(preferences.run_starting_profile || "beginner").trim() || "beginner";
+    if (value === "conservative_beginner") return tr("profile.run_starting_profile_conservative");
+    if (value === "novice") return tr("profile.run_starting_profile_novice");
+    return tr("profile.run_starting_profile_beginner");
+  };
+
+  const buildProgramWhyReason = (domain) => {
+    const selectionSource = String(activeProgramStatusByDomain?.[domain]?.selection_source || "").trim().toLowerCase();
+    if (!selectionSource || selectionSource === "manual_override") return "";
+
+    const weekGoal = tr("profile.program_why_week_goal", { count: weeklyTargetSessions });
+    const startLevel = tr("profile.program_why_starting_level", { value: getStartingProfileLabel(domain) });
+
+    if (domain === "strength"){
+      return tr("profile.program_why_strength", {
+        week_goal: weekGoal,
+        equipment: getEquipmentReasonText(),
+        starting_level: startLevel
+      });
+    }
+
+    return tr("profile.program_why_run", {
+      week_goal: weekGoal,
+      starting_level: startLevel
+    });
+  };
+
   const strengthTrainingEnabled = Boolean(trainingTypes.strength_weights) || Boolean(trainingTypes.bodyweight);
   const runTrainingEnabled = Boolean(trainingTypes.running);
 
@@ -2318,6 +2366,25 @@ function renderProfileEquipmentCard(){
     activeProgramsLineEl.textContent = activeProgramBits.length
       ? tr("profile.active_programs_value", { value: activeProgramBits.join(" · ") })
       : tr("profile.active_programs_none");
+  }
+
+  const strengthWhy = strengthTrainingEnabled && activeStrengthProgramName
+    ? buildProgramWhyReason("strength")
+    : "";
+  const runWhy = runTrainingEnabled && activeEnduranceProgramName
+    ? buildProgramWhyReason("run")
+    : "";
+
+  if (profileProgramWhyStrengthLineEl){
+    profileProgramWhyStrengthLineEl.textContent = strengthWhy;
+    profileProgramWhyStrengthLineEl.style.display = strengthWhy ? "" : "none";
+  }
+  if (profileProgramWhyRunLineEl){
+    profileProgramWhyRunLineEl.textContent = runWhy;
+    profileProgramWhyRunLineEl.style.display = runWhy ? "" : "none";
+  }
+  if (profileProgramWhyWrapEl){
+    profileProgramWhyWrapEl.style.display = (strengthWhy || runWhy) ? "" : "none";
   }
 
   if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){

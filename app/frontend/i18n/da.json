@@ -713,5 +713,13 @@
   "profile.run_starting_profile_help": "Vælg hvor roligt eller ambitiøst løbedelen skal starte. Det påvirker dit første programvalg.",
   "profile.run_starting_profile_help_levels": "Forsigtig / genopstart = rolig opstart eller tilbage efter pause · Begynder = ny eller lidt nylig løbetræning · Let øvet = mere vane og lidt højere kapacitet.",
   "onboarding.first_run.section.planning_level_hint": "Dit startniveau hjælper appen med at vælge, hvor forsigtig eller ambitiøs den første programanbefaling skal være.",
-  "onboarding.first_run.finish_selection_hint": "Dit første program vælges ud fra træningstyper, ugemål, udstyr og startniveau."
+  "onboarding.first_run.finish_selection_hint": "Dit første program vælges ud fra træningstyper, ugemål, udstyr og startniveau.",
+  "profile.program_why_week_goal": "{count} pas/uge",
+  "profile.program_why_starting_level": "startniveau: {value}",
+  "profile.program_why_equipment_barbell_bench": "dit udstyr matcher stang og bænk",
+  "profile.program_why_equipment_dumbbell": "dit udstyr matcher håndvægte",
+  "profile.program_why_equipment_bodyweight": "du har kropsvægt til rådighed",
+  "profile.program_why_equipment_basic": "dit udstyr matcher det valgte niveau",
+  "profile.program_why_strength": "Styrkeprogrammet blev valgt ud fra {week_goal}, {equipment} og {starting_level}.",
+  "profile.program_why_run": "Løbeprogrammet blev valgt ud fra {week_goal} og {starting_level}."
 }
