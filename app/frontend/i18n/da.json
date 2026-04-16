@@ -707,5 +707,11 @@
   "today_plan.recommended_strength_program_value": "Anbefalet styrkeprogram: {value}",
   "profile.active_program_selected_by_user": "Valgt af dig",
   "profile.active_program_selected_automatically": "Valgt automatisk",
-  "profile.active_program_auto_assigned": "Valgt automatisk fra start"
+  "profile.active_program_auto_assigned": "Valgt automatisk fra start",
+  "profile.strength_starting_profile_help": "Vælg hvor forsigtigt eller ambitiøst styrkedelen skal starte. Det påvirker dit første programvalg.",
+  "profile.strength_starting_profile_help_levels": "Forsigtig / genopstart = rolig opstart eller tilbage efter pause · Begynder = ny eller lidt nylig træning · Let øvet = lidt mere vane og belastningstolerance.",
+  "profile.run_starting_profile_help": "Vælg hvor forsigtigt eller ambitiøst løbedelen skal starte. Det påvirker dit første programvalg.",
+  "profile.run_starting_profile_help_levels": "Forsigtig / genopstart = rolig opstart eller tilbage efter pause · Begynder = ny eller lidt nylig løbetræning · Let øvet = lidt mere vane og kapacitet.",
+  "onboarding.first_run.section.planning_level_hint": "Dit startniveau hjælper appen med at vælge, hvor forsigtig eller ambitiøs den første programanbefaling skal være.",
+  "onboarding.first_run.finish_selection_hint": "Dit første program vælges ud fra træningstyper, ugemål, udstyr og startniveau."
 }
