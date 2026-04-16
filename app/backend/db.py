@@ -25,9 +25,20 @@ def init_db():
         user_id TEXT PRIMARY KEY,
         equipment_increments TEXT,
         available_equipment TEXT,
+        profile TEXT,
+        preferences TEXT,
         updated_at TEXT
     )
     """)
+
+    user_settings_columns = {
+        row["name"] if isinstance(row, sqlite3.Row) else row[1]
+        for row in cur.execute("PRAGMA table_info(user_settings)").fetchall()
+    }
+    if "profile" not in user_settings_columns:
+        cur.execute("ALTER TABLE user_settings ADD COLUMN profile TEXT")
+    if "preferences" not in user_settings_columns:
+        cur.execute("ALTER TABLE user_settings ADD COLUMN preferences TEXT")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS workouts (

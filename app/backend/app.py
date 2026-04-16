@@ -2847,6 +2847,7 @@ def build_active_program_status_by_domain(programs, user_settings):
     preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
     overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
     auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
+    accepted_recommendations = preferences.get("accepted_program_recommendations", {}) if isinstance(preferences.get("accepted_program_recommendations", {}), dict) else {}
 
     active_programs = build_active_programs_by_domain(programs, settings)
     status = {}
@@ -2855,6 +2856,7 @@ def build_active_program_status_by_domain(programs, user_settings):
         program_id = str(active_programs.get(domain, "") or "").strip()
         override_id = str(overrides.get(domain, "") or "").strip()
         auto_assigned_id = str(auto_assigned.get(domain, "") or "").strip()
+        accepted_id = str(accepted_recommendations.get(domain, "") or "").strip()
         if not program_id:
             status[domain] = {
                 "program_id": None,
@@ -2863,7 +2865,7 @@ def build_active_program_status_by_domain(programs, user_settings):
             continue
 
         if override_id and override_id == program_id:
-            selection_source = "manual_override"
+            selection_source = "accepted_recommendation" if accepted_id and accepted_id == program_id else "manual_override"
         elif auto_assigned_id and auto_assigned_id == program_id:
             selection_source = "auto_assigned"
         else:
@@ -5165,6 +5167,20 @@ def post_user_settings():
         clean_preferences = {**clean_preferences, "active_program_overrides": clean_overrides}
     elif "active_program_overrides" in clean_preferences:
         clean_preferences = {k: v for k, v in clean_preferences.items() if k != "active_program_overrides"}
+
+    raw_accepted_recommendations = clean_preferences.get("accepted_program_recommendations", {}) if isinstance(clean_preferences.get("accepted_program_recommendations", {}), dict) else {}
+    clean_accepted_recommendations = {}
+    if isinstance(raw_accepted_recommendations, dict):
+        raw_strength_accepted = str(raw_accepted_recommendations.get("strength", "")).strip()
+        raw_run_accepted = str(raw_accepted_recommendations.get("run", "")).strip()
+        if raw_strength_accepted:
+            clean_accepted_recommendations["strength"] = raw_strength_accepted
+        if raw_run_accepted:
+            clean_accepted_recommendations["run"] = raw_run_accepted
+    if clean_accepted_recommendations:
+        clean_preferences = {**clean_preferences, "accepted_program_recommendations": clean_accepted_recommendations}
+    elif "accepted_program_recommendations" in clean_preferences:
+        clean_preferences = {k: v for k, v in clean_preferences.items() if k != "accepted_program_recommendations"}
 
     raw_auto_assigned = clean_preferences.get("auto_assigned_programs", {}) if isinstance(clean_preferences.get("auto_assigned_programs", {}), dict) else {}
     clean_auto_assigned = {}

@@ -2289,6 +2289,7 @@ function renderProfileEquipmentCard(){
   const formatProgramSelectionSource = (source) => {
     const normalized = String(source || "").trim().toLowerCase();
     if (normalized === "manual_override") return tr("profile.active_program_selected_by_user");
+    if (normalized === "accepted_recommendation") return tr("profile.active_program_accepted_recommendation");
     if (normalized === "auto_assigned") return tr("profile.active_program_auto_assigned");
     if (normalized === "automatic" || normalized === "automatic_recommendation") return tr("profile.active_program_selected_automatically");
     return "";
@@ -2522,6 +2523,10 @@ function renderProfileEquipmentCard(){
         kind: "ok",
         message: tr("profile.recommended_program_switch_success", { value: recommendedProgramName })
       };
+      PROFILE_ACCEPTED_RECOMMENDATION_PENDING = {
+        domain: "strength",
+        program_id: recommendedProgramId
+      };
 
       if (PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT){
         clearTimeout(PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT);
@@ -2566,6 +2571,40 @@ function renderProfileEquipmentCard(){
         delete nextPreferences.active_program_overrides;
       }
 
+      const currentAcceptedRecommendations = currentPreferences.accepted_program_recommendations
+        && typeof currentPreferences.accepted_program_recommendations === "object"
+          ? currentPreferences.accepted_program_recommendations
+          : {};
+      const nextAcceptedRecommendations = { ...currentAcceptedRecommendations };
+
+      if (
+        PROFILE_ACCEPTED_RECOMMENDATION_PENDING
+        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.domain === "strength"
+        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id
+        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id === selectedStrength
+      ){
+        nextAcceptedRecommendations.strength = selectedStrength;
+      } else {
+        delete nextAcceptedRecommendations.strength;
+      }
+
+      if (
+        PROFILE_ACCEPTED_RECOMMENDATION_PENDING
+        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.domain === "run"
+        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id
+        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id === selectedRun
+      ){
+        nextAcceptedRecommendations.run = selectedRun;
+      } else {
+        delete nextAcceptedRecommendations.run;
+      }
+
+      if (Object.keys(nextAcceptedRecommendations).length){
+        nextPreferences.accepted_program_recommendations = nextAcceptedRecommendations;
+      } else {
+        delete nextPreferences.accepted_program_recommendations;
+      }
+
       const payload = {
         ...currentSettings,
         preferences: nextPreferences
@@ -2573,6 +2612,7 @@ function renderProfileEquipmentCard(){
 
       const res = await apiPost("/api/user-settings", payload);
       STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
+      PROFILE_ACCEPTED_RECOMMENDATION_PENDING = null;
 
       const todayPlanRes = await apiGet("/api/today-plan");
       STATE.currentTodayPlan = todayPlanRes?.item || null;
@@ -6767,6 +6807,7 @@ const AUTH_RETURN_TO = "https://strength.innosocia.dk";
 let AUTH_USER = null;
 let PROFILE_PROGRAM_SWITCH_STATUS = null;
 let PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = null;
+let PROFILE_ACCEPTED_RECOMMENDATION_PENDING = null;
 
 function showAuthMessage(msg){
   const statusEl = document.getElementById("status");
