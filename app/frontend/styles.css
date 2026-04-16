@@ -11,6 +11,12 @@
   --success:#9fd3a8;
   --caution:#e7c27d;
 
+  --atmo-top:rgba(214, 211, 201, 0.08);
+  --atmo-mid:rgba(126, 145, 170, 0.05);
+  --atmo-bottom:rgba(255, 255, 255, 0.02);
+  --surface-glow:rgba(255, 255, 255, 0.025);
+  --card-shadow:0 10px 30px rgba(0, 0, 0, 0.22);
+
   --space-1:6px;
   --space-2:10px;
   --space-3:16px;
@@ -35,8 +41,20 @@
 }
 
 body{
-  background:var(--bg);
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(circle at top left, var(--atmo-top), transparent 42%),
+    radial-gradient(circle at 85% 18%, var(--atmo-mid), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.015), transparent 28%),
+    linear-gradient(180deg, #161616 0%, var(--bg) 26%, #101010 100%);
+  background-attachment:fixed;
   color:var(--text-primary);
+}
+
+body.workout-mode-active{
+  background-image:
+    radial-gradient(circle at top left, rgba(214, 211, 201, 0.035), transparent 30%),
+    linear-gradient(180deg, #141414 0%, #101010 100%);
 }
 
 .wrap{
@@ -51,14 +69,19 @@ li{
 }
 
 .card{
-  background:var(--surface-2);
+  background:
+    linear-gradient(180deg, var(--surface-glow), transparent 38%),
+    var(--surface-2);
   border-radius:var(--radius-lg);
   padding:var(--space-3);
+  box-shadow:var(--card-shadow);
 }
 
 .entry-box,
 li{
-  background:var(--surface-3);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.018), transparent 34%),
+    var(--surface-3);
   border-radius:var(--radius-md);
 }
 
