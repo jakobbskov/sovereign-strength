@@ -1120,15 +1120,24 @@ def get_training_type_preferences(user_settings):
     preferences = settings.get("preferences", {})
     if not isinstance(preferences, dict):
         preferences = {}
-    training_types = preferences.get("training_types", {})
-    if not isinstance(training_types, dict):
-        training_types = {}
+
+    raw_training_types = preferences.get("training_types", None)
+
+    if raw_training_types is None:
+        return {
+            "running": True,
+            "strength_weights": True,
+            "bodyweight": True,
+            "mobility": True,
+        }
+
+    training_types = raw_training_types if isinstance(raw_training_types, dict) else {}
 
     return {
-        "running": bool(training_types.get("running", True)),
-        "strength_weights": bool(training_types.get("strength_weights", True)),
-        "bodyweight": bool(training_types.get("bodyweight", True)),
-        "mobility": bool(training_types.get("mobility", True)),
+        "running": bool(training_types.get("running", False)),
+        "strength_weights": bool(training_types.get("strength_weights", False)),
+        "bodyweight": bool(training_types.get("bodyweight", False)),
+        "mobility": bool(training_types.get("mobility", False)),
     }
 
 def get_training_day_preferences(user_settings):
@@ -2597,6 +2606,11 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
     auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
 
+    prefs = get_training_type_preferences(settings)
+    strength_enabled = bool(prefs.get("strength_weights", False)) or bool(prefs.get("bodyweight", False))
+    if not strength_enabled:
+        return None
+
     override_id = str(overrides.get("strength", "")).strip()
     if override_id:
         for program in programs:
@@ -3855,6 +3869,10 @@ def build_today_plan_training_decision(
         prefs=prefs,
     )
 
+    has_strength_training = bool(prefs.get("strength_weights", False)) or bool(prefs.get("bodyweight", False))
+    has_running_training = bool(prefs.get("running", False))
+    has_any_primary_training_type = has_strength_training or has_running_training
+
     strength_ctx = build_strength_plan(
         programs=programs,
         exercises=exercises,
@@ -3884,6 +3902,22 @@ def build_today_plan_training_decision(
         planning_mode = raw_planning_mode if raw_planning_mode in {"fixed", "autoplan"} else "fixed"
 
     autoplan_meta = None
+
+    if not has_any_primary_training_type:
+        return {
+            "session_type": "restitution",
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_variant": "missing_training_types",
+            "reason": "ingen træningstyper valgt · opsæt profil før første plan",
+            "autoplan_meta": {
+                "template_mode": "missing_training_types",
+                "families_selected": [],
+            },
+            "weekly_status": weekly_status,
+            "selected_strength_program_id": None,
+            "selected_endurance_program_id": None,
+        }
 
     weekday_key = None
     try:

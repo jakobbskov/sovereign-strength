@@ -1726,6 +1726,30 @@ function renderForecastHero(planItem, latestCheckin){
     return;
   }
 
+  const missingTrainingTypes = String(planItem?.plan_variant || "").trim() === "missing_training_types";
+
+  if (missingTrainingTypes){
+    setText("forecastType", tr("forecast.missing_training_types_title"));
+    setText("forecastSummary", tr("forecast.missing_training_types_summary"));
+    setText("forecastReason", tr("forecast.missing_training_types_reason"));
+
+    const btn = document.getElementById("forecastPrimaryBtn");
+    if (btn){
+      btn.textContent = tr("forecast.missing_training_types_cta");
+      btn.onclick = () => {
+        showWizardStep("overview");
+        requestAnimationFrame(() => {
+          const profileCard = document.getElementById("profileEquipmentCard");
+          if (profileCard && typeof profileCard.scrollIntoView === "function"){
+            profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          setEquipmentEditorOpen(true);
+        });
+      };
+    }
+    return;
+  }
+
   if (completedToday || completedRestDayToday){
     setText("forecastType", tr("forecast.completed_today"));
     setText(
@@ -5803,20 +5827,27 @@ function renderTodayPlan(item){
 
     const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
     const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
-    const showPlannedRestChoiceCard = isPlannedRestDay;
+    const missingTrainingTypes = String(item?.plan_variant || "").trim() === "missing_training_types";
+    const showPlannedRestChoiceCard = isPlannedRestDay && !missingTrainingTypes;
     const showRestitutionChoice = showPlannedRestChoiceCard && hasEntries && isRestitutionPlan;
 
-    const heroTitle = showPlannedRestChoiceCard
-      ? tr("today_plan.rest_day_title")
-      : formatSessionType(item.session_type || "unknown");
-    const heroLead = showPlannedRestChoiceCard
-      ? tr("today_plan.rest_day_lead")
-      : "";
+    const heroTitle = missingTrainingTypes
+      ? tr("today_plan.missing_training_types_title")
+      : showPlannedRestChoiceCard
+        ? tr("today_plan.rest_day_title")
+        : formatSessionType(item.session_type || "unknown");
+    const heroLead = missingTrainingTypes
+      ? tr("today_plan.missing_training_types_lead")
+      : showPlannedRestChoiceCard
+        ? tr("today_plan.rest_day_lead")
+        : "";
 
-    const heroActions = buildTodayPlanHeroActionsHtml({
-      showPlannedRestChoiceCard,
-      showRestitutionChoice,
-    });
+    const heroActions = missingTrainingTypes
+      ? `<div class="btn-row" style="margin-top:10px"><button type="button" id="todayPlanOpenSetupBtn">${esc(tr("today_plan.missing_training_types_cta"))}</button></div>`
+      : buildTodayPlanHeroActionsHtml({
+          showPlannedRestChoiceCard,
+          showRestitutionChoice,
+        });
 
     const heroCard = buildTodayPlanHeroCardHtml({
       heroTitle,
@@ -5834,6 +5865,19 @@ function renderTodayPlan(item){
     const entryCards = buildTodayPlanEntryCardsHtml(item, isPlannedRestDay);
 
     root.innerHTML = heroCard + recoveryCard + recommendationCard + entryCards;
+
+    if (String(item?.plan_variant || "").trim() === "missing_training_types"){
+      document.getElementById("todayPlanOpenSetupBtn")?.addEventListener("click", () => {
+        showWizardStep("overview");
+        requestAnimationFrame(() => {
+          const profileCard = document.getElementById("profileEquipmentCard");
+          if (profileCard && typeof profileCard.scrollIntoView === "function"){
+            profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          setEquipmentEditorOpen(true);
+        });
+      });
+    }
 
     wireTodayPlanActions(item);
 

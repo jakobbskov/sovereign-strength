@@ -214,9 +214,54 @@ def test_build_active_programs_by_domain_returns_none_when_no_training_types_ena
     # empty preference handling is ultimately enforced in the today-plan flow.
     assert active["strength"] in {None, "starter_strength_2x", "reentry_strength_2x", "starter_strength_gym_2x"}
 
+def test_get_training_type_preferences_uses_legacy_defaults_when_missing():
+    settings = {
+        "preferences": {}
+    }
+
+    prefs = backend_app.get_training_type_preferences(settings)
+
+    assert prefs == {
+        "running": True,
+        "strength_weights": True,
+        "bodyweight": True,
+        "mobility": True,
+    }
+
+
+def test_get_training_type_preferences_respects_explicit_empty_dict():
+    settings = {
+        "preferences": {
+            "training_types": {}
+        }
+    }
+
+    prefs = backend_app.get_training_type_preferences(settings)
+
+    assert prefs == {
+        "running": False,
+        "strength_weights": False,
+        "bodyweight": False,
+        "mobility": False,
+    }
+
+
+def test_build_active_programs_by_domain_returns_none_when_training_types_are_explicitly_empty():
+    settings = make_user_settings(
+        training_types={},
+        weekly_target_sessions=2,
+        available_equipment={},
+    )
+
+    active = backend_app.build_active_programs_by_domain(PROGRAMS, settings)
+
+    assert active["strength"] is None
+    assert active["run"] is None
 
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
             fn()
     print("first auto-assigned program matrix tests passed")
+
+

@@ -724,5 +724,12 @@
   "profile.program_why_run": "Løbeprogrammet blev valgt ud fra {week_goal} og {starting_level}.",
   "profile.domain_strength_title": "Styrke",
   "profile.domain_run_title": "Løb",
-  "profile.program_selection_title": "Programvalg"
+  "profile.program_selection_title": "Programvalg",
+  "forecast.missing_training_types_title": "Opsætning mangler",
+  "forecast.missing_training_types_summary": "Vælg mindst én træningstype for at få din første plan.",
+  "forecast.missing_training_types_reason": "Appen kan først lave en reel anbefaling, når du har valgt fx styrke, løb eller begge dele.",
+  "forecast.missing_training_types_cta": "Åbn profil og udstyr",
+  "today_plan.missing_training_types_title": "Opsætning mangler",
+  "today_plan.missing_training_types_lead": "Vælg mindst én træningstype i profil og udstyr, før appen kan lave din første plan.",
+  "today_plan.missing_training_types_cta": "Åbn profil og udstyr"
 }
