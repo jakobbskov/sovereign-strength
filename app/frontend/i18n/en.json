@@ -719,5 +719,6 @@
   "profile.recommended_program_current_label": "You are currently using",
   "profile.recommended_program_suggested_label": "The app recommends",
   "profile.recommended_current_strength_program_value": "{value}",
-  "profile.recommended_current_strength_program_missing": "No active strength program is selected yet"
+  "profile.recommended_current_strength_program_missing": "No active strength program is selected yet",
+  "profile.recommended_program_switch_success": "Strength program updated to: {value}"
 }

@@ -735,5 +735,6 @@
   "profile.recommended_program_current_label": "Du bruger nu",
   "profile.recommended_program_suggested_label": "Appen anbefaler",
   "profile.recommended_current_strength_program_value": "{value}",
-  "profile.recommended_current_strength_program_missing": "Der er ikke valgt et aktivt styrkeprogram endnu"
+  "profile.recommended_current_strength_program_missing": "Der er ikke valgt et aktivt styrkeprogram endnu",
+  "profile.recommended_program_switch_success": "Styrkeprogram opdateret til: {value}"
 }
