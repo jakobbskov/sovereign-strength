@@ -705,5 +705,8 @@
   "profile.program_why_equipment_bodyweight": "you have bodyweight available",
   "profile.program_why_equipment_basic": "your equipment matches the selected level",
   "profile.program_why_strength": "The strength program was chosen from {week_goal}, {equipment}, and {starting_level}.",
-  "profile.program_why_run": "The running program was chosen from {week_goal} and {starting_level}."
+  "profile.program_why_run": "The running program was chosen from {week_goal} and {starting_level}.",
+  "profile.domain_strength_title": "Strength",
+  "profile.domain_run_title": "Running",
+  "profile.program_selection_title": "Program selection"
 }

@@ -721,5 +721,8 @@
   "profile.program_why_equipment_bodyweight": "du har kropsvægt til rådighed",
   "profile.program_why_equipment_basic": "dit udstyr matcher det valgte niveau",
   "profile.program_why_strength": "Styrkeprogrammet blev valgt ud fra {week_goal}, {equipment} og {starting_level}.",
-  "profile.program_why_run": "Løbeprogrammet blev valgt ud fra {week_goal} og {starting_level}."
+  "profile.program_why_run": "Løbeprogrammet blev valgt ud fra {week_goal} og {starting_level}.",
+  "profile.domain_strength_title": "Styrke",
+  "profile.domain_run_title": "Løb",
+  "profile.program_selection_title": "Programvalg"
 }
