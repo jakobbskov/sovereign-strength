@@ -5381,6 +5381,7 @@ function ensureTimedHoldTick(item){
   const prepRemaining = getTimedHoldPrepRemainingSeconds(entry);
   if (prepRemaining > 0){
     window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
+      if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
       renderTodayPlan(item);
     }, 1000);
     return;
@@ -5390,6 +5391,7 @@ function ensureTimedHoldTick(item){
     clearTimedHoldPrep(entry);
     startTimedHoldTimer(entry);
     window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
+      if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
       renderTodayPlan(item);
     }, 50);
     return;
@@ -5401,6 +5403,7 @@ function ensureTimedHoldTick(item){
   }
 
   window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
+    if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
     renderTodayPlan(item);
   }, 1000);
 }
@@ -5498,7 +5501,15 @@ function isWorkoutRestTimerRunning(){
 }
 
 function isWorkoutRestState(){
-  return Boolean(STATE.workoutInProgress && STATE.workoutRestTimerActive);
+  if (!STATE.workoutInProgress || !STATE.workoutRestTimerActive) return false;
+
+  const hasRunningTimer = getRemainingWorkoutRestSeconds() > 0;
+  const hasResolvedTarget = Boolean(
+    String(STATE.workoutRestTargetKind || "").trim() ||
+    Number(STATE.workoutRestNextEntryIndex) >= 0
+  );
+
+  return hasRunningTimer || hasResolvedTarget;
 }
 
 function getActiveWorkoutEntry(item){
