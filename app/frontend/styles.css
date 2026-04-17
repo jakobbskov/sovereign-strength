@@ -172,3 +172,78 @@ button{
 .training-option span{
   flex:1;
 }
+
+.overview-hero-card{
+  padding:18px 16px;
+}
+
+.overview-hero-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.overview-hero-copy{
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+
+.overview-hero-eyebrow{
+  letter-spacing:0.01em;
+  text-transform:none;
+}
+
+.overview-hero-type{
+  line-height:1.05;
+  font-size:clamp(2rem, 8vw, 2.6rem);
+}
+
+.overview-hero-date{
+  white-space:nowrap;
+  padding-top:4px;
+}
+
+.overview-hero-summary{
+  margin-top:10px;
+  font-size:1rem;
+  color:var(--text-primary);
+  line-height:1.4;
+}
+
+.overview-hero-reason{
+  margin-top:8px;
+  line-height:1.45;
+}
+
+.overview-hero-actions{
+  margin-top:14px;
+}
+
+.overview-hero-actions .primary-cta{
+  min-width:min(100%, 280px);
+  padding:12px 14px;
+}
+
+.overview-context-card .overview-status{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.overview-context-card .stat-line{
+  padding:10px 12px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.014), transparent 36%),
+    var(--surface-3);
+}
+
+@media (min-width: 700px){
+  .overview-context-card .overview-status{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
