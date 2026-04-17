@@ -3652,7 +3652,28 @@ function buildWorkoutSetFields(entry, idx, setIdx){
   const existingReps = String(existingSet.reps || (setIdx === 0 ? existingResult.achieved_reps || "" : "")).trim();
   const existingLoad = String(existingSet.load || "").trim();
 
-  if (inputKind === "time" || inputKind === "cardio_time"){
+  if (inputKind === "time"){
+    const remainingSec = getTimedHoldRemainingSeconds(entry);
+    const targetSec = Number(entry?._active_hold_timer_target_sec || getTimedHoldTargetSeconds(entry) || 0);
+    const existingSeconds = getTimedHoldExistingSeconds(entry);
+    const isActiveTimer = remainingSec > 0;
+
+    return `
+      <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
+        <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+        <div class="small" style="margin-bottom:8px; opacity:0.78">${tr("input_kind.time")}</div>
+        <input type="hidden" name="review_set_reps_${idx}_${setIdx}" value="${esc(String(existingSeconds || targetSec || ""))}">
+        <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0">${esc(String(isActiveTimer ? remainingSec : (existingSeconds || targetSec || 0)))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
+        <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+          <button type="button" class="secondary" data-start-hold-timer="${esc(String(idx))}" style="width:100%; padding:12px 14px; font-weight:700">${esc(isActiveTimer ? tr("button.hold_timer_running") : tr("button.start_set"))}</button>
+          ${isActiveTimer ? `<button type="button" data-stop-hold-timer="${esc(String(idx))}" style="width:100%; padding:12px 14px; font-weight:700">${esc(tr("button.finish_set"))}</button>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  if (inputKind === "cardio_time"){
     return `
       <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
         <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
@@ -5272,6 +5293,71 @@ function hasMoreWorkoutSets(entry){
   return getCurrentWorkoutSetIndex(entry) < (getWorkoutPlannedSetCount(entry) - 1);
 }
 
+function isTimedHoldWorkoutEntry(entry){
+  const meta = getReviewExerciseMeta(entry?.exercise_id);
+  return String(meta?.input_kind || "").trim() === "time";
+}
+
+function getTimedHoldTargetSeconds(entry){
+  const meta = getReviewExerciseMeta(entry?.exercise_id);
+  const raw = String(entry?.target_reps || "").trim();
+  const match = raw.match(/(\d+)/);
+  if (match) return Number(match[1]) || 0;
+  const options = Array.isArray(meta?.time_options) ? meta.time_options : [];
+  for (const option of options){
+    const m = String(option || "").match(/(\d+)/);
+    if (m) return Number(m[1]) || 0;
+  }
+  return 0;
+}
+
+function getTimedHoldExistingSeconds(entry){
+  const setIdx = getCurrentWorkoutSetIndex(entry);
+  const existing = entry?._existing_result && typeof entry._existing_result === "object" ? entry._existing_result : {};
+  const sets = Array.isArray(existing.sets) ? existing.sets : [];
+  const setItem = sets[setIdx] && typeof sets[setIdx] === "object" ? sets[setIdx] : {};
+  const raw = String(setItem.reps || "").trim();
+  const match = raw.match(/(\d+)/);
+  return match ? (Number(match[1]) || 0) : 0;
+}
+
+function getTimedHoldRemainingSeconds(entry){
+  const endsAt = Number(entry?._active_hold_timer_ends_at || 0);
+  if (!endsAt) return 0;
+  const remainingMs = endsAt - Date.now();
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+}
+
+function clearTimedHoldTimer(entry){
+  if (!entry || typeof entry !== "object") return;
+  delete entry._active_hold_timer_ends_at;
+  delete entry._active_hold_timer_target_sec;
+}
+
+function startTimedHoldTimer(entry){
+  if (!entry || typeof entry !== "object") return 0;
+  const targetSec = Math.max(1, getTimedHoldTargetSeconds(entry));
+  entry._active_hold_timer_target_sec = targetSec;
+  entry._active_hold_timer_ends_at = Date.now() + (targetSec * 1000);
+  return targetSec;
+}
+
+function ensureTimedHoldTick(item){
+  window.clearTimeout(window.__ssWorkoutActiveHoldTick || 0);
+  const active = getActiveWorkoutEntry(item);
+  const entry = active?.entry;
+  if (!entry || !isTimedHoldWorkoutEntry(entry)) return;
+  if (getTimedHoldRemainingSeconds(entry) <= 0) return;
+
+  window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
+    renderTodayPlan(item);
+  }, 1000);
+}
+
+function clearTimedHoldTick(){
+  window.clearTimeout(window.__ssWorkoutActiveHoldTick || 0);
+}
+
 function clearWorkoutRestTimer(){
   STATE.workoutRestTimerActive = false;
   STATE.workoutRestTimerEndsAt = 0;
@@ -5607,7 +5693,64 @@ function renderActiveWorkoutCard(item){
       </li>
     `;
       wireWorkoutRepChoiceButtons(root);
+
+      root.querySelector('[data-start-hold-timer]')?.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        if (isTimedHoldWorkoutEntry(entry) && getTimedHoldRemainingSeconds(entry) <= 0){
+          startTimedHoldTimer(entry);
+          renderTodayPlan(item);
+        }
+      });
+
+      root.querySelector('[data-stop-hold-timer]')?.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        if (isTimedHoldWorkoutEntry(entry)){
+          const hidden = root.querySelector(`[name="review_set_reps_${idx}_${currentSetIndex}"]`);
+          const targetSec = Number(entry?._active_hold_timer_target_sec || getTimedHoldTargetSeconds(entry) || 0);
+          const remainingSec = getTimedHoldRemainingSeconds(entry);
+          const completedSec = remainingSec > 0 ? Math.max(1, targetSec - remainingSec) : targetSec;
+          if (hidden) hidden.value = String(completedSec);
+          clearTimedHoldTimer(entry);
+          saveActiveWorkoutEntryProgress(item);
+
+          if (hasMoreSetsRemaining){
+            STATE.currentWorkoutSetIndex = currentSetIndex + 1;
+            startWorkoutRestTimer(undefined, {
+              targetKind: "next_set",
+              nextEntryIndex: idx,
+            });
+            renderTodayPlan(item);
+            return;
+          }
+
+          STATE.currentWorkoutSetIndex = 0;
+
+          if (isLast){
+            STATE.workoutInProgress = false;
+            STATE.currentWorkoutEntryIndex = 0;
+            clearWorkoutRestTimer();
+            renderReviewSummary(item);
+            renderSessionReview(item);
+            showWizardStep("review");
+            return;
+          }
+
+          STATE.currentWorkoutEntryIndex = idx + 1;
+          startWorkoutRestTimer(undefined, {
+            targetKind: "next_exercise",
+            nextEntryIndex: idx + 1,
+          });
+          renderTodayPlan(item);
+        }
+      });
+
+      ensureTimedHoldTick(item);
+
       document.getElementById("nextWorkoutEntryBtn")?.addEventListener("click", () => {
+        if (isTimedHoldWorkoutEntry(entry) && getTimedHoldRemainingSeconds(entry) > 0){
+          return;
+        }
+
         saveActiveWorkoutEntryProgress(item);
 
         if (hasMoreSetsRemaining && !isCardioEntry){
