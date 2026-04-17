@@ -5667,8 +5667,12 @@ function renderActiveWorkoutCard(item){
       const completed = Boolean(existingSets[setIdx]?.reps || existingSets[setIdx]?.load);
       if (setIdx < currentSetIndex){
         const summaryBits = [];
-        if (existingSets[setIdx]?.reps) summaryBits.push(`${tr("exercise.target_label", { value: esc(existingSets[setIdx].reps) })}`);
-        if (existingSets[setIdx]?.load) summaryBits.push(esc(existingSets[setIdx].load));
+        if (isTime){
+          if (existingSets[setIdx]?.reps) summaryBits.push(`${tr("input_kind.time")}: ${esc(existingSets[setIdx].reps)} sek`);
+        } else {
+          if (existingSets[setIdx]?.reps) summaryBits.push(`${tr("exercise.target_label", { value: esc(existingSets[setIdx].reps) })}`);
+          if (existingSets[setIdx]?.load) summaryBits.push(esc(existingSets[setIdx].load));
+        }
         return `
           <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.22)">
             <div class="small" style="margin-bottom:6px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>

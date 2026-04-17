@@ -732,5 +732,10 @@
   "profile.recommended_current_strength_program_value": "{value}",
   "profile.recommended_current_strength_program_missing": "No active strength program is selected yet",
   "profile.recommended_program_switch_success": "Strength program updated to: {value}",
-  "profile.active_program_accepted_recommendation": "Accepted recommendation"
+  "profile.active_program_accepted_recommendation": "Accepted recommendation",
+  "workout.waiting_for_previous_set": "Waiting for previous set",
+  "common.done": "Done",
+  "button.start_set": "Start set",
+  "button.finish_set": "Finish set",
+  "workout.hold_get_ready": "Get ready"
 }

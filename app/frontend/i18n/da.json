@@ -748,5 +748,10 @@
   "profile.recommended_current_strength_program_value": "{value}",
   "profile.recommended_current_strength_program_missing": "Der er ikke valgt et aktivt styrkeprogram endnu",
   "profile.recommended_program_switch_success": "Styrkeprogram opdateret til: {value}",
-  "profile.active_program_accepted_recommendation": "Accepteret anbefaling"
+  "profile.active_program_accepted_recommendation": "Accepteret anbefaling",
+  "workout.waiting_for_previous_set": "Venter på forrige sæt",
+  "common.done": "Færdig",
+  "button.start_set": "Start sæt",
+  "button.finish_set": "Afslut sæt",
+  "workout.hold_get_ready": "Gør dig klar"
 }
