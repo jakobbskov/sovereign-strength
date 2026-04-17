@@ -5351,9 +5351,16 @@ function saveActiveWorkoutEntryProgress(item){
   const entry = active.entry;
   const idx = active.index;
   const setCount = Math.max(1, Number(entry.sets || 1));
+  const currentSetIndex = getCurrentWorkoutSetIndex(entry);
   const existing = entry._existing_result && typeof entry._existing_result === "object"
     ? entry._existing_result
     : {};
+  const existingSets = Array.isArray(existing.sets)
+    ? existing.sets.slice(0, setCount).map(setItem => ({
+        reps: String(setItem?.reps || "").trim(),
+        load: String(setItem?.load || "").trim(),
+      }))
+    : [];
   const scope = document.getElementById("todayPlanList") || document;
 
   const meta = getReviewExerciseMeta(entry.exercise_id);
@@ -5373,23 +5380,26 @@ function saveActiveWorkoutEntryProgress(item){
     return;
   }
 
-  const sets = Array.from({length: setCount}, (_, setIdx) => {
-    const repsVal = scope.querySelector(`[name="review_set_reps_${idx}_${setIdx}"]`)?.value?.trim() || "";
-    let loadVal = scope.querySelector(`[name="review_set_load_${idx}_${setIdx}"]`)?.value?.trim() || "";
-    if (isTime || isBodyweight){
-      loadVal = "";
-    }
-    return {
-      reps: repsVal,
-      load: loadVal,
-    };
-  });
+  while (existingSets.length < setCount){
+    existingSets.push({ reps: "", load: "" });
+  }
 
-  const nonEmptySets = sets.filter(x => x.reps || x.load);
+  const repsVal = scope.querySelector(`[name="review_set_reps_${idx}_${currentSetIndex}"]`)?.value?.trim() || "";
+  let loadVal = scope.querySelector(`[name="review_set_load_${idx}_${currentSetIndex}"]`)?.value?.trim() || "";
+  if (isTime || isBodyweight){
+    loadVal = "";
+  }
+
+  existingSets[currentSetIndex] = {
+    reps: repsVal,
+    load: loadVal,
+  };
+
+  const nonEmptySets = existingSets.filter(x => x.reps || x.load);
   entry._existing_result = {
     ...existing,
     achieved_reps: nonEmptySets[0]?.reps || "",
-    sets,
+    sets: existingSets,
     hit_failure: String(scope.querySelector(`[name="review_hit_failure_${idx}"]`)?.value || "false") === "true",
     notes: scope.querySelector(`[name="review_notes_${idx}"]`)?.value?.trim() || "",
   };
@@ -5519,7 +5529,31 @@ function renderActiveWorkoutCard(item){
       </label>
     `;
   } else {
-      const setFields = Array.from({length: plannedSetCount}, (_, setIdx) => buildWorkoutSetFields(entry, idx, setIdx)).join("");
+      const existingSets = Array.isArray(entry?._existing_result?.sets) ? entry._existing_result.sets : [];
+    const setFields = Array.from({length: plannedSetCount}, (_, setIdx) => {
+      const completed = Boolean(existingSets[setIdx]?.reps || existingSets[setIdx]?.load);
+      if (setIdx < currentSetIndex){
+        const summaryBits = [];
+        if (existingSets[setIdx]?.reps) summaryBits.push(`${tr("exercise.target_label", { value: esc(existingSets[setIdx].reps) })}`);
+        if (existingSets[setIdx]?.load) summaryBits.push(esc(existingSets[setIdx].load));
+        return `
+          <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.22)">
+            <div class="small" style="margin-bottom:6px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+            <div style="font-weight:700">${esc(tr("common.done"))}</div>
+            ${summaryBits.length ? `<div class="small" style="margin-top:6px; opacity:0.8">${summaryBits.join(" · ")}</div>` : ""}
+          </div>
+        `;
+      }
+      if (setIdx > currentSetIndex){
+        return `
+          <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
+            <div class="small" style="margin-bottom:6px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+            <div class="small" style="opacity:0.72">${esc(tr("workout.waiting_for_previous_set"))}</div>
+          </div>
+        `;
+      }
+      return buildWorkoutSetFields(entry, idx, setIdx);
+    }).join("");
     loggingHtml = `
       <div style="margin-top:12px">
         ${setFields}
