@@ -1770,13 +1770,16 @@ function renderForecastHero(planItem, latestCheckin){
       }
     }
 
-    let nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
-    const loweredNextGuidance = nextGuidanceMessage.toLowerCase();
-    if (
-      loweredNextGuidance.includes("there is no next training day yet") ||
-      loweredNextGuidance.includes("no next training day yet")
-    ){
-      nextGuidanceMessage = "";
+    let nextGuidanceMessage = getNextPlannedSessionOverviewText(planItem || null) || "";
+    if (!nextGuidanceMessage){
+      const rawNextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
+      const loweredNextGuidance = rawNextGuidanceMessage.toLowerCase();
+      if (
+        !loweredNextGuidance.includes("there is no next training day yet") &&
+        !loweredNextGuidance.includes("no next training day yet")
+      ){
+        nextGuidanceMessage = rawNextGuidanceMessage;
+      }
     }
 
     const forecastReasonEl = document.getElementById("forecastReason");
@@ -1886,9 +1889,13 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     } else if (dailyUiState === "no_checkin_yet"){
       latestCheckinLine.textContent = tr("overview.no_checkin_yet");
     } else if (dailyUiState === "completed_rest_day_today"){
-      latestCheckinLine.textContent = tr("today_plan.rest_day_acknowledged_saved");
+      latestCheckinLine.textContent = latestCheckin?.date
+        ? tr("overview.latest_checkin", { value: latestCheckin.date })
+        : tr("today_plan.rest_day_acknowledged_saved");
     } else if (dailyUiState === "completed_session_today"){
-      latestCheckinLine.textContent = tr("overview.completed_today_status");
+      latestCheckinLine.textContent = latestCheckin?.date
+        ? tr("overview.latest_checkin", { value: latestCheckin.date })
+        : tr("overview.completed_today_status");
     } else if (latestCheckin?.date){
       latestCheckinLine.textContent = tr("overview.latest_checkin", { value: latestCheckin.date });
     } else {
@@ -1913,6 +1920,7 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
   }
 
   if (overviewWorkoutLine){
+    overviewWorkoutLine.style.whiteSpace = "";
     if (isFirstTime){
       overviewWorkoutLine.textContent = tr("overview.no_history_first_point");
     } else if (dailyUiState === "no_checkin_yet"){
@@ -1922,7 +1930,9 @@ function renderOverviewStatus(planItem, latestCheckin, workouts){
     } else if (dailyUiState === "planned_rest_today"){
       overviewWorkoutLine.textContent = tr("today_plan.acknowledge_rest_day");
     } else if (dailyUiState === "completed_rest_day_today"){
-      overviewWorkoutLine.textContent = tr("today_plan.rest_day_logged_title");
+      const nextOverviewText = getNextPlannedSessionOverviewText(planItem || null);
+      overviewWorkoutLine.textContent = nextOverviewText || tr("today_plan.rest_day_logged_title");
+      overviewWorkoutLine.style.whiteSpace = nextOverviewText ? "pre-line" : "";
     } else if (dailyUiState === "completed_session_today"){
       const nextOverviewText = getNextPlannedSessionOverviewText(planItem || null);
       overviewWorkoutLine.textContent = nextOverviewText || tr("overview.completed_today_review_hint");

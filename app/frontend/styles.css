@@ -300,3 +300,56 @@ button{
     padding: 16px 16px 18px;
   }
 }
+
+
+#todayPlanSection{
+  display:grid;
+  gap:12px;
+}
+
+#todayPlanMeta{
+  opacity:0.82;
+}
+
+#todayPlanTiming,
+#todayPlanSummary{
+  margin:0;
+}
+
+#todayPlanTiming{
+  opacity:0.82;
+}
+
+#todayPlanSummary{
+  color:var(--text-primary);
+  line-height:1.45;
+}
+
+#todayPlanList{
+  display:grid;
+  gap:12px;
+  margin:0;
+  padding:0;
+}
+
+#todayPlanList > li{
+  list-style:none;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.016), transparent 34%),
+    var(--surface-2);
+  padding:14px;
+}
+
+#todayPlanSection .btn-row{
+  margin-top:12px;
+}
+
+#sessionReviewHeading{
+  padding-top:2px;
+}
+
+#reviewPlanSummary{
+  line-height:1.45;
+}
