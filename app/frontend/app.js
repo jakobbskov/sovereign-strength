@@ -5397,7 +5397,8 @@ function ensureTimedHoldTick(item){
     return;
   }
 
-  if (getTimedHoldRemainingSeconds(entry) <= 0){
+  const hasActiveHoldTimer = Number(entry?._active_hold_timer_ends_at || 0) > 0;
+  if (hasActiveHoldTimer && getTimedHoldRemainingSeconds(entry) <= 0){
     completeTimedHoldSet(item);
     return;
   }
