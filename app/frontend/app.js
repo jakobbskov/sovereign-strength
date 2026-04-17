@@ -292,7 +292,9 @@ function isFirstRunUser(planItem, latestCheckin, sessionResults){
   const hasPlan = !!(planItem && typeof planItem === "object");
   const hasLatestCheckin = !!(latestCheckin && typeof latestCheckin === "object" && String(latestCheckin.date || "").trim());
   const hasSessions = Array.isArray(sessionResults) && sessionResults.length > 0;
-  return !hasPlan && !hasLatestCheckin && !hasSessions;
+  const checklistState = buildInitialSetupChecklist(STATE.userSettings || {});
+  const setupReady = !!checklistState?.readyForRecommendation;
+  return !setupReady && !hasPlan && !hasLatestCheckin && !hasSessions;
 }
 
 function deriveDailyUiState(planItem, latestCheckin, sessionResults){
@@ -2969,6 +2971,7 @@ async function handleEquipmentSettingsSubmit(ev){
   ev.preventDefault();
 
   const statusEl = document.getElementById("equipmentSettingsStatus");
+  const wasFirstRunActive = isFirstRunSetupFlowActive();
 
   const readBool = (id) => document.getElementById(id)?.value === "true";
   const readNum = (id, fallback = 0) => {
@@ -3034,6 +3037,20 @@ async function handleEquipmentSettingsSubmit(ev){
     await refreshAll();
     updateMenstruationCheckinVisibility();
     setEquipmentEditorOpen(false);
+
+    const checklistState = buildInitialSetupChecklist(STATE.userSettings || {});
+    const shouldSendToFirstCheckin = wasFirstRunActive && !!checklistState?.readyForRecommendation;
+
+    if (shouldSendToFirstCheckin){
+      showWizardStep("checkin");
+      requestAnimationFrame(() => {
+        const checkinCard = document.getElementById("checkinSection") || document.getElementById("checkinForm");
+        if (checkinCard && typeof checkinCard.scrollIntoView === "function"){
+          checkinCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+
     if (statusEl) statusEl.textContent = tr("status.equipment_saved");
   }catch(err){
     console.error("equipment save error", err);
