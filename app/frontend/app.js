@@ -5394,7 +5394,10 @@ function ensureTimedHoldTick(item){
     return;
   }
 
-  if (getTimedHoldRemainingSeconds(entry) <= 0) return;
+  if (getTimedHoldRemainingSeconds(entry) <= 0){
+    completeTimedHoldSet(item);
+    return;
+  }
 
   window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
     renderTodayPlan(item);
@@ -5403,6 +5406,59 @@ function ensureTimedHoldTick(item){
 
 function clearTimedHoldTick(){
   window.clearTimeout(window.__ssWorkoutActiveHoldTick || 0);
+}
+
+function completeTimedHoldSet(item){
+  const active = getActiveWorkoutEntry(item);
+  if (!active || !active.entry) return false;
+
+  const entry = active.entry;
+  if (!isTimedHoldWorkoutEntry(entry)) return false;
+
+  const idx = active.index;
+  const total = active.total;
+  const isLast = idx >= total - 1;
+  const hasMoreSetsRemaining = hasMoreWorkoutSets(entry);
+  const currentSetIndex = getCurrentWorkoutSetIndex(entry);
+
+  const root = document.getElementById("todayPlanList");
+  const hidden = root?.querySelector(`[name="review_set_reps_${idx}_${currentSetIndex}"]`);
+  const targetSec = Number(entry?._active_hold_timer_target_sec || getTimedHoldTargetSeconds(entry) || 0);
+  if (hidden) hidden.value = String(targetSec);
+
+  clearTimedHoldTimer(entry);
+  clearTimedHoldTick();
+  saveActiveWorkoutEntryProgress(item);
+
+  if (hasMoreSetsRemaining){
+    STATE.currentWorkoutSetIndex = currentSetIndex + 1;
+    startWorkoutRestTimer(undefined, {
+      targetKind: "next_set",
+      nextEntryIndex: idx,
+    });
+    renderTodayPlan(item);
+    return true;
+  }
+
+  STATE.currentWorkoutSetIndex = 0;
+
+  if (isLast){
+    STATE.workoutInProgress = false;
+    STATE.currentWorkoutEntryIndex = 0;
+    clearWorkoutRestTimer();
+    renderReviewSummary(item);
+    renderSessionReview(item);
+    showWizardStep("review");
+    return true;
+  }
+
+  STATE.currentWorkoutEntryIndex = idx + 1;
+  startWorkoutRestTimer(undefined, {
+    targetKind: "next_exercise",
+    nextEntryIndex: idx + 1,
+  });
+  renderTodayPlan(item);
+  return true;
 }
 
 function clearWorkoutRestTimer(){
@@ -5762,6 +5818,7 @@ function renderActiveWorkoutCard(item){
           const completedSec = remainingSec > 0 ? Math.max(1, targetSec - remainingSec) : targetSec;
           if (hidden) hidden.value = String(completedSec);
           clearTimedHoldTimer(entry);
+          clearTimedHoldTick();
           saveActiveWorkoutEntryProgress(item);
 
           if (hasMoreSetsRemaining){
