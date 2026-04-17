@@ -3653,20 +3653,27 @@ function buildWorkoutSetFields(entry, idx, setIdx){
   const existingLoad = String(existingSet.load || "").trim();
 
   if (inputKind === "time"){
+    const prepRemainingSec = getTimedHoldPrepRemainingSeconds(entry);
     const remainingSec = getTimedHoldRemainingSeconds(entry);
     const targetSec = Number(entry?._active_hold_timer_target_sec || getTimedHoldTargetSeconds(entry) || 0);
     const existingSeconds = getTimedHoldExistingSeconds(entry);
+    const isPrepTimer = prepRemainingSec > 0;
     const isActiveTimer = remainingSec > 0;
+    const displaySeconds = isPrepTimer ? prepRemainingSec : (isActiveTimer ? remainingSec : (existingSeconds || targetSec || 0));
+    const statusLabel = isPrepTimer
+      ? tr("workout.hold_get_ready")
+      : (isActiveTimer ? tr("input_kind.time") : tr("input_kind.time"));
 
     return `
       <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
         <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
-        <div class="small" style="margin-bottom:8px; opacity:0.78">${tr("input_kind.time")}</div>
+        <div class="small" style="margin-bottom:8px; opacity:0.78">${esc(statusLabel)}</div>
         <input type="hidden" name="review_set_reps_${idx}_${setIdx}" value="${esc(String(existingSeconds || targetSec || ""))}">
-        <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0">${esc(String(isActiveTimer ? remainingSec : (existingSeconds || targetSec || 0)))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
+        <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0">${esc(String(displaySeconds))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
         <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
         <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
-          <button type="button" class="secondary" data-start-hold-timer="${esc(String(idx))}" style="width:100%; padding:12px 14px; font-weight:700">${esc(isActiveTimer ? tr("button.hold_timer_running") : tr("button.start_set"))}</button>
+          ${(!isPrepTimer && !isActiveTimer) ? `<button type="button" class="secondary" data-start-hold-timer="${esc(String(idx))}" style="width:100%; padding:12px 14px; font-weight:700">${esc(tr("button.start_set"))}</button>` : ""}
+          ${isPrepTimer ? `<button type="button" class="secondary" disabled style="width:100%; padding:12px 14px; font-weight:700; opacity:0.9">${esc(tr("workout.hold_get_ready"))}</button>` : ""}
           ${isActiveTimer ? `<button type="button" data-stop-hold-timer="${esc(String(idx))}" style="width:100%; padding:12px 14px; font-weight:700">${esc(tr("button.finish_set"))}</button>` : ""}
         </div>
       </div>
@@ -5328,10 +5335,32 @@ function getTimedHoldRemainingSeconds(entry){
   return Math.max(0, Math.ceil(remainingMs / 1000));
 }
 
+function getTimedHoldPrepRemainingSeconds(entry){
+  const endsAt = Number(entry?._active_hold_prep_ends_at || 0);
+  if (!endsAt) return 0;
+  const remainingMs = endsAt - Date.now();
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+}
+
+function clearTimedHoldPrep(entry){
+  if (!entry || typeof entry !== "object") return;
+  delete entry._active_hold_prep_ends_at;
+  delete entry._active_hold_prep_duration_sec;
+}
+
+function startTimedHoldPrep(entry, durationSec = 5){
+  if (!entry || typeof entry !== "object") return 0;
+  const prepSec = Math.max(1, Number(durationSec || 5));
+  entry._active_hold_prep_duration_sec = prepSec;
+  entry._active_hold_prep_ends_at = Date.now() + (prepSec * 1000);
+  return prepSec;
+}
+
 function clearTimedHoldTimer(entry){
   if (!entry || typeof entry !== "object") return;
   delete entry._active_hold_timer_ends_at;
   delete entry._active_hold_timer_target_sec;
+  clearTimedHoldPrep(entry);
 }
 
 function startTimedHoldTimer(entry){
@@ -5347,6 +5376,24 @@ function ensureTimedHoldTick(item){
   const active = getActiveWorkoutEntry(item);
   const entry = active?.entry;
   if (!entry || !isTimedHoldWorkoutEntry(entry)) return;
+
+  const prepRemaining = getTimedHoldPrepRemainingSeconds(entry);
+  if (prepRemaining > 0){
+    window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
+      renderTodayPlan(item);
+    }, 1000);
+    return;
+  }
+
+  if (Number(entry?._active_hold_prep_ends_at || 0) > 0 && getTimedHoldRemainingSeconds(entry) <= 0){
+    clearTimedHoldPrep(entry);
+    startTimedHoldTimer(entry);
+    window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
+      renderTodayPlan(item);
+    }, 50);
+    return;
+  }
+
   if (getTimedHoldRemainingSeconds(entry) <= 0) return;
 
   window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
@@ -5696,8 +5743,8 @@ function renderActiveWorkoutCard(item){
 
       root.querySelector('[data-start-hold-timer]')?.addEventListener("click", (ev) => {
         ev.preventDefault();
-        if (isTimedHoldWorkoutEntry(entry) && getTimedHoldRemainingSeconds(entry) <= 0){
-          startTimedHoldTimer(entry);
+        if (isTimedHoldWorkoutEntry(entry) && getTimedHoldRemainingSeconds(entry) <= 0 && getTimedHoldPrepRemainingSeconds(entry) <= 0){
+          startTimedHoldPrep(entry, 5);
           renderTodayPlan(item);
         }
       });
@@ -5747,7 +5794,7 @@ function renderActiveWorkoutCard(item){
       ensureTimedHoldTick(item);
 
       document.getElementById("nextWorkoutEntryBtn")?.addEventListener("click", () => {
-        if (isTimedHoldWorkoutEntry(entry) && getTimedHoldRemainingSeconds(entry) > 0){
+        if (isTimedHoldWorkoutEntry(entry) && (getTimedHoldRemainingSeconds(entry) > 0 || getTimedHoldPrepRemainingSeconds(entry) > 0)){
           return;
         }
 
