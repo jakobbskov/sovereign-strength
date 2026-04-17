@@ -5927,17 +5927,30 @@ async function applyRecommendedStrengthProgram(programId){
   renderTodayPlan(STATE.currentTodayPlan || null);
 }
 
+function resetWorkoutRuntimeState(item){
+  clearWorkoutRestTimer();
+  clearTimedHoldTick();
+  STATE.currentWorkoutEntryIndex = 0;
+  STATE.currentWorkoutSetIndex = 0;
+
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  for (const entry of entries){
+    if (!entry || typeof entry !== "object") continue;
+    clearTimedHoldTimer(entry);
+  }
+}
+
 function wireTodayPlanActions(item){
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
+    resetWorkoutRuntimeState(item);
     STATE.workoutInProgress = true;
-    STATE.currentWorkoutEntryIndex = 0;
     renderTodayPlan(item);
     showWizardStep("plan");
   });
 
   document.getElementById("startRestitutionBtn")?.addEventListener("click", () => {
+    resetWorkoutRuntimeState(item);
     STATE.workoutInProgress = true;
-    STATE.currentWorkoutEntryIndex = 0;
     renderTodayPlan(item);
     showWizardStep("plan");
   });
