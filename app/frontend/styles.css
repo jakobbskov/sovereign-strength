@@ -247,3 +247,56 @@ button{
     grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 }
+
+.checkin-section{
+  margin-top: 14px;
+  padding: 14px 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.016), transparent 34%),
+    var(--surface-2);
+}
+
+.checkin-section:first-of-type{
+  margin-top: 0;
+}
+
+.checkin-section-head{
+  margin-bottom: 12px;
+}
+
+.checkin-section-title{
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.checkin-section-copy{
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+#recoveryForm > .checkin-section label + label{
+  margin-top: 10px;
+}
+
+#menstruationCheckinFields{
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#recoveryForm .entry-box{
+  margin-top: 10px;
+}
+
+#recoveryForm button[type="submit"]{
+  min-height: 48px;
+}
+
+@media (min-width: 700px){
+  .checkin-section{
+    padding: 16px 16px 18px;
+  }
+}

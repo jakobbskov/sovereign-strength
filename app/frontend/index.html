@@ -991,78 +991,101 @@
       <h2 data-i18n="checkin.title">Check-in</h2>
       <p id="checkinIntro" class="small" data-i18n="checkin.intro">Start her. Vurder søvn, energi, ømhed og tid, så beregner SovereignStrength dagens træning ud fra dit aktuelle niveau.</p>
       <form id="recoveryForm">
-        <label>
-          <span data-i18n="common.date">Dato</span>
-          <input id="recovery_date" name="recovery_date" type="date" required>
-        </label>
-
-        <label>
-          <span data-i18n="checkin.sleep_score_label">Søvn (1-5)</span>
-          <select id="sleep_score" name="sleep_score" required>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3" selected>3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </label>
-
-        <label>
-          <span data-i18n="checkin.energy_score_label">Energi (1-5)</span>
-          <select id="energy_score" name="energy_score" required>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3" selected>3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </label>
-
-        <label>
-          <span data-i18n="checkin.soreness_score_label">Ømhed (1-5)</span>
-          <select id="soreness_score" name="soreness_score" required>
-            <option value="1">1</option>
-            <option value="2" selected>2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </label>
-
-        <label>
-          <span data-i18n="checkin.time_today">Tid i dag</span>
-          <select id="time_budget_min" name="time_budget_min" required>
-            <option value="20">20 min</option>
-            <option value="30">30 min</option>
-            <option value="45" selected>45 min</option>
-            <option value="60">60 min</option>
-          </select>
-        </label>
-
-        <div id="menstruationCheckinFields" class="wizard-step-hidden">
+        <div class="checkin-section">
+          <div class="checkin-section-head">
+            <h3 class="checkin-section-title" data-i18n="common.date">Dato</h3>
+          </div>
           <label>
-            <span>Menstruation i dag</span>
-            <input id="menstruation_today" name="menstruation_today" type="checkbox">
+            <span data-i18n="common.date">Dato</span>
+            <input id="recovery_date" name="recovery_date" type="date" required>
           </label>
+        </div>
+
+        <div class="checkin-section">
+          <div class="checkin-section-head">
+            <h3 class="checkin-section-title" data-i18n="checkin.section.how_feel_title">Hvordan har du det i dag?</h3>
+            <p class="small checkin-section-copy" data-i18n="checkin.section.how_feel_copy">Vælg det svar der passer bedst lige nu. Det behøver ikke være perfekt.</p>
+          </div>
+
           <label>
-            <span>Menstruationssmerter</span>
-            <select id="menstrual_pain" name="menstrual_pain">
-              <option value="none">Ingen</option>
-              <option value="light">Lette</option>
-              <option value="moderate">Moderate</option>
-              <option value="severe">Svære</option>
+            <span data-i18n="checkin.sleep_score_label">Søvn (1-5)</span>
+            <select id="sleep_score" name="sleep_score" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="checkin.energy_score_label">Energi (1-5)</span>
+            <select id="energy_score" name="energy_score" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="checkin.soreness_score_label">Ømhed (1-5)</span>
+            <select id="soreness_score" name="soreness_score" required>
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
             </select>
           </label>
         </div>
 
-        <label>
-          <span data-i18n="checkin.notes">Noter</span>
-          <textarea id="recovery_notes" name="recovery_notes" data-i18n-placeholder="checkin.notes_placeholder" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
-        </label>
+        <div class="checkin-section">
+          <div class="checkin-section-head">
+            <h3 class="checkin-section-title" data-i18n="checkin.section.capacity_title">Hvad kan dagen bære?</h3>
+          </div>
+          <label>
+            <span data-i18n="checkin.time_today">Tid i dag</span>
+            <select id="time_budget_min" name="time_budget_min" required>
+              <option value="20">20 min</option>
+              <option value="30">30 min</option>
+              <option value="45" selected>45 min</option>
+              <option value="60">60 min</option>
+            </select>
+          </label>
+        </div>
 
-        <div class="entry-box">
-          <strong data-i18n="checkin.local_signals_title">Lokale signaler</strong>
-          <p class="small" data-i18n="checkin.local_signals_intro">Valgfrit. Markér kun områder der kræver ekstra hensyn i dag.</p>
+        <div class="checkin-section">
+          <div class="checkin-section-head">
+            <h3 class="checkin-section-title" data-i18n="checkin.section.context_title">Ekstra kontekst</h3>
+            <p class="small checkin-section-copy" data-i18n="checkin.section.context_copy">Valgfrit. Brug kun dette hvis det hjælper dagens plan til at blive mere præcis.</p>
+          </div>
+
+          <div id="menstruationCheckinFields" class="wizard-step-hidden">
+            <label>
+              <span data-i18n="checkin.menstruation_today">Menstruation i dag</span>
+              <input id="menstruation_today" name="menstruation_today" type="checkbox">
+            </label>
+            <label>
+              <span data-i18n="checkin.menstrual_pain">Menstruationssmerter</span>
+              <select id="menstrual_pain" name="menstrual_pain">
+                <option value="none" data-i18n="checkin.menstrual_pain.none">Ingen</option>
+                <option value="light" data-i18n="checkin.menstrual_pain.light">Lette</option>
+                <option value="moderate" data-i18n="checkin.menstrual_pain.moderate">Moderate</option>
+                <option value="severe" data-i18n="checkin.menstrual_pain.severe">Svære</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            <span data-i18n="checkin.notes">Noter</span>
+            <textarea id="recovery_notes" name="recovery_notes" data-i18n-placeholder="checkin.notes_placeholder" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
+          </label>
+
+          <div class="entry-box">
+            <strong data-i18n="checkin.local_signals_title">Lokale signaler</strong>
+            <p class="small" data-i18n="checkin.local_signals_intro">Valgfrit. Markér kun områder der kræver ekstra hensyn i dag.</p>
 
           <label>
             <span data-i18n="checkin.local_signal.knee">Knæ</span>
