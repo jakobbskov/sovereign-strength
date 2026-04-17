@@ -5373,6 +5373,7 @@ function startTimedHoldTimer(entry){
 
 function ensureTimedHoldTick(item){
   window.clearTimeout(window.__ssWorkoutActiveHoldTick || 0);
+  const runtimeNonce = Number(STATE.workoutRuntimeNonce || 0);
   const active = getActiveWorkoutEntry(item);
   const entry = active?.entry;
   if (!entry || !isTimedHoldWorkoutEntry(entry)) return;
@@ -5466,6 +5467,7 @@ function clearWorkoutRestTimer(){
   STATE.workoutRestTimerEndsAt = 0;
   STATE.workoutRestTargetKind = "";
   STATE.workoutRestNextEntryIndex = -1;
+  window.clearTimeout(window.__ssWorkoutRestTick || 0);
 }
 
 function startWorkoutRestTimer(durationSec, options = {}){
@@ -5668,9 +5670,11 @@ function renderWorkoutRestState(item, active){
   });
 
   if (STATE.workoutRestTimerActive){
+    const runtimeNonce = Number(STATE.workoutRuntimeNonce || 0);
     window.clearTimeout(window.__ssWorkoutRestTick || 0);
     if (!restDone){
       window.__ssWorkoutRestTick = window.setTimeout(() => {
+        if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
         renderTodayPlan(item);
       }, 1000);
     }
@@ -5928,6 +5932,7 @@ async function applyRecommendedStrengthProgram(programId){
 }
 
 function resetWorkoutRuntimeState(item){
+  STATE.workoutRuntimeNonce = Number(STATE.workoutRuntimeNonce || 0) + 1;
   clearWorkoutRestTimer();
   clearTimedHoldTick();
   STATE.currentWorkoutEntryIndex = 0;
