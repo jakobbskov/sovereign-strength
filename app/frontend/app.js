@@ -5472,6 +5472,14 @@ function clearWorkoutRestTimer(){
 
 function startWorkoutRestTimer(durationSec, options = {}){
   const seconds = Math.max(5, Number(durationSec || STATE.workoutRestTimerDurationSec || 90));
+  console.log("startWorkoutRestTimer", {
+    seconds,
+    options,
+    workoutRuntimeNonce: STATE.workoutRuntimeNonce,
+    currentWorkoutEntryIndex: STATE.currentWorkoutEntryIndex,
+    currentWorkoutSetIndex: STATE.currentWorkoutSetIndex,
+    stack: new Error().stack
+  });
   STATE.workoutRestTimerDurationSec = seconds;
   STATE.workoutRestTimerEndsAt = Date.now() + (seconds * 1000);
   STATE.workoutRestTimerActive = true;
@@ -5937,6 +5945,14 @@ function resetWorkoutRuntimeState(item){
   clearTimedHoldTick();
   STATE.currentWorkoutEntryIndex = 0;
   STATE.currentWorkoutSetIndex = 0;
+  console.log("resetWorkoutRuntimeState", {
+    workoutRuntimeNonce: STATE.workoutRuntimeNonce,
+    currentWorkoutEntryIndex: STATE.currentWorkoutEntryIndex,
+    currentWorkoutSetIndex: STATE.currentWorkoutSetIndex,
+    workoutRestTimerActive: STATE.workoutRestTimerActive,
+    workoutRestTargetKind: STATE.workoutRestTargetKind,
+    workoutRestNextEntryIndex: STATE.workoutRestNextEntryIndex
+  });
 
   const entries = Array.isArray(item?.entries) ? item.entries : [];
   for (const entry of entries){
