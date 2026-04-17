@@ -3936,12 +3936,12 @@ function renderSessionReview(item){
 
     if (isCardioEntry){
       return `
-        <li>
+        <li class="card" style="padding:14px; margin-top:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
           <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
-          <div class="small" style="margin-bottom:10px">
+          <div class="small" style="margin-bottom:8px; line-height:1.5">
             ${tr("exercise.target_colon")} ${entry.target_reps ? esc(formatTarget(entry.target_reps)) : tr("session_type.cardio")}
           </div>
-          <div class="small" style="margin-bottom:10px">
+          <div class="small" style="margin-bottom:12px; opacity:0.82">
             ${tr("common.type_label")}: ${tr("session_type.run")}
           </div>
           <label>
@@ -3968,34 +3968,35 @@ function renderSessionReview(item){
       else if (entry.target_load) actualBits.push(esc(entry.target_load));
 
       return `
-        <li>
+        <li class="card" style="padding:14px; margin-top:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
           <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
-          <div class="small" style="margin-bottom:10px">
+          <div class="small" style="margin-bottom:8px; line-height:1.5">
             ${tr("exercise.target_colon")} ${actualBits.join(" · ")}
           </div>
-
-        <div class="small" style="margin-bottom:10px">
-          ${tr("common.type_label")}: ${esc(formatInputKindLabel(inputKind))}
-        </div>
-
-        ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px">${tr("exercise.load_bodyweight")}</div>` : ""}
-        ${meta?.rep_display_hint ? `<div class="small" style="margin-bottom:10px">${esc(meta.rep_display_hint)}</div>` : ""}
-
-        ${setFields}
-
-        <label>
-          ${esc(tr("after_training.fail_label"))}
-          <select name="review_hit_failure_${idx}">
-            <option value="false" ${entry?._existing_result?.hit_failure ? "" : "selected"}>${esc(tr("common.no"))}</option>
-            <option value="true" ${entry?._existing_result?.hit_failure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
-          </select>
-        </label>
-
-        <label>
-          ${esc(tr("exercise.note_label"))}
-          <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
-        </label>
-      </li>
+          <div class="small" style="margin-bottom:10px; opacity:0.82">
+            ${tr("common.type_label")}: ${esc(formatInputKindLabel(inputKind))}
+          </div>
+          ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px; opacity:0.8">${tr("exercise.load_bodyweight")}</div>` : ""}
+          ${meta?.rep_display_hint ? `<div class="small" style="margin-bottom:10px; opacity:0.8">${esc(meta.rep_display_hint)}</div>` : ""}
+          <div style="margin-top:12px">
+            ${setFields}
+          </div>
+          <div style="margin-top:12px">
+            <label>
+              ${esc(tr("after_training.fail_label"))}
+              <select name="review_hit_failure_${idx}">
+                <option value="false" ${entry?._existing_result?.hit_failure ? "" : "selected"}>${esc(tr("common.no"))}</option>
+                <option value="true" ${entry?._existing_result?.hit_failure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
+              </select>
+            </label>
+          </div>
+          <div style="margin-top:10px">
+            <label>
+              ${esc(tr("exercise.note_label"))}
+              <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
+            </label>
+          </div>
+        </li>
     `;
   }).join("");
 }
@@ -4011,18 +4012,30 @@ function renderReviewSummary(item){
     return;
   }
 
+  const sessionType = formatSessionType(item.session_type || "");
+  const summaryBits = [];
+  if (item.time_budget_min) summaryBits.push(`${esc(item.time_budget_min)} min`);
+  if (item.readiness_score != null) summaryBits.push(`${esc(tr("overview.readiness"))}: ${esc(String(item.readiness_score))}`);
+  summaryBits.push(`${esc(String(item.entries.length))} ${esc(item.entries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
+
   root.innerHTML = `
-    <div class="small" style="margin-bottom:6px">
-      ${esc(formatSessionType(item.session_type || ""))}${item.time_budget_min ? ` · ${esc(item.time_budget_min)} min` : ""}${item.readiness_score != null ? ` · readiness ${esc(item.readiness_score)}` : ""}
-    </div>
-    <div class="small">
-      ${item.entries.map(entry => {
-        const bits = [];
-        if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
-        if (entry.target_reps) bits.push(tr("exercise.target_label", { value: formatTarget(entry.target_reps) }));
-        if (entry.target_load) bits.push(esc(entry.target_load));
-        return `${esc(formatExerciseName(entry.exercise_id))}${bits.length ? ` · ${bits.join(" · ")}` : ""}`;
-      }).join("<br>")}
+    <div class="card" style="padding:14px 14px 12px 14px; margin-bottom:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
+      <div style="font-weight:700; margin-bottom:8px">${esc(tr("review.session_review"))}</div>
+      <div class="small" style="margin-bottom:8px; line-height:1.5">
+        ${esc(sessionType)}${summaryBits.length ? ` · ${summaryBits.join(" · ")}` : ""}
+      </div>
+      <div class="small" style="margin-bottom:10px; line-height:1.5; opacity:0.86">
+        ${esc(tr("review.closure_intro"))}
+      </div>
+      <div class="small" style="line-height:1.6">
+        ${item.entries.map(entry => {
+          const bits = [];
+          if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
+          if (entry.target_reps) bits.push(tr("exercise.target_label", { value: formatTarget(entry.target_reps) }));
+          if (entry.target_load) bits.push(esc(entry.target_load));
+          return `${esc(formatExerciseName(entry.exercise_id))}${bits.length ? ` · ${bits.join(" · ")}` : ""}`;
+        }).join("<br>")}
+      </div>
     </div>
   `;
 }

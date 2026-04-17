@@ -737,5 +737,8 @@
   "common.done": "Done",
   "button.start_set": "Start set",
   "button.finish_set": "Finish set",
-  "workout.hold_get_ready": "Get ready"
+  "workout.hold_get_ready": "Get ready",
+  "review.closure_intro": "Briefly review how the session went. This helps the next recommendation fit your training better.",
+  "common.exercise_singular": "exercise",
+  "common.exercise_plural": "exercises"
 }

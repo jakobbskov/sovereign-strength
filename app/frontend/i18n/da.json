@@ -753,5 +753,8 @@
   "common.done": "Færdig",
   "button.start_set": "Start sæt",
   "button.finish_set": "Afslut sæt",
-  "workout.hold_get_ready": "Gør dig klar"
+  "workout.hold_get_ready": "Gør dig klar",
+  "review.closure_intro": "Gennemgå kort, hvordan passet gik. Det hjælper næste anbefaling med at passe bedre til din træning.",
+  "common.exercise_singular": "øvelse",
+  "common.exercise_plural": "øvelser"
 }
