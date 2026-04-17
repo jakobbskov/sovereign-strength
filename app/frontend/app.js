@@ -5943,6 +5943,20 @@ function resetWorkoutRuntimeState(item){
 function wireTodayPlanActions(item){
   document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
     resetWorkoutRuntimeState(item);
+    try {
+      console.log("startWorkoutBtn:item", JSON.parse(JSON.stringify(item)));
+      console.log("startWorkoutBtn:state", {
+        workoutInProgress: STATE.workoutInProgress,
+        currentWorkoutEntryIndex: STATE.currentWorkoutEntryIndex,
+        currentWorkoutSetIndex: STATE.currentWorkoutSetIndex,
+        workoutRestTimerActive: STATE.workoutRestTimerActive,
+        workoutRestTimerEndsAt: STATE.workoutRestTimerEndsAt,
+        workoutRestTargetKind: STATE.workoutRestTargetKind,
+        workoutRestNextEntryIndex: STATE.workoutRestNextEntryIndex
+      });
+    } catch (err) {
+      console.log("startWorkoutBtn:log_error", err);
+    }
     STATE.workoutInProgress = true;
     renderTodayPlan(item);
     showWizardStep("plan");
