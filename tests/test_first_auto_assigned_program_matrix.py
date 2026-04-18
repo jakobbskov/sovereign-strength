@@ -369,3 +369,13 @@ def test_select_strength_program_novice_hybrid_home_2x_prefers_minimalist_path()
         strength_starting_profile="novice",
     )
     assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "minimalist_strength_2x"
+
+def test_select_strength_program_beginner_gym_3x():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="beginner",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "starter_strength_gym_3x"
+
