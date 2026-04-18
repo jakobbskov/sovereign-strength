@@ -379,3 +379,14 @@ def test_select_strength_program_beginner_gym_3x():
     )
     assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "starter_strength_gym_3x"
 
+
+
+def test_select_strength_program_fat_loss_home_2x_prefers_minimalist_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="beginner",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "minimalist_strength_2x"

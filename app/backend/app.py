@@ -1183,6 +1183,16 @@ def get_weekly_target_sessions(user_settings):
     return val
 
 
+def get_training_goal(user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {})
+    if not isinstance(preferences, dict):
+        preferences = {}
+
+    goal = str(preferences.get("training_goal", "general_health") or "general_health").strip().lower()
+    if goal not in {"general_health", "strength", "fat_loss", "hypertrophy", "mixed", "performance"}:
+        return "general_health"
+    return goal
 
 
 def get_local_load_targets_for_exercise(exercise_id, exercises=None):
@@ -2672,6 +2682,7 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     if strength_starting_profile not in ("conservative_beginner", "beginner", "novice"):
         strength_starting_profile = "beginner"
 
+    training_goal = get_training_goal(settings)
     target_level = "novice" if strength_starting_profile == "novice" else "beginner"
 
     candidates = []
@@ -2705,6 +2716,8 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
                 preferred_ids.append("starter_strength_gym_2x")
 
     if equipment_profile in ("minimal_home", "dumbbell_home"):
+        if training_goal == "fat_loss" and target_sessions == 2:
+            preferred_ids.append("minimalist_strength_2x")
         if bool(prefs.get("running", False)) and target_sessions == 2:
             preferred_ids.append("minimalist_strength_2x")
         if target_level == "novice" and equipment_profile == "dumbbell_home":
@@ -5296,10 +5309,15 @@ def post_user_settings():
     if run_starting_profile not in {"conservative_beginner", "beginner", "novice"}:
         run_starting_profile = "beginner"
 
+    training_goal = str(clean_preferences.get("training_goal", "general_health") or "general_health").strip().lower()
+    if training_goal not in {"general_health", "strength", "fat_loss", "hypertrophy", "mixed", "performance"}:
+        training_goal = "general_health"
+
     clean_preferences = {
         **clean_preferences,
         "strength_starting_profile": strength_starting_profile,
         "run_starting_profile": run_starting_profile,
+        "training_goal": training_goal,
     }
 
     allowed_regions = {"ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"}

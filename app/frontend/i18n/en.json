@@ -755,5 +755,13 @@
   "review.saved_summary.failure_markers_count": "Failure markers: {count}",
   "review.summary_hold_times_label": "Time per set",
   "review.summary_total_hold_time_label": "Total hold time",
-  "progress_flag.exercise_failure": "{exercise} not completed"
+  "progress_flag.exercise_failure": "{exercise} not completed",
+  "profile.training_goal": "Primary training goal",
+  "profile.training_goal_general_health": "General health",
+  "profile.training_goal_strength": "Strength",
+  "profile.training_goal_fat_loss": "Fat loss with muscle retention",
+  "profile.training_goal_hypertrophy": "Muscle gain",
+  "profile.training_goal_mixed": "Mixed goal",
+  "profile.training_goal_performance": "Performance",
+  "profile.training_goal_help": "Used to choose more relevant programs when the catalog supports the goal."
 }
