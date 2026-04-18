@@ -5622,10 +5622,10 @@ def build_session_summary(session_item):
                     total_time_under_tension_sec += achieved_tut
                     estimated_volume += achieved_reps * effective_load
 
-        if bool(r.get("completed", False)):
-            progress_flags.append(f'{exercise_id}_done')
         if bool(r.get("hit_failure", False)):
             progress_flags.append(f'{exercise_id}_failure')
+        elif bool(r.get("completed", False)):
+            progress_flags.append(f'{exercise_id}_done')
 
     fatigue_points = 0
     if hit_failure_count >= 2:
@@ -5678,8 +5678,7 @@ def build_session_summary(session_item):
     if next_step_hint:
         explanation_bits.append(next_step_hint)
 
-    if hit_failure_count > 0:
-        explanation_bits.append(f"Failure markers: {hit_failure_count}")
+
 
     return {
         "completion_state": "completed_session",

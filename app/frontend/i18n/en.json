@@ -740,5 +740,20 @@
   "workout.hold_get_ready": "Get ready",
   "review.closure_intro": "Briefly review how the session went. This helps the next recommendation fit your training better.",
   "common.exercise_singular": "exercise",
-  "common.exercise_plural": "exercises"
+  "common.exercise_plural": "exercises",
+  "review.saved_summary.session_saved": "Today's session has been saved.",
+  "review.saved_summary.recovery_logged": "Today's recovery has been logged.",
+  "review.saved_summary.great_work": "Great work today.",
+  "review.saved_summary.progress_next_time": "You can probably progress next time.",
+  "review.saved_summary.hold_next_time": "Hold this level next time.",
+  "review.saved_summary.light_load_recorded": "Light overall load recorded.",
+  "review.saved_summary.high_load_recorded": "High overall load recorded.",
+  "review.saved_summary.stable_load_recorded": "Stable overall load recorded.",
+  "review.saved_summary.keep_progression_conservative": "Keep progression conservative next session.",
+  "review.saved_summary.moderate_load_recorded": "Moderate overall load recorded.",
+  "review.saved_summary.plank_failure": "Plank not completed",
+  "review.saved_summary.failure_markers_count": "Failure markers: {count}",
+  "review.summary_hold_times_label": "Time per set",
+  "review.summary_total_hold_time_label": "Total hold time",
+  "progress_flag.exercise_failure": "{exercise} not completed"
 }
