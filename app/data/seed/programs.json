@@ -1509,5 +1509,88 @@
       "3x",
       "mixed_friendly"
     ]
+  },
+  {
+    "id": "minimalist_strength_2x",
+    "name": "Minimalist strength (2 days/week)",
+    "name_en": "Minimalist strength (2 days/week)",
+    "kind": "strength",
+    "recommended_levels": [
+      "beginner",
+      "novice",
+      "intermediate"
+    ],
+    "supported_goals": [
+      "strength",
+      "general_health",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "minimal_home",
+      "dumbbell_home",
+      "gym_basic",
+      "full_gym"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 2,
+            "reps": "8-12"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 2,
+            "reps": "8/side"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "romanian_deadlift",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "overhead_press",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "split_squat",
+            "sets": 2,
+            "reps": "6/leg"
+          }
+        ]
+      }
+    ],
+    "training_style": "minimalist",
+    "session_duration_min": 15,
+    "session_duration_max": 25,
+    "fatigue_profile": "low",
+    "complexity": "low",
+    "good_for_reentry": true,
+    "good_for_concurrent_running": true,
+    "program_family": "minimalist_strength",
+    "progression_model": "minimal_dose_linear",
+    "tags": [
+      "minimalist",
+      "short",
+      "low_fatigue",
+      "mixed_friendly",
+      "adherence_friendly"
+    ]
   }
 ]

@@ -40,6 +40,7 @@ ALLOWED_TRAINING_STYLES = {
     "full_body_base",
     "reentry_full_body",
     "upper_lower_split",
+    "minimalist",
 }
 
 ALLOWED_FATIGUE_PROFILES = {

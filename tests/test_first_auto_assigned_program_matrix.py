@@ -350,3 +350,22 @@ def test_select_strength_program_novice_home_3x_prefers_base_home_path():
         strength_starting_profile="novice",
     )
     assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "base_strength_home_3x"
+
+def test_select_strength_program_beginner_hybrid_home_2x_prefers_minimalist_path():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="beginner",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "minimalist_strength_2x"
+
+
+def test_select_strength_program_novice_hybrid_home_2x_prefers_minimalist_path():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="novice",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "minimalist_strength_2x"
