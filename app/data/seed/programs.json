@@ -70,6 +70,21 @@
     "equipment_profiles": [
       "minimal_home",
       "dumbbell_home"
+    ],
+    "training_style": "full_body_foundation",
+    "session_duration_min": 20,
+    "session_duration_max": 35,
+    "fatigue_profile": "low_to_moderate",
+    "complexity": "low",
+    "good_for_reentry": true,
+    "good_for_concurrent_running": true,
+    "program_family": "starter_strength",
+    "progression_model": "beginner_linear",
+    "tags": [
+      "beginner",
+      "home",
+      "simple",
+      "low_barrier"
     ]
   },
   {
@@ -143,6 +158,21 @@
     "equipment_profiles": [
       "gym_basic",
       "full_gym"
+    ],
+    "training_style": "full_body_base",
+    "session_duration_min": 35,
+    "session_duration_max": 50,
+    "fatigue_profile": "moderate",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": false,
+    "program_family": "base_strength",
+    "progression_model": "linear_load_then_reps",
+    "tags": [
+      "gym",
+      "barbell",
+      "base",
+      "strength_priority"
     ]
   },
   {
@@ -450,6 +480,21 @@
           }
         ]
       }
+    ],
+    "training_style": "full_body_foundation",
+    "session_duration_min": 30,
+    "session_duration_max": 45,
+    "fatigue_profile": "moderate",
+    "complexity": "low",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": true,
+    "program_family": "starter_strength",
+    "progression_model": "beginner_linear",
+    "tags": [
+      "beginner",
+      "home",
+      "3x",
+      "mixed_friendly"
     ]
   },
   {
@@ -593,6 +638,21 @@
           }
         ]
       }
+    ],
+    "training_style": "full_body_foundation",
+    "session_duration_min": 30,
+    "session_duration_max": 45,
+    "fatigue_profile": "moderate",
+    "complexity": "moderate",
+    "good_for_reentry": true,
+    "good_for_concurrent_running": true,
+    "program_family": "starter_strength_gym",
+    "progression_model": "beginner_linear",
+    "tags": [
+      "beginner",
+      "gym",
+      "foundation",
+      "mixed_friendly"
     ]
   },
   {
@@ -691,6 +751,21 @@
           }
         ]
       }
+    ],
+    "training_style": "full_body_foundation",
+    "session_duration_min": 35,
+    "session_duration_max": 50,
+    "fatigue_profile": "moderate",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": true,
+    "program_family": "starter_strength_gym",
+    "progression_model": "beginner_linear",
+    "tags": [
+      "beginner",
+      "gym",
+      "3x",
+      "mixed_friendly"
     ]
   },
   {
@@ -766,6 +841,21 @@
           }
         ]
       }
+    ],
+    "training_style": "reentry_full_body",
+    "session_duration_min": 20,
+    "session_duration_max": 35,
+    "fatigue_profile": "low",
+    "complexity": "low",
+    "good_for_reentry": true,
+    "good_for_concurrent_running": true,
+    "program_family": "reentry_strength",
+    "progression_model": "reentry_conservative",
+    "tags": [
+      "reentry",
+      "low_fatigue",
+      "simple",
+      "recovery_friendly"
     ]
   },
   {
@@ -863,6 +953,21 @@
           }
         ]
       }
+    ],
+    "training_style": "full_body_base",
+    "session_duration_min": 40,
+    "session_duration_max": 55,
+    "fatigue_profile": "moderate_to_high",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": false,
+    "program_family": "base_strength_gym",
+    "progression_model": "linear_load_then_reps",
+    "tags": [
+      "gym",
+      "novice",
+      "3x",
+      "strength_priority"
     ]
   },
   {
@@ -986,6 +1091,21 @@
           }
         ]
       }
+    ],
+    "training_style": "upper_lower_split",
+    "session_duration_min": 45,
+    "session_duration_max": 60,
+    "fatigue_profile": "high",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": false,
+    "program_family": "base_strength_gym",
+    "progression_model": "linear_split_progression",
+    "tags": [
+      "gym",
+      "4x",
+      "upper_lower",
+      "hypertrophy_friendly"
     ]
   },
   {
