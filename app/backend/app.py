@@ -1195,6 +1195,18 @@ def get_training_goal(user_settings):
     return goal
 
 
+def get_starter_capacity_profile(user_settings):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {})
+    if not isinstance(preferences, dict):
+        preferences = {}
+
+    profile = str(preferences.get("starter_capacity_profile", "general_beginner") or "general_beginner").strip().lower()
+    if profile not in {"very_low_capacity", "low_capacity", "general_beginner", "loaded_beginner"}:
+        return "general_beginner"
+    return profile
+
+
 def get_local_load_targets_for_exercise(exercise_id, exercises=None):
     exercise_id = str(exercise_id or "").strip()
     if not exercise_id:
@@ -1544,7 +1556,7 @@ def decide_fatigue_session_override(fatigue_score, recovery_state):
     return None
 
 
-def build_restitution_plan(time_budget_min):
+def build_restitution_plan(time_budget_min, starter_capacity_profile="general_beginner"):
     try:
         time_budget_min = int(time_budget_min or 0)
     except Exception:
@@ -1553,15 +1565,42 @@ def build_restitution_plan(time_budget_min):
     if time_budget_min <= 0:
         time_budget_min = 20
 
-    if time_budget_min <= 20:
-        duration = "20 sec"
+    profile = str(starter_capacity_profile or "general_beginner").strip().lower()
+    if profile not in {"very_low_capacity", "low_capacity", "general_beginner", "loaded_beginner"}:
+        profile = "general_beginner"
+
+    if profile == "very_low_capacity":
+        duration = "15 sec" if time_budget_min <= 20 else "20 sec"
         rounds = 2
-    elif time_budget_min <= 30:
-        duration = "30 sec"
-        rounds = 2
+        second_reps = "6/side"
+        third_exercise_id = "glute_bridge"
+        third_target_reps = "8"
+    elif profile == "low_capacity":
+        if time_budget_min <= 20:
+            duration = "20 sec"
+            rounds = 2
+        elif time_budget_min <= 30:
+            duration = "25 sec"
+            rounds = 2
+        else:
+            duration = "30 sec"
+            rounds = 3
+        second_reps = "6/side"
+        third_exercise_id = "glute_bridge"
+        third_target_reps = "10"
     else:
-        duration = "40 sec"
-        rounds = 3
+        if time_budget_min <= 20:
+            duration = "20 sec"
+            rounds = 2
+        elif time_budget_min <= 30:
+            duration = "30 sec"
+            rounds = 2
+        else:
+            duration = "40 sec"
+            rounds = 3
+        second_reps = "8/side"
+        third_exercise_id = "plank"
+        third_target_reps = duration
 
     return [
         {
@@ -1581,7 +1620,7 @@ def build_restitution_plan(time_budget_min):
         {
             "exercise_id": "dead_bug",
             "sets": rounds,
-            "target_reps": "8/side",
+            "target_reps": second_reps,
             "target_load": None,
             "progression_decision": "no_progression",
             "progression_reason": "recovery prioritized",
@@ -1593,9 +1632,9 @@ def build_restitution_plan(time_budget_min):
             "substituted_from": None,
         },
         {
-            "exercise_id": "plank",
+            "exercise_id": third_exercise_id,
             "sets": rounds,
-            "target_reps": duration,
+            "target_reps": third_target_reps,
             "target_load": None,
             "progression_decision": "no_progression",
             "progression_reason": "recovery prioritized",
@@ -2254,7 +2293,8 @@ def get_local_protect_regions(user_id, regions=None):
     return sorted(set(out))
 
 
-def build_local_risk_planning_override(user_id, readiness_score, fatigue_score, timing_state, time_budget_min):
+def build_local_risk_planning_override(user_id, readiness_score, fatigue_score, timing_state, time_budget_min, user_settings=None):
+    starter_capacity_profile = get_starter_capacity_profile(user_settings)
     protect_regions = get_local_protect_regions(user_id, regions=("knee", "ankle_calf", "low_back"))
     if not protect_regions:
         return None
@@ -2263,7 +2303,7 @@ def build_local_risk_planning_override(user_id, readiness_score, fatigue_score, 
         return {
             "session_type": "restitution",
             "template_id": "restitution_easy",
-            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
             "plan_variant": "local_protection_override",
             "reason": f"lokal beskyttelse i {', '.join(protect_regions)} overstyrer cardiovalg",
             "autoplan_meta": {
@@ -2278,7 +2318,7 @@ def build_local_risk_planning_override(user_id, readiness_score, fatigue_score, 
         return {
             "session_type": "restitution",
             "template_id": "restitution_easy",
-            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
             "plan_variant": "local_protection_override",
             "reason": f"lokal beskyttelse i {', '.join(protect_regions)} prioriterer restitution",
             "autoplan_meta": {
@@ -3900,13 +3940,17 @@ def build_today_plan_priority_decision(
     training_day_ctx,
     weekly_status,
     latest_checkin=None,
+    user_settings=None,
 ):
+    starter_capacity_profile = get_starter_capacity_profile(user_settings)
+
     local_override = build_local_risk_planning_override(
         auth_user.get("user_id") if isinstance(auth_user, dict) else None,
         readiness_score=readiness_score,
         fatigue_score=fatigue_score,
         timing_state=timing_state,
         time_budget_min=time_budget_min,
+        user_settings=user_settings,
     )
     if isinstance(local_override, dict):
         local_override["weekly_status"] = weekly_status
@@ -3917,7 +3961,7 @@ def build_today_plan_priority_decision(
         return {
             "session_type": "restitution",
             "template_id": "restitution_easy",
-            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
             "plan_variant": "menstruation_support_override",
             "reason": f"{menstruation_signal.get('reason')} · restitution prioriteres",
             "autoplan_meta": {
@@ -3957,7 +4001,7 @@ def build_today_plan_priority_decision(
         return {
             "session_type": "restitution",
             "template_id": "restitution_easy",
-            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
             "plan_variant": "default",
             "reason": "low readiness",
             "autoplan_meta": None,
@@ -3985,7 +4029,7 @@ def build_today_plan_priority_decision(
         return {
             "session_type": "restitution",
             "template_id": "restitution_easy",
-            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
             "plan_variant": "default",
             "reason": "high fatigue, recovery prioritized",
             "autoplan_meta": None,
@@ -4072,13 +4116,15 @@ def build_today_plan_training_decision(
         raw_planning_mode = str(preferences.get("planning_mode", "")).strip() or str(user_settings.get("planning_mode", "")).strip() or "fixed"
         planning_mode = raw_planning_mode if raw_planning_mode in {"fixed", "autoplan"} else "fixed"
 
+    starter_capacity_profile = get_starter_capacity_profile(user_settings)
+
     autoplan_meta = None
 
     if not has_any_primary_training_type:
         return {
             "session_type": "restitution",
             "template_id": "restitution_easy",
-            "plan_entries": build_restitution_plan(time_budget_min),
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
             "plan_variant": "missing_training_types",
             "reason": "ingen træningstyper valgt · opsæt profil før første plan",
             "autoplan_meta": {
@@ -4100,7 +4146,7 @@ def build_today_plan_training_decision(
     if weekday_key and not training_day_prefs.get(weekday_key, True):
         session_type = "restitution"
         template_id = "restitution_easy"
-        plan_entries = build_restitution_plan(time_budget_min)
+        plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
         plan_variant = "calendar_rest"
         reason = "dagen er ikke valgt som mulig træningsdag"
         autoplan_meta = {
@@ -4113,7 +4159,7 @@ def build_today_plan_training_decision(
     elif weekly_goal_reached and isinstance(training_day_ctx, dict) and training_day_ctx.get("is_training_day") is False:
         session_type = "restitution"
         template_id = "weekly_goal_reached_restitution"
-        plan_entries = build_restitution_plan(time_budget_min)
+        plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
         plan_variant = "weekly_goal_cap"
         reason = "weekly goal reached · not a planned training day · recovery prioritized"
         autoplan_meta = {
@@ -4156,7 +4202,7 @@ def build_today_plan_training_decision(
                 else:
                     session_type = "restitution"
                     template_id = "restitution_easy"
-                    plan_entries = build_restitution_plan(time_budget_min)
+                    plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
                     plan_variant = "default"
                     reason = "løb fravalgt og ingen styrkevalg · restitution vælges"
                     autoplan_meta = None
@@ -4170,7 +4216,7 @@ def build_today_plan_training_decision(
         else:
             session_type = "restitution"
             template_id = "restitution_easy"
-            plan_entries = build_restitution_plan(time_budget_min)
+            plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
             plan_variant = "default"
             reason = "løb og styrke fravalgt · restitution vælges"
             autoplan_meta = None
@@ -4225,7 +4271,7 @@ def build_today_plan_training_decision(
         else:
             session_type = "restitution"
             template_id = "restitution_easy"
-            plan_entries = build_restitution_plan(time_budget_min)
+            plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
             plan_variant = "default"
             reason = "løb og styrke fravalgt · restitution vælges"
             autoplan_meta = None
@@ -4257,7 +4303,7 @@ def build_today_plan_training_decision(
         else:
             session_type = "restitution"
             template_id = "restitution_easy"
-            plan_entries = build_restitution_plan(time_budget_min)
+            plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
             plan_variant = "default"
             reason = "løb og styrke fravalgt · restitution vælges"
             autoplan_meta = None
@@ -4303,6 +4349,7 @@ def resolve_today_plan_decision_context(
         training_day_ctx=training_day_ctx,
         weekly_status=weekly_status,
         latest_checkin=latest_checkin,
+        user_settings=user_settings,
     )
 
     if isinstance(priority_decision_ctx, dict):
@@ -4829,11 +4876,12 @@ def get_today_plan():
     fatigue_score = fatigue_ctx["fatigue_score"]
     recovery_state = fatigue_ctx["recovery_state"]
     fatigue_session_override = fatigue_ctx["fatigue_session_override"]
+    starter_capacity_profile = get_starter_capacity_profile(user_settings)
 
     if fatigue_session_override == "restitution":
         session_type = "restitution"
         template_id = "restitution_easy"
-        plan_entries = build_restitution_plan(time_budget_min)
+        plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
         plan_variant = "default"
         autoplan_meta = None
         if recovery_state.get("recovery_state") == "recover":
@@ -5187,7 +5235,7 @@ def get_today_plan_debug():
         template_id = "restitution_easy"
         reason = "low readiness"
         plan_variant = "default"
-        plan_entries = build_restitution_plan(time_budget_min)
+        plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
     elif timing_state == "early":
         session_type = "cardio"
         template_id = "cardio_easy"
@@ -5205,7 +5253,7 @@ def get_today_plan_debug():
         template_id = "restitution_easy"
         reason = "high fatigue, recovery prioritized"
         plan_variant = "default"
-        plan_entries = build_restitution_plan(time_budget_min)
+        plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
     elif fatigue_score >= 4:
         session_type = "cardio"
         template_id = "cardio_easy"
