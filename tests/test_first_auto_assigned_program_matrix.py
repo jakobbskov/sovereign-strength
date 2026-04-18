@@ -302,3 +302,32 @@ def test_build_active_program_status_reports_accepted_recommendation_source():
     assert status["strength"]["selection_source"] == "accepted_recommendation"
     assert status["run"]["program_id"] == "starter_run_2x"
     assert status["run"]["selection_source"] == "accepted_recommendation"
+
+def test_select_strength_program_conservative_beginner_prefers_reentry_program():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="conservative_beginner",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "reentry_strength_2x"
+
+
+def test_select_strength_program_beginner_hybrid_gym_prefers_concurrent_running_friendly_option():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="beginner",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "starter_strength_gym_2x"
+
+
+def test_select_strength_program_novice_gym_3x_prefers_base_path():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="novice",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "base_strength_gym_3x"
