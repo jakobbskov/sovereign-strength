@@ -2685,6 +2685,10 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     if strength_starting_profile not in ("conservative_beginner", "beginner", "novice", "intermediate"):
         strength_starting_profile = "beginner"
 
+    starter_capacity_profile = str(preferences.get("starter_capacity_profile", "general_beginner") or "general_beginner").strip().lower()
+    if starter_capacity_profile not in ("very_low_capacity", "low_capacity", "general_beginner", "loaded_beginner"):
+        starter_capacity_profile = "general_beginner"
+
     training_goal = get_training_goal(settings)
     if strength_starting_profile == "intermediate":
         target_level = "intermediate"
@@ -2705,6 +2709,19 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
             candidates.append(program)
 
     preferred_ids = []
+
+    if starter_capacity_profile == "very_low_capacity":
+        if target_sessions == 2:
+            preferred_ids.append("reentry_strength_2x")
+        elif equipment_profile in ("minimal_home", "dumbbell_home"):
+            preferred_ids.append("strength_full_body_3x_beginner")
+        else:
+            preferred_ids.append("starter_strength_gym_3x")
+    elif starter_capacity_profile == "low_capacity":
+        if equipment_profile in ("minimal_home", "dumbbell_home") and target_sessions == 2:
+            preferred_ids.append("minimalist_strength_2x")
+        elif target_sessions == 2:
+            preferred_ids.append("reentry_strength_2x")
 
     if strength_starting_profile == "conservative_beginner":
         preferred_ids.append("reentry_strength_2x")

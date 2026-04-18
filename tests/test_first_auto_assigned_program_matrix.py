@@ -22,6 +22,7 @@ def make_user_settings(
     weekly_target_sessions=3,
     available_equipment=None,
     strength_starting_profile="beginner",
+    starter_capacity_profile="general_beginner",
     run_starting_profile="beginner",
     active_program_overrides=None,
     auto_assigned_programs=None,
@@ -32,6 +33,7 @@ def make_user_settings(
             "training_types": training_types or {},
             "weekly_target_sessions": weekly_target_sessions,
             "strength_starting_profile": strength_starting_profile,
+            "starter_capacity_profile": starter_capacity_profile,
             "run_starting_profile": run_starting_profile,
             **(
                 {"active_program_overrides": active_program_overrides}
@@ -85,6 +87,50 @@ def test_select_strength_program_novice_gym_2x():
         strength_starting_profile="novice",
     )
     assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "base_strength_a"
+
+
+def test_select_strength_program_very_low_capacity_home_2x_biases_to_reentry():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="beginner",
+        starter_capacity_profile="very_low_capacity",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "reentry_strength_2x"
+
+
+def test_select_strength_program_low_capacity_home_2x_biases_to_minimalist():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="beginner",
+        starter_capacity_profile="low_capacity",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "minimalist_strength_2x"
+
+
+def test_select_strength_program_general_beginner_gym_2x_keeps_standard_starter():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="beginner",
+        starter_capacity_profile="general_beginner",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "starter_strength_gym_2x"
+
+
+def test_select_strength_program_loaded_beginner_gym_3x_biases_to_proper_gym_starter():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="beginner",
+        starter_capacity_profile="loaded_beginner",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "starter_strength_gym_3x"
 
 
 def test_select_strength_program_novice_gym_4x():
