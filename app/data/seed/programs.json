@@ -62,7 +62,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       2
@@ -395,7 +396,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       3
@@ -578,7 +580,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       2
@@ -666,7 +669,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       3
@@ -1320,7 +1324,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       2
@@ -1408,7 +1413,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       3
@@ -1523,7 +1529,8 @@
     "supported_goals": [
       "strength",
       "general_health",
-      "mixed"
+      "mixed",
+      "fat_loss"
     ],
     "supported_weekly_sessions": [
       2
