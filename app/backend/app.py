@@ -2840,6 +2840,10 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     if run_starting_profile not in ("conservative_beginner", "beginner", "novice"):
         run_starting_profile = "beginner"
 
+    starter_capacity_profile = str(preferences.get("starter_capacity_profile", "general_beginner") or "general_beginner").strip().lower()
+    if starter_capacity_profile not in ("very_low_capacity", "low_capacity", "general_beginner", "loaded_beginner"):
+        starter_capacity_profile = "general_beginner"
+
     running_enabled = bool(prefs.get("running", True))
     strength_enabled = bool(prefs.get("strength_weights", True)) or bool(prefs.get("bodyweight", True))
 
@@ -2847,6 +2851,15 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
         return None
 
     preferred_ids = []
+
+    if starter_capacity_profile in ("very_low_capacity", "low_capacity"):
+        if target_sessions == 2:
+            preferred_ids.append("reentry_run_2x")
+        elif target_sessions == 3:
+            preferred_ids.append("starter_run_3x_beginner")
+    elif starter_capacity_profile == "loaded_beginner":
+        if not strength_enabled and target_sessions == 3 and run_starting_profile == "beginner":
+            preferred_ids.append("base_run_3x")
 
     if running_enabled and strength_enabled:
         if target_sessions >= 3:
