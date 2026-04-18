@@ -2769,6 +2769,45 @@ def select_endurance_program(programs, user_settings, weekly_target_sessions, pr
     return None
 
 
+
+
+def is_valid_program_id_for_domain(programs, program_id, domain):
+    pid = str(program_id or "").strip()
+    dom = str(domain or "").strip().lower()
+    if not pid or dom not in {"strength", "run"}:
+        return False
+
+    allowed_kinds_by_domain = {
+        "strength": {"strength"},
+        "run": {"run", "løb", "running"},
+    }
+
+    allowed_kinds = allowed_kinds_by_domain.get(dom, set())
+
+    for program in programs or []:
+        if not isinstance(program, dict):
+            continue
+        if str(program.get("id", "")).strip() != pid:
+            continue
+        kind = str(program.get("kind", "")).strip().lower()
+        return kind in allowed_kinds
+
+    return False
+
+
+def sanitize_auto_assigned_program_ids(programs, auto_assigned):
+    raw = auto_assigned if isinstance(auto_assigned, dict) else {}
+    clean = {}
+
+    for domain in ("strength", "run"):
+        candidate_id = str(raw.get(domain, "") or "").strip()
+        if not candidate_id:
+            continue
+        if is_valid_program_id_for_domain(programs, candidate_id, domain):
+            clean[domain] = candidate_id
+
+    return clean
+
 def build_active_programs_by_domain(programs, user_settings):
     settings = user_settings if isinstance(user_settings, dict) else {}
     prefs = get_training_type_preferences(settings)
@@ -2798,25 +2837,25 @@ def ensure_initial_auto_assigned_programs(programs, user_settings):
     overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
     auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
 
-    next_auto_assigned = dict(auto_assigned)
-    changed = False
+    next_auto_assigned = sanitize_auto_assigned_program_ids(programs, auto_assigned)
+    changed = next_auto_assigned != auto_assigned
 
     if (bool(prefs.get("strength_weights", True)) or bool(prefs.get("bodyweight", True))):
         override_strength = str(overrides.get("strength", "")).strip()
-        auto_strength = str(auto_assigned.get("strength", "")).strip()
+        auto_strength = str(next_auto_assigned.get("strength", "")).strip()
         if not override_strength and not auto_strength:
             selected_strength = select_strength_program(
                 programs=programs,
                 user_settings=settings,
                 weekly_target_sessions=weekly_target_sessions,
             )
-            if selected_strength:
+            if selected_strength and is_valid_program_id_for_domain(programs, selected_strength, "strength"):
                 next_auto_assigned["strength"] = selected_strength
                 changed = True
 
     if bool(prefs.get("running", True)):
         override_run = str(overrides.get("run", "")).strip()
-        auto_run = str(auto_assigned.get("run", "")).strip()
+        auto_run = str(next_auto_assigned.get("run", "")).strip()
         if not override_run and not auto_run:
             selected_run = select_endurance_program(
                 programs=programs,
@@ -2824,17 +2863,19 @@ def ensure_initial_auto_assigned_programs(programs, user_settings):
                 weekly_target_sessions=weekly_target_sessions,
                 prefs=prefs,
             )
-            if selected_run:
+            if selected_run and is_valid_program_id_for_domain(programs, selected_run, "run"):
                 next_auto_assigned["run"] = selected_run
                 changed = True
 
     if not changed:
         return settings, False
 
-    next_preferences = {
-        **preferences,
-        "auto_assigned_programs": next_auto_assigned,
-    }
+    next_preferences = dict(preferences)
+    if next_auto_assigned:
+        next_preferences["auto_assigned_programs"] = next_auto_assigned
+    else:
+        next_preferences.pop("auto_assigned_programs", None)
+
     next_settings = {
         **settings,
         "preferences": next_preferences,
