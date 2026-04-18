@@ -331,3 +331,22 @@ def test_select_strength_program_novice_gym_3x_prefers_base_path():
         strength_starting_profile="novice",
     )
     assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "base_strength_gym_3x"
+
+def test_select_strength_program_novice_home_2x_prefers_base_home_path():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="novice",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "base_strength_home_2x"
+
+
+def test_select_strength_program_novice_home_3x_prefers_base_home_path():
+    settings = make_user_settings(
+        training_types={"strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="novice",
+    )
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "base_strength_home_3x"

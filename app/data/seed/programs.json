@@ -1308,5 +1308,206 @@
     "equipment_profiles": [
       "hybrid_home"
     ]
+  },
+  {
+    "id": "base_strength_home_2x",
+    "name": "Base home (2 days/week)",
+    "name_en": "Base home (2 days/week)",
+    "kind": "strength",
+    "recommended_levels": [
+      "novice"
+    ],
+    "supported_goals": [
+      "strength",
+      "general_health",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      2
+    ],
+    "equipment_profiles": [
+      "dumbbell_home"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 3,
+            "reps": "8-12"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 3,
+            "reps": "8/side"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 3,
+            "reps": "30-40 sec"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "romanian_deadlift",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "overhead_press",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "lunges",
+            "sets": 3,
+            "reps": "8/leg"
+          },
+          {
+            "exercise_id": "dead_bug",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      }
+    ],
+    "training_style": "full_body_base",
+    "session_duration_min": 30,
+    "session_duration_max": 45,
+    "fatigue_profile": "moderate",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": true,
+    "program_family": "base_strength_home",
+    "progression_model": "linear_load_then_reps",
+    "tags": [
+      "home",
+      "dumbbell",
+      "novice",
+      "base",
+      "mixed_friendly"
+    ]
+  },
+  {
+    "id": "base_strength_home_3x",
+    "name": "Base home (3 days/week)",
+    "name_en": "Base home (3 days/week)",
+    "kind": "strength",
+    "recommended_levels": [
+      "novice"
+    ],
+    "supported_goals": [
+      "strength",
+      "general_health",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      3
+    ],
+    "equipment_profiles": [
+      "dumbbell_home"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 3,
+            "reps": "8-12"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 3,
+            "reps": "8/side"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 3,
+            "reps": "30-40 sec"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "romanian_deadlift",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "overhead_press",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "lunges",
+            "sets": 3,
+            "reps": "8/leg"
+          },
+          {
+            "exercise_id": "dead_bug",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "glute_bridge",
+            "sets": 3,
+            "reps": "10-12"
+          },
+          {
+            "exercise_id": "push_ups",
+            "sets": 3,
+            "reps": "6-10"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 3,
+            "reps": "10/side"
+          },
+          {
+            "exercise_id": "bird_dog",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      }
+    ],
+    "training_style": "full_body_base",
+    "session_duration_min": 35,
+    "session_duration_max": 50,
+    "fatigue_profile": "moderate_to_high",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": true,
+    "program_family": "base_strength_home",
+    "progression_model": "linear_load_then_reps",
+    "tags": [
+      "home",
+      "dumbbell",
+      "novice",
+      "3x",
+      "mixed_friendly"
+    ]
   }
 ]
