@@ -89,11 +89,32 @@ Do not use broad `--delete` sync against `/var/www/sovereign-strength/`.
 Backend deploy should update the live backend entry point directly:
 
 - source: `app/backend/app.py`
-- target: `/opt/sovereign-strength-api/app.py`
+- target: `/opt/sovereign-strength-api/app/backend/app.py`
 
 Then restart:
 
 - `sovereign-strength-api.service`
+
+
+### Runtime catalog sync/reset
+
+Runtime catalog files must stay aligned with seed files used by selector logic.
+
+Primary operational sync path:
+- `python3 scripts/init_catalog_from_seed.py`
+
+This script:
+- copies `app/data/seed/programs.json` into `/var/www/sovereign-strength/data/programs.json`
+- copies `app/data/seed/exercises.json` into `/var/www/sovereign-strength/data/exercises.json`
+- creates timestamped backups of existing live catalog files before overwrite
+- verifies that live `programs.json` contains required selector metadata for strength programs
+
+Available admin alternative:
+- `POST /api/admin/reset-catalog`
+
+Use the script for normal server-side maintenance and deploy recovery.
+Use the admin endpoint only when an authenticated operational reset through the running app is explicitly intended.
+
 
 ### Minimum post-deploy checks
 
@@ -102,6 +123,7 @@ After deploy, verify at minimum:
 - frontend files are present in the expected live locations
 - i18n files are present under `/var/www/sovereign-strength/i18n/`
 - runtime data still exists under `/var/www/sovereign-strength/data/`
+- live `programs.json` contains selector metadata keys such as `supported_weekly_sessions` and `equipment_profiles`
 - backend service is active
 - `GET /api/health` returns healthy
 - at least one core user flow still works
