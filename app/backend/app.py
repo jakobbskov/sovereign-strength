@@ -5468,13 +5468,6 @@ def _get_bodyweight_kg_for_session(session_item):
                     except Exception:
                         pass
 
-                # fallback for legacy flat structure
-                try:
-                    val = float(settings.get("bodyweight_kg", 0) or 0)
-                    if val > 0:
-                        return val
-                except Exception:
-                    pass
 
     return 0.0
 

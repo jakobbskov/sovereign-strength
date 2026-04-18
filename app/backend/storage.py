@@ -9,6 +9,90 @@ from db import init_db
 logger = logging.getLogger(__name__)
 
 
+LEGACY_PROFILE_FIELD_NAMES = {
+    "bodyweight_kg",
+    "height_cm",
+    "age",
+    "sex",
+    "gender",
+    "equipment_profile",
+}
+
+LEGACY_PREFERENCE_FIELD_NAMES = {
+    "training_types",
+    "training_days",
+    "weekly_target_sessions",
+    "planning_mode",
+    "strength_starting_profile",
+    "run_starting_profile",
+    "active_program_overrides",
+    "accepted_program_recommendations",
+    "auto_assigned_programs",
+    "default_phone_region",
+}
+
+
+def normalize_user_settings_shape(user_id, settings):
+    source = dict(settings or {}) if isinstance(settings, dict) else {}
+
+    clean = dict(source)
+    clean["user_id"] = user_id
+
+    profile = dict(clean.get("profile") or {}) if isinstance(clean.get("profile"), dict) else {}
+    preferences = dict(clean.get("preferences") or {}) if isinstance(clean.get("preferences"), dict) else {}
+
+    for field_name in LEGACY_PROFILE_FIELD_NAMES:
+        if field_name in clean and field_name not in profile:
+            profile[field_name] = clean[field_name]
+
+    for field_name in LEGACY_PREFERENCE_FIELD_NAMES:
+        if field_name in clean and field_name not in preferences:
+            preferences[field_name] = clean[field_name]
+
+    clean["profile"] = profile
+    clean["preferences"] = preferences
+
+    for field_name in LEGACY_PROFILE_FIELD_NAMES:
+        clean.pop(field_name, None)
+
+    for field_name in LEGACY_PREFERENCE_FIELD_NAMES:
+        clean.pop(field_name, None)
+
+    equipment_increments = clean.get("equipment_increments", {})
+    available_equipment = clean.get("available_equipment", {})
+    local_protection_holds = clean.get("local_protection_holds", {})
+
+    clean["equipment_increments"] = equipment_increments if isinstance(equipment_increments, dict) else {}
+    clean["available_equipment"] = available_equipment if isinstance(available_equipment, dict) else {}
+    clean["local_protection_holds"] = local_protection_holds if isinstance(local_protection_holds, dict) else {}
+
+    return clean
+
+
+
+def is_legacy_user_settings_payload(value):
+    if not isinstance(value, dict):
+        return False
+
+    known_top_level = {
+        "equipment_increments",
+        "available_equipment",
+        "profile",
+        "preferences",
+        "local_protection_holds",
+    }
+
+    if any(key in value for key in known_top_level):
+        return True
+
+    if any(key in value for key in LEGACY_PROFILE_FIELD_NAMES):
+        return True
+
+    if any(key in value for key in LEGACY_PREFERENCE_FIELD_NAMES):
+        return True
+
+    return False
+
 class JSONStorage:
     def __init__(self, data_dir):
         self.data_dir = Path(data_dir)
@@ -253,25 +337,21 @@ class JSONStorage:
 
         top_user_id = raw.get("user_id")
         if top_user_id == user_id:
-            return raw
+            return normalize_user_settings_shape(user_id, raw)
 
         users_map = raw.get("users")
         if isinstance(users_map, dict):
             candidate = users_map.get(str(user_id)) or users_map.get(user_id)
             if isinstance(candidate, dict):
-                merged = dict(candidate)
-                merged.setdefault("user_id", user_id)
-                return merged
+                return normalize_user_settings_shape(user_id, candidate)
 
         if isinstance(users_map, list):
             for item in users_map:
                 if isinstance(item, dict) and item.get("user_id") == user_id:
-                    return item
+                    return normalize_user_settings_shape(user_id, item)
 
-        if "equipment_increments" in raw or "available_equipment" in raw or "profile" in raw or "preferences" in raw:
-            merged = dict(raw)
-            merged.setdefault("user_id", user_id)
-            return merged
+        if is_legacy_user_settings_payload(raw):
+            return normalize_user_settings_shape(user_id, raw)
 
         return {}
 
@@ -284,17 +364,12 @@ class JSONStorage:
 
             if "users" not in raw or not isinstance(raw.get("users"), dict):
                 legacy = {}
-                if raw and ("equipment_increments" in raw or "available_equipment" in raw or "profile" in raw or "preferences" in raw):
+                if is_legacy_user_settings_payload(raw):
                     legacy_user_id = raw.get("user_id", 1)
-                    legacy[str(legacy_user_id)] = dict(raw)
+                    legacy[str(legacy_user_id)] = normalize_user_settings_shape(legacy_user_id, raw)
                 raw = {"users": legacy}
 
-            clean = dict(settings or {})
-            clean["user_id"] = user_id
-            if not isinstance(clean.get("profile"), dict):
-                clean["profile"] = {}
-            if not isinstance(clean.get("preferences"), dict):
-                clean["preferences"] = {}
+            clean = normalize_user_settings_shape(user_id, settings)
             raw["users"][str(user_id)] = clean
             self._write_object("user_settings", raw)
             return clean
@@ -484,29 +559,18 @@ class SQLiteStorage:
         if not row:
             return {}
 
-        return {
+        return normalize_user_settings_shape(user_id, {
             "user_id": row["user_id"],
             "equipment_increments": json.loads(row["equipment_increments"] or "{}"),
             "available_equipment": json.loads(row["available_equipment"] or "{}"),
             "profile": json.loads(row["profile"] or "{}") if "profile" in row.keys() else {},
             "preferences": json.loads(row["preferences"] or "{}") if "preferences" in row.keys() else {},
-        }
+        })
 
     def save_user_settings_for(self, user_id, settings):
         self._ensure_user_row(user_id)
 
-        equipment_increments = settings.get("equipment_increments", {})
-        available_equipment = settings.get("available_equipment", {})
-        profile = settings.get("profile", {})
-        preferences = settings.get("preferences", {})
-
-        clean = {
-            "user_id": user_id,
-            "equipment_increments": equipment_increments if isinstance(equipment_increments, dict) else {},
-            "available_equipment": available_equipment if isinstance(available_equipment, dict) else {},
-            "profile": profile if isinstance(profile, dict) else {},
-            "preferences": preferences if isinstance(preferences, dict) else {},
-        }
+        clean = normalize_user_settings_shape(user_id, settings)
 
         with self._conn() as conn:
             conn.execute(
