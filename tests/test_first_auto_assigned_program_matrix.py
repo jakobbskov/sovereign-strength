@@ -390,3 +390,58 @@ def test_select_strength_program_fat_loss_home_2x_prefers_minimalist_path():
     )
     settings["preferences"]["training_goal"] = "fat_loss"
     assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "minimalist_strength_2x"
+
+
+def test_select_strength_program_fat_loss_beginner_gym_2x_prefers_starter_gym_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="beginner",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "starter_strength_gym_2x"
+
+
+def test_select_strength_program_fat_loss_beginner_gym_3x_prefers_starter_gym_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="beginner",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "starter_strength_gym_3x"
+
+
+def test_select_strength_program_fat_loss_beginner_home_3x_prefers_foundation_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="beginner",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "strength_full_body_3x_beginner"
+
+
+def test_select_strength_program_fat_loss_novice_home_2x_prefers_base_home_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="novice",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 2) == "base_strength_home_2x"
+
+
+def test_select_strength_program_fat_loss_novice_home_3x_prefers_base_home_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=3,
+        available_equipment={"bodyweight": True, "dumbbell": True},
+        strength_starting_profile="novice",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "base_strength_home_3x"

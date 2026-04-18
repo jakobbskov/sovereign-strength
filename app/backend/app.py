@@ -2598,7 +2598,10 @@ def _program_recommended_levels(program):
 
 
 def _sort_strength_candidates(candidates, target_level, preferred_ids, strength_starting_profile=None, running_enabled=False):
-    preferred_order = {pid: idx for idx, pid in enumerate(preferred_ids)}
+    preferred_order = {}
+    for idx, pid in enumerate(preferred_ids):
+        if pid not in preferred_order:
+            preferred_order[pid] = idx
     target = str(target_level or "").strip().lower()
     starting_profile = str(strength_starting_profile or "").strip().lower()
 
@@ -2702,6 +2705,12 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
         preferred_ids.append("reentry_strength_2x")
 
     if equipment_profile in ("gym_basic", "full_gym"):
+        if training_goal == "fat_loss" and target_level != "novice":
+            if target_sessions >= 3:
+                preferred_ids.append("starter_strength_gym_3x")
+            if target_sessions == 2:
+                preferred_ids.append("starter_strength_gym_2x")
+
         if target_level == "novice":
             if target_sessions >= 4:
                 preferred_ids.append("base_strength_gym_4x")
@@ -2716,8 +2725,19 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
                 preferred_ids.append("starter_strength_gym_2x")
 
     if equipment_profile in ("minimal_home", "dumbbell_home"):
-        if training_goal == "fat_loss" and target_sessions == 2:
-            preferred_ids.append("minimalist_strength_2x")
+        if training_goal == "fat_loss":
+            if target_level == "novice" and equipment_profile == "dumbbell_home":
+                if target_sessions >= 3:
+                    preferred_ids.append("base_strength_home_3x")
+                if target_sessions == 2:
+                    preferred_ids.append("base_strength_home_2x")
+                    preferred_ids.append("minimalist_strength_2x")
+            else:
+                if target_sessions == 2:
+                    preferred_ids.append("minimalist_strength_2x")
+                if target_sessions >= 3:
+                    preferred_ids.append("strength_full_body_3x_beginner")
+
         if bool(prefs.get("running", False)) and target_sessions == 2:
             preferred_ids.append("minimalist_strength_2x")
         if target_level == "novice" and equipment_profile == "dumbbell_home":
