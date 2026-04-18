@@ -2705,6 +2705,11 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
                 preferred_ids.append("starter_strength_gym_2x")
 
     if equipment_profile in ("minimal_home", "dumbbell_home"):
+        if target_level == "novice" and equipment_profile == "dumbbell_home":
+            if target_sessions >= 3:
+                preferred_ids.append("base_strength_home_3x")
+            if target_sessions == 2:
+                preferred_ids.append("base_strength_home_2x")
         if target_sessions >= 3:
             preferred_ids.append("strength_full_body_3x_beginner")
         if target_sessions == 2:
