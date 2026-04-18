@@ -780,5 +780,12 @@
   "profile.training_goal_mixed": "Blandet mål",
   "profile.training_goal_performance": "Performance",
   "profile.training_goal_help": "Bruges til at vælge mere relevante programmer, når kataloget understøtter målet.",
-  "profile.strength_starting_profile_intermediate": "Øvet"
+  "profile.strength_starting_profile_intermediate": "Øvet",
+  "profile.starter_capacity_profile": "Startkapacitet",
+  "profile.starter_capacity_profile_very_low": "Meget lav kapacitet",
+  "profile.starter_capacity_profile_low": "Lav kapacitet",
+  "profile.starter_capacity_profile_general": "Almindelig begynder",
+  "profile.starter_capacity_profile_loaded": "Robust begynder",
+  "profile.starter_capacity_profile_help": "Vælg hvor let eller robust din samlede opstartskapacitet er lige nu. Det bruges som et tidligt planlægningssignal.",
+  "profile.starter_capacity_profile_help_levels": "Meget lav kapacitet = meget rolig opstart med lav tærskel · Lav kapacitet = forsigtig opstart med enkel belastning · Almindelig begynder = normal begynderopstart · Robust begynder = ny, men klar til en mere direkte start."
 }

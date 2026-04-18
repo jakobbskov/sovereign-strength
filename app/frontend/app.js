@@ -2804,6 +2804,7 @@ function populateEquipmentEditor(){
     ? preferences.training_days
     : {};
   const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
+  const starterCapacityProfile = String(preferences.starter_capacity_profile || "general_beginner").trim() || "general_beginner";
   const strengthStartingProfile = String(preferences.strength_starting_profile || "beginner").trim() || "beginner";
   const runStartingProfile = String(preferences.run_starting_profile || "beginner").trim() || "beginner";
   const trainingGoal = String(preferences.training_goal || "general_health").trim() || "general_health";
@@ -2841,6 +2842,7 @@ function populateEquipmentEditor(){
   setChecked("day_sat", trainingDays.sat !== false);
   setChecked("day_sun", trainingDays.sun !== false);
   setVal("weekly_target_sessions", weeklyTargetSessions);
+  setVal("starter_capacity_profile", starterCapacityProfile);
   setVal("strength_starting_profile", strengthStartingProfile);
   setVal("run_starting_profile", runStartingProfile);
   setVal("training_goal", trainingGoal);
@@ -3024,6 +3026,7 @@ async function handleEquipmentSettingsSubmit(ev){
         sun: readChecked("day_sun"),
       },
       weekly_target_sessions: Number(document.getElementById("weekly_target_sessions")?.value || 3),
+      starter_capacity_profile: String(document.getElementById("starter_capacity_profile")?.value || "general_beginner").trim() || "general_beginner",
       strength_starting_profile: String(document.getElementById("strength_starting_profile")?.value || "beginner").trim() || "beginner",
       run_starting_profile: String(document.getElementById("run_starting_profile")?.value || "beginner").trim() || "beginner",
       training_goal: String(document.getElementById("training_goal")?.value || "general_health").trim() || "general_health"

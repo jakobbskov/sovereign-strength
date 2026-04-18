@@ -536,6 +536,18 @@
             </label>
 
             <label>
+              <span data-i18n="profile.starter_capacity_profile">Startkapacitet</span>
+              <select id="starter_capacity_profile" name="starter_capacity_profile">
+                <option value="very_low_capacity" data-i18n="profile.starter_capacity_profile_very_low">Meget lav kapacitet</option>
+                <option value="low_capacity" data-i18n="profile.starter_capacity_profile_low">Lav kapacitet</option>
+                <option value="general_beginner" selected data-i18n="profile.starter_capacity_profile_general">Almindelig begynder</option>
+                <option value="loaded_beginner" data-i18n="profile.starter_capacity_profile_loaded">Robust begynder</option>
+              </select>
+              <div class="small" style="margin-top:6px" data-i18n="profile.starter_capacity_profile_help">Vælg hvor let eller robust din samlede opstartskapacitet er lige nu. Det bruges som et tidligt planlægningssignal.</div>
+              <div class="small" style="margin-top:6px; margin-bottom:14px" data-i18n="profile.starter_capacity_profile_help_levels">Meget lav kapacitet = meget rolig opstart med lav tærskel · Lav kapacitet = forsigtig opstart med enkel belastning · Almindelig begynder = normal begynderopstart · Robust begynder = ny, men klar til en mere direkte start.</div>
+            </label>
+
+            <label>
               <span data-i18n="profile.strength_starting_profile">Styrke-startniveau</span>
               <select id="strength_starting_profile" name="strength_starting_profile">
                 <option value="conservative_beginner" data-i18n="profile.strength_starting_profile_conservative">Forsigtig / genopstart</option>

@@ -5343,6 +5343,10 @@ def post_user_settings():
     if run_starting_profile not in {"conservative_beginner", "beginner", "novice"}:
         run_starting_profile = "beginner"
 
+    starter_capacity_profile = str(clean_preferences.get("starter_capacity_profile", "general_beginner") or "general_beginner").strip().lower()
+    if starter_capacity_profile not in {"very_low_capacity", "low_capacity", "general_beginner", "loaded_beginner"}:
+        starter_capacity_profile = "general_beginner"
+
     training_goal = str(clean_preferences.get("training_goal", "general_health") or "general_health").strip().lower()
     if training_goal not in {"general_health", "strength", "fat_loss", "hypertrophy", "mixed", "performance"}:
         training_goal = "general_health"
@@ -5351,6 +5355,7 @@ def post_user_settings():
         **clean_preferences,
         "strength_starting_profile": strength_starting_profile,
         "run_starting_profile": run_starting_profile,
+        "starter_capacity_profile": starter_capacity_profile,
         "training_goal": training_goal,
     }
 
