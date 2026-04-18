@@ -704,7 +704,7 @@
   "profile.active_program_selected_automatically": "Chosen automatically",
   "profile.active_program_auto_assigned": "Auto-assigned initially",
   "profile.strength_starting_profile_help": "Choose how gently or ambitiously the strength side should start. This affects your first program choice.",
-  "profile.strength_starting_profile_help_levels": "Conservative / re-entry = start gently or return after a break · Beginner = new or only a little recent training · Novice = more habit and slightly higher load tolerance.",
+  "profile.strength_starting_profile_help_levels": "Conservative / re-entry = calm restart or return after a break · Beginner = new or only recently training · Novice = more habit and somewhat higher load tolerance · Intermediate = solid training habit and need for more demanding program matching.",
   "profile.run_starting_profile_help": "Choose how gently or ambitiously the running side should start. This affects your first program choice.",
   "profile.run_starting_profile_help_levels": "Conservative / re-entry = start gently or return after a break · Beginner = new or only a little recent running · Novice = more habit and slightly higher capacity.",
   "onboarding.first_run.section.planning_level_hint": "Your starting level helps the app choose how conservative or ambitious the first program recommendation should be.",
@@ -763,5 +763,6 @@
   "profile.training_goal_hypertrophy": "Muscle gain",
   "profile.training_goal_mixed": "Mixed goal",
   "profile.training_goal_performance": "Performance",
-  "profile.training_goal_help": "Used to choose more relevant programs when the catalog supports the goal."
+  "profile.training_goal_help": "Used to choose more relevant programs when the catalog supports the goal.",
+  "profile.strength_starting_profile_intermediate": "Intermediate"
 }

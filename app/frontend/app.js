@@ -2322,6 +2322,7 @@ function renderProfileEquipmentCard(){
       const value = String(preferences.strength_starting_profile || "beginner").trim() || "beginner";
       if (value === "conservative_beginner") return tr("profile.strength_starting_profile_conservative");
       if (value === "novice") return tr("profile.strength_starting_profile_novice");
+      if (value === "intermediate") return tr("profile.strength_starting_profile_intermediate");
       return tr("profile.strength_starting_profile_beginner");
     }
     const value = String(preferences.run_starting_profile || "beginner").trim() || "beginner";

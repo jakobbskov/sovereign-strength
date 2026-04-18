@@ -720,7 +720,7 @@
   "profile.active_program_selected_automatically": "Valgt automatisk",
   "profile.active_program_auto_assigned": "Valgt automatisk fra start",
   "profile.strength_starting_profile_help": "Vælg hvor roligt eller ambitiøst styrkedelen skal starte. Det påvirker dit første programvalg.",
-  "profile.strength_starting_profile_help_levels": "Forsigtig / genopstart = rolig opstart eller tilbage efter pause · Begynder = ny eller lidt nylig træning · Let øvet = mere vane og lidt højere belastningstolerance.",
+  "profile.strength_starting_profile_help_levels": "Forsigtig / genopstart = rolig opstart eller tilbage efter pause · Begynder = ny eller lidt nylig træning · Let øvet = mere vane og lidt højere belastningstolerance · Øvet = solid træningsvane og behov for mere krævende programmatch.",
   "profile.run_starting_profile_help": "Vælg hvor roligt eller ambitiøst løbedelen skal starte. Det påvirker dit første programvalg.",
   "profile.run_starting_profile_help_levels": "Forsigtig / genopstart = rolig opstart eller tilbage efter pause · Begynder = ny eller lidt nylig løbetræning · Let øvet = mere vane og lidt højere kapacitet.",
   "onboarding.first_run.section.planning_level_hint": "Dit startniveau hjælper appen med at vælge, hvor forsigtig eller ambitiøs den første programanbefaling skal være.",
@@ -779,5 +779,6 @@
   "profile.training_goal_hypertrophy": "Muskelopbygning",
   "profile.training_goal_mixed": "Blandet mål",
   "profile.training_goal_performance": "Performance",
-  "profile.training_goal_help": "Bruges til at vælge mere relevante programmer, når kataloget understøtter målet."
+  "profile.training_goal_help": "Bruges til at vælge mere relevante programmer, når kataloget understøtter målet.",
+  "profile.strength_starting_profile_intermediate": "Øvet"
 }

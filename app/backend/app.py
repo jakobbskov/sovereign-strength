@@ -2682,11 +2682,16 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
     equipment_profile = infer_equipment_profile(settings)
     target_sessions = int(weekly_target_sessions or 2)
     strength_starting_profile = str(preferences.get("strength_starting_profile", "beginner") or "beginner").strip()
-    if strength_starting_profile not in ("conservative_beginner", "beginner", "novice"):
+    if strength_starting_profile not in ("conservative_beginner", "beginner", "novice", "intermediate"):
         strength_starting_profile = "beginner"
 
     training_goal = get_training_goal(settings)
-    target_level = "novice" if strength_starting_profile == "novice" else "beginner"
+    if strength_starting_profile == "intermediate":
+        target_level = "intermediate"
+    elif strength_starting_profile == "novice":
+        target_level = "novice"
+    else:
+        target_level = "beginner"
 
     candidates = []
     for program in programs:
@@ -2705,7 +2710,16 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
         preferred_ids.append("reentry_strength_2x")
 
     if equipment_profile in ("gym_basic", "full_gym"):
-        if training_goal == "fat_loss" and target_level != "novice":
+        if target_level == "intermediate":
+            if target_sessions >= 4:
+                if training_goal in ("hypertrophy", "fat_loss"):
+                    preferred_ids.append("intermediate_hypertrophy_4x")
+                if training_goal in ("strength", "mixed", "general_health"):
+                    preferred_ids.append("intermediate_upper_lower_4x")
+            if target_sessions == 2:
+                preferred_ids.append("base_strength_a")
+
+        if training_goal == "fat_loss" and target_level == "beginner":
             if target_sessions >= 3:
                 preferred_ids.append("starter_strength_gym_3x")
             if target_sessions == 2:
@@ -2718,7 +2732,7 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
                 preferred_ids.append("base_strength_gym_3x")
             if target_sessions == 2:
                 preferred_ids.append("base_strength_a")
-        else:
+        elif target_level == "beginner":
             if target_sessions >= 3:
                 preferred_ids.append("starter_strength_gym_3x")
             if target_sessions == 2:
@@ -5322,7 +5336,7 @@ def post_user_settings():
         clean_preferences = {k: v for k, v in clean_preferences.items() if k != "auto_assigned_programs"}
 
     strength_starting_profile = str(clean_preferences.get("strength_starting_profile", "beginner") or "beginner").strip()
-    if strength_starting_profile not in {"conservative_beginner", "beginner", "novice"}:
+    if strength_starting_profile not in {"conservative_beginner", "beginner", "novice", "intermediate"}:
         strength_starting_profile = "beginner"
 
     run_starting_profile = str(clean_preferences.get("run_starting_profile", "beginner") or "beginner").strip()
