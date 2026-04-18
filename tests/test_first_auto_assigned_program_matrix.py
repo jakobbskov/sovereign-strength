@@ -153,6 +153,50 @@ def test_select_endurance_program_beginner_run_2x():
     assert backend_app.select_endurance_program(PROGRAMS, settings, 2, prefs) == "starter_run_2x"
 
 
+def test_select_endurance_program_very_low_capacity_beginner_2x_biases_to_reentry():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": False, "bodyweight": False},
+        weekly_target_sessions=2,
+        run_starting_profile="beginner",
+        starter_capacity_profile="very_low_capacity",
+    )
+    prefs = backend_app.get_training_type_preferences(settings)
+    assert backend_app.select_endurance_program(PROGRAMS, settings, 2, prefs) == "reentry_run_2x"
+
+
+def test_select_endurance_program_low_capacity_beginner_2x_biases_to_reentry():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": False, "bodyweight": False},
+        weekly_target_sessions=2,
+        run_starting_profile="beginner",
+        starter_capacity_profile="low_capacity",
+    )
+    prefs = backend_app.get_training_type_preferences(settings)
+    assert backend_app.select_endurance_program(PROGRAMS, settings, 2, prefs) == "reentry_run_2x"
+
+
+def test_select_endurance_program_general_beginner_3x_keeps_starter_path():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": False, "bodyweight": False},
+        weekly_target_sessions=3,
+        run_starting_profile="beginner",
+        starter_capacity_profile="general_beginner",
+    )
+    prefs = backend_app.get_training_type_preferences(settings)
+    assert backend_app.select_endurance_program(PROGRAMS, settings, 3, prefs) == "starter_run_3x_beginner"
+
+
+def test_select_endurance_program_loaded_beginner_3x_can_bias_to_easy_run_base():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": False, "bodyweight": False},
+        weekly_target_sessions=3,
+        run_starting_profile="beginner",
+        starter_capacity_profile="loaded_beginner",
+    )
+    prefs = backend_app.get_training_type_preferences(settings)
+    assert backend_app.select_endurance_program(PROGRAMS, settings, 3, prefs) == "base_run_3x"
+
+
 def test_select_endurance_program_novice_run_3x():
     settings = make_user_settings(
         training_types={"running": True, "strength_weights": False, "bodyweight": False},
