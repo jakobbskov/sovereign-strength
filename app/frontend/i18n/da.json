@@ -771,5 +771,13 @@
   "review.saved_summary.failure_markers_count": "Failure-markører: {count}",
   "review.summary_hold_times_label": "Tid pr. sæt",
   "review.summary_total_hold_time_label": "Samlet holdtid",
-  "progress_flag.exercise_failure": "{exercise} ikke fuldført"
+  "progress_flag.exercise_failure": "{exercise} ikke fuldført",
+  "profile.training_goal": "Primært træningsmål",
+  "profile.training_goal_general_health": "Generel sundhed",
+  "profile.training_goal_strength": "Styrke",
+  "profile.training_goal_fat_loss": "Fedttab med muskelbevarelse",
+  "profile.training_goal_hypertrophy": "Muskelopbygning",
+  "profile.training_goal_mixed": "Blandet mål",
+  "profile.training_goal_performance": "Performance",
+  "profile.training_goal_help": "Bruges til at vælge mere relevante programmer, når kataloget understøtter målet."
 }

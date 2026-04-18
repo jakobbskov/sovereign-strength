@@ -2805,6 +2805,7 @@ function populateEquipmentEditor(){
   const weeklyTargetSessions = Number(preferences.weekly_target_sessions || 3) || 3;
   const strengthStartingProfile = String(preferences.strength_starting_profile || "beginner").trim() || "beginner";
   const runStartingProfile = String(preferences.run_starting_profile || "beginner").trim() || "beginner";
+  const trainingGoal = String(preferences.training_goal || "general_health").trim() || "general_health";
   const available = settings.available_equipment && typeof settings.available_equipment === "object"
     ? settings.available_equipment
     : {};
@@ -2841,6 +2842,7 @@ function populateEquipmentEditor(){
   setVal("weekly_target_sessions", weeklyTargetSessions);
   setVal("strength_starting_profile", strengthStartingProfile);
   setVal("run_starting_profile", runStartingProfile);
+  setVal("training_goal", trainingGoal);
 
   setVal("eq_barbell_enabled", available.barbell === false ? "false" : "true");
   setVal("eq_dumbbell_enabled", available.dumbbell === false ? "false" : "true");
@@ -3022,7 +3024,8 @@ async function handleEquipmentSettingsSubmit(ev){
       },
       weekly_target_sessions: Number(document.getElementById("weekly_target_sessions")?.value || 3),
       strength_starting_profile: String(document.getElementById("strength_starting_profile")?.value || "beginner").trim() || "beginner",
-      run_starting_profile: String(document.getElementById("run_starting_profile")?.value || "beginner").trim() || "beginner"
+      run_starting_profile: String(document.getElementById("run_starting_profile")?.value || "beginner").trim() || "beginner",
+      training_goal: String(document.getElementById("training_goal")?.value || "general_health").trim() || "general_health"
     },
     available_equipment: {
       barbell: readBool("eq_barbell_enabled"),
