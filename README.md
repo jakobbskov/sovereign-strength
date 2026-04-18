@@ -107,6 +107,10 @@ Primary files:
 ### Backend
 Python Flask API served via Gunicorn and systemd from:
 
+Python dependencies are defined authoritatively in `app/backend/requirements.txt`.
+The top-level `requirements.txt` is only a thin convenience wrapper that references the backend file.
+
+
 `/opt/sovereign-strength-api/app.py`
 
 ### Data

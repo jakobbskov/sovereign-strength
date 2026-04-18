@@ -6,6 +6,8 @@ SovereignStrength is documented as a self-hosted local-first application with:
 
 - static frontend files
 - Flask API backend
+- Python dependencies are installed from `app/backend/requirements.txt`
+- The repository root `requirements.txt` is only a wrapper to that authoritative backend file
 - local JSON storage
 - Gunicorn
 - systemd
