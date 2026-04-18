@@ -953,12 +953,11 @@ function buildSessionSummaryFromResults(item){
 
     totalSets += setCount;
 
-    if (result.completed){
-      progressFlags.push(`${result.exercise_id || "exercise"}_done`);
-    }
     if (result.hit_failure){
       hitFailureCount += 1;
       progressFlags.push(`${result.exercise_id || "exercise"}_failure`);
+    } else if (result.completed){
+      progressFlags.push(`${result.exercise_id || "exercise"}_done`);
     }
   });
 
@@ -3331,7 +3330,7 @@ function formatProgressFlag(flag){
 
   if (raw.endsWith("_failure")){
     const exerciseId = raw.slice(0, -8);
-    return `${formatExerciseName(exerciseId)} failure`;
+    return tr("progress_flag.exercise_failure", { exercise: formatExerciseName(exerciseId) });
   }
 
   return raw.replaceAll("_", " ");
@@ -3397,6 +3396,59 @@ function formatFatigueText(value){
   if (v === "moderate") return tr("fatigue.moderate");
   if (v === "high") return tr("fatigue.high");
   return v;
+}
+
+function formatSavedSummaryMessage(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
+  const map = {
+    "today's session has been saved.": tr("review.saved_summary.session_saved"),
+    "dagens session er gemt.": tr("review.saved_summary.session_saved"),
+    "today's recovery has been logged.": tr("review.saved_summary.recovery_logged"),
+    "dagens restitution er registreret.": tr("review.saved_summary.recovery_logged"),
+    "great work today.": tr("review.saved_summary.great_work"),
+    "godt arbejde i dag.": tr("review.saved_summary.great_work")
+  };
+  return map[x] || value;
+}
+
+function formatSavedSummaryNextStep(value){
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
+  const map = {
+    "you can probably progress next time.": tr("review.saved_summary.progress_next_time"),
+    "du kan sandsynligvis progrediere næste gang.": tr("review.saved_summary.progress_next_time"),
+    "hold this level next time.": tr("review.saved_summary.hold_next_time"),
+    "hold dette niveau næste gang.": tr("review.saved_summary.hold_next_time"),
+    "keep progression conservative next session.": tr("review.saved_summary.keep_progression_conservative"),
+    "hold progressionen konservativ næste session.": tr("review.saved_summary.keep_progression_conservative")
+  };
+  return map[x] || value;
+}
+
+function formatSavedSummaryExplanationBit(value){
+  const normalizedRecovery = formatRecoveryExplanationBit(value);
+  if (normalizedRecovery !== value) return normalizedRecovery;
+
+  const x = String(value || "").trim().toLowerCase();
+  if (!x) return "";
+  const map = {
+    "light overall load recorded.": tr("review.saved_summary.light_load_recorded"),
+    "lav samlet belastning registreret.": tr("review.saved_summary.light_load_recorded"),
+    "moderate overall load recorded.": tr("review.saved_summary.moderate_load_recorded"),
+    "moderat samlet belastning registreret.": tr("review.saved_summary.moderate_load_recorded"),
+    "high overall load recorded.": tr("review.saved_summary.high_load_recorded"),
+    "høj samlet belastning registreret.": tr("review.saved_summary.high_load_recorded"),
+    "stable overall load recorded.": tr("review.saved_summary.stable_load_recorded"),
+    "stabil samlet belastning registreret.": tr("review.saved_summary.stable_load_recorded"),
+    "you can probably progress next time.": tr("review.saved_summary.progress_next_time"),
+    "du kan sandsynligvis progrediere næste gang.": tr("review.saved_summary.progress_next_time"),
+    "keep progression conservative next session.": tr("review.saved_summary.keep_progression_conservative"),
+    "hold progressionen konservativ næste session.": tr("review.saved_summary.keep_progression_conservative"),
+    "failure markers: 1": tr("review.saved_summary.failure_markers_count", { count: 1 }),
+    "plank failure": tr("review.saved_summary.plank_failure")
+  };
+  return map[x] || value;
 }
 
 function formatTimingState(value){
@@ -3594,6 +3646,23 @@ function buildReviewSetFields(entry, idx, setIdx){
   const existingSet = existingSets[setIdx] && typeof existingSets[setIdx] === "object" ? existingSets[setIdx] : {};
   const existingReps = String(existingSet.reps || (setIdx === 0 ? existingResult.achieved_reps || "" : "")).trim();
   const existingLoad = String(existingSet.load || "").trim();
+  const timedTargetSec = Number(String(entry?.target_reps || "").match(/\d+/)?.[0] || 0);
+  const timedActualSec = Number(String(existingReps || "").match(/\d+/)?.[0] || 0);
+  const derivedTimedFailure = (inputKind === "time" || inputKind === "cardio_time")
+    && timedTargetSec > 0
+    && timedActualSec > 0
+    && timedActualSec < timedTargetSec;
+  const existingSetFailure = Boolean(existingSet.hit_failure || derivedTimedFailure);
+
+  const failureField = `
+    <label style="margin-top:10px; margin-bottom:0">
+      ${esc(tr("after_training.fail_label"))}
+      <select name="review_set_hit_failure_${idx}_${setIdx}">
+        <option value="false" ${existingSetFailure ? "" : "selected"}>${esc(tr("common.no"))}</option>
+        <option value="true" ${existingSetFailure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
+      </select>
+    </label>
+  `;
 
   if (inputKind === "time" || inputKind === "cardio_time"){
     return `
@@ -3605,6 +3674,7 @@ function buildReviewSetFields(entry, idx, setIdx){
           ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewTimeOptions(meta), existingReps, tr("after_training.select_time"))}
         </label>
         <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
+        ${failureField}
       </div>
     `;
   }
@@ -3619,6 +3689,7 @@ function buildReviewSetFields(entry, idx, setIdx){
           ${buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
         </label>
         <div class="small" style="margin-top:6px">${tr("exercise.load_bodyweight")}</div>
+        ${failureField}
       </div>
     `;
   }
@@ -3638,6 +3709,7 @@ function buildReviewSetFields(entry, idx, setIdx){
       </label>
 
       ${meta?.load_optional && meta?.supports_bodyweight ? `<div class="small" style="margin-top:6px">${esc(tr("review.bodyweight_empty_means"))}</div>` : ""}
+      ${failureField}
     </div>
   `;
 }
@@ -3936,12 +4008,12 @@ function renderSessionReview(item){
 
     if (isCardioEntry){
       return `
-        <li>
+        <li class="card" style="padding:14px; margin-top:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
           <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
-          <div class="small" style="margin-bottom:10px">
+          <div class="small" style="margin-bottom:8px; line-height:1.5">
             ${tr("exercise.target_colon")} ${entry.target_reps ? esc(formatTarget(entry.target_reps)) : tr("session_type.cardio")}
           </div>
-          <div class="small" style="margin-bottom:10px">
+          <div class="small" style="margin-bottom:12px; opacity:0.82">
             ${tr("common.type_label")}: ${tr("session_type.run")}
           </div>
           <label>
@@ -3968,34 +4040,26 @@ function renderSessionReview(item){
       else if (entry.target_load) actualBits.push(esc(entry.target_load));
 
       return `
-        <li>
+        <li class="card" style="padding:14px; margin-top:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
           <div style="font-weight:700; margin-bottom:8px">${esc(formatExerciseName(entry.exercise_id))}</div>
-          <div class="small" style="margin-bottom:10px">
+          <div class="small" style="margin-bottom:8px; line-height:1.5">
             ${tr("exercise.target_colon")} ${actualBits.join(" · ")}
           </div>
-
-        <div class="small" style="margin-bottom:10px">
-          ${tr("common.type_label")}: ${esc(formatInputKindLabel(inputKind))}
-        </div>
-
-        ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px">${tr("exercise.load_bodyweight")}</div>` : ""}
-        ${meta?.rep_display_hint ? `<div class="small" style="margin-bottom:10px">${esc(meta.rep_display_hint)}</div>` : ""}
-
-        ${setFields}
-
-        <label>
-          ${esc(tr("after_training.fail_label"))}
-          <select name="review_hit_failure_${idx}">
-            <option value="false" ${entry?._existing_result?.hit_failure ? "" : "selected"}>${esc(tr("common.no"))}</option>
-            <option value="true" ${entry?._existing_result?.hit_failure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
-          </select>
-        </label>
-
-        <label>
-          ${esc(tr("exercise.note_label"))}
-          <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
-        </label>
-      </li>
+          <div class="small" style="margin-bottom:10px; opacity:0.82">
+            ${tr("common.type_label")}: ${esc(formatInputKindLabel(inputKind))}
+          </div>
+          ${isTime || isBodyweight ? `<div class="small" style="margin-bottom:10px; opacity:0.8">${tr("exercise.load_bodyweight")}</div>` : ""}
+          ${meta?.rep_display_hint ? `<div class="small" style="margin-bottom:10px; opacity:0.8">${esc(meta.rep_display_hint)}</div>` : ""}
+          <div style="margin-top:12px">
+            ${setFields}
+          </div>
+          <div style="margin-top:10px">
+            <label>
+              ${esc(tr("exercise.note_label"))}
+              <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
+            </label>
+          </div>
+        </li>
     `;
   }).join("");
 }
@@ -4011,18 +4075,30 @@ function renderReviewSummary(item){
     return;
   }
 
+  const sessionType = formatSessionType(item.session_type || "");
+  const summaryBits = [];
+  if (item.time_budget_min) summaryBits.push(`${esc(item.time_budget_min)} min`);
+  if (item.readiness_score != null) summaryBits.push(`${esc(tr("overview.readiness"))}: ${esc(String(item.readiness_score))}`);
+  summaryBits.push(`${esc(String(item.entries.length))} ${esc(item.entries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
+
   root.innerHTML = `
-    <div class="small" style="margin-bottom:6px">
-      ${esc(formatSessionType(item.session_type || ""))}${item.time_budget_min ? ` · ${esc(item.time_budget_min)} min` : ""}${item.readiness_score != null ? ` · readiness ${esc(item.readiness_score)}` : ""}
-    </div>
-    <div class="small">
-      ${item.entries.map(entry => {
-        const bits = [];
-        if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
-        if (entry.target_reps) bits.push(tr("exercise.target_label", { value: formatTarget(entry.target_reps) }));
-        if (entry.target_load) bits.push(esc(entry.target_load));
-        return `${esc(formatExerciseName(entry.exercise_id))}${bits.length ? ` · ${bits.join(" · ")}` : ""}`;
-      }).join("<br>")}
+    <div class="card" style="padding:14px 14px 12px 14px; margin-bottom:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
+      <div style="font-weight:700; margin-bottom:8px">${esc(tr("review.session_review"))}</div>
+      <div class="small" style="margin-bottom:8px; line-height:1.5">
+        ${esc(sessionType)}${summaryBits.length ? ` · ${summaryBits.join(" · ")}` : ""}
+      </div>
+      <div class="small" style="margin-bottom:10px; line-height:1.5; opacity:0.86">
+        ${esc(tr("review.closure_intro"))}
+      </div>
+      <div class="small" style="line-height:1.6">
+        ${item.entries.map(entry => {
+          const bits = [];
+          if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
+          if (entry.target_reps) bits.push(tr("exercise.target_label", { value: formatTarget(entry.target_reps) }));
+          if (entry.target_load) bits.push(esc(entry.target_load));
+          return `${esc(formatExerciseName(entry.exercise_id))}${bits.length ? ` · ${bits.join(" · ")}` : ""}`;
+        }).join("<br>")}
+      </div>
     </div>
   `;
 }
@@ -4069,7 +4145,7 @@ function renderRestDayAcknowledgedSummary(checkinItem, planItem){
   wireFeedbackFooterActions();
 }
 
-function renderSessionResultSummary(summary){
+function renderSessionResultSummary(summary, fallbackResults = null){
   const root = document.getElementById("reviewPlanSummary");
   if (!root) return;
   if (!summary || typeof summary !== "object"){
@@ -4081,9 +4157,11 @@ function renderSessionResultSummary(summary){
   const fatigue = String(summary.fatigue || "").trim();
   const fatigueText = formatFatigueText(fatigue);
   const fatigueLine = fatigue ? ` · ${esc(tr("after_training.fatigue_label"))} ${esc(fatigueText)}` : "";
-  const nextStepHint = String(summary.progression_summary || summary.next_step_hint || "").trim();
-  const postWorkoutMessage = String(summary.post_workout_message || "").trim();
-  const explanationBits = Array.isArray(summary.explanation_bits) ? summary.explanation_bits.filter(Boolean) : [];
+  const nextStepHint = formatSavedSummaryNextStep(String(summary.progression_summary || summary.next_step_hint || "").trim());
+  const postWorkoutMessage = formatSavedSummaryMessage(String(summary.post_workout_message || "").trim());
+  const explanationBits = Array.isArray(summary.explanation_bits)
+    ? summary.explanation_bits.map(formatSavedSummaryExplanationBit).filter(Boolean)
+    : [];
   const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
   if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run"){
@@ -4129,6 +4207,62 @@ function renderSessionResultSummary(summary){
   const totalReps = Number(summary.total_reps || 0);
   const estimatedVolume = Number(summary.estimated_volume || 0);
   const hitFailureCount = Number(summary.hit_failure_count || 0);
+  const summaryResults = Array.isArray(summary.results) ? summary.results : [];
+  const explicitFallbackResults = Array.isArray(fallbackResults) ? fallbackResults : [];
+  const fallbackPlanResults = Array.isArray(STATE.currentTodayPlan?.entries) ? STATE.currentTodayPlan.entries : [];
+  const timedSummaryCandidates = summaryResults.length
+    ? summaryResults
+    : (explicitFallbackResults.length ? explicitFallbackResults : fallbackPlanResults);
+  const timedStrengthResults = timedSummaryCandidates.filter(result => {
+    const exId = String(result?.exercise_id || result?._base_exercise_id || "").trim();
+    const meta = getReviewExerciseMeta(exId);
+    return String(meta?.input_kind || "").trim() === "time";
+  });
+  const timedSetSeconds = timedStrengthResults.flatMap(result => {
+    const directSets = Array.isArray(result?.sets) ? result.sets : [];
+    if (directSets.length){
+      return directSets
+        .map(setItem => Number(String(setItem?.reps || "").match(/\d+/)?.[0] || 0))
+        .filter(x => x > 0);
+    }
+    const existingSets = Array.isArray(result?._existing_result?.sets) ? result._existing_result.sets : [];
+    return existingSets
+      .map(setItem => Number(String(setItem?.reps || "").match(/\d+/)?.[0] || 0))
+      .filter(x => x > 0);
+  });
+  const totalTimedSeconds = timedSetSeconds.reduce((sum, x) => sum + x, 0);
+  const timedCandidateCount = timedSummaryCandidates.length;
+  const hasTimedOnlyPlan = timedCandidateCount > 0 && timedStrengthResults.length === timedCandidateCount;
+  const shouldUseTimedSummary = timedSetSeconds.length > 0 || hasTimedOnlyPlan;
+
+  const normalizedNextStepHint = String(nextStepHint || "").trim().toLowerCase();
+
+  const visibleExplanationBits = (shouldUseTimedSummary ? explanationBits.filter(bit => {
+    const x = String(bit || "").trim().toLowerCase();
+    return x && !x.startsWith("failure-markører:") && !x.startsWith("failure markers:");
+  }) : explanationBits).filter(bit => {
+    const x = String(bit || "").trim().toLowerCase();
+    return x && x != normalizedNextStepHint;
+  });
+
+  const visibleProgressFlags = shouldUseTimedSummary
+    ? progressFlags.filter(flag => {
+        const raw = String(flag || "").trim().toLowerCase();
+        return raw && !raw.endsWith("_done") && !raw.endsWith("_failure");
+      })
+    : progressFlags;
+
+  const performanceBlock = shouldUseTimedSummary
+    ? `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
+      ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
+      ${esc(tr("review.summary_hold_times_label"))}: ${esc(timedSetSeconds.length ? timedSetSeconds.join(" / ") : "-")} sek<br>
+      ${esc(tr("review.summary_total_hold_time_label"))}: ${esc(String(totalTimedSeconds))} sek<br>
+      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`
+    : `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
+      ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
+      ${esc(tr("review.summary_reps_label"))}: ${esc(String(totalReps))}<br>
+      ${esc(tr("review.summary_volume_label"))}: ${esc(String(estimatedVolume))}<br>
+      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`;
 
   root.innerHTML = `
     <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
@@ -4139,19 +4273,13 @@ function renderSessionResultSummary(summary){
       ${esc(sessionType)}${fatigueLine}
     </div>
     <div class="small" style="margin-bottom:8px">
-      ${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
-      ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
-      ${esc(tr("review.summary_reps_label"))}: ${esc(String(totalReps))}<br>
-      ${esc(tr("review.summary_volume_label"))}: ${esc(String(estimatedVolume))}<br>
-      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}
+      ${performanceBlock}
     </div>
     <div class="small" style="margin-bottom:8px">
       ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
     </div>
-    ${explanationBits.length ? `<div class="small" style="margin-bottom:8px">${esc(explanationBits.join(" · "))}</div>` : ""}
-    <div class="small">
-      ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
-    </div>
+    ${visibleExplanationBits.length ? `<div class="small" style="margin-bottom:8px">${esc(visibleExplanationBits.join(" · "))}</div>` : ""}
+    ${visibleProgressFlags.length ? `<div class="small">${esc(visibleProgressFlags.map(formatProgressFlag).join(", "))}</div>` : ""}
     ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
     ${buildFeedbackFooterHtml()}
   `;
@@ -5428,8 +5556,10 @@ function completeTimedHoldSet(item){
 
   const root = document.getElementById("todayPlanList");
   const hidden = root?.querySelector(`[name="review_set_reps_${idx}_${currentSetIndex}"]`);
+  const failSelect = root?.querySelector(`[name="review_set_hit_failure_${idx}_${currentSetIndex}"]`);
   const targetSec = Number(entry?._active_hold_timer_target_sec || getTimedHoldTargetSeconds(entry) || 0);
   if (hidden) hidden.value = String(targetSec);
+  if (failSelect) failSelect.value = "false";
 
   clearTimedHoldTimer(entry);
   clearTimedHoldTick();
@@ -5768,13 +5898,6 @@ function renderActiveWorkoutCard(item){
         ${setFields}
       </div>
       <label>
-        ${esc(tr("after_training.fail_label"))}
-        <select name="review_hit_failure_${idx}">
-          <option value="false" ${entry?._existing_result?.hit_failure ? "" : "selected"}>${esc(tr("common.no"))}</option>
-          <option value="true" ${entry?._existing_result?.hit_failure ? "selected" : ""}>${esc(tr("common.yes"))}</option>
-        </select>
-      </label>
-      <label>
         ${esc(tr("exercise.note_label"))}
         <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("exercise.note_placeholder_example"))}">
       </label>
@@ -5829,10 +5952,13 @@ function renderActiveWorkoutCard(item){
         ev.preventDefault();
         if (isTimedHoldWorkoutEntry(entry)){
           const hidden = root.querySelector(`[name="review_set_reps_${idx}_${currentSetIndex}"]`);
+          const failSelect = root.querySelector(`[name="review_set_hit_failure_${idx}_${currentSetIndex}"]`);
           const targetSec = Number(entry?._active_hold_timer_target_sec || getTimedHoldTargetSeconds(entry) || 0);
           const remainingSec = getTimedHoldRemainingSeconds(entry);
           const completedSec = remainingSec > 0 ? Math.max(1, targetSec - remainingSec) : targetSec;
+          const hitFailure = completedSec < targetSec;
           if (hidden) hidden.value = String(completedSec);
+          if (failSelect) failSelect.value = hitFailure ? "true" : "false";
           clearTimedHoldTimer(entry);
           clearTimedHoldTick();
           saveActiveWorkoutEntryProgress(item);
@@ -7066,8 +7192,8 @@ session_type:
         ? entry._existing_result
         : {};
 
+      const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
       const sets = Array.from({length: setCount}, (_, setIdx) => {
-        const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
         const existingSet = existingSets[setIdx] && typeof existingSets[setIdx] === "object" ? existingSets[setIdx] : {};
         const repsVal = form[`review_set_reps_${idx}_${setIdx}`]?.value?.trim() || String(existingSet.reps || "").trim();
         let loadVal = form[`review_set_load_${idx}_${setIdx}`]?.value?.trim() || String(existingSet.load || "").trim();
@@ -7076,13 +7202,19 @@ session_type:
           loadVal = "";
         }
 
+        const setFailed = String(
+          form[`review_set_hit_failure_${idx}_${setIdx}`]?.value
+          || String(Boolean(existingSet.hit_failure))
+        ) === "true";
+
         return {
           reps: repsVal,
-          load: loadVal
+          load: loadVal,
+          hit_failure: setFailed
         };
       });
 
-      const nonEmptySets = sets.filter(x => x.reps || x.load);
+      const nonEmptySets = sets.filter(x => x.reps || x.load || x.hit_failure);
       let firstLoad = nonEmptySets[0]?.load || "";
       if (!firstLoad && existingResult.load){
         firstLoad = String(existingResult.load || "").trim();
@@ -7099,14 +7231,14 @@ session_type:
         achieved_reps: nonEmptySets[0]?.reps || String(existingResult.achieved_reps || "").trim(),
         load: firstLoad,
         sets: nonEmptySets,
-        hit_failure: String(form[`review_hit_failure_${idx}`]?.value || String(Boolean(existingResult.hit_failure))) === "true",
+        hit_failure: nonEmptySets.some(x => x.hit_failure),
         notes: form[`review_notes_${idx}`]?.value?.trim() || String(existingResult.notes || "").trim()
       };
     }) : []
   };
 
   try{
-    setText("sessionResultStatus", tr("review.saving_session_result"));
+    setText("sessionResultStatus", JSON.stringify(payload.results || []));
     statusEl?.classList.remove("warn");
     const editingSessionResultId = String(STATE.editingSessionResultId || "").trim();
     const isEditingSession = Boolean(editingSessionResultId);
@@ -7115,11 +7247,18 @@ session_type:
       ? await apiJsonRequest("PUT", `/api/session-results/${encodeURIComponent(editingSessionResultId)}`, payload)
       : await apiPost("/api/session-result", payload);
 
+    try {
+      const summaryDebug = JSON.stringify(res?.summary || null);
+      setText("sessionResultStatus", summaryDebug);
+    } catch (err) {
+      setText("sessionResultStatus", "summary_debug_error: " + (err?.message || String(err)));
+    }
+
     form.reset();
     form.session_completed.value = "true";
     await refreshAll();
     showWizardStep("review");
-    renderSessionResultSummary(res?.summary || null);
+    renderSessionResultSummary(res?.summary || null, payload.results || []);
     setText("sessionResultStatus", isEditingSession ? "Session opdateret." : tr("review.session_result_saved"));
     statusEl?.classList.add("ok");
 
