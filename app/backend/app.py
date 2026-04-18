@@ -2587,16 +2587,53 @@ def _program_recommended_levels(program):
     return [str(x).strip().lower() for x in levels if str(x).strip()]
 
 
-def _sort_strength_candidates(candidates, target_level, preferred_ids):
+def _sort_strength_candidates(candidates, target_level, preferred_ids, strength_starting_profile=None, running_enabled=False):
     preferred_order = {pid: idx for idx, pid in enumerate(preferred_ids)}
     target = str(target_level or "").strip().lower()
+    starting_profile = str(strength_starting_profile or "").strip().lower()
+
+    def metadata_penalty(program):
+        penalty = 0
+
+        good_for_reentry = bool(program.get("good_for_reentry", False))
+        good_for_concurrent_running = bool(program.get("good_for_concurrent_running", False))
+        training_style = str(program.get("training_style", "")).strip().lower()
+        program_family = str(program.get("program_family", "")).strip().lower()
+        fatigue_profile = str(program.get("fatigue_profile", "")).strip().lower()
+        complexity = str(program.get("complexity", "")).strip().lower()
+        sessions = program.get("supported_weekly_sessions", []) or []
+
+        if starting_profile == "conservative_beginner":
+            penalty += 0 if good_for_reentry else 50
+
+        if running_enabled:
+            penalty += 0 if good_for_concurrent_running else 20
+
+        if target == "beginner":
+            if training_style == "full_body_foundation":
+                penalty -= 8
+            if complexity == "low":
+                penalty -= 6
+            elif complexity == "moderate":
+                penalty -= 2
+
+        if target == "novice":
+            if program_family in {"base_strength", "base_strength_gym"}:
+                penalty -= 8
+            if training_style == "upper_lower_split" and 4 in sessions:
+                penalty -= 10
+            if fatigue_profile in {"moderate", "moderate_to_high"}:
+                penalty -= 2
+
+        return penalty
 
     def key(program):
         pid = str(program.get("id", "")).strip()
         levels = _program_recommended_levels(program)
         level_match = 0 if target and target in levels else 1
         preferred_rank = preferred_order.get(pid, 999)
-        return (level_match, preferred_rank, pid)
+        meta_penalty = metadata_penalty(program)
+        return (level_match, preferred_rank, meta_penalty, pid)
 
     return sorted(candidates, key=key)
 
@@ -2673,7 +2710,14 @@ def select_strength_program(programs, user_settings, weekly_target_sessions):
         if target_sessions == 2:
             preferred_ids.append("starter_strength_2x")
 
-    sorted_candidates = _sort_strength_candidates(candidates, target_level, preferred_ids)
+    running_enabled = bool(prefs.get("running", False))
+    sorted_candidates = _sort_strength_candidates(
+        candidates,
+        target_level,
+        preferred_ids,
+        strength_starting_profile=strength_starting_profile,
+        running_enabled=running_enabled,
+    )
     if sorted_candidates:
         return str(sorted_candidates[0].get("id"))
 
