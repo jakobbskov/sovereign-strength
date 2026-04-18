@@ -30,6 +30,18 @@ Common documented fields include:
 - `equipment_profiles`
 - `days`
 
+Strength programs may also include compact selector-oriented metadata such as:
+- `training_style`
+- `session_duration_min`
+- `session_duration_max`
+- `fatigue_profile`
+- `complexity`
+- `good_for_reentry`
+- `good_for_concurrent_running`
+- `program_family`
+- `progression_model`
+- `tags`
+
 Each `days` entry typically contains:
 
 - `label`
@@ -52,6 +64,18 @@ Important clarification:
 
 The program layer is no longer only a list of day labels with exercises.
 It now also carries lightweight metadata about who a program is for, which is intended to support deterministic program selection later.
+
+This metadata should stay compact and practical.
+It is meant to improve program matching quality, not to turn the catalog into an overengineered ontology.
+
+Practical interpretation:
+- `training_style` describes the broad session structure
+- `session_duration_min` / `session_duration_max` describe realistic session demand
+- `fatigue_profile` and `complexity` provide practical fit signals
+- `good_for_reentry` and `good_for_concurrent_running` support conservative matching
+- `program_family` groups related templates
+- `progression_model` describes the intended progression pattern at a high level
+- `tags` support lightweight future filtering without making the core schema unreadable
 
 ---
 
