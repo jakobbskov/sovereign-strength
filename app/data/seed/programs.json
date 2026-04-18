@@ -1712,5 +1712,283 @@
       "3x",
       "hypertrophy_friendly"
     ]
+  },
+  {
+    "id": "intermediate_upper_lower_4x",
+    "name": "Intermediate upper/lower (4 days/week)",
+    "name_en": "Intermediate upper/lower (4 days/week)",
+    "kind": "strength",
+    "recommended_levels": [
+      "intermediate"
+    ],
+    "supported_goals": [
+      "strength",
+      "hypertrophy",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      4
+    ],
+    "equipment_profiles": [
+      "gym_basic",
+      "full_gym"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "bench_press",
+            "sets": 4,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "barbell_row",
+            "sets": 4,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "overhead_press",
+            "sets": 3,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 3,
+            "reps": "40 sec"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 4,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "romanian_deadlift",
+            "sets": 4,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "lunges",
+            "sets": 3,
+            "reps": "8/leg"
+          },
+          {
+            "exercise_id": "dead_bug",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "bench_press",
+            "sets": 4,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 4,
+            "reps": "10/side"
+          },
+          {
+            "exercise_id": "push_ups",
+            "sets": 3,
+            "reps": "8-12"
+          },
+          {
+            "exercise_id": "bird_dog",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      },
+      {
+        "label": "Day D",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 4,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "split_squat",
+            "sets": 3,
+            "reps": "8/leg"
+          },
+          {
+            "exercise_id": "glute_bridge",
+            "sets": 3,
+            "reps": "10-12"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 3,
+            "reps": "40 sec"
+          }
+        ]
+      }
+    ],
+    "training_style": "upper_lower_split",
+    "session_duration_min": 45,
+    "session_duration_max": 60,
+    "fatigue_profile": "moderate_to_high",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": false,
+    "program_family": "intermediate_strength_gym",
+    "progression_model": "intermediate_upper_lower_linear",
+    "tags": [
+      "intermediate",
+      "gym",
+      "4x",
+      "upper_lower",
+      "strength_hypertrophy"
+    ]
+  },
+  {
+    "id": "intermediate_hypertrophy_4x",
+    "name": "Intermediate hypertrophy (4 days/week)",
+    "name_en": "Intermediate hypertrophy (4 days/week)",
+    "kind": "strength",
+    "recommended_levels": [
+      "intermediate"
+    ],
+    "supported_goals": [
+      "hypertrophy",
+      "fat_loss",
+      "mixed"
+    ],
+    "supported_weekly_sessions": [
+      4
+    ],
+    "equipment_profiles": [
+      "gym_basic",
+      "full_gym"
+    ],
+    "days": [
+      {
+        "label": "Day A",
+        "exercises": [
+          {
+            "exercise_id": "bench_press",
+            "sets": 4,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "barbell_row",
+            "sets": 4,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "overhead_press",
+            "sets": 3,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 3,
+            "reps": "40 sec"
+          }
+        ]
+      },
+      {
+        "label": "Day B",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 4,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "romanian_deadlift",
+            "sets": 4,
+            "reps": "8-10"
+          },
+          {
+            "exercise_id": "lunges",
+            "sets": 3,
+            "reps": "10/leg"
+          },
+          {
+            "exercise_id": "dead_bug",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      },
+      {
+        "label": "Day C",
+        "exercises": [
+          {
+            "exercise_id": "bench_press",
+            "sets": 4,
+            "reps": "10-12"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 4,
+            "reps": "10/side"
+          },
+          {
+            "exercise_id": "push_ups",
+            "sets": 3,
+            "reps": "10-15"
+          },
+          {
+            "exercise_id": "bird_dog",
+            "sets": 3,
+            "reps": "8/side"
+          }
+        ]
+      },
+      {
+        "label": "Day D",
+        "exercises": [
+          {
+            "exercise_id": "squat",
+            "sets": 4,
+            "reps": "10-12"
+          },
+          {
+            "exercise_id": "split_squat",
+            "sets": 3,
+            "reps": "10/leg"
+          },
+          {
+            "exercise_id": "glute_bridge",
+            "sets": 3,
+            "reps": "12-15"
+          },
+          {
+            "exercise_id": "plank",
+            "sets": 3,
+            "reps": "40 sec"
+          }
+        ]
+      }
+    ],
+    "training_style": "upper_lower_split",
+    "session_duration_min": 50,
+    "session_duration_max": 65,
+    "fatigue_profile": "high",
+    "complexity": "moderate",
+    "good_for_reentry": false,
+    "good_for_concurrent_running": false,
+    "program_family": "intermediate_hypertrophy_gym",
+    "progression_model": "intermediate_hypertrophy_volume",
+    "tags": [
+      "intermediate",
+      "gym",
+      "4x",
+      "upper_lower",
+      "hypertrophy"
+    ]
   }
 ]

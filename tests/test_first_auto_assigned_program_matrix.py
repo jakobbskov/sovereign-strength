@@ -445,3 +445,47 @@ def test_select_strength_program_fat_loss_novice_home_3x_prefers_base_home_path(
     )
     settings["preferences"]["training_goal"] = "fat_loss"
     assert backend_app.select_strength_program(PROGRAMS, settings, 3) == "base_strength_home_3x"
+
+
+def test_select_strength_program_intermediate_gym_4x_strength_prefers_upper_lower_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=4,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="intermediate",
+    )
+    settings["preferences"]["training_goal"] = "strength"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 4) == "intermediate_upper_lower_4x"
+
+
+def test_select_strength_program_intermediate_gym_4x_mixed_prefers_upper_lower_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=4,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="intermediate",
+    )
+    settings["preferences"]["training_goal"] = "mixed"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 4) == "intermediate_upper_lower_4x"
+
+
+def test_select_strength_program_intermediate_gym_4x_hypertrophy_prefers_hypertrophy_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=4,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="intermediate",
+    )
+    settings["preferences"]["training_goal"] = "hypertrophy"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 4) == "intermediate_hypertrophy_4x"
+
+
+def test_select_strength_program_intermediate_gym_4x_fat_loss_prefers_hypertrophy_path():
+    settings = make_user_settings(
+        training_types={"running": False, "strength_weights": True},
+        weekly_target_sessions=4,
+        available_equipment={"barbell": True, "bench": True},
+        strength_starting_profile="intermediate",
+    )
+    settings["preferences"]["training_goal"] = "fat_loss"
+    assert backend_app.select_strength_program(PROGRAMS, settings, 4) == "intermediate_hypertrophy_4x"
