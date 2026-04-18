@@ -265,3 +265,40 @@ if __name__ == "__main__":
     print("first auto-assigned program matrix tests passed")
 
 
+
+def test_build_active_program_status_reports_automatic_recommendation_source():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"barbell": True, "bench": True},
+    )
+
+    status = backend_app.build_active_program_status_by_domain(PROGRAMS, settings)
+
+    assert status["strength"]["program_id"] == "starter_strength_gym_2x"
+    assert status["strength"]["selection_source"] == "automatic_recommendation"
+    assert status["run"]["program_id"] == "hybrid_run_strength_2x_beginner"
+    assert status["run"]["selection_source"] == "automatic_recommendation"
+
+
+def test_build_active_program_status_reports_accepted_recommendation_source():
+    settings = make_user_settings(
+        training_types={"running": True, "strength_weights": True},
+        weekly_target_sessions=2,
+        available_equipment={"barbell": True, "bench": True},
+        active_program_overrides={
+            "strength": "base_strength_a",
+            "run": "starter_run_2x",
+        },
+    )
+    settings["preferences"]["accepted_program_recommendations"] = {
+        "strength": "base_strength_a",
+        "run": "starter_run_2x",
+    }
+
+    status = backend_app.build_active_program_status_by_domain(PROGRAMS, settings)
+
+    assert status["strength"]["program_id"] == "base_strength_a"
+    assert status["strength"]["selection_source"] == "accepted_recommendation"
+    assert status["run"]["program_id"] == "starter_run_2x"
+    assert status["run"]["selection_source"] == "accepted_recommendation"
