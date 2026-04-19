@@ -2383,7 +2383,12 @@ function renderProfileEquipmentCard(){
   const profileRunProgramCardEl = document.getElementById("profileRunProgramCard");
   const profileRunProgramSummaryEl = document.getElementById("profileRunProgramSummary");
   const profileRunProgramWhyEl = document.getElementById("profileRunProgramWhy");
+  const profileSectionDisplayNameEl = document.getElementById("profileSectionDisplayName");
+  const profileSectionBodyLineEl = document.getElementById("profileSectionBodyLine");
+  const profileSectionTrainingTypesLineEl = document.getElementById("profileSectionTrainingTypesLine");
+  const profileSectionTrainingDaysLineEl = document.getElementById("profileSectionTrainingDaysLine");
   const equipmentLineEl = document.getElementById("profileEquipmentLine");
+  const profileSectionEquipmentLineEl = document.getElementById("profileSectionEquipmentLine");
   const strengthProgramControlWrapEl = document.getElementById("profileStrengthProgramControlWrap");
   const strengthProgramSelectEl = document.getElementById("profileStrengthProgramSelect");
   const runProgramControlWrapEl = document.getElementById("profileRunProgramControlWrap");
@@ -2395,6 +2400,17 @@ function renderProfileEquipmentCard(){
   const recommendedStrengthReasonEl = document.getElementById("profileRecommendedStrengthReason");
   const profileProgramActionStatusEl = document.getElementById("profileProgramActionStatus");
   const applyRecommendedStrengthProgramBtn = document.getElementById("applyRecommendedStrengthProgramBtn");
+  const strengthProgramControlWrapProfileEl = document.getElementById("profileStrengthProgramControlWrapProfile");
+  const strengthProgramSelectProfileEl = document.getElementById("profileStrengthProgramSelectProfile");
+  const runProgramControlWrapProfileEl = document.getElementById("profileRunProgramControlWrapProfile");
+  const runProgramSelectProfileEl = document.getElementById("profileRunProgramSelectProfile");
+  const saveProfileProgramsBtnProfile = document.getElementById("saveProfileProgramsBtnProfile");
+  const recommendedProgramWrapProfileEl = document.getElementById("profileRecommendedProgramWrapProfile");
+  const recommendedCurrentStrengthLineProfileEl = document.getElementById("profileRecommendedCurrentStrengthLineProfile");
+  const recommendedStrengthLineProfileEl = document.getElementById("profileRecommendedStrengthLineProfile");
+  const recommendedStrengthReasonProfileEl = document.getElementById("profileRecommendedStrengthReasonProfile");
+  const profileProgramActionStatusProfileEl = document.getElementById("profileProgramActionStatusProfile");
+  const applyRecommendedStrengthProgramBtnProfile = document.getElementById("applyRecommendedStrengthProgramBtnProfile");
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
   const accountHelpLineEl = document.getElementById("profileAccountHelpLine");
@@ -2454,6 +2470,9 @@ function renderProfileEquipmentCard(){
 
   if (displayNameEl){
     displayNameEl.textContent = username;
+  }
+  if (profileSectionDisplayNameEl){
+    profileSectionDisplayNameEl.textContent = username;
   }
 
   const getProgramById = (programId) => {
@@ -2592,23 +2611,40 @@ function renderProfileEquipmentCard(){
     trainingDays.sun ? tr("day.sun") : ""
   ].filter(Boolean);
 
+  const profileBodyText = profileBits.length
+    ? profileBits.join(" · ")
+    : tr("profile.no_body_metrics_yet");
+
   if (bodyLineEl){
-    bodyLineEl.textContent = profileBits.length
-      ? profileBits.join(" · ")
-      : tr("profile.no_body_metrics_yet");
+    bodyLineEl.textContent = profileBodyText;
   }
+  if (profileSectionBodyLineEl){
+    profileSectionBodyLineEl.textContent = profileBodyText;
+  }
+
+  const trainingTypesText = selectedTraining.length
+    ? tr("profile.training_types_value", { value: selectedTraining.join(", ") })
+    : tr("profile.training_types_none");
 
   if (trainingTypesLineEl){
-    trainingTypesLineEl.textContent = selectedTraining.length
-      ? tr("profile.training_types_value", { value: selectedTraining.join(", ") })
-      : tr("profile.training_types_none");
+    trainingTypesLineEl.textContent = trainingTypesText;
+  }
+  if (profileSectionTrainingTypesLineEl){
+    profileSectionTrainingTypesLineEl.textContent = trainingTypesText;
   }
 
-  if (trainingDaysLineEl){
+  const trainingDaysText = (() => {
     const dayText = selectedDays.length
       ? tr("profile.training_days_value", { value: selectedDays.join(", ") })
       : tr("checkin.possible_days_none");
-    trainingDaysLineEl.textContent = `${dayText} · ${tr("profile.week_goal_value", { count: weeklyTargetSessions })}`;
+    return `${dayText} · ${tr("profile.week_goal_value", { count: weeklyTargetSessions })}`;
+  })();
+
+  if (trainingDaysLineEl){
+    trainingDaysLineEl.textContent = trainingDaysText;
+  }
+  if (profileSectionTrainingDaysLineEl){
+    profileSectionTrainingDaysLineEl.textContent = trainingDaysText;
   }
 
   if (activeProgramsLineEl){
@@ -2662,61 +2698,91 @@ function renderProfileEquipmentCard(){
     profileActiveProgramCardsWrapEl.style.display = hasCards ? "" : "none";
   }
 
-  if (profileProgramActionStatusEl){
-    profileProgramActionStatusEl.classList.remove("ok", "warn");
+  const applyProgramStatusState = (statusEl) => {
+    if (!statusEl) return;
+    statusEl.classList.remove("ok", "warn");
     if (PROFILE_PROGRAM_SWITCH_STATUS && PROFILE_PROGRAM_SWITCH_STATUS.kind === "ok"){
-      profileProgramActionStatusEl.textContent = PROFILE_PROGRAM_SWITCH_STATUS.message || "";
-      profileProgramActionStatusEl.style.display = PROFILE_PROGRAM_SWITCH_STATUS.message ? "" : "none";
-      profileProgramActionStatusEl.classList.add("ok");
+      statusEl.textContent = PROFILE_PROGRAM_SWITCH_STATUS.message || "";
+      statusEl.style.display = PROFILE_PROGRAM_SWITCH_STATUS.message ? "" : "none";
+      statusEl.classList.add("ok");
       requestAnimationFrame(() => {
-        profileProgramActionStatusEl.style.opacity = PROFILE_PROGRAM_SWITCH_STATUS.message ? "1" : "0";
+        statusEl.style.opacity = PROFILE_PROGRAM_SWITCH_STATUS.message ? "1" : "0";
       });
     } else {
-      profileProgramActionStatusEl.textContent = "";
-      profileProgramActionStatusEl.style.opacity = "0";
-      profileProgramActionStatusEl.style.display = "none";
+      statusEl.textContent = "";
+      statusEl.style.opacity = "0";
+      statusEl.style.display = "none";
     }
-  }
+  };
 
-  if (recommendedProgramWrapEl && recommendedStrengthLineEl && recommendedStrengthReasonEl){
-    const hasRecommendation = strengthTrainingEnabled
-      && Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName)
-      && recommendedStrengthProgramId !== String(activeProgramsByDomain.strength || "").trim();
+  applyProgramStatusState(profileProgramActionStatusEl);
+  applyProgramStatusState(profileProgramActionStatusProfileEl);
 
-    recommendedProgramWrapEl.classList.toggle("wizard-step-hidden", !hasRecommendation);
-    recommendedProgramWrapEl.style.display = hasRecommendation ? "" : "none";
+  const hasRecommendation = strengthTrainingEnabled
+    && Boolean(recommendedStrengthProgramId && recommendedStrengthProgramName)
+    && recommendedStrengthProgramId !== String(activeProgramsByDomain.strength || "").trim();
 
-    if (applyRecommendedStrengthProgramBtn){
-      applyRecommendedStrengthProgramBtn.dataset.recommendedProgramId = hasRecommendation ? recommendedStrengthProgramId : "";
+  const applyRecommendationState = (wrapEl, currentEl, lineEl, reasonEl, buttonEl) => {
+    if (!wrapEl || !lineEl || !reasonEl) return;
+
+    wrapEl.classList.toggle("wizard-step-hidden", !hasRecommendation);
+    wrapEl.style.display = hasRecommendation ? "" : "none";
+
+    if (buttonEl){
+      buttonEl.dataset.recommendedProgramId = hasRecommendation ? recommendedStrengthProgramId : "";
     }
 
     if (hasRecommendation){
-      if (recommendedCurrentStrengthLineEl){
-        recommendedCurrentStrengthLineEl.textContent = activeStrengthProgramName
+      if (currentEl){
+        currentEl.textContent = activeStrengthProgramName
           ? tr("profile.recommended_current_strength_program_value", { value: activeStrengthProgramName })
           : tr("profile.recommended_current_strength_program_missing");
       }
-      recommendedStrengthLineEl.textContent = tr("profile.recommended_strength_program_value", {
+      lineEl.textContent = tr("profile.recommended_strength_program_value", {
         value: recommendedStrengthProgramName
       });
-      recommendedStrengthReasonEl.textContent = recommendedStrengthReason || tr("profile.recommended_strength_program_default_reason");
+      reasonEl.textContent = recommendedStrengthReason || tr("profile.recommended_strength_program_default_reason");
     } else {
-      if (recommendedCurrentStrengthLineEl){
-        recommendedCurrentStrengthLineEl.textContent = "";
+      if (currentEl){
+        currentEl.textContent = "";
       }
-      recommendedStrengthLineEl.textContent = "";
-      recommendedStrengthReasonEl.textContent = "";
+      lineEl.textContent = "";
+      reasonEl.textContent = "";
     }
-  }
+  };
+
+  applyRecommendationState(
+    recommendedProgramWrapEl,
+    recommendedCurrentStrengthLineEl,
+    recommendedStrengthLineEl,
+    recommendedStrengthReasonEl,
+    applyRecommendedStrengthProgramBtn
+  );
+  applyRecommendationState(
+    recommendedProgramWrapProfileEl,
+    recommendedCurrentStrengthLineProfileEl,
+    recommendedStrengthLineProfileEl,
+    recommendedStrengthReasonProfileEl,
+    applyRecommendedStrengthProgramBtnProfile
+  );
 
   if (strengthProgramControlWrapEl){
     strengthProgramControlWrapEl.style.display = strengthTrainingEnabled ? "" : "none";
   }
+  if (strengthProgramControlWrapProfileEl){
+    strengthProgramControlWrapProfileEl.style.display = strengthTrainingEnabled ? "" : "none";
+  }
   if (runProgramControlWrapEl){
     runProgramControlWrapEl.style.display = runTrainingEnabled ? "" : "none";
   }
+  if (runProgramControlWrapProfileEl){
+    runProgramControlWrapProfileEl.style.display = runTrainingEnabled ? "" : "none";
+  }
   if (saveProfileProgramsBtn){
     saveProfileProgramsBtn.style.display = (strengthTrainingEnabled || runTrainingEnabled) ? "" : "none";
+  }
+  if (saveProfileProgramsBtnProfile){
+    saveProfileProgramsBtnProfile.style.display = (strengthTrainingEnabled || runTrainingEnabled) ? "" : "none";
   }
   const overrideHelpEl = document.getElementById("profileProgramOverrideHelp");
   if (overrideHelpEl){
@@ -2725,14 +2791,18 @@ function renderProfileEquipmentCard(){
 
   if (strengthTrainingEnabled){
     fillProgramOverrideSelect(strengthProgramSelectEl, "strength", activeProgramOverrides.strength);
-  } else if (strengthProgramSelectEl){
-    strengthProgramSelectEl.value = "";
+    fillProgramOverrideSelect(strengthProgramSelectProfileEl, "strength", activeProgramOverrides.strength);
+  } else {
+    if (strengthProgramSelectEl) strengthProgramSelectEl.value = "";
+    if (strengthProgramSelectProfileEl) strengthProgramSelectProfileEl.value = "";
   }
 
   if (runTrainingEnabled){
     fillProgramOverrideSelect(runProgramSelectEl, "run", activeProgramOverrides.run);
-  } else if (runProgramSelectEl){
-    runProgramSelectEl.value = "";
+    fillProgramOverrideSelect(runProgramSelectProfileEl, "run", activeProgramOverrides.run);
+  } else {
+    if (runProgramSelectEl) runProgramSelectEl.value = "";
+    if (runProgramSelectProfileEl) runProgramSelectProfileEl.value = "";
   }
 
   if (applyRecommendedStrengthProgramBtn && !applyRecommendedStrengthProgramBtn.dataset.bound){
@@ -2846,10 +2916,15 @@ function renderProfileEquipmentCard(){
     });
   }
 
+    const equipmentText = enabledEquipment.length
+    ? tr("profile.available_equipment_value", { value: formatEquipmentList(enabledEquipment) })
+    : tr("profile.no_equipment_yet");
+
   if (equipmentLineEl){
-    equipmentLineEl.textContent = enabledEquipment.length
-      ? tr("profile.available_equipment_value", { value: formatEquipmentList(enabledEquipment) })
-      : tr("profile.no_equipment_yet");
+    equipmentLineEl.textContent = equipmentText;
+  }
+  if (profileSectionEquipmentLineEl){
+    profileSectionEquipmentLineEl.textContent = equipmentText;
   }
 
   if (incrementLineEl){
@@ -3335,7 +3410,7 @@ function bindEquipmentEditor(){
     openBtn.dataset.bound = "1";
     openBtn.onclick = (ev) => {
       ev.preventDefault();
-      setEquipmentEditorOpen(true);
+      showWizardStep("profile");
     };
   }
 
@@ -3348,6 +3423,24 @@ function bindEquipmentEditor(){
       } else if (form){
         form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
       }
+    };
+  }
+
+  const openProfileBtn = document.getElementById("openEquipmentSettingsBtnProfile");
+  if (openProfileBtn && !openProfileBtn.dataset.bound){
+    openProfileBtn.dataset.bound = "1";
+    openProfileBtn.onclick = (ev) => {
+      ev.preventDefault();
+      setEquipmentEditorOpen(true);
+    };
+  }
+
+  const openAccountProfileBtn = document.getElementById("openAccountSettingsBtnProfile");
+  if (openAccountProfileBtn && !openAccountProfileBtn.dataset.bound){
+    openAccountProfileBtn.dataset.bound = "1";
+    openAccountProfileBtn.onclick = (ev) => {
+      ev.preventDefault();
+      accountBtn2?.click();
     };
   }
 
@@ -7888,6 +7981,9 @@ function getWizardSections(){
       document.getElementById("historyTopSection"),
       document.getElementById("historyBottomSection"),
     ],
+    profile: [
+      document.getElementById("profileSection"),
+    ],
     library: [
       document.getElementById("librarySection"),
     ],
@@ -7915,13 +8011,6 @@ function renderUtilityNav(){
   root.querySelectorAll("[data-utility-step]").forEach(btn => {
     btn.addEventListener("click", () => {
       const target = String(btn.getAttribute("data-utility-step") || "").trim();
-      if (target === "profile"){
-        showWizardStep("overview");
-        requestAnimationFrame(() => {
-          setEquipmentEditorOpen(true);
-        });
-        return;
-      }
       showWizardStep(target);
     });
   });
