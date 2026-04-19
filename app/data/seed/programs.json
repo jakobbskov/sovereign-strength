@@ -605,7 +605,7 @@
             "reps": "6-8"
           },
           {
-            "exercise_id": "barbell_row",
+            "exercise_id": "lat_pulldown",
             "sets": 2,
             "reps": "6-8"
           },
@@ -694,7 +694,7 @@
             "reps": "6-8"
           },
           {
-            "exercise_id": "barbell_row",
+            "exercise_id": "lat_pulldown",
             "sets": 2,
             "reps": "6-8"
           },
@@ -896,7 +896,7 @@
             "reps": "6-8"
           },
           {
-            "exercise_id": "barbell_row",
+            "exercise_id": "lat_pulldown",
             "sets": 3,
             "reps": "6-8"
           },
@@ -1034,7 +1034,7 @@
             "reps": "6-8"
           },
           {
-            "exercise_id": "barbell_row",
+            "exercise_id": "lat_pulldown",
             "sets": 3,
             "reps": "6-8"
           },

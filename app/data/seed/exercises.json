@@ -2822,5 +2822,72 @@
       "Keep the hip stable at the top",
       "Lower back down under control without dropping"
     ]
+  },
+  {
+    "id": "lat_pulldown",
+    "name": "Lat pulldown",
+    "name_en": "Lat pulldown",
+    "category": "pull",
+    "category_en": "pull",
+    "default_unit": "kg",
+    "progression_step": 10,
+    "start_weight": 30,
+    "notes": "Vertikalt træk i maskine eller kabel. Træk albuerne ned mod siden med kontrol.",
+    "notes_en": "Vertical pull on a machine or cable. Pull the elbows down toward the sides with control.",
+    "progression_mode": "double_progression",
+    "recommended_step": 2.5,
+    "load_increment": 10,
+    "equipment_type": "machine",
+    "movement_pattern": "vertical_pull",
+    "difficulty_tier": 1,
+    "progression_style": "load",
+    "input_kind": "load_reps",
+    "load_optional": false,
+    "supports_bodyweight": false,
+    "supports_load": true,
+    "set_options": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "rep_options": [
+      "4-6",
+      "6-8",
+      "8-10",
+      "10-12",
+      "12-15"
+    ],
+    "load_options": [
+      "10 kg",
+      "20 kg",
+      "30 kg",
+      "40 kg",
+      "50 kg",
+      "60 kg",
+      "70 kg",
+      "80 kg"
+    ],
+    "image_folder": "Wide-Grip_Lat_Pulldown",
+    "external_images": [
+      "Wide-Grip_Lat_Pulldown/0.jpg",
+      "Wide-Grip_Lat_Pulldown/1.jpg"
+    ],
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist"
+    ],
+    "form_cues": [
+      "Start med skuldrene aktive og brystet let løftet",
+      "Træk albuerne ned mod siden i stedet for at hive med hænderne",
+      "Stop før du mister kontrol eller læner dig for langt tilbage"
+    ],
+    "form_cues_en": [
+      "Start with active shoulders and a lightly lifted chest",
+      "Pull the elbows down toward the sides instead of yanking with the hands",
+      "Stop before you lose control or lean too far back"
+    ]
   }
 ]
