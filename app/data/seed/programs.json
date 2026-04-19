@@ -33,7 +33,7 @@
         "label": "Day B",
         "exercises": [
           {
-            "exercise_id": "glute_bridge",
+            "exercise_id": "hip_hinge_bw",
             "sets": 2,
             "reps": "8-12"
           },
@@ -1477,7 +1477,7 @@
         "label": "Day C",
         "exercises": [
           {
-            "exercise_id": "glute_bridge",
+            "exercise_id": "romanian_deadlift",
             "sets": 3,
             "reps": "10-12"
           },
