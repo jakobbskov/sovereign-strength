@@ -816,6 +816,21 @@
             <p id="manualTemplateStatus" class="small" data-i18n="manual_template.status_ready">Klar.</p>
           </div>
 
+          <div class="card" style="margin-top:12px; padding:12px">
+            <div class="small" data-i18n="custom_workout.title">Gemte custom workouts</div>
+            <label style="margin-top:8px">
+              <span data-i18n="custom_workout.select_label">Vælg workout</span>
+              <select id="customWorkoutSelect">
+                <option value="" data-i18n="custom_workout.none_saved">Ingen gemte workouts</option>
+              </select>
+            </label>
+            <div class="btn-row" style="margin-top:10px">
+              <button type="button" id="saveCustomWorkoutBtn" data-i18n="custom_workout.save_btn">Gem som workout</button>
+              <button type="button" id="loadCustomWorkoutBtn" data-i18n="custom_workout.load_btn">Indlæs workout</button>
+            </div>
+            <p id="customWorkoutStatus" class="small" data-i18n="custom_workout.status_ready">Klar.</p>
+          </div>
+
           <p id="entryStatus" class="small" data-i18n="entry.none_added_yet">Ingen øvelser tilføjet endnu.</p>
           <ul id="pendingEntriesList"></ul>
         </div>
