@@ -353,6 +353,46 @@ button{
   min-height: 48px;
 }
 
+#recoveryForm details.entry-box{
+  margin-top: 0;
+}
+
+#recoveryForm details.entry-box summary{
+  cursor: pointer;
+  list-style: none;
+}
+
+#recoveryForm details.entry-box summary::-webkit-details-marker{
+  display: none;
+}
+
+#recoveryForm details.entry-box summary strong{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#recoveryForm details.entry-box summary strong::before{
+  content: "+";
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+  opacity: 0.72;
+}
+
+#recoveryForm details[open].entry-box summary strong::before{
+  content: "−";
+}
+
+#recoveryForm details.entry-box p.small{
+  margin-top: 10px;
+}
+
+#recoveryFormStatus{
+  margin-top: 14px;
+  line-height: 1.45;
+}
+
 @media (min-width: 700px){
   .checkin-section{
     padding: 16px 16px 18px;
