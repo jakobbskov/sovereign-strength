@@ -1793,7 +1793,7 @@
         "label": "Day D",
         "exercises": [
           {
-            "exercise_id": "squat",
+            "exercise_id": "step_ups",
             "sets": 4,
             "reps": "8-10"
           },
@@ -1932,7 +1932,7 @@
         "label": "Day D",
         "exercises": [
           {
-            "exercise_id": "squat",
+            "exercise_id": "step_ups",
             "sets": 4,
             "reps": "10-12"
           },
