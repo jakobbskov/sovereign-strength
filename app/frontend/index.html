@@ -410,80 +410,100 @@
           <div class="stat-line" id="profileBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
           <div class="stat-line" id="profileTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
           <div class="stat-line" id="profileTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
-          <div class="stat-line" id="profileActiveProgramsLine" data-i18n="profile.active_programs_loading" style="display:none">Aktive programmer indlæses...</div>
-          <div id="profileActiveProgramCardsWrap" class="profile-program-cards" style="display:none">
-            <div id="profileStrengthProgramCard" class="small profile-program-card" style="display:none">
-              <div style="font-weight:700" data-i18n="profile.domain_strength_title">Styrke</div>
-              <div id="profileStrengthProgramSummary" style="margin-top:4px"></div>
-              <div id="profileStrengthProgramWhy" style="margin-top:4px; opacity:0.85"></div>
-            </div>
-            <div id="profileRunProgramCard" class="small profile-program-card" style="display:none">
-              <div style="font-weight:700" data-i18n="profile.domain_run_title">Løb</div>
-              <div id="profileRunProgramSummary" style="margin-top:4px"></div>
-              <div id="profileRunProgramWhy" style="margin-top:4px; opacity:0.85"></div>
-            </div>
-          </div>
-          <div class="stat-line" id="profileEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
-        </div>
-        <details id="profileEquipmentDetails" class="profile-details">
-          <summary class="small" data-i18n="overview.more_profile_details">Flere profiloplysninger</summary>
-          <div class="overview-status" style="margin-top:10px">
-            <div class="stat-line" id="profileIncrementLine" data-i18n="profile.increment_loading">Vægtspring indlæses...</div>
-            <div class="stat-line" id="profileAccountLine" data-i18n="profile.account_loading">Konto indlæses...</div>
-            <div class="stat-line" id="profileAccountHelpLine" data-i18n="profile.account_help">Profil og adgangskode håndteres centralt via auth.</div>
-          </div>
-        </details>
-        <div class="overview-status profile-summary-actions wizard-step-hidden" style="display:none">
-          <div class="stat-line"><strong data-i18n="profile.program_selection_title">Programvalg</strong></div>
-          <div class="small" id="profileProgramActionStatus" style="display:none; opacity:0; transition:opacity 220ms ease"></div>
-          <div class="small" id="profileProgramOverrideHelp" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
-
-          <div id="profileStrengthProgramControlWrap" class="wizard-step-hidden" style="display:none">
-            <label class="small" for="profileStrengthProgramSelect" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
-            <select id="profileStrengthProgramSelect">
-              <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
-            </select>
-          </div>
-
-          <div id="profileRunProgramControlWrap" class="wizard-step-hidden" style="display:none">
-            <label class="small" for="profileRunProgramSelect" data-i18n="profile.active_program_run_label">Løbeprogram</label>
-            <select id="profileRunProgramSelect">
-              <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
-            </select>
-          </div>
-
-          <div id="profileRecommendedProgramWrap" class="overview-status wizard-step-hidden" style="display:none">
-            <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>
-            <div class="small" id="profileRecommendedProgramCurrentLabel" data-i18n="profile.recommended_program_current_label">Du bruger nu</div>
-            <div class="stat-line" id="profileRecommendedCurrentStrengthLine">-</div>
-            <div class="small" id="profileRecommendedProgramSuggestedLabel" data-i18n="profile.recommended_program_suggested_label">Appen anbefaler nu</div>
-            <div class="stat-line" id="profileRecommendedStrengthLine">-</div>
-            <div class="small" id="profileRecommendedStrengthReason">-</div>
-            <div class="btn-row">
-              <button type="button" id="applyRecommendedStrengthProgramBtn" class="primary" data-i18n="button.switch_to_recommended_program">Skift til anbefalet program</button>
-            </div>
-          </div>
-
-          <button type="button" id="saveProfileProgramsBtn" class="wizard-step-hidden" style="display:none" data-i18n="button.save_active_programs">Gem aktive programmer</button>
         </div>
         <div class="btn-row profile-summary-buttons">
           <button type="button" id="openEquipmentSettingsBtn" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
           <button type="button" id="openAccountSettingsSecondaryBtn" data-i18n="button.account_password">Konto og adgangskode</button>
         </div>
       </section>
-      
-      <div id="equipmentEditorWrap" class="card wizard-step-hidden" style="margin-top:14px; display:none"></div>
 
-      <div id="equipmentSettingsModal" class="modal-backdrop wizard-step-hidden" style="display:none">
-        <div class="modal-card">
-          <div class="row" style="align-items:center; margin-bottom:10px">
-            <h3 style="margin:0" data-i18n="overview.profile_equipment">Profil og udstyr</h3>
-            <button type="button" id="cancelEquipmentSettingsBtn" class="small" data-i18n="button.close">Luk</button>
+      <section class="card">
+        <h2 data-i18n="workouts.title">Workouts</h2>
+        <div class="metric" id="workoutsCount">-</div>
+        <div class="small" data-i18n="stats.logged_strength_sessions">Logged strength sessions</div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="exercises.title">Øvelser</h2>
+        <div class="metric" id="exercisesCount">-</div>
+        <div class="small" data-i18n="exercises.count_label">Antal øvelser i biblioteket</div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="programs.title">Programmer</h2>
+        <div class="metric" id="programsCount">-</div>
+        <div class="small" data-i18n="programs.count_label">Antal aktive programmer</div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="recovery.title">Recovery</h2>
+        <div class="metric" id="recoveryCount">-</div>
+        <div class="small" data-i18n="recovery.count_label">Antal recovery-logs</div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="readiness.title">Readiness</h2>
+        <div class="metric" id="readinessScore">-</div>
+        <div class="small" id="readinessLabel" data-i18n="common.no_data_yet">Ingen data endnu</div>
+        <div class="small" id="readinessSuggestion" style="margin-top:8px"></div>
+        <div class="small" id="readinessAction" style="margin-top:8px"></div>
+      </section>
+    </div>
+
+    <section class="card wizard-step-hidden" id="profileSection" style="margin-top:18px">
+      <div class="row">
+        <h2 data-i18n="overview.profile_equipment">Profil og udstyr</h2>
+        <div class="small" id="profileSectionDisplayName">-</div>
+      </div>
+      <p class="small" data-i18n="settings.help">Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.</p>
+
+      <div class="overview-status" style="margin-top:12px">
+        <div class="stat-line" id="profileSectionBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
+        <div class="stat-line" id="profileSectionTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
+        <div class="stat-line" id="profileSectionTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
+        <div class="stat-line" id="profileSectionEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
+      </div>
+
+      <div class="overview-status" style="margin-top:12px">
+        <div class="stat-line"><strong data-i18n="profile.program_selection_title">Programvalg</strong></div>
+        <div class="small" id="profileProgramActionStatusProfile" style="display:none; opacity:0; transition:opacity 220ms ease"></div>
+        <div class="small" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
+
+        <div id="profileStrengthProgramControlWrapProfile">
+          <label class="small" for="profileStrengthProgramSelectProfile" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
+          <select id="profileStrengthProgramSelectProfile">
+            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
+          </select>
+        </div>
+
+        <div id="profileRunProgramControlWrapProfile">
+          <label class="small" for="profileRunProgramSelectProfile" data-i18n="profile.active_program_run_label">Løbeprogram</label>
+          <select id="profileRunProgramSelectProfile">
+            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
+          </select>
+        </div>
+
+        <div id="profileRecommendedProgramWrapProfile" class="overview-status wizard-step-hidden" style="display:none">
+          <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>
+          <div class="small" data-i18n="profile.recommended_program_current_label">Du bruger nu</div>
+          <div class="stat-line" id="profileRecommendedCurrentStrengthLineProfile">-</div>
+          <div class="small" data-i18n="profile.recommended_program_suggested_label">Appen anbefaler nu</div>
+          <div class="stat-line" id="profileRecommendedStrengthLineProfile">-</div>
+          <div class="small" id="profileRecommendedStrengthReasonProfile">-</div>
+          <div class="btn-row">
+            <button type="button" id="applyRecommendedStrengthProgramBtnProfile" class="primary" data-i18n="button.switch_to_recommended_program">Skift til anbefalet program</button>
           </div>
+        </div>
 
-          <p class="small" data-i18n="settings.help">Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.</p>
+        <button type="button" id="saveProfileProgramsBtnProfile" data-i18n="button.save_active_programs">Gem aktive programmer</button>
+      </div>
 
-          <form id="equipmentSettingsForm">
+      
+      <div class="overview-status" style="margin-top:18px">
+        <div class="stat-line"><strong data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</strong></div>
+      </div>
+
+<div id="profileEquipmentEditorSection" class="wizard-step-hidden" style="display:none; margin-top:12px">\n        <form id="equipmentSettingsForm" style="margin-top:12px">
             <div id="firstRunSetupIntro" class="small wizard-step-hidden" style="margin-bottom:12px; display:none"></div>
 
             <div class="first-run-setup-section" data-first-run-step="basic_profile">
@@ -676,93 +696,14 @@
                 <button type="button" id="resetCatalogFromSeedBtn" class="secondary" data-i18n="button.reset_catalog_from_seed">Reset øvelser og programmer</button>
             </div>
             </div>
-          </form>
-
           <p id="equipmentSettingsStatus" class="small" style="margin-top:12px">Ikke ændret endnu.</p>
+        <div class="btn-row" style="margin-top:12px">
+          <button type="button" id="cancelEquipmentSettingsBtn" class="secondary" data-i18n="button.close">Luk</button>
         </div>
-      </div>
-      <section class="card">
-        <h2 data-i18n="workouts.title">Workouts</h2>
-        <div class="metric" id="workoutsCount">-</div>
-        <div class="small" data-i18n="stats.logged_strength_sessions">Logged strength sessions</div>
-      </section>
-
-      <section class="card">
-        <h2 data-i18n="exercises.title">Øvelser</h2>
-        <div class="metric" id="exercisesCount">-</div>
-        <div class="small" data-i18n="exercises.count_label">Antal øvelser i biblioteket</div>
-      </section>
-
-      <section class="card">
-        <h2 data-i18n="programs.title">Programmer</h2>
-        <div class="metric" id="programsCount">-</div>
-        <div class="small" data-i18n="programs.count_label">Antal aktive programmer</div>
-      </section>
-
-      <section class="card">
-        <h2 data-i18n="recovery.title">Recovery</h2>
-        <div class="metric" id="recoveryCount">-</div>
-        <div class="small" data-i18n="recovery.count_label">Antal recovery-logs</div>
-      </section>
-
-      <section class="card">
-        <h2 data-i18n="readiness.title">Readiness</h2>
-        <div class="metric" id="readinessScore">-</div>
-        <div class="small" id="readinessLabel" data-i18n="common.no_data_yet">Ingen data endnu</div>
-        <div class="small" id="readinessSuggestion" style="margin-top:8px"></div>
-        <div class="small" id="readinessAction" style="margin-top:8px"></div>
-      </section>
-    </div>
-
-    <section class="card wizard-step-hidden" id="profileSection" style="margin-top:18px">
-      <div class="row">
-        <h2 data-i18n="overview.profile_equipment">Profil og udstyr</h2>
-        <div class="small" id="profileSectionDisplayName">-</div>
-      </div>
-      <p class="small" data-i18n="settings.help">Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.</p>
-
-      <div class="overview-status" style="margin-top:12px">
-        <div class="stat-line" id="profileSectionBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
-        <div class="stat-line" id="profileSectionTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
-        <div class="stat-line" id="profileSectionTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
-        <div class="stat-line" id="profileSectionEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
+        </form>
       </div>
 
-      <div class="overview-status" style="margin-top:12px">
-        <div class="stat-line"><strong data-i18n="profile.program_selection_title">Programvalg</strong></div>
-        <div class="small" id="profileProgramActionStatusProfile" style="display:none; opacity:0; transition:opacity 220ms ease"></div>
-        <div class="small" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
-
-        <div id="profileStrengthProgramControlWrapProfile">
-          <label class="small" for="profileStrengthProgramSelectProfile" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
-          <select id="profileStrengthProgramSelectProfile">
-            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
-          </select>
-        </div>
-
-        <div id="profileRunProgramControlWrapProfile">
-          <label class="small" for="profileRunProgramSelectProfile" data-i18n="profile.active_program_run_label">Løbeprogram</label>
-          <select id="profileRunProgramSelectProfile">
-            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
-          </select>
-        </div>
-
-        <div id="profileRecommendedProgramWrapProfile" class="overview-status wizard-step-hidden" style="display:none">
-          <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>
-          <div class="small" data-i18n="profile.recommended_program_current_label">Du bruger nu</div>
-          <div class="stat-line" id="profileRecommendedCurrentStrengthLineProfile">-</div>
-          <div class="small" data-i18n="profile.recommended_program_suggested_label">Appen anbefaler nu</div>
-          <div class="stat-line" id="profileRecommendedStrengthLineProfile">-</div>
-          <div class="small" id="profileRecommendedStrengthReasonProfile">-</div>
-          <div class="btn-row">
-            <button type="button" id="applyRecommendedStrengthProgramBtnProfile" class="primary" data-i18n="button.switch_to_recommended_program">Skift til anbefalet program</button>
-          </div>
-        </div>
-
-        <button type="button" id="saveProfileProgramsBtnProfile" data-i18n="button.save_active_programs">Gem aktive programmer</button>
-      </div>
-
-      <div class="btn-row" style="margin-top:12px">
+<div class="btn-row" style="margin-top:12px">
         <button type="button" id="openEquipmentSettingsBtnProfile" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
         <button type="button" id="openAccountSettingsBtnProfile" data-i18n="button.account_password">Konto og adgangskode</button>
       </div>

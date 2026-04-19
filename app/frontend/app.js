@@ -2972,18 +2972,7 @@ function renderProfileEquipmentCard(){
   }
 
 function mountEquipmentEditorInline(){
-  const wrap = document.getElementById("equipmentEditorWrap");
-  const modal = document.getElementById("equipmentSettingsModal");
-  if (!wrap || !modal) return;
-
-  const card = modal.querySelector(".modal-card");
-  if (!card) return;
-
-  if (wrap.dataset.mounted !== "1"){
-    wrap.innerHTML = "";
-    wrap.appendChild(card);
-    wrap.dataset.mounted = "1";
-  }
+  return;
 }
 
 
@@ -3243,26 +3232,27 @@ function bindFirstRunSetupNavigation(){
 }
 
 function setEquipmentEditorOpen(isOpen){
-  const wrap = document.getElementById("equipmentEditorWrap");
-  const modal = document.getElementById("equipmentSettingsModal");
-  if (wrap){
-    wrap.classList.toggle("wizard-step-hidden", !isOpen);
-    wrap.style.display = isOpen ? "block" : "none";
+  const section = document.getElementById("profileEquipmentEditorSection");
+  if (section){
+    section.classList.toggle("wizard-step-hidden", !isOpen);
+    section.style.display = isOpen ? "" : "none";
   }
-  if (modal){
-    modal.classList.add("wizard-step-hidden");
-    modal.style.display = "none";
-  }
+
   if (isOpen){
     populateEquipmentEditor();
     bindFirstRunSetupNavigation();
     renderFirstRunSetupEditorState();
     const status = document.getElementById("equipmentSettingsStatus");
     if (status) status.textContent = tr("profile.edit_and_save_when_ready");
-    const firstField =
-      document.querySelector('.first-run-setup-section[data-first-run-step]:not([style*="display: none"]) input, .first-run-setup-section[data-first-run-step]:not([style*="display: none"]) select')
-      || document.getElementById("profile_height_cm");
-    if (firstField && typeof firstField.focus === "function") firstField.focus();
+    requestAnimationFrame(() => {
+      const firstField =
+        document.querySelector('.first-run-setup-section[data-first-run-step]:not([style*="display: none"]) input, .first-run-setup-section[data-first-run-step]:not([style*="display: none"]) select')
+        || document.getElementById("profile_height_cm");
+      if (firstField && typeof firstField.focus === "function") firstField.focus();
+      if (section && typeof section.scrollIntoView === "function"){
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   } else {
     renderFirstRunSetupEditorState();
   }
