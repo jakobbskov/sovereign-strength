@@ -771,5 +771,7 @@
   "profile.starter_capacity_profile_general": "General beginner",
   "profile.starter_capacity_profile_loaded": "Loaded beginner",
   "profile.starter_capacity_profile_help": "Choose how light or robust your overall starting capacity is right now. This is used as an early planning signal.",
-  "profile.starter_capacity_profile_help_levels": "Very low capacity = very gentle start with a low threshold · Low capacity = cautious start with simple loading · General beginner = normal beginner starting point · Loaded beginner = new, but ready for a more direct start."
+  "profile.starter_capacity_profile_help_levels": "Very low capacity = very gentle start with a low threshold · Low capacity = cautious start with simple loading · General beginner = normal beginner starting point · Loaded beginner = new, but ready for a more direct start.",
+  "library.tab_exercises": "Exercises",
+  "library.tab_programs": "Programs"
 }
