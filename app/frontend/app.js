@@ -2426,8 +2426,11 @@ function renderProfileEquipmentCard(){
   const strengthWhy = strengthTrainingEnabled && activeStrengthProgramName
     ? [strengthJourney, buildProgramWhyReason("strength")].filter(Boolean).join(" ")
     : "";
+  const runningJourney = runTrainingEnabled && activeEnduranceProgram
+    ? getRunningJourneyCopy(activeEnduranceProgram)
+    : "";
   const runWhy = runTrainingEnabled && activeEnduranceProgramName
-    ? buildProgramWhyReason("run")
+    ? [runningJourney, buildProgramWhyReason("run")].filter(Boolean).join(" ")
     : "";
 
   if (profileStrengthProgramSummaryEl){
@@ -6497,6 +6500,24 @@ function renderTodayPlan(item){
 
   renderReviewSummary(item);
   renderSessionReview(item);
+}
+
+function getRunningJourneyCopy(program){
+  const item = program && typeof program === "object" ? program : {};
+  const pid = String(item.id || "").trim().toLowerCase();
+  const kind = String(item.kind || "").trim().toLowerCase();
+  const style = String(item.training_style || "").trim().toLowerCase();
+  const family = String(item.program_family || "").trim().toLowerCase();
+  const tags = Array.isArray(item.tags) ? item.tags.map(x => String(x || "").trim().toLowerCase()) : [];
+  const sessions = Array.isArray(item.supported_weekly_sessions) ? item.supported_weekly_sessions.map(x => Number(x) || 0) : [];
+
+  if (pid === "reentry_run_2x") return tr("running_journey.reentry");
+  if (pid === "starter_run_2x" || pid === "starter_run_3x_beginner") return tr("running_journey.beginner_start");
+  if ((family === "base_run" || style === "base_run_progression") && sessions.includes(3)) return tr("running_journey.base_5k_10k");
+  if ((family === "base_run" || style === "base_run_progression") && sessions.includes(4)) return tr("running_journey.base_10k_half");
+  if (kind === "hybrid" || kind === "mixed" || style === "hybrid_run_first" || tags.includes("hybrid")) return tr("running_journey.hybrid");
+
+  return "";
 }
 
 function getStrengthJourneyCopy(program){

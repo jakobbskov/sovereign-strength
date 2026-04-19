@@ -804,5 +804,10 @@
   "strength_journey.base_home": "A home-based base strength path with more progression and slightly more total training work.",
   "strength_journey.base_gym": "A base gym strength path focused on stable main lifts and clear progression.",
   "strength_journey.upper_lower": "A more structured upper/lower strength path with higher frequency and a clearer weekly rhythm.",
-  "strength_journey.hybrid_support": "A strength path meant to support a hybrid setup without taking all the focus away from running or mixed training."
+  "strength_journey.hybrid_support": "A strength path meant to support a hybrid setup without taking all the focus away from running or mixed training.",
+  "running_journey.reentry": "A gentle return-to-running path with lower load and room to build consistency again.",
+  "running_journey.beginner_start": "A beginner-friendly running start with manageable frequency and a clear path into regular running.",
+  "running_journey.base_5k_10k": "A running base with enough structure to point toward 5K and 10K without becoming rigid or overcomplicated.",
+  "running_journey.base_10k_half": "A more extended running base with room for longer sessions and progression toward 10K or half marathon base work.",
+  "running_journey.hybrid": "A hybrid running path where running and strength are meant to work together instead of competing for all the space."
 }
