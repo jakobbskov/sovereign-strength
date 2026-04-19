@@ -714,6 +714,60 @@
       </section>
     </div>
 
+    <section class="card wizard-step-hidden" id="profileSection" style="margin-top:18px">
+      <div class="row">
+        <h2 data-i18n="overview.profile_equipment">Profil og udstyr</h2>
+        <div class="small" id="profileSectionDisplayName">-</div>
+      </div>
+      <p class="small" data-i18n="settings.help">Vælg hvilket udstyr du har adgang til, angiv højde og kropsvægt, og gem når du er klar.</p>
+
+      <div class="overview-status" style="margin-top:12px">
+        <div class="stat-line" id="profileSectionBodyLine" data-i18n="profile.loading">Profil indlæses...</div>
+        <div class="stat-line" id="profileSectionTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
+        <div class="stat-line" id="profileSectionTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
+        <div class="stat-line" id="profileSectionEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
+      </div>
+
+      <div class="overview-status" style="margin-top:12px">
+        <div class="stat-line"><strong data-i18n="profile.program_selection_title">Programvalg</strong></div>
+        <div class="small" id="profileProgramActionStatusProfile" style="display:none; opacity:0; transition:opacity 220ms ease"></div>
+        <div class="small" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
+
+        <div id="profileStrengthProgramControlWrapProfile">
+          <label class="small" for="profileStrengthProgramSelectProfile" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
+          <select id="profileStrengthProgramSelectProfile">
+            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
+          </select>
+        </div>
+
+        <div id="profileRunProgramControlWrapProfile">
+          <label class="small" for="profileRunProgramSelectProfile" data-i18n="profile.active_program_run_label">Løbeprogram</label>
+          <select id="profileRunProgramSelectProfile">
+            <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
+          </select>
+        </div>
+
+        <div id="profileRecommendedProgramWrapProfile" class="overview-status wizard-step-hidden" style="display:none">
+          <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>
+          <div class="small" data-i18n="profile.recommended_program_current_label">Du bruger nu</div>
+          <div class="stat-line" id="profileRecommendedCurrentStrengthLineProfile">-</div>
+          <div class="small" data-i18n="profile.recommended_program_suggested_label">Appen anbefaler nu</div>
+          <div class="stat-line" id="profileRecommendedStrengthLineProfile">-</div>
+          <div class="small" id="profileRecommendedStrengthReasonProfile">-</div>
+          <div class="btn-row">
+            <button type="button" id="applyRecommendedStrengthProgramBtnProfile" class="primary" data-i18n="button.switch_to_recommended_program">Skift til anbefalet program</button>
+          </div>
+        </div>
+
+        <button type="button" id="saveProfileProgramsBtnProfile" data-i18n="button.save_active_programs">Gem aktive programmer</button>
+      </div>
+
+      <div class="btn-row" style="margin-top:12px">
+        <button type="button" id="openEquipmentSettingsBtnProfile" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
+        <button type="button" id="openAccountSettingsBtnProfile" data-i18n="button.account_password">Konto og adgangskode</button>
+      </div>
+    </section>
+
     <section class="card" id="manualWorkoutSection" style="margin-top:18px">
       <h2 data-i18n="new_workout.title">Nyt workout</h2>
       <form id="workoutForm">
