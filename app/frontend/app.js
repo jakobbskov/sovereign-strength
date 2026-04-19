@@ -6591,6 +6591,8 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   renderWorkouts(STATE.workouts);
   renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null, todayPlanApi && todayPlanApi.item ? todayPlanApi.item.recovery_state : null);
   renderSessionHistory(STATE.sessionResults);
+  renderExercises(STATE.exercises);
+  renderExerciseLibrary();
   renderRecovery(recoveryApi.items || []);
   renderReadiness(latestRecoveryApi.item || null);
   renderForecastHero(todayPlanApi.item || null, latestRecoveryApi.item || null);
@@ -6598,6 +6600,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
     renderOverviewStatus(todayPlanApi.item || null, latestRecoveryApi.item || null, workoutsApi.items || []);
   renderProfileEquipmentCard();
     renderTodayPlan(todayPlanApi.item || null);
+  renderPrograms(STATE.programs, STATE.exercises);
   renderPendingEntries();
 
   const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || []);
@@ -7389,6 +7392,7 @@ const WIZARD_STEPS = [
   { id: "review", labelKey: "wizard.review" },
   { id: "manual", labelKey: "wizard.manual" },
   { id: "history", labelKey: "wizard.history" },
+  { id: "library", labelKey: "wizard.library" },
 ];
 
 function getWizardStepLabel(step){
@@ -7404,7 +7408,8 @@ function getWizardStepLabel(step){
       "wizard.plan": "Dagens plan",
       "wizard.review": "Efter træning",
       "wizard.manual": "Manuel træning",
-      "wizard.history": "Historik"
+      "wizard.history": "Historik",
+      "wizard.library": "Bibliotek"
     },
     en: {
       "wizard.overview": "Overview",
@@ -7412,7 +7417,8 @@ function getWizardStepLabel(step){
       "wizard.plan": "Today's plan",
       "wizard.review": "After training",
       "wizard.manual": "Manual workout",
-      "wizard.history": "History"
+      "wizard.history": "History",
+      "wizard.library": "Library"
     }
   };
 
@@ -7442,6 +7448,9 @@ function getWizardSections(){
       document.getElementById("historyTopSection"),
       document.getElementById("historyBottomSection"),
     ],
+    library: [
+      document.getElementById("librarySection"),
+    ],
   };
 }
 
@@ -7454,6 +7463,7 @@ function renderUtilityNav(){
     { id: "profile", label: tr("overview.profile_equipment") },
     { id: "manual", label: getWizardStepLabel({ labelKey: "wizard.manual" }) },
     { id: "history", label: getWizardStepLabel({ labelKey: "wizard.history" }) },
+    { id: "library", label: getWizardStepLabel({ labelKey: "wizard.library" }) },
   ];
 
   root.innerHTML = items.map(item => `
