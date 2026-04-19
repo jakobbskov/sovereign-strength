@@ -5344,17 +5344,50 @@ function getExerciseLibraryCardCopy(item){
 
 function renderExerciseLibrary(){
   const root = document.getElementById("exerciseLibrary");
+  const searchInput = document.getElementById("libraryExerciseSearchInput");
   if (!root) return;
+
+  if (searchInput && searchInput.dataset.boundSearch !== "true"){
+    searchInput.dataset.boundSearch = "true";
+    searchInput.addEventListener("input", () => {
+      CURRENT_LIBRARY_EXERCISE_QUERY = String(searchInput.value || "").trim();
+      renderExerciseLibrary();
+    });
+  }
+
+  if (searchInput && searchInput.value !== CURRENT_LIBRARY_EXERCISE_QUERY){
+    searchInput.value = CURRENT_LIBRARY_EXERCISE_QUERY;
+  }
 
   const items = Array.isArray(STATE.exercises) ? STATE.exercises.slice() : [];
   if (!items.length){
     root.innerHTML = `<div class="small">${esc(tr("exercise.none_loaded_yet"))}</div>`;
+    setText("exerciseMeta", tr("common.items_count", { count: 0 }));
+    return;
+  }
+
+  const query = String(CURRENT_LIBRARY_EXERCISE_QUERY || "").trim().toLowerCase();
+  const filteredItems = items.filter(item => {
+    if (!item || typeof item !== "object") return false;
+    if (!query) return true;
+    const copy = getExerciseLibraryCardCopy(item);
+    const haystack = [
+      String(item.id || ""),
+      String(copy.name || ""),
+      String(copy.notes || ""),
+      String(item.category || "")
+    ].join(" ").toLowerCase();
+    return haystack.includes(query);
+  });
+
+  if (!filteredItems.length){
+    root.innerHTML = `<div class="small">${esc(tr("library.exercise_search_empty"))}</div>`;
+    setText("exerciseMeta", tr("common.items_count", { count: 0 }));
     return;
   }
 
   const grouped = {};
-  for (const item of items){
-    if (!item || typeof item !== "object") continue;
+  for (const item of filteredItems){
     const category = String(item.category || "andet").trim() || "andet";
     if (!grouped[category]) grouped[category] = [];
     grouped[category].push(item);
@@ -5401,6 +5434,7 @@ function renderExerciseLibrary(){
     `;
   }).join("");
 
+  setText("exerciseMeta", tr("common.items_count", { count: filteredItems.length }));
   bindExerciseViewer();
 }
 
@@ -7427,6 +7461,7 @@ function getWizardStepLabel(step){
 
 let CURRENT_STEP = "";
 let CURRENT_LIBRARY_TAB = "exercises";
+let CURRENT_LIBRARY_EXERCISE_QUERY = "";
 
 function renderLibraryTabs(){
   const exercisesBtn = document.getElementById("libraryTabExercises");
