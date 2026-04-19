@@ -2420,8 +2420,11 @@ function renderProfileEquipmentCard(){
     activeProgramsLineEl.style.display = activeProgramBits.length ? "none" : "";
   }
 
+  const strengthJourney = strengthTrainingEnabled && activeStrengthProgram
+    ? getStrengthJourneyCopy(activeStrengthProgram)
+    : "";
   const strengthWhy = strengthTrainingEnabled && activeStrengthProgramName
-    ? buildProgramWhyReason("strength")
+    ? [strengthJourney, buildProgramWhyReason("strength")].filter(Boolean).join(" ")
     : "";
   const runWhy = runTrainingEnabled && activeEnduranceProgramName
     ? buildProgramWhyReason("run")
@@ -6494,6 +6497,26 @@ function renderTodayPlan(item){
 
   renderReviewSummary(item);
   renderSessionReview(item);
+}
+
+function getStrengthJourneyCopy(program){
+  const item = program && typeof program === "object" ? program : {};
+  const role = String(item.program_role || "").trim().toLowerCase();
+  const style = String(item.training_style || "").trim().toLowerCase();
+  const tags = Array.isArray(item.tags) ? item.tags.map(x => String(x || "").trim().toLowerCase()) : [];
+  const equipmentProfiles = Array.isArray(item.equipment_profiles) ? item.equipment_profiles.map(x => String(x || "").trim().toLowerCase()) : [];
+
+  if (role === "reentry") return tr("strength_journey.reentry");
+  if (role === "minimal_dose") return tr("strength_journey.minimal_dose");
+  if (role === "starter" && equipmentProfiles.includes("minimal_home")) return tr("strength_journey.beginner_home");
+  if (role === "starter" && equipmentProfiles.includes("dumbbell_home")) return tr("strength_journey.beginner_home");
+  if (role === "starter" && (equipmentProfiles.includes("gym_basic") || equipmentProfiles.includes("full_gym"))) return tr("strength_journey.beginner_gym");
+  if (style === "full_body_base" && equipmentProfiles.includes("dumbbell_home")) return tr("strength_journey.base_home");
+  if (style === "full_body_base" && (equipmentProfiles.includes("gym_basic") || equipmentProfiles.includes("full_gym"))) return tr("strength_journey.base_gym");
+  if (style === "upper_lower_split") return tr("strength_journey.upper_lower");
+  if (style === "hybrid_run_first" || tags.includes("run_first")) return tr("strength_journey.hybrid_support");
+
+  return "";
 }
 
 function getProgramPathLabels(program){
