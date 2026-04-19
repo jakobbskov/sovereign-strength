@@ -1310,7 +1310,7 @@
     "id": "hybrid_run_strength_2x_beginner",
     "name": "Hybrid run + strength foundation (2 sessions/week)",
     "name_en": "Hybrid run + strength foundation (2 sessions/week)",
-    "kind": "run",
+    "kind": "mixed",
     "days": [
       {
         "label": "Day A",
@@ -1318,7 +1318,7 @@
           {
             "exercise_id": "run_easy",
             "sets": 1,
-            "reps": "20-25 min"
+            "reps": "20-30 min"
           }
         ]
       },
@@ -1326,9 +1326,19 @@
         "label": "Day B",
         "exercises": [
           {
-            "exercise_id": "run_intervals",
-            "sets": 1,
-            "reps": "5 x 1 min hurtigt / 1 min roligt"
+            "exercise_id": "squat",
+            "sets": 2,
+            "reps": "6-8"
+          },
+          {
+            "exercise_id": "incline_push_ups",
+            "sets": 2,
+            "reps": "6-10"
+          },
+          {
+            "exercise_id": "dumbbell_row",
+            "sets": 2,
+            "reps": "8/side"
           }
         ]
       }
@@ -1346,6 +1356,16 @@
     ],
     "equipment_profiles": [
       "hybrid_home"
+    ],
+    "training_style": "hybrid_run_first",
+    "program_family": "hybrid_run_strength",
+    "progression_model": "hybrid_beginner_balanced",
+    "tags": [
+      "hybrid",
+      "beginner",
+      "run_first",
+      "home",
+      "mixed_friendly"
     ]
   },
   {
