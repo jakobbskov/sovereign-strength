@@ -788,5 +788,13 @@
   "program.identity_base_builder": "Base builder",
   "program.identity_foundation": "Foundation",
   "program.identity_upper_lower": "Upper/lower split",
-  "program.identity_base_running": "Base running"
+  "program.identity_base_running": "Base running",
+  "program.path_home_friendly": "Home-friendly",
+  "program.path_low_equipment": "Low equipment",
+  "program.path_beginner_friendly": "Beginner-friendly",
+  "program.path_reentry": "Gentle re-entry",
+  "program.path_mobility": "Mobility",
+  "program.path_recovery": "Recovery",
+  "program.path_hybrid": "Hybrid",
+  "program.path_simple_start": "Simple start"
 }

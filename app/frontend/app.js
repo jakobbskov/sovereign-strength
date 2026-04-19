@@ -6496,6 +6496,48 @@ function renderTodayPlan(item){
   renderSessionReview(item);
 }
 
+function getProgramPathLabels(program){
+  const item = program && typeof program === "object" ? program : {};
+  const kind = String(item.kind || "").trim().toLowerCase();
+  const role = String(item.program_role || "").trim().toLowerCase();
+  const levels = Array.isArray(item.recommended_levels) ? item.recommended_levels.map(x => String(x || "").trim().toLowerCase()) : [];
+  const equipmentProfiles = Array.isArray(item.equipment_profiles) ? item.equipment_profiles.map(x => String(x || "").trim().toLowerCase()) : [];
+  const tags = Array.isArray(item.tags) ? item.tags.map(x => String(x || "").trim().toLowerCase()) : [];
+  const labels = [];
+
+  const add = (key) => {
+    const value = tr(key);
+    if (!value || value === key || labels.includes(value)) return;
+    labels.push(value);
+  };
+
+  if (kind === "mobility" || kind === "mobilitet") add("program.path_mobility");
+  if (kind === "recovery" || kind === "restitution" || kind === "rest") add("program.path_recovery");
+  if (kind === "hybrid" || kind === "mixed") add("program.path_hybrid");
+
+  if (equipmentProfiles.includes("minimal_home") || equipmentProfiles.includes("dumbbell_home") || equipmentProfiles.includes("hybrid_home") || tags.includes("home")) {
+    add("program.path_home_friendly");
+  }
+
+  if (equipmentProfiles.includes("minimal_home") || tags.includes("low_barrier") || tags.includes("minimalist")) {
+    add("program.path_low_equipment");
+  }
+
+  if (levels.includes("beginner") || role === "starter" || tags.includes("beginner")) {
+    add("program.path_beginner_friendly");
+  }
+
+  if (role === "reentry" || item.good_for_reentry === true || tags.includes("reentry")) {
+    add("program.path_reentry");
+  }
+
+  if (tags.includes("simple") || tags.includes("low_barrier") || role === "starter") {
+    add("program.path_simple_start");
+  }
+
+  return labels.slice(0, 4);
+}
+
 function getProgramIdentityLabel(program){
   const item = program && typeof program === "object" ? program : {};
   const role = String(item.program_role || "").trim().toLowerCase();
@@ -6574,6 +6616,7 @@ function renderPrograms(programs, exercises){
 
   root.innerHTML = filteredPrograms.map(program => {
     const identityLabel = getProgramIdentityLabel(program);
+    const pathLabels = getProgramPathLabels(program);
     return `
     <div class="card" style="margin-top:12px; background:#141414">
       <div class="row">
@@ -6581,6 +6624,7 @@ function renderPrograms(programs, exercises){
         <span class="pill">${esc(getProgramKindDisplayLabel(program.kind || ""))}</span>
       </div>
       ${identityLabel ? `<div class="small" style="margin-top:6px">${esc(identityLabel)}</div>` : ""}
+      ${pathLabels.length ? `<div class="row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">${pathLabels.map(label => `<span class="pill">${esc(label)}</span>`).join("")}</div>` : ""}
       ${(program.days || []).map(day => `
         <div class="program-day">
           <strong>${esc(getProgramDayDisplayLabel(day))}</strong>

@@ -804,5 +804,13 @@
   "program.identity_base_builder": "Base builder",
   "program.identity_foundation": "Grundforløb",
   "program.identity_upper_lower": "Upper/lower split",
-  "program.identity_base_running": "Base løb"
+  "program.identity_base_running": "Base løb",
+  "program.path_home_friendly": "Hjemmevenlig",
+  "program.path_low_equipment": "Få redskaber",
+  "program.path_beginner_friendly": "Begyndervenlig",
+  "program.path_reentry": "Rolig genstart",
+  "program.path_mobility": "Mobilitet",
+  "program.path_recovery": "Restitution",
+  "program.path_hybrid": "Hybrid",
+  "program.path_simple_start": "Enkel opstart"
 }
