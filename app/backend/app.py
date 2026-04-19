@@ -904,6 +904,19 @@ def create_session_result(user_id, payload):
     item["summary"] = build_session_summary(item)
 
     item, count = append_user_item("session_results", item)
+
+    if isinstance(item, dict) and bool(item.get("completed", False)):
+        user_settings = get_user_settings_for(user_id)
+        current_profile = get_starter_capacity_profile(user_settings)
+        session_results = list_session_results_for_user(user_id)
+        next_profile = calibrate_starter_capacity_profile(current_profile, session_results, limit=3)
+
+        if next_profile != current_profile:
+            current_preferences = user_settings.get("preferences", {}) if isinstance(user_settings.get("preferences", {}), dict) else {}
+            next_preferences = {**current_preferences, "starter_capacity_profile": next_profile}
+            next_settings = {**user_settings, "preferences": next_preferences}
+            save_user_settings_for(user_id, next_settings)
+
     return item, None, count
 
 def build_session_result_item(user_id, payload, existing_item=None):
@@ -1485,6 +1498,78 @@ def find_latest_session_by_type(session_results, session_type):
         if str(session.get("session_type", "")).strip() == session_type:
             return session
     return None
+
+
+def get_starter_capacity_calibration_sessions(session_results, limit=3):
+    completed = []
+    for session in session_results or []:
+        if not isinstance(session, dict):
+            continue
+        if not bool(session.get("completed", False)):
+            continue
+        completed.append(session)
+        if len(completed) >= int(limit or 3):
+            break
+    return completed
+
+
+def classify_starter_capacity_review_signal(session_result):
+    item = session_result if isinstance(session_result, dict) else {}
+    session_type = str(item.get("session_type", "")).strip().lower()
+    completed = bool(item.get("completed", False))
+    if not completed:
+        return "neutral"
+
+    if session_type in ("styrke", "strength"):
+        results = item.get("results", [])
+        if not isinstance(results, list):
+            results = []
+        has_failure = any(bool(r.get("hit_failure", False)) for r in results if isinstance(r, dict))
+        return "too_hard" if has_failure else "appropriate"
+
+    if session_type in ("løb", "run", "cardio"):
+        avg_rpe = item.get("avg_rpe", None)
+        try:
+            avg_rpe = float(avg_rpe) if avg_rpe not in (None, "", "null") else None
+        except Exception:
+            avg_rpe = None
+        if avg_rpe is None:
+            return "neutral"
+        if avg_rpe >= 7:
+            return "too_hard"
+        if avg_rpe <= 4:
+            return "too_easy"
+        return "appropriate"
+
+    if session_type in ("restitution", "mobilitet", "mobility", "recovery"):
+        return "appropriate"
+
+    return "neutral"
+
+
+def calibrate_starter_capacity_profile(current_profile, session_results, limit=3):
+    profile = str(current_profile or "general_beginner").strip().lower()
+    ordered_profiles = ["very_low_capacity", "low_capacity", "general_beginner", "loaded_beginner"]
+    if profile not in ordered_profiles:
+        profile = "general_beginner"
+
+    early_sessions = get_starter_capacity_calibration_sessions(session_results, limit=limit)
+    if not early_sessions:
+        return profile
+
+    signals = [classify_starter_capacity_review_signal(item) for item in early_sessions]
+    hard_count = sum(1 for s in signals if s == "too_hard")
+    easy_count = sum(1 for s in signals if s == "too_easy")
+
+    idx = ordered_profiles.index(profile)
+
+    if hard_count >= 1:
+        return ordered_profiles[max(0, idx - 1)]
+
+    if easy_count >= 2:
+        return ordered_profiles[min(len(ordered_profiles) - 1, idx + 1)]
+
+    return profile
 
 
 def compute_fatigue_score(
