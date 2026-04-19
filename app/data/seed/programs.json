@@ -81,6 +81,17 @@
       "home",
       "simple",
       "low_barrier"
+    ],
+    "program_role": "starter",
+    "transition_type": "temporary",
+    "expected_use_window_weeks": [
+      4,
+      8
+    ],
+    "exit_criteria": [
+      "completes planned sessions consistently for multiple weeks",
+      "tolerates current exercises and recovery demands without difficulty",
+      "needs more progression headroom than the entry template provides"
     ]
   },
   {
@@ -487,6 +498,17 @@
       "home",
       "3x",
       "mixed_friendly"
+    ],
+    "program_role": "starter",
+    "transition_type": "temporary",
+    "expected_use_window_weeks": [
+      4,
+      8
+    ],
+    "exit_criteria": [
+      "completes three weekly sessions consistently for multiple weeks",
+      "handles current hinge, squat, push, and pull work with stable recovery",
+      "needs a more durable novice home progression path"
     ]
   },
   {
@@ -641,6 +663,17 @@
       "gym",
       "foundation",
       "mixed_friendly"
+    ],
+    "program_role": "starter",
+    "transition_type": "temporary",
+    "expected_use_window_weeks": [
+      4,
+      8
+    ],
+    "exit_criteria": [
+      "completes planned sessions consistently for multiple weeks",
+      "shows stable tolerance for gym-based loading and session structure",
+      "is ready for a more durable base gym program"
     ]
   },
   {
@@ -750,6 +783,17 @@
       "gym",
       "3x",
       "mixed_friendly"
+    ],
+    "program_role": "starter",
+    "transition_type": "temporary",
+    "expected_use_window_weeks": [
+      4,
+      8
+    ],
+    "exit_criteria": [
+      "completes three weekly sessions consistently for multiple weeks",
+      "shows stable recovery and low friction across the training week",
+      "is ready for a more durable base gym program"
     ]
   },
   {
@@ -840,6 +884,17 @@
       "low_fatigue",
       "simple",
       "recovery_friendly"
+    ],
+    "program_role": "reentry",
+    "transition_type": "temporary",
+    "expected_use_window_weeks": [
+      2,
+      6
+    ],
+    "exit_criteria": [
+      "completes both weekly sessions consistently for 2 to 3 weeks",
+      "reports low friction and stable recovery after sessions",
+      "is ready for a more standard beginner or novice loading path"
     ]
   },
   {
@@ -1578,6 +1633,17 @@
       "low_fatigue",
       "mixed_friendly",
       "adherence_friendly"
+    ],
+    "program_role": "minimal_dose",
+    "transition_type": "durable",
+    "expected_use_window_weeks": [
+      8,
+      24
+    ],
+    "exit_criteria": [
+      "wants more weekly training volume or broader movement coverage",
+      "has enough recovery and schedule capacity for a fuller base template",
+      "is no longer using minimal dose as the primary adherence strategy"
     ]
   },
   {
