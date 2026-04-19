@@ -2889,5 +2889,52 @@
       "Pull the elbows down toward the sides instead of yanking with the hands",
       "Stop before you lose control or lean too far back"
     ]
+  },
+  {
+    "id": "assisted_pull_up",
+    "name": "Assisted pull-up",
+    "name_en": "Assisted pull-up",
+    "category": "pull",
+    "category_en": "pull",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "vertical_pull",
+    "notes": "Vertikalt træk med elastik eller anden assistance, så bevægelsen kan trænes før frie pull-ups er realistiske.",
+    "notes_en": "Vertical pull using band or other assistance so the movement can be trained before strict pull-ups are realistic.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Band_Assisted_Pull-Up",
+    "external_images": [
+      "Band_Assisted_Pull-Up/0.jpg",
+      "Band_Assisted_Pull-Up/1.jpg"
+    ],
+    "form_cues": [
+      "Start med aktive skuldre og lang nakke",
+      "Træk albuerne ned mod siden i stedet for at hive med hænderne",
+      "Brug assistancen til kontrol, ikke til at kaste kroppen op"
+    ],
+    "form_cues_en": [
+      "Start with active shoulders and a long neck",
+      "Pull the elbows down toward the sides instead of yanking with the hands",
+      "Use the assistance for control, not to throw the body upward"
+    ]
   }
 ]
