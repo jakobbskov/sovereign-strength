@@ -246,7 +246,7 @@
           {
             "exercise_id": "run_intervals",
             "sets": 1,
-            "reps": "8 x 1 min hurtigt / 1 min roligt"
+            "reps": "6 x 2 min kontrolleret hurtigt / 1 min roligt"
           }
         ]
       },
@@ -256,7 +256,7 @@
           {
             "exercise_id": "run_easy",
             "sets": 1,
-            "reps": "30-40 min"
+            "reps": "35-45 min roligt"
           }
         ]
       }
@@ -277,6 +277,16 @@
     "equipment_profiles": [
       "run_only",
       "hybrid_home"
+    ],
+    "training_style": "base_run_progression",
+    "program_family": "base_run",
+    "progression_model": "duration_plus_quality",
+    "tags": [
+      "run",
+      "base",
+      "3x",
+      "aerobic",
+      "interval_progression"
     ]
   },
   {
@@ -1265,7 +1275,7 @@
           {
             "exercise_id": "run_intervals",
             "sets": 1,
-            "reps": "10 x 1 min hurtigt / 1 min roligt"
+            "reps": "5 x 3 min kontrolleret hurtigt / 90 sek roligt"
           }
         ]
       },
@@ -1275,7 +1285,7 @@
           {
             "exercise_id": "run_easy",
             "sets": 1,
-            "reps": "30-35 min"
+            "reps": "20-25 min meget roligt"
           }
         ]
       },
@@ -1285,7 +1295,7 @@
           {
             "exercise_id": "run_easy",
             "sets": 1,
-            "reps": "40-50 min"
+            "reps": "45-55 min roligt"
           }
         ]
       }
@@ -1304,6 +1314,17 @@
     "equipment_profiles": [
       "run_only",
       "hybrid_home"
+    ],
+    "training_style": "base_run_progression",
+    "program_family": "base_run",
+    "progression_model": "duration_plus_quality",
+    "tags": [
+      "run",
+      "base",
+      "4x",
+      "aerobic",
+      "interval_progression",
+      "long_run"
     ]
   },
   {
