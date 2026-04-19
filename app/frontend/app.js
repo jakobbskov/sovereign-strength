@@ -6591,8 +6591,6 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   renderWorkouts(STATE.workouts);
   renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null, todayPlanApi && todayPlanApi.item ? todayPlanApi.item.recovery_state : null);
   renderSessionHistory(STATE.sessionResults);
-  renderExercises(STATE.exercises);
-  renderExerciseLibrary();
   renderRecovery(recoveryApi.items || []);
   renderReadiness(latestRecoveryApi.item || null);
   renderForecastHero(todayPlanApi.item || null, latestRecoveryApi.item || null);
@@ -6600,7 +6598,6 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
     renderOverviewStatus(todayPlanApi.item || null, latestRecoveryApi.item || null, workoutsApi.items || []);
   renderProfileEquipmentCard();
     renderTodayPlan(todayPlanApi.item || null);
-  renderPrograms(STATE.programs, STATE.exercises);
   renderPendingEntries();
 
   const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || []);
