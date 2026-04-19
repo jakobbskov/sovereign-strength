@@ -6600,6 +6600,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   renderProfileEquipmentCard();
     renderTodayPlan(todayPlanApi.item || null);
   renderPrograms(STATE.programs, STATE.exercises);
+  renderLibraryTabs();
   renderPendingEntries();
 
   const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || []);
@@ -7425,6 +7426,43 @@ function getWizardStepLabel(step){
 }
 
 let CURRENT_STEP = "";
+let CURRENT_LIBRARY_TAB = "exercises";
+
+function renderLibraryTabs(){
+  const exercisesBtn = document.getElementById("libraryTabExercises");
+  const programsBtn = document.getElementById("libraryTabPrograms");
+  const exercisesPanel = document.getElementById("libraryExercisesPanel");
+  const programsPanel = document.getElementById("libraryProgramsPanel");
+
+  if (!exercisesBtn || !programsBtn || !exercisesPanel || !programsPanel) return;
+
+  const activeTab = CURRENT_LIBRARY_TAB === "programs" ? "programs" : "exercises";
+  exercisesPanel.style.display = activeTab === "exercises" ? "" : "none";
+  programsPanel.style.display = activeTab === "programs" ? "" : "none";
+
+  exercisesBtn.classList.toggle("secondary", activeTab !== "exercises");
+  programsBtn.classList.toggle("secondary", activeTab !== "programs");
+  exercisesBtn.disabled = activeTab === "exercises";
+  programsBtn.disabled = activeTab === "programs";
+
+  if (exercisesBtn.dataset.tabsBound !== "true"){
+    exercisesBtn.dataset.tabsBound = "true";
+    exercisesBtn.addEventListener("click", () => {
+      CURRENT_LIBRARY_TAB = "exercises";
+      renderLibraryTabs();
+    });
+  }
+
+  if (programsBtn.dataset.tabsBound !== "true"){
+    programsBtn.dataset.tabsBound = "true";
+    programsBtn.addEventListener("click", () => {
+      CURRENT_LIBRARY_TAB = "programs";
+      renderLibraryTabs();
+    });
+  }
+}
+
+
 
 function getWizardSections(){
   return {

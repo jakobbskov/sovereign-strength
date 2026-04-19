@@ -1358,8 +1358,18 @@
       </section>
     </div>
 
-    <div class="two-col wizard-step-hidden" id="librarySection" style="margin-top:18px; display:none">
+    <div class="wizard-step-hidden" id="librarySection" style="margin-top:18px; display:none">
       <section class="card">
+        <div class="row">
+          <h2 data-i18n="wizard.library">Bibliotek</h2>
+        </div>
+        <div class="btn-row" id="libraryTabs" style="margin-top:12px">
+          <button type="button" id="libraryTabExercises" data-i18n="library.tab_exercises">Øvelser</button>
+          <button type="button" id="libraryTabPrograms" class="secondary" data-i18n="library.tab_programs">Programmer</button>
+        </div>
+      </section>
+
+      <section class="card" id="libraryExercisesPanel" style="margin-top:14px">
         <div class="row">
           <h2 data-i18n="history.exercise_library">Øvelsesbibliotek</h2>
           <div class="small" id="exerciseMeta"></div>
@@ -1367,7 +1377,7 @@
         <div id="exerciseLibrary"></div>
       </section>
 
-      <section class="card">
+      <section class="card" id="libraryProgramsPanel" style="margin-top:14px; display:none">
         <div class="row">
           <h2 data-i18n="programs.title">Programmer</h2>
           <div class="small" id="programMeta"></div>
