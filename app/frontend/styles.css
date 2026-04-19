@@ -242,6 +242,55 @@ button{
     var(--surface-3);
 }
 
+.profile-summary-card{
+  grid-column:1/-1;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.01), transparent 32%),
+    var(--surface-3);
+  border:1px solid rgba(255,255,255,0.05);
+  box-shadow:none;
+}
+
+.profile-summary-card h2{
+  margin-bottom:8px;
+}
+
+.profile-summary-card .row{
+  align-items:flex-start;
+}
+
+.profile-summary-card .overview-status{
+  gap:8px;
+}
+
+.profile-program-cards{
+  margin-top:6px;
+  display:grid;
+  gap:8px;
+}
+
+.profile-program-card{
+  padding:10px 12px;
+  border-radius:var(--radius-md);
+  border:1px solid var(--border-subtle);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.014), transparent 36%),
+    var(--surface-3);
+}
+
+.profile-details{
+  margin-top:12px;
+}
+
+.profile-summary-actions{
+  margin-top:12px;
+}
+
+.profile-summary-buttons{
+  margin-top:12px;
+}
+
+
 @media (min-width: 700px){
   .overview-context-card .overview-status{
     grid-template-columns:repeat(2, minmax(0, 1fr));

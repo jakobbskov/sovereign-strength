@@ -401,7 +401,7 @@
         </div>
       </section>
 
-      <section class="card" id="profileEquipmentCard" style="grid-column:1/-1">
+      <section class="card profile-summary-card" id="profileEquipmentCard">
         <div class="row">
           <h2 data-i18n="overview.profile_equipment">Profil og udstyr</h2>
           <div class="small" id="profileDisplayName">-</div>
@@ -411,13 +411,13 @@
           <div class="stat-line" id="profileTrainingTypesLine" data-i18n="profile.training_types_loading">Træningstyper indlæses...</div>
           <div class="stat-line" id="profileTrainingDaysLine" data-i18n="profile.training_days_loading">Træningsdage indlæses...</div>
           <div class="stat-line" id="profileActiveProgramsLine" data-i18n="profile.active_programs_loading" style="display:none">Aktive programmer indlæses...</div>
-          <div id="profileActiveProgramCardsWrap" style="margin-top:6px; display:none">
-            <div id="profileStrengthProgramCard" class="small" style="display:none; padding:10px 12px; border-radius:12px; border:1px solid var(--line); margin-bottom:8px">
+          <div id="profileActiveProgramCardsWrap" class="profile-program-cards" style="display:none">
+            <div id="profileStrengthProgramCard" class="small profile-program-card" style="display:none">
               <div style="font-weight:700" data-i18n="profile.domain_strength_title">Styrke</div>
               <div id="profileStrengthProgramSummary" style="margin-top:4px"></div>
               <div id="profileStrengthProgramWhy" style="margin-top:4px; opacity:0.85"></div>
             </div>
-            <div id="profileRunProgramCard" class="small" style="display:none; padding:10px 12px; border-radius:12px; border:1px solid var(--line)">
+            <div id="profileRunProgramCard" class="small profile-program-card" style="display:none">
               <div style="font-weight:700" data-i18n="profile.domain_run_title">Løb</div>
               <div id="profileRunProgramSummary" style="margin-top:4px"></div>
               <div id="profileRunProgramWhy" style="margin-top:4px; opacity:0.85"></div>
@@ -425,7 +425,7 @@
           </div>
           <div class="stat-line" id="profileEquipmentLine" data-i18n="profile.equipment_loading">Udstyr indlæses...</div>
         </div>
-        <details id="profileEquipmentDetails" style="margin-top:12px">
+        <details id="profileEquipmentDetails" class="profile-details">
           <summary class="small" data-i18n="overview.more_profile_details">Flere profiloplysninger</summary>
           <div class="overview-status" style="margin-top:10px">
             <div class="stat-line" id="profileIncrementLine" data-i18n="profile.increment_loading">Vægtspring indlæses...</div>
@@ -433,36 +433,40 @@
             <div class="stat-line" id="profileAccountHelpLine" data-i18n="profile.account_help">Profil og adgangskode håndteres centralt via auth.</div>
           </div>
         </details>
-        <div class="overview-status" style="margin-top:12px">
+        <div class="overview-status profile-summary-actions wizard-step-hidden" style="display:none">
           <div class="stat-line"><strong data-i18n="profile.program_selection_title">Programvalg</strong></div>
-          <div class="small" id="profileProgramActionStatus" style="margin:6px 0 10px; display:none; opacity:0; transition:opacity 220ms ease"></div>
-          <div id="profileStrengthProgramControlWrap">
+          <div class="small" id="profileProgramActionStatus" style="display:none; opacity:0; transition:opacity 220ms ease"></div>
+          <div class="small" id="profileProgramOverrideHelp" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
+
+          <div id="profileStrengthProgramControlWrap" class="wizard-step-hidden" style="display:none">
             <label class="small" for="profileStrengthProgramSelect" data-i18n="profile.active_program_strength_label">Styrkeprogram</label>
-            <select id="profileStrengthProgramSelect" style="margin-bottom:10px">
+            <select id="profileStrengthProgramSelect">
               <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
             </select>
           </div>
-          <div id="profileRunProgramControlWrap">
+
+          <div id="profileRunProgramControlWrap" class="wizard-step-hidden" style="display:none">
             <label class="small" for="profileRunProgramSelect" data-i18n="profile.active_program_run_label">Løbeprogram</label>
             <select id="profileRunProgramSelect">
               <option value="" data-i18n="profile.active_program_auto">Automatisk anbefalet</option>
             </select>
           </div>
-          <div class="small" id="profileProgramOverrideHelp" style="margin-top:8px" data-i18n="profile.active_program_override_help">Vælg et program her for at overstyre den automatiske anbefaling.</div>
-        <div id="profileRecommendedProgramWrap" class="overview-status wizard-step-hidden" style="margin-top:12px; display:none">
-          <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>
-          <div class="small" id="profileRecommendedProgramCurrentLabel" style="margin-top:4px" data-i18n="profile.recommended_program_current_label">Du bruger nu</div>
-          <div class="stat-line" id="profileRecommendedCurrentStrengthLine">-</div>
-          <div class="small" id="profileRecommendedProgramSuggestedLabel" style="margin-top:8px" data-i18n="profile.recommended_program_suggested_label">Appen anbefaler nu</div>
-          <div class="stat-line" id="profileRecommendedStrengthLine">-</div>
-          <div class="small" id="profileRecommendedStrengthReason" style="margin-top:6px">-</div>
-          <div class="btn-row" style="margin-top:10px">
-            <button type="button" id="applyRecommendedStrengthProgramBtn" class="primary" data-i18n="button.switch_to_recommended_program">Skift til anbefalet program</button>
+
+          <div id="profileRecommendedProgramWrap" class="overview-status wizard-step-hidden" style="display:none">
+            <div class="stat-line"><strong data-i18n="profile.recommended_program_title">Anbefalet program</strong></div>
+            <div class="small" id="profileRecommendedProgramCurrentLabel" data-i18n="profile.recommended_program_current_label">Du bruger nu</div>
+            <div class="stat-line" id="profileRecommendedCurrentStrengthLine">-</div>
+            <div class="small" id="profileRecommendedProgramSuggestedLabel" data-i18n="profile.recommended_program_suggested_label">Appen anbefaler nu</div>
+            <div class="stat-line" id="profileRecommendedStrengthLine">-</div>
+            <div class="small" id="profileRecommendedStrengthReason">-</div>
+            <div class="btn-row">
+              <button type="button" id="applyRecommendedStrengthProgramBtn" class="primary" data-i18n="button.switch_to_recommended_program">Skift til anbefalet program</button>
+            </div>
           </div>
+
+          <button type="button" id="saveProfileProgramsBtn" class="wizard-step-hidden" style="display:none" data-i18n="button.save_active_programs">Gem aktive programmer</button>
         </div>
-        </div>
-        <div class="btn-row" style="margin-top:12px">
-          <button type="button" id="saveProfileProgramsBtn" data-i18n="button.save_active_programs">Gem aktive programmer</button>
+        <div class="btn-row profile-summary-buttons">
           <button type="button" id="openEquipmentSettingsBtn" data-i18n="button.edit_profile_equipment">Redigér profil og udstyr</button>
           <button type="button" id="openAccountSettingsSecondaryBtn" data-i18n="button.account_password">Konto og adgangskode</button>
         </div>
