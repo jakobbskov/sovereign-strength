@@ -2698,6 +2698,13 @@ def infer_equipment_profile(user_settings):
     if not isinstance(available, dict):
         available = {}
 
+    if not available:
+        preferences = user_settings.get("preferences", {})
+        if isinstance(preferences, dict):
+            pref_equipment = preferences.get("equipment", {})
+            if isinstance(pref_equipment, dict):
+                available = pref_equipment
+
     has_barbell = bool(available.get("barbell"))
     has_bench = bool(available.get("bench"))
     has_dumbbell = bool(available.get("dumbbell"))
@@ -2739,6 +2746,8 @@ def _sort_strength_candidates(candidates, target_level, preferred_ids, strength_
         program_family = str(program.get("program_family", "")).strip().lower()
         fatigue_profile = str(program.get("fatigue_profile", "")).strip().lower()
         complexity = str(program.get("complexity", "")).strip().lower()
+        transition_type = str(program.get("transition_type", "")).strip().lower()
+        program_role = str(program.get("program_role", "")).strip().lower()
         sessions = program.get("supported_weekly_sessions", []) or []
 
         if starting_profile == "conservative_beginner":
@@ -2746,6 +2755,14 @@ def _sort_strength_candidates(candidates, target_level, preferred_ids, strength_
 
         if running_enabled:
             penalty += 0 if good_for_concurrent_running else 20
+
+        if transition_type == "temporary":
+            if starting_profile == "conservative_beginner":
+                penalty += 0
+            elif program_role == "reentry":
+                penalty += 18
+            else:
+                penalty += 10
 
         if target == "beginner":
             if training_style == "full_body_foundation":
