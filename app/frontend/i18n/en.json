@@ -809,5 +809,18 @@
   "running_journey.beginner_start": "A beginner-friendly running start with manageable frequency and a clear path into regular running.",
   "running_journey.base_5k_10k": "A running base with enough structure to point toward 5K and 10K without becoming rigid or overcomplicated.",
   "running_journey.base_10k_half": "A more extended running base with room for longer sessions and progression toward 10K or half marathon base work.",
-  "running_journey.hybrid": "A hybrid running path where running and strength are meant to work together instead of competing for all the space."
+  "running_journey.hybrid": "A hybrid running path where running and strength are meant to work together instead of competing for all the space.",
+  "manual_template.title": "Manual templates",
+  "manual_template.select_label": "Choose template",
+  "manual_template.none_saved": "No saved templates",
+  "manual_template.save_btn": "Save as template",
+  "manual_template.load_btn": "Load template",
+  "manual_template.status_ready": "Ready.",
+  "manual_template.prompt_name": "Template name",
+  "manual_template.save_requires_entries": "Add at least one exercise before saving a template.",
+  "manual_template.save_cancelled": "Template was not saved.",
+  "manual_template.saved": "Template saved: {name}",
+  "manual_template.select_first": "Choose a template first.",
+  "manual_template.not_found": "Template was not found.",
+  "manual_template.loaded": "Template loaded: {name}"
 }

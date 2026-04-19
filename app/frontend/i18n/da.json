@@ -825,5 +825,18 @@
   "running_journey.beginner_start": "En begyndervenlig løbeopstart med overskuelig frekvens og tydelig vej ind i regelmæssig løbetræning.",
   "running_journey.base_5k_10k": "En løbebase med nok struktur til at pege mod 5K og 10K uden at blive stiv eller overteknisk.",
   "running_journey.base_10k_half": "En mere udvidet løbebase med plads til længere ture og progression mod 10K eller halvmaraton-base.",
-  "running_journey.hybrid": "En hybrid løbevej, hvor løb og styrke er tænkt sammen i stedet for at konkurrere om al pladsen."
+  "running_journey.hybrid": "En hybrid løbevej, hvor løb og styrke er tænkt sammen i stedet for at konkurrere om al pladsen.",
+  "manual_template.title": "Manuelle templates",
+  "manual_template.select_label": "Vælg template",
+  "manual_template.none_saved": "Ingen gemte templates",
+  "manual_template.save_btn": "Gem som template",
+  "manual_template.load_btn": "Indlæs template",
+  "manual_template.status_ready": "Klar.",
+  "manual_template.prompt_name": "Navn på template",
+  "manual_template.save_requires_entries": "Tilføj mindst én øvelse før du gemmer en template.",
+  "manual_template.save_cancelled": "Template blev ikke gemt.",
+  "manual_template.saved": "Template gemt: {name}",
+  "manual_template.select_first": "Vælg en template først.",
+  "manual_template.not_found": "Template blev ikke fundet.",
+  "manual_template.loaded": "Template indlæst: {name}"
 }
