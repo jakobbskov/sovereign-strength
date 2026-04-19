@@ -2258,13 +2258,17 @@ function renderProfileEquipmentCard(){
     displayNameEl.textContent = username;
   }
 
-  const getProgramNameById = (programId) => {
+  const getProgramById = (programId) => {
     const id = String(programId || "").trim();
     if (!id) return null;
-    const found = Array.isArray(STATE.programs)
-      ? STATE.programs.find(program => String(program?.id || "").trim() === id)
+    return Array.isArray(STATE.programs)
+      ? (STATE.programs.find(program => String(program?.id || "").trim() === id) || null)
       : null;
-    return found ? getProgramDisplayName(found) : id;
+  };
+
+  const getProgramNameById = (programId) => {
+    const found = getProgramById(programId);
+    return found ? getProgramDisplayName(found) : (String(programId || "").trim() || null);
   };
 
   const recommendedStrengthProgramName = getProgramNameById(recommendedStrengthProgramId);
@@ -2356,17 +2360,21 @@ function renderProfileEquipmentCard(){
   const runTrainingEnabled = Boolean(trainingTypes.running);
 
   const activeProgramBits = [];
-  const activeStrengthProgramName = getProgramNameById(activeProgramsByDomain.strength);
+  const activeStrengthProgram = getProgramById(activeProgramsByDomain.strength);
+  const activeStrengthProgramName = activeStrengthProgram ? getProgramDisplayName(activeStrengthProgram) : getProgramNameById(activeProgramsByDomain.strength);
+  const activeStrengthIdentity = activeStrengthProgram ? getProgramIdentityLabel(activeStrengthProgram) : "";
   const activeStrengthSource = formatProgramSelectionSource(activeProgramStatusByDomain?.strength?.selection_source);
   if (strengthTrainingEnabled && activeStrengthProgramName){
     const strengthLabel = tr("profile.active_program_strength_value", { value: activeStrengthProgramName });
-    activeProgramBits.push([strengthLabel, activeStrengthSource].filter(Boolean).join(" · "));
+    activeProgramBits.push([strengthLabel, activeStrengthIdentity, activeStrengthSource].filter(Boolean).join(" · "));
   }
-  const activeEnduranceProgramName = getProgramNameById(activeProgramsByDomain.run);
+  const activeEnduranceProgram = getProgramById(activeProgramsByDomain.run);
+  const activeEnduranceProgramName = activeEnduranceProgram ? getProgramDisplayName(activeEnduranceProgram) : getProgramNameById(activeProgramsByDomain.run);
+  const activeEnduranceIdentity = activeEnduranceProgram ? getProgramIdentityLabel(activeEnduranceProgram) : "";
   const activeEnduranceSource = formatProgramSelectionSource(activeProgramStatusByDomain?.run?.selection_source);
   if (runTrainingEnabled && activeEnduranceProgramName){
     const enduranceLabel = tr("profile.active_program_endurance_value", { value: activeEnduranceProgramName });
-    activeProgramBits.push([enduranceLabel, activeEnduranceSource].filter(Boolean).join(" · "));
+    activeProgramBits.push([enduranceLabel, activeEnduranceIdentity, activeEnduranceSource].filter(Boolean).join(" · "));
   }
 
   const selectedTraining = [
@@ -6488,6 +6496,26 @@ function renderTodayPlan(item){
   renderSessionReview(item);
 }
 
+function getProgramIdentityLabel(program){
+  const item = program && typeof program === "object" ? program : {};
+  const role = String(item.program_role || "").trim().toLowerCase();
+  const style = String(item.training_style || "").trim().toLowerCase();
+  const kind = String(item.kind || "").trim().toLowerCase();
+
+  if (role === "reentry") return tr("program.identity_reentry");
+  if (role === "starter" && (kind === "strength" || kind === "styrke")) return tr("program.identity_beginner_entry");
+  if (role === "minimal_dose") return tr("program.identity_low_dose");
+
+  if (style === "hybrid_run_first") return tr("program.identity_run_first_hybrid");
+  if (style === "full_body_base") return tr("program.identity_base_builder");
+  if (style === "full_body_foundation") return tr("program.identity_foundation");
+  if (style === "upper_lower_split") return tr("program.identity_upper_lower");
+  if (style === "base_run_progression") return tr("program.identity_base_running");
+  if (style === "reentry_full_body") return tr("program.identity_reentry");
+
+  return "";
+}
+
 function renderPrograms(programs, exercises){
   const root = document.getElementById("programsRoot");
   const searchInput = document.getElementById("libraryProgramSearchInput");
@@ -6544,12 +6572,15 @@ function renderPrograms(programs, exercises){
     return;
   }
 
-  root.innerHTML = filteredPrograms.map(program => `
+  root.innerHTML = filteredPrograms.map(program => {
+    const identityLabel = getProgramIdentityLabel(program);
+    return `
     <div class="card" style="margin-top:12px; background:#141414">
       <div class="row">
         <h3>${esc(getProgramDisplayName(program) || "Program")}</h3>
         <span class="pill">${esc(getProgramKindDisplayLabel(program.kind || ""))}</span>
       </div>
+      ${identityLabel ? `<div class="small" style="margin-top:6px">${esc(identityLabel)}</div>` : ""}
       ${(program.days || []).map(day => `
         <div class="program-day">
           <strong>${esc(getProgramDayDisplayLabel(day))}</strong>
@@ -6571,7 +6602,8 @@ function renderPrograms(programs, exercises){
         </div>
       `).join("")}
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   setText("programMeta", tr("common.items_count", { count: filteredPrograms.length }));
 }
