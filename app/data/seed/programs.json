@@ -1885,7 +1885,7 @@
             "reps": "10/side"
           },
           {
-            "exercise_id": "push_ups",
+            "exercise_id": "barbell_row",
             "sets": 3,
             "reps": "8-12"
           },
@@ -2024,7 +2024,7 @@
             "reps": "10/side"
           },
           {
-            "exercise_id": "push_ups",
+            "exercise_id": "barbell_row",
             "sets": 3,
             "reps": "10-15"
           },
