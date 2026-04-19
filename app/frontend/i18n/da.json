@@ -812,5 +812,13 @@
   "program.path_mobility": "Mobilitet",
   "program.path_recovery": "Restitution",
   "program.path_hybrid": "Hybrid",
-  "program.path_simple_start": "Enkel opstart"
+  "program.path_simple_start": "Enkel opstart",
+  "strength_journey.reentry": "En rolig styrkevej tilbage med lavere friktion og fokus på at komme stabilt i gang.",
+  "strength_journey.minimal_dose": "En kort og enkel styrkevej, der prioriterer vedholdenhed og lav friktion.",
+  "strength_journey.beginner_home": "En begyndervenlig full-body styrkevej til hjemmet med enkel struktur og tydelige basisbevægelser.",
+  "strength_journey.beginner_gym": "En begyndervenlig styrkevej i gym med en enkel base af squat, pres og træk.",
+  "strength_journey.base_home": "En hjemmebaseret basevej for styrke med mere progression og lidt mere samlet træningsarbejde.",
+  "strength_journey.base_gym": "En basevej for styrke i gym med fokus på stabile basisløft og tydelig progression.",
+  "strength_journey.upper_lower": "En mere struktureret upper/lower styrkevej med højere frekvens og tydeligere ugerytme.",
+  "strength_journey.hybrid_support": "En styrkevej, der skal støtte et hybridforløb uden at tage hele fokus fra løb eller blandet træning."
 }

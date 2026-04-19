@@ -796,5 +796,13 @@
   "program.path_mobility": "Mobility",
   "program.path_recovery": "Recovery",
   "program.path_hybrid": "Hybrid",
-  "program.path_simple_start": "Simple start"
+  "program.path_simple_start": "Simple start",
+  "strength_journey.reentry": "A gentle return-to-strength path with lower friction and a focus on getting started consistently.",
+  "strength_journey.minimal_dose": "A short and simple strength path that prioritizes adherence and low friction.",
+  "strength_journey.beginner_home": "A beginner-friendly full-body strength path for home training with simple structure and clear main movements.",
+  "strength_journey.beginner_gym": "A beginner-friendly gym strength path built around a simple base of squat, press, and pull.",
+  "strength_journey.base_home": "A home-based base strength path with more progression and slightly more total training work.",
+  "strength_journey.base_gym": "A base gym strength path focused on stable main lifts and clear progression.",
+  "strength_journey.upper_lower": "A more structured upper/lower strength path with higher frequency and a clearer weekly rhythm.",
+  "strength_journey.hybrid_support": "A strength path meant to support a hybrid setup without taking all the focus away from running or mixed training."
 }
