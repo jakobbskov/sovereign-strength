@@ -666,6 +666,108 @@ function resetEntryInputs(form){
   applyEntryInputMode("");
 }
 
+const MANUAL_TEMPLATE_STORAGE_KEY = "ss_manual_workout_templates";
+
+function readManualWorkoutTemplates(){
+  try{
+    const raw = localStorage.getItem(MANUAL_TEMPLATE_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return data.filter(item =>
+      item &&
+      typeof item === "object" &&
+      String(item.name || "").trim() &&
+      Array.isArray(item.entries)
+    );
+  }catch(err){
+    console.error(err);
+    return [];
+  }
+}
+
+function writeManualWorkoutTemplates(items){
+  const clean = Array.isArray(items) ? items : [];
+  localStorage.setItem(MANUAL_TEMPLATE_STORAGE_KEY, JSON.stringify(clean));
+}
+
+function renderManualTemplateOptions(){
+  const selectEl = document.getElementById("manualTemplateSelect");
+  if (!selectEl) return;
+
+  const templates = readManualWorkoutTemplates();
+  const options = [
+    `<option value="">${esc(tr("manual_template.none_saved"))}</option>`,
+    ...templates.map(item => `<option value="${esc(String(item.id || ""))}">${esc(String(item.name || "").trim())}</option>`)
+  ];
+  selectEl.innerHTML = options.join("");
+}
+
+function handleSaveManualTemplate(){
+  const statusEl = document.getElementById("manualTemplateStatus");
+  if (!Array.isArray(STATE.pendingEntries) || STATE.pendingEntries.length === 0){
+    setText("manualTemplateStatus", tr("manual_template.save_requires_entries"));
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  const rawName = window.prompt(tr("manual_template.prompt_name"), "");
+  const name = String(rawName || "").trim();
+  if (!name){
+    setText("manualTemplateStatus", tr("manual_template.save_cancelled"));
+    statusEl?.classList.remove("warn");
+    return;
+  }
+
+  const templates = readManualWorkoutTemplates();
+  const item = {
+    id: `tpl_${Date.now()}`,
+    name,
+    entries: JSON.parse(JSON.stringify(STATE.pendingEntries))
+  };
+
+  templates.push(item);
+  writeManualWorkoutTemplates(templates);
+  renderManualTemplateOptions();
+  const selectEl = document.getElementById("manualTemplateSelect");
+  if (selectEl) selectEl.value = item.id;
+
+  statusEl?.classList.remove("warn");
+  setText("manualTemplateStatus", tr("manual_template.saved", { name }));
+}
+
+function handleLoadManualTemplate(){
+  const selectEl = document.getElementById("manualTemplateSelect");
+  const statusEl = document.getElementById("manualTemplateStatus");
+  const templateId = String(selectEl?.value || "").trim();
+
+  if (!templateId){
+    setText("manualTemplateStatus", tr("manual_template.select_first"));
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  const templates = readManualWorkoutTemplates();
+  const found = templates.find(item => String(item.id || "").trim() === templateId);
+  if (!found){
+    setText("manualTemplateStatus", tr("manual_template.not_found"));
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  STATE.pendingEntries = JSON.parse(JSON.stringify(Array.isArray(found.entries) ? found.entries : []));
+  renderPendingEntries();
+
+  const form = document.getElementById("workoutForm");
+  if (form){
+    resetEntryInputs(form);
+    setText("progressionHint", tr("workout.no_load_suggestion"));
+  }
+
+  statusEl?.classList.remove("warn");
+  setText("manualTemplateStatus", tr("manual_template.loaded", { name: found.name }));
+}
+
 function renderPendingEntries(){
   const root = document.getElementById("pendingEntriesList");
   if (!root) return;
@@ -6799,6 +6901,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
     renderTodayPlan(todayPlanApi.item || null);
   renderPrograms(STATE.programs, STATE.exercises);
   renderLibraryTabs();
+  renderManualTemplateOptions();
   renderPendingEntries();
 
   const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || []);
@@ -7970,6 +8073,8 @@ async function boot(){
     document.getElementById("addEntryBtn")?.addEventListener("click", handleAddEntry);
     document.getElementById("clearEntriesBtn")?.addEventListener("click", handleClearEntries);
     document.getElementById("loadProgramDayBtn")?.addEventListener("click", handleLoadProgramDay);
+    document.getElementById("saveManualTemplateBtn")?.addEventListener("click", handleSaveManualTemplate);
+    document.getElementById("loadManualTemplateBtn")?.addEventListener("click", handleLoadManualTemplate);
     document.getElementById("program_id")?.addEventListener("change", refreshProgramDaySelect);
     document.getElementById("entry_exercise_id")?.addEventListener("change", handleExerciseChange);
     mountEquipmentEditorInline();

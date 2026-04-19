@@ -801,6 +801,21 @@
             <button type="button" id="clearEntriesBtn" data-i18n="button.clear_exercises">Ryd øvelser</button>
           </div>
 
+          <div class="card" style="margin-top:12px; padding:12px">
+            <div class="small" data-i18n="manual_template.title">Manuelle templates</div>
+            <label style="margin-top:8px">
+              <span data-i18n="manual_template.select_label">Vælg template</span>
+              <select id="manualTemplateSelect">
+                <option value="" data-i18n="manual_template.none_saved">Ingen gemte templates</option>
+              </select>
+            </label>
+            <div class="btn-row" style="margin-top:10px">
+              <button type="button" id="saveManualTemplateBtn" data-i18n="manual_template.save_btn">Gem som template</button>
+              <button type="button" id="loadManualTemplateBtn" data-i18n="manual_template.load_btn">Indlæs template</button>
+            </div>
+            <p id="manualTemplateStatus" class="small" data-i18n="manual_template.status_ready">Klar.</p>
+          </div>
+
           <p id="entryStatus" class="small" data-i18n="entry.none_added_yet">Ingen øvelser tilføjet endnu.</p>
           <ul id="pendingEntriesList"></ul>
         </div>
