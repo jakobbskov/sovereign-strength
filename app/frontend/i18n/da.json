@@ -795,5 +795,6 @@
   "library.exercise_search_empty": "Ingen øvelser matcher din søgning.",
   "library.program_search_label": "Søg i programmer",
   "library.program_search_placeholder": "Fx styrke, 3x eller squat",
-  "library.program_search_empty": "Ingen programmer matcher din søgning."
+  "library.program_search_empty": "Ingen programmer matcher din søgning.",
+  "wizard.library": "Bibliotek"
 }
