@@ -773,5 +773,8 @@
   "profile.starter_capacity_profile_help": "Choose how light or robust your overall starting capacity is right now. This is used as an early planning signal.",
   "profile.starter_capacity_profile_help_levels": "Very low capacity = very gentle start with a low threshold · Low capacity = cautious start with simple loading · General beginner = normal beginner starting point · Loaded beginner = new, but ready for a more direct start.",
   "library.tab_exercises": "Exercises",
-  "library.tab_programs": "Programs"
+  "library.tab_programs": "Programs",
+  "library.exercise_search_label": "Search exercises",
+  "library.exercise_search_placeholder": "For example squat or hip",
+  "library.exercise_search_empty": "No exercises match your search."
 }

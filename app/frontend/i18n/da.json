@@ -789,5 +789,8 @@
   "profile.starter_capacity_profile_help": "Vælg hvor let eller robust din samlede opstartskapacitet er lige nu. Det bruges som et tidligt planlægningssignal.",
   "profile.starter_capacity_profile_help_levels": "Meget lav kapacitet = meget rolig opstart med lav tærskel · Lav kapacitet = forsigtig opstart med enkel belastning · Almindelig begynder = normal begynderopstart · Robust begynder = ny, men klar til en mere direkte start.",
   "library.tab_exercises": "Øvelser",
-  "library.tab_programs": "Programmer"
+  "library.tab_programs": "Programmer",
+  "library.exercise_search_label": "Søg i øvelser",
+  "library.exercise_search_placeholder": "Fx squat eller hofte",
+  "library.exercise_search_empty": "Ingen øvelser matcher din søgning."
 }
