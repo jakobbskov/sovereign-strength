@@ -796,5 +796,13 @@
   "library.program_search_label": "Søg i programmer",
   "library.program_search_placeholder": "Fx styrke, 3x eller squat",
   "library.program_search_empty": "Ingen programmer matcher din søgning.",
-  "wizard.library": "Bibliotek"
+  "wizard.library": "Bibliotek",
+  "program.identity_reentry": "Re-entry",
+  "program.identity_beginner_entry": "Begynderopstart",
+  "program.identity_low_dose": "Lav dosis",
+  "program.identity_run_first_hybrid": "Løbe-først hybrid",
+  "program.identity_base_builder": "Base builder",
+  "program.identity_foundation": "Grundforløb",
+  "program.identity_upper_lower": "Upper/lower split",
+  "program.identity_base_running": "Base løb"
 }

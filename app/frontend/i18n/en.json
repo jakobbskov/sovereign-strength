@@ -780,5 +780,13 @@
   "library.program_search_label": "Search programs",
   "library.program_search_placeholder": "For example strength, 3x or squat",
   "library.program_search_empty": "No programs match your search.",
-  "wizard.library": "Library"
+  "wizard.library": "Library",
+  "program.identity_reentry": "Re-entry",
+  "program.identity_beginner_entry": "Beginner entry",
+  "program.identity_low_dose": "Low dose",
+  "program.identity_run_first_hybrid": "Run-first hybrid",
+  "program.identity_base_builder": "Base builder",
+  "program.identity_foundation": "Foundation",
+  "program.identity_upper_lower": "Upper/lower split",
+  "program.identity_base_running": "Base running"
 }
