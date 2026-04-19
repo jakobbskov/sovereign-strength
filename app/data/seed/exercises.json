@@ -939,6 +939,11 @@
       "shoulder",
       "elbow",
       "wrist"
+    ],
+    "image_folder": "Push-Ups_-_Close_Triceps_Position",
+    "external_images": [
+      "Push-Ups_-_Close_Triceps_Position/0.jpg",
+      "Push-Ups_-_Close_Triceps_Position/1.jpg"
     ]
   },
   {
@@ -1075,6 +1080,11 @@
     "notes_en": "Isometric back and posterior-chain exercise.",
     "local_load_targets": [
       "low_back"
+    ],
+    "image_folder": "Superman",
+    "external_images": [
+      "Superman/0.jpg",
+      "Superman/1.jpg"
     ]
   },
   {
@@ -1252,6 +1262,11 @@
       "Lean slightly forward without collapsing the back",
       "Stand up with control through the working leg",
       "Sit back down slowly instead of dropping"
+    ],
+    "image_folder": "Single-Leg_High_Box_Squat",
+    "external_images": [
+      "Single-Leg_High_Box_Squat/0.jpg",
+      "Single-Leg_High_Box_Squat/1.jpg"
     ]
   },
   {
@@ -1677,6 +1692,11 @@
       "shoulder",
       "wrist",
       "hip"
+    ],
+    "image_folder": "Mountain_Climbers",
+    "external_images": [
+      "Mountain_Climbers/0.jpg",
+      "Mountain_Climbers/1.jpg"
     ]
   },
   {
@@ -1718,6 +1738,11 @@
     "local_load_targets": [
       "hip",
       "shoulder"
+    ],
+    "image_folder": "Worlds_Greatest_Stretch",
+    "external_images": [
+      "Worlds_Greatest_Stretch/0.jpg",
+      "Worlds_Greatest_Stretch/1.jpg"
     ]
   },
   {
