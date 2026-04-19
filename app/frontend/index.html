@@ -1102,11 +1102,21 @@
       <form id="recoveryForm">
         <div class="checkin-section">
           <div class="checkin-section-head">
-            <h3 class="checkin-section-title" data-i18n="common.date">Dato</h3>
+            <h3 class="checkin-section-title" data-i18n="checkin.section.capacity_intro_title">Start med rammerne for i dag</h3>
+            <p class="small checkin-section-copy" data-i18n="checkin.section.capacity_intro_copy">Vælg dato og hvor meget tid dagen realistisk kan bære.</p>
           </div>
           <label>
             <span data-i18n="common.date">Dato</span>
             <input id="recovery_date" name="recovery_date" type="date" required>
+          </label>
+          <label>
+            <span data-i18n="checkin.time_today">Tid i dag</span>
+            <select id="time_budget_min" name="time_budget_min" required>
+              <option value="20">20 min</option>
+              <option value="30">30 min</option>
+              <option value="45" selected>45 min</option>
+              <option value="60">60 min</option>
+            </select>
           </label>
         </div>
 
@@ -1151,18 +1161,73 @@
         </div>
 
         <div class="checkin-section">
-          <div class="checkin-section-head">
-            <h3 class="checkin-section-title" data-i18n="checkin.section.capacity_title">Hvad kan dagen bære?</h3>
-          </div>
-          <label>
-            <span data-i18n="checkin.time_today">Tid i dag</span>
-            <select id="time_budget_min" name="time_budget_min" required>
-              <option value="20">20 min</option>
-              <option value="30">30 min</option>
-              <option value="45" selected>45 min</option>
-              <option value="60">60 min</option>
-            </select>
-          </label>
+          <details class="entry-box">
+            <summary><strong data-i18n="checkin.local_signals_title">Lokale signaler</strong></summary>
+            <p class="small" data-i18n="checkin.local_signals_intro">Valgfrit. Markér kun områder der kræver ekstra hensyn i dag.</p>
+
+            <label>
+              <span data-i18n="checkin.local_signal.knee">Knæ</span>
+              <select name="local_signal_knee">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="checkin.local_signal.low_back">Lænd</span>
+              <select name="local_signal_low_back">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="checkin.local_signal.shoulder">Skulder</span>
+              <select name="local_signal_shoulder">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="checkin.local_signal.elbow">Albue</span>
+              <select name="local_signal_elbow">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="checkin.local_signal.hip">Hofte</span>
+              <select name="local_signal_hip">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="checkin.local_signal.ankle_calf">Ankel / læg</span>
+              <select name="local_signal_ankle_calf">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="checkin.local_signal.wrist">Håndled</span>
+              <select name="local_signal_wrist">
+                <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
+                <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
+                <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
+              </select>
+            </label>
+          </details>
         </div>
 
         <div class="checkin-section">
@@ -1190,73 +1255,6 @@
           <label>
             <span data-i18n="checkin.notes">Noter</span>
             <textarea id="recovery_notes" name="recovery_notes" data-i18n-placeholder="checkin.notes_placeholder" placeholder="Fx sov fint, lidt træt i ben, 45 min tid i dag"></textarea>
-          </label>
-
-          <div class="entry-box">
-            <strong data-i18n="checkin.local_signals_title">Lokale signaler</strong>
-            <p class="small" data-i18n="checkin.local_signals_intro">Valgfrit. Markér kun områder der kræver ekstra hensyn i dag.</p>
-
-          <label>
-            <span data-i18n="checkin.local_signal.knee">Knæ</span>
-            <select name="local_signal_knee">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="checkin.local_signal.low_back">Lænd</span>
-            <select name="local_signal_low_back">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="checkin.local_signal.shoulder">Skulder</span>
-            <select name="local_signal_shoulder">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="checkin.local_signal.elbow">Albue</span>
-            <select name="local_signal_elbow">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="checkin.local_signal.hip">Hofte</span>
-            <select name="local_signal_hip">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="checkin.local_signal.ankle_calf">Ankel / læg</span>
-            <select name="local_signal_ankle_calf">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="checkin.local_signal.wrist">Håndled</span>
-            <select name="local_signal_wrist">
-              <option value="" data-i18n="checkin.local_signal.none">Ingen særlige signaler</option>
-              <option value="caution" data-i18n="checkin.local_signal.caution">Vær opmærksom</option>
-              <option value="irritated" data-i18n="checkin.local_signal.irritated">Irriteret</option>
-            </select>
           </label>
         </div>
 

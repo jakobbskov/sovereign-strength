@@ -294,6 +294,8 @@
   "checkin.section.how_feel_title": "How do you feel today?",
   "checkin.section.how_feel_copy": "Choose the answer that fits best right now. It does not have to be perfect.",
   "checkin.section.capacity_title": "What can today support?",
+  "checkin.section.capacity_intro_title": "Start with today\u2019s frame",
+  "checkin.section.capacity_intro_copy": "Choose the date and how much time today can realistically support.",
   "checkin.section.context_title": "Extra context",
   "checkin.section.context_copy": "Optional. Use this only if it helps make today’s plan more precise.",
   "checkin.menstruation_today": "Menstruation today",

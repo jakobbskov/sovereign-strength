@@ -307,6 +307,8 @@
   "checkin.section.how_feel_title": "Hvordan har du det i dag?",
   "checkin.section.how_feel_copy": "Vælg det svar der passer bedst lige nu. Det behøver ikke være perfekt.",
   "checkin.section.capacity_title": "Hvad kan dagen bære?",
+  "checkin.section.capacity_intro_title": "Start med rammerne for i dag",
+  "checkin.section.capacity_intro_copy": "Vælg dato og hvor meget tid dagen realistisk kan bære.",
   "checkin.section.context_title": "Ekstra kontekst",
   "checkin.section.context_copy": "Valgfrit. Brug kun dette hvis det hjælper dagens plan til at blive mere præcis.",
   "checkin.menstruation_today": "Menstruation i dag",
