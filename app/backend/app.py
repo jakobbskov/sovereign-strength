@@ -155,6 +155,7 @@ DATA_DIR = Path("/var/www/sovereign-strength/data")
 
 FILES = {
     "workouts": DATA_DIR / "workouts.json",
+    "custom_workouts": DATA_DIR / "custom_workouts.json",
     "runs": DATA_DIR / "runs.json",
     "recovery": DATA_DIR / "recovery.json",
     "checkins": DATA_DIR / "checkins.json",
@@ -318,6 +319,9 @@ def consume_manual_override_workout(user_id, date):
 
 def list_workouts_for_user(user_id):
     return list_user_items("workouts", user_id)
+
+def list_custom_workouts_for_user(user_id):
+    return list_user_items("custom_workouts", user_id)
 
 def make_error_payload(error, message, **extra):
     payload = {
@@ -533,6 +537,64 @@ def create_workout(user_id, payload):
     }
 
     item, count = append_user_item("workouts", item)
+    return item, None, count
+
+def create_custom_workout(user_id, payload):
+    if not isinstance(payload, dict):
+        return None, make_error_payload("invalid_payload", "ugyldig payload"), 400
+
+    name = str(payload.get("name", "")).strip()
+    session_type = str(payload.get("session_type", "styrke") or "styrke").strip().lower()
+    notes = str(payload.get("notes", "")).strip()
+    raw_entries = payload.get("entries", [])
+
+    if not name:
+        return None, make_error_payload("missing_name", "name mangler", field="name"), 400
+
+    if session_type not in {"styrke", "strength", "løb", "run", "mobilitet", "mobility", "andet", "other"}:
+        return None, make_error_payload("invalid_session_type", "ugyldig session_type", field="session_type"), 400
+
+    if not isinstance(raw_entries, list):
+        return None, make_error_payload("invalid_entries", "entries skal være en liste", field="entries"), 400
+
+    clean_entries = []
+    for entry in raw_entries:
+        if not isinstance(entry, dict):
+            continue
+
+        exercise_id = str(entry.get("exercise_id", "")).strip()
+        sets = str(entry.get("sets", "")).strip()
+        reps = str(entry.get("reps", "")).strip()
+        achieved_reps = str(entry.get("achieved_reps", "")).strip()
+        load = str(entry.get("load", "")).strip()
+        entry_notes = str(entry.get("notes", "")).strip()
+
+        if not exercise_id:
+            continue
+
+        clean_entries.append({
+            "exercise_id": exercise_id,
+            "sets": sets,
+            "reps": reps,
+            "achieved_reps": achieved_reps,
+            "load": load,
+            "notes": entry_notes,
+        })
+
+    if not clean_entries:
+        return None, make_error_payload("empty_custom_workout", "ingen øvelser at gemme"), 400
+
+    item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "name": name,
+        "session_type": session_type,
+        "notes": notes,
+        "entries": clean_entries,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    item, count = append_user_item("custom_workouts", item)
     return item, None, count
 
 def list_checkins_for_user(user_id):
@@ -7859,6 +7921,29 @@ def post_workouts():
         return auth_err
 
     item, err_payload, third = create_workout(auth_user.get("user_id"), request.get_json(silent=True) or {})
+    if err_payload is not None:
+        payload, status = ensure_error_contract(err_payload, third)
+        return jsonify(payload), status
+
+    return jsonify({"ok": True, "item": item, "count": third}), 201
+
+@app.get("/api/custom-workouts")
+def get_custom_workouts():
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("custom-workouts:get", auth_err)
+        return auth_err
+    items = list_custom_workouts_for_user(auth_user.get("user_id"))
+    return jsonify({"ok": True, "items": items})
+
+@app.post("/api/custom-workouts")
+def post_custom_workouts():
+    auth_user, auth_err = require_auth_user()
+    if auth_err:
+        log_auth_failure("custom-workouts:post", auth_err)
+        return auth_err
+
+    item, err_payload, third = create_custom_workout(auth_user.get("user_id"), request.get_json(silent=True) or {})
     if err_payload is not None:
         payload, status = ensure_error_contract(err_payload, third)
         return jsonify(payload), status

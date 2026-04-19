@@ -14,6 +14,7 @@ let STATE = {
   programs: [],
   userSettings: {},
   pendingEntries: [],
+  customWorkouts: [],
   workouts: [],
   sessionResults: [],
   recoveryHistory: [],
@@ -689,6 +690,101 @@ function readManualWorkoutTemplates(){
 function writeManualWorkoutTemplates(items){
   const clean = Array.isArray(items) ? items : [];
   localStorage.setItem(MANUAL_TEMPLATE_STORAGE_KEY, JSON.stringify(clean));
+}
+
+function renderCustomWorkoutOptions(){
+  const selectEl = document.getElementById("customWorkoutSelect");
+  if (!selectEl) return;
+
+  const items = Array.isArray(STATE.customWorkouts) ? STATE.customWorkouts : [];
+  const options = [
+    `<option value="">${esc(tr("custom_workout.none_saved"))}</option>`,
+    ...items.map(item => `<option value="${esc(String(item.id || ""))}">${esc(String(item.name || "").trim())}</option>`)
+  ];
+  selectEl.innerHTML = options.join("");
+}
+
+async function handleSaveCustomWorkout(){
+  const statusEl = document.getElementById("customWorkoutStatus");
+
+  if (!Array.isArray(STATE.pendingEntries) || STATE.pendingEntries.length === 0){
+    setText("customWorkoutStatus", tr("custom_workout.save_requires_entries"));
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  const rawName = window.prompt(tr("custom_workout.prompt_name"), "");
+  const name = String(rawName || "").trim();
+  if (!name){
+    setText("customWorkoutStatus", tr("custom_workout.save_cancelled"));
+    statusEl?.classList.remove("warn");
+    return;
+  }
+
+  try{
+    const form = document.getElementById("workoutForm");
+    const sessionType = String(form?.type?.value || "styrke").trim().toLowerCase();
+    const notes = String(form?.notes?.value || "").trim();
+
+    const res = await apiPost("/api/custom-workouts", {
+      name,
+      session_type: sessionType,
+      notes,
+      entries: STATE.pendingEntries,
+    });
+
+    const item = res && res.item && typeof res.item === "object" ? res.item : null;
+    if (!item){
+      throw new Error("missing custom workout item");
+    }
+
+    STATE.customWorkouts = [item, ...(Array.isArray(STATE.customWorkouts) ? STATE.customWorkouts : [])];
+    renderCustomWorkoutOptions();
+
+    const selectEl = document.getElementById("customWorkoutSelect");
+    if (selectEl) selectEl.value = String(item.id || "");
+
+    statusEl?.classList.remove("warn");
+    setText("customWorkoutStatus", tr("custom_workout.saved", { name }));
+  }catch(err){
+    statusEl?.classList.add("warn");
+    setText("customWorkoutStatus", tr("status.error_prefix") + (err?.message || String(err)));
+  }
+}
+
+function handleLoadCustomWorkout(){
+  const selectEl = document.getElementById("customWorkoutSelect");
+  const statusEl = document.getElementById("customWorkoutStatus");
+  const workoutId = String(selectEl?.value || "").trim();
+
+  if (!workoutId){
+    setText("customWorkoutStatus", tr("custom_workout.select_first"));
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  const items = Array.isArray(STATE.customWorkouts) ? STATE.customWorkouts : [];
+  const found = items.find(item => String(item.id || "").trim() === workoutId);
+
+  if (!found){
+    setText("customWorkoutStatus", tr("custom_workout.not_found"));
+    statusEl?.classList.add("warn");
+    return;
+  }
+
+  STATE.pendingEntries = JSON.parse(JSON.stringify(Array.isArray(found.entries) ? found.entries : []));
+  renderPendingEntries();
+
+  const form = document.getElementById("workoutForm");
+  if (form){
+    resetEntryInputs(form);
+    if (form.type) form.type.value = String(found.session_type || "styrke");
+    if (form.notes) form.notes.value = String(found.notes || "");
+    setText("progressionHint", tr("workout.no_load_suggestion"));
+  }
+
+  statusEl?.classList.remove("warn");
+  setText("customWorkoutStatus", tr("custom_workout.loaded", { name: found.name }));
 }
 
 function renderManualTemplateOptions(){
@@ -6800,7 +6896,7 @@ function renderPrograms(programs, exercises){
 
 async function refreshAll(){
   const debug = {};
-  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettingsApi, workoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
+  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettingsApi, workoutsApi, customWorkoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
     getJson(FILES.workouts),
     getJson(FILES.runs),
     getJson(FILES.recovery),
@@ -6808,6 +6904,7 @@ async function refreshAll(){
     getJsonOrSeed(FILES.exercises, FILES.seed_exercises),
     apiGet("/api/user-settings"),
     apiGet("/api/workouts"),
+    apiGet("/api/custom-workouts"),
     apiGet("/api/checkins"),
     apiGet("/api/checkin/latest"),
     apiGet("/api/today-plan"),
@@ -6821,6 +6918,7 @@ async function refreshAll(){
     : {};
   STATE.checkins = Array.isArray(recoveryApi && recoveryApi.items) ? recoveryApi.items : [];
 STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.items : [];
+  STATE.customWorkouts = Array.isArray(customWorkoutsApi && customWorkoutsApi.items) ? customWorkoutsApi.items : [];
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
   STATE.latestCheckin = latestRecoveryApi.item || null;
   STATE.currentTodayPlan = todayPlanApi.item || null;
@@ -6902,6 +7000,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   renderPrograms(STATE.programs, STATE.exercises);
   renderLibraryTabs();
   renderManualTemplateOptions();
+  renderCustomWorkoutOptions();
   renderPendingEntries();
 
   const dailyUiState = deriveDailyUiState(todayPlanApi.item || null, latestRecoveryApi.item || null, sessionResultsApi.items || []);
@@ -6909,6 +7008,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   debug.pendingEntries = STATE.pendingEntries;
   debug.workouts_file = workoutsFile;
   debug.workouts_api = workoutsApi;
+  debug.custom_workouts_api = customWorkoutsApi;
   debug.recovery_file = recoveryFile;
   debug.recovery_api = recoveryApi;
   debug.latest_recovery_api = latestRecoveryApi;
@@ -8075,6 +8175,8 @@ async function boot(){
     document.getElementById("loadProgramDayBtn")?.addEventListener("click", handleLoadProgramDay);
     document.getElementById("saveManualTemplateBtn")?.addEventListener("click", handleSaveManualTemplate);
     document.getElementById("loadManualTemplateBtn")?.addEventListener("click", handleLoadManualTemplate);
+    document.getElementById("saveCustomWorkoutBtn")?.addEventListener("click", handleSaveCustomWorkout);
+    document.getElementById("loadCustomWorkoutBtn")?.addEventListener("click", handleLoadCustomWorkout);
     document.getElementById("program_id")?.addEventListener("change", refreshProgramDaySelect);
     document.getElementById("entry_exercise_id")?.addEventListener("change", handleExerciseChange);
     mountEquipmentEditorInline();

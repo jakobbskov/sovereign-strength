@@ -838,5 +838,18 @@
   "manual_template.saved": "Template gemt: {name}",
   "manual_template.select_first": "Vælg en template først.",
   "manual_template.not_found": "Template blev ikke fundet.",
-  "manual_template.loaded": "Template indlæst: {name}"
+  "manual_template.loaded": "Template indlæst: {name}",
+  "custom_workout.title": "Gemte custom workouts",
+  "custom_workout.select_label": "Vælg workout",
+  "custom_workout.none_saved": "Ingen gemte workouts",
+  "custom_workout.save_btn": "Gem som workout",
+  "custom_workout.load_btn": "Indlæs workout",
+  "custom_workout.status_ready": "Klar.",
+  "custom_workout.prompt_name": "Navn på workout",
+  "custom_workout.save_requires_entries": "Tilføj mindst én øvelse før du gemmer et workout.",
+  "custom_workout.save_cancelled": "Workout blev ikke gemt.",
+  "custom_workout.saved": "Workout gemt: {name}",
+  "custom_workout.select_first": "Vælg et workout først.",
+  "custom_workout.not_found": "Workout blev ikke fundet.",
+  "custom_workout.loaded": "Workout indlæst: {name}"
 }

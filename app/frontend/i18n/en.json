@@ -822,5 +822,18 @@
   "manual_template.saved": "Template saved: {name}",
   "manual_template.select_first": "Choose a template first.",
   "manual_template.not_found": "Template was not found.",
-  "manual_template.loaded": "Template loaded: {name}"
+  "manual_template.loaded": "Template loaded: {name}",
+  "custom_workout.title": "Saved custom workouts",
+  "custom_workout.select_label": "Choose workout",
+  "custom_workout.none_saved": "No saved workouts",
+  "custom_workout.save_btn": "Save as workout",
+  "custom_workout.load_btn": "Load workout",
+  "custom_workout.status_ready": "Ready.",
+  "custom_workout.prompt_name": "Workout name",
+  "custom_workout.save_requires_entries": "Add at least one exercise before saving a workout.",
+  "custom_workout.save_cancelled": "Workout was not saved.",
+  "custom_workout.saved": "Workout saved: {name}",
+  "custom_workout.select_first": "Choose a workout first.",
+  "custom_workout.not_found": "Workout was not found.",
+  "custom_workout.loaded": "Workout loaded: {name}"
 }
