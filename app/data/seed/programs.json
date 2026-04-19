@@ -21,11 +21,6 @@
             "exercise_id": "dumbbell_row",
             "sets": 2,
             "reps": "8/side"
-          },
-          {
-            "exercise_id": "dead_bug",
-            "sets": 2,
-            "reps": "6/side"
           }
         ]
       },
@@ -424,11 +419,6 @@
             "exercise_id": "dumbbell_row",
             "sets": 2,
             "reps": "8/side"
-          },
-          {
-            "exercise_id": "dead_bug",
-            "sets": 2,
-            "reps": "6/side"
           }
         ]
       },
@@ -608,11 +598,6 @@
             "exercise_id": "lat_pulldown",
             "sets": 2,
             "reps": "6-8"
-          },
-          {
-            "exercise_id": "dead_bug",
-            "sets": 2,
-            "reps": "6/side"
           }
         ]
       },
@@ -697,11 +682,6 @@
             "exercise_id": "lat_pulldown",
             "sets": 2,
             "reps": "6-8"
-          },
-          {
-            "exercise_id": "dead_bug",
-            "sets": 2,
-            "reps": "6/side"
           }
         ]
       },
