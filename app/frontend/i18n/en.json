@@ -776,5 +776,8 @@
   "library.tab_programs": "Programs",
   "library.exercise_search_label": "Search exercises",
   "library.exercise_search_placeholder": "For example squat or hip",
-  "library.exercise_search_empty": "No exercises match your search."
+  "library.exercise_search_empty": "No exercises match your search.",
+  "library.program_search_label": "Search programs",
+  "library.program_search_placeholder": "For example strength, 3x or squat",
+  "library.program_search_empty": "No programs match your search."
 }

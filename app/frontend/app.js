@@ -6490,9 +6490,22 @@ function renderTodayPlan(item){
 
 function renderPrograms(programs, exercises){
   const root = document.getElementById("programsRoot");
+  const searchInput = document.getElementById("libraryProgramSearchInput");
   if (!root) return;
 
   const exerciseMap = new Map((Array.isArray(exercises) ? exercises : []).map(x => [x.id, x]));
+
+  if (searchInput && searchInput.dataset.boundSearch !== "true"){
+    searchInput.dataset.boundSearch = "true";
+    searchInput.addEventListener("input", () => {
+      CURRENT_LIBRARY_PROGRAM_QUERY = String(searchInput.value || "").trim();
+      renderPrograms(programs, exercises);
+    });
+  }
+
+  if (searchInput && searchInput.value !== CURRENT_LIBRARY_PROGRAM_QUERY){
+    searchInput.value = CURRENT_LIBRARY_PROGRAM_QUERY;
+  }
 
   if (!Array.isArray(programs) || programs.length === 0){
     root.innerHTML = `<div class="small">${esc(tr("program.none_yet"))}</div>`;
@@ -6500,7 +6513,38 @@ function renderPrograms(programs, exercises){
     return;
   }
 
-  root.innerHTML = programs.map(program => `
+  const query = String(CURRENT_LIBRARY_PROGRAM_QUERY || "").trim().toLowerCase();
+  const filteredPrograms = programs.filter(program => {
+    if (!program || typeof program !== "object") return false;
+    if (!query) return true;
+
+    const dayBits = Array.isArray(program.days) ? program.days.flatMap(day => {
+      const dayLabel = String(getProgramDayDisplayLabel(day) || "");
+      const exerciseBits = Array.isArray(day?.exercises) ? day.exercises.map(ex => {
+        const found = exerciseMap.get(ex.exercise_id) || {};
+        const display = getExerciseDisplayCopy(found);
+        return display.name || formatExerciseName(ex.exercise_id || "") || ex.exercise_id || "";
+      }) : [];
+      return [dayLabel, ...exerciseBits];
+    }) : [];
+
+    const haystack = [
+      String(program.id || ""),
+      String(getProgramDisplayName(program) || ""),
+      String(getProgramKindDisplayLabel(program.kind || "") || ""),
+      ...dayBits
+    ].join(" ").toLowerCase();
+
+    return haystack.includes(query);
+  });
+
+  if (!filteredPrograms.length){
+    root.innerHTML = `<div class="small">${esc(tr("library.program_search_empty"))}</div>`;
+    setText("programMeta", tr("common.items_count", { count: 0 }));
+    return;
+  }
+
+  root.innerHTML = filteredPrograms.map(program => `
     <div class="card" style="margin-top:12px; background:#141414">
       <div class="row">
         <h3>${esc(getProgramDisplayName(program) || "Program")}</h3>
@@ -6529,7 +6573,7 @@ function renderPrograms(programs, exercises){
     </div>
   `).join("");
 
-  setText("programMeta", tr("common.items_count", { count: programs.length }));
+  setText("programMeta", tr("common.items_count", { count: filteredPrograms.length }));
 }
 
 async function refreshAll(){
@@ -7462,6 +7506,7 @@ function getWizardStepLabel(step){
 let CURRENT_STEP = "";
 let CURRENT_LIBRARY_TAB = "exercises";
 let CURRENT_LIBRARY_EXERCISE_QUERY = "";
+let CURRENT_LIBRARY_PROGRAM_QUERY = "";
 
 function renderLibraryTabs(){
   const exercisesBtn = document.getElementById("libraryTabExercises");
