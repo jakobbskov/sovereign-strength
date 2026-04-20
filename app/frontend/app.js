@@ -6616,7 +6616,9 @@ function deriveTodayPlanDisplayState(item){
   const todayWeekPlanItem = getTodayWeekPlanItem(item);
   const todayWeekKind = String(todayWeekPlanItem?.kind || "").trim().toLowerCase();
   const actualKind = String(item?.session_type || "").trim().toLowerCase();
-  const isPlannedRestDay = todayWeekKind === "rest";
+  const isManualOverridePlan = String(item?.plan_variant || "").trim() === "manual_override"
+    || String(item?.source || "").trim() === "manual_override";
+  const isPlannedRestDay = todayWeekKind === "rest" && !isManualOverridePlan;
 
   let trainingAllowedSummary = "";
   if (todayWeekKind === "rest"){
@@ -8181,6 +8183,13 @@ function showWizardStep(stepId){
 
   if (todayPlanList){
     todayPlanList.classList.toggle("wizard-step-hidden", stepId === "review");
+  }
+
+  if (stepId === "plan"){
+    renderTodayPlan(STATE.currentTodayPlan || null);
+  } else if (stepId === "review"){
+    renderReviewSummary(STATE.currentTodayPlan || null);
+    renderSessionReview(STATE.currentTodayPlan || null);
   }
 
   if (todayPlanTiming){
