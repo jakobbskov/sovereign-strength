@@ -283,6 +283,7 @@
   "workout.select_program_day_first": "Vælg en dag fra programmet.",
   "status.saving_generic": "Gemmer...",
   "workout.saved": "Workout gemt.",
+  "workout.empty_workout_error": "Tilføj mindst én øvelse før du gemmer workout.",
   "review.saving_session_result": "Gemmer session-resultat...",
   "review.session_result_saved": "Session-resultat gemt.",
   "review.next_progression_label": "Progression næste gang",
