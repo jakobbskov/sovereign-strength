@@ -6442,12 +6442,25 @@ function wireTodayPlanActions(item){
   });
 
   document.getElementById("returnToAutoplanBtn")?.addEventListener("click", async () => {
-    const workoutId = String(item?.manual_override_workout_id || "").trim();
-    if (!workoutId) return;
+    const todayDate = String(STATE.latestCheckin?.date || item?.date || "").trim();
+    if (!todayDate) return;
     if (!window.confirm(tr("today_plan.return_to_autoplan_confirm"))){
       return;
     }
-    await apiJsonRequest("DELETE", `/api/workouts/${encodeURIComponent(workoutId)}`);
+
+    const overrideWorkoutIds = (Array.isArray(STATE.workouts) ? STATE.workouts : [])
+      .filter(workout =>
+        workout
+        && String(workout.date || "").trim() === todayDate
+        && workout.is_manual_override === true
+      )
+      .map(workout => String(workout.id || "").trim())
+      .filter(Boolean);
+
+    for (const workoutId of overrideWorkoutIds){
+      await apiJsonRequest("DELETE", `/api/workouts/${encodeURIComponent(workoutId)}`);
+    }
+
     STATE.manualWorkoutActsAsTodayOverride = false;
     await refreshAll();
     showWizardStep("plan");
