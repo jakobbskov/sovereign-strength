@@ -444,6 +444,44 @@ button{
   margin-top:12px;
 }
 
+.today-plan-hero-title{
+  font-weight:700;
+  font-size:1.1rem;
+}
+
+.today-plan-hero-meta{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.today-plan-hero-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03);
+  font-size:0.92rem;
+  line-height:1.2;
+}
+
+.today-plan-hero-lead{
+  margin-top:10px;
+  line-height:1.45;
+}
+
+.today-plan-hero-context{
+  margin-top:10px;
+  line-height:1.45;
+}
+
+.today-plan-hero-context + .today-plan-hero-context{
+  margin-top:6px;
+}
+
 #sessionReviewHeading{
   padding-top:2px;
 }
