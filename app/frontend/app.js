@@ -24,6 +24,7 @@ let STATE = {
   workoutRestTimerActive: false,
   workoutRestTimerEndsAt: 0,
   workoutRestTimerDurationSec: 90,
+  manualWorkoutActsAsTodayOverride: false,
   workoutRestTargetKind: "",
   workoutRestNextEntryIndex: -1,
   editingCheckinId: null,
@@ -6436,6 +6437,7 @@ function wireTodayPlanActions(item){
 
   document.getElementById("acknowledgeRestDayBtn")?.addEventListener("click", handleRestDayAcknowledge);
   document.getElementById("openManualTrainingBtn")?.addEventListener("click", () => {
+    STATE.manualWorkoutActsAsTodayOverride = true;
     showWizardStep("manual");
   });
 
@@ -6580,17 +6582,25 @@ function buildTodayPlanHeroCardHtml({
   timeBudgetMin,
   planContextBits,
 }){
+  const metaBits = [
+    !isPlannedRestDay ? (variantLabel || "") : "",
+    timeBudgetMin ? tr("overview.time_today_short", { minutes: timeBudgetMin }) : ""
+  ].filter(Boolean);
+
+  const recoveryBit = planContextBits[0] || "";
+  const secondaryBits = planContextBits.slice(1);
+
   return `
     <li>
-      <div style="font-weight:700; font-size:1.1rem">${esc(heroTitle)}</div>
-      <div class="small" style="margin-top:6px">
-        ${esc([
-          !isPlannedRestDay ? (variantLabel || "") : "",
-          timeBudgetMin ? tr("overview.time_today_short", { minutes: timeBudgetMin }) : ""
-        ].filter(Boolean).join(" · "))}
-      </div>
-      ${heroLead ? `<div class="small" style="margin-top:8px; line-height:1.45">${esc(heroLead)}</div>` : ""}
-      ${planContextBits.length ? `<div class="small" style="margin-top:8px; line-height:1.45">${planContextBits.map(bit => esc(bit)).join("<br>")}</div>` : ""}
+      <div class="today-plan-hero-title">${esc(heroTitle)}</div>
+      ${metaBits.length ? `
+        <div class="today-plan-hero-meta">
+          ${metaBits.map(bit => `<div class="today-plan-hero-pill small">${esc(bit)}</div>`).join("")}
+        </div>
+      ` : ""}
+      ${heroLead ? `<div class="small today-plan-hero-lead">${esc(heroLead)}</div>` : ""}
+      ${recoveryBit ? `<div class="small today-plan-hero-context">${esc(recoveryBit)}</div>` : ""}
+      ${secondaryBits.map(bit => `<div class="small today-plan-hero-context">${esc(bit)}</div>`).join("")}
       ${heroActions}
     </li>
   `;
@@ -6650,6 +6660,13 @@ function deriveTodayPlanDisplayState(item){
       ? tr("plan.light_movement_today")
       : "";
 
+  const recoverySummaryText = recovery
+    ? tr("today_plan.recovery_label", { value: `${formatRecoveryState(recovery.recovery_state || "")}${recovery.recovery_score != null ? ` (${recovery.recovery_score})` : ""}` })
+    : "";
+  const recoveryExplanationText = Array.isArray(recovery?.explanation) && recovery.explanation.length
+    ? recovery.explanation.map(formatRecoveryExplanationBit).join(" · ")
+    : "";
+
   const decisionTrace = item?.decision_trace && typeof item.decision_trace === "object" ? item.decision_trace : null;
   const planVariantKey = String(item?.plan_variant || "").trim();
   const hasHighImpactOverride = Boolean(
@@ -6661,12 +6678,16 @@ function deriveTodayPlanDisplayState(item){
 
   const rawReason = String(item?.reason || "").trim();
   const overrideReasonText = rawReason ? formatPlanReason(rawReason) : "";
-  const planContextBits = hasHighImpactOverride
-    ? [
-        overrideReasonText ? `${tr("common.why_label")}: ${overrideReasonText}` : "",
-        familiesSummary,
-      ].filter(Boolean)
-    : [];
+  const planContextBits = [
+    recoverySummaryText,
+    recoveryExplanationText,
+    ...(hasHighImpactOverride
+      ? [
+          overrideReasonText ? `${tr("common.why_label")}: ${overrideReasonText}` : "",
+          familiesSummary,
+        ]
+      : [])
+  ].filter(Boolean);
 
   return {
     variantLabel,
@@ -6757,7 +6778,7 @@ function renderTodayPlan(item){
       planContextBits,
     });
 
-    const recoveryCard = buildTodayPlanRecoveryCardHtml(recovery);
+    const recoveryCard = "";
     const recommendationCard = buildTodayPlanProgramRecommendationCardHtml(item);
 
     const entryCards = buildTodayPlanEntryCardsHtml(item, isPlannedRestDay);
@@ -7325,6 +7346,7 @@ async function handleWorkoutSubmit(ev){
     notes: form.notes.value.trim(),
     program_id: form.program_id.value.trim(),
     program_day_label: selectedDay?.label || "",
+    is_manual_override: STATE.manualWorkoutActsAsTodayOverride === true,
     entries: [...STATE.pendingEntries]
   };
 
@@ -7335,6 +7357,7 @@ async function handleWorkoutSubmit(ev){
     setText("formStatus", tr("workout.saved"));
     statusEl?.classList.add("ok");
     STATE.pendingEntries = [];
+    STATE.manualWorkoutActsAsTodayOverride = false;
     form.reset();
     form.date.value = new Date().toISOString().slice(0,10);
     form.duration_min.value = 45;

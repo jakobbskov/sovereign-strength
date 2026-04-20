@@ -521,6 +521,8 @@ def create_workout(user_id, payload):
     if session_type == "styrke" and not clean_entries:
         return None, make_error_payload("empty_workout", "ingen træningsdata at gemme"), 400
 
+    is_manual_override = bool(payload.get("is_manual_override", False))
+
     item = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -531,8 +533,8 @@ def create_workout(user_id, payload):
         "program_id": program_id,
         "program_day_label": program_day_label,
         "entries": clean_entries,
-        "is_manual_override": True,
-        "is_consumed": False,
+        "is_manual_override": is_manual_override,
+        "is_consumed": False if is_manual_override else None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
