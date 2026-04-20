@@ -6758,7 +6758,11 @@ function renderTodayPlan(item){
       planContextBits,
     } = deriveTodayPlanDisplayState(item);
 
-    const compactSummaryLead = trainingAllowedSummary || recoveryDaySummary || "";
+    const isManualOverridePlan = String(item?.plan_variant || "").trim() === "manual_override"
+      || String(item?.source || "").trim() === "manual_override";
+    const compactSummaryLead = isManualOverridePlan
+      ? ""
+      : (trainingAllowedSummary || recoveryDaySummary || "");
     setText(
       "todayPlanSummary",
       compactSummaryLead
@@ -7398,7 +7402,11 @@ async function handleWorkoutSubmit(ev){
     await refreshAll();
     advanceWizardAfterCheckin();
   }catch(err){
-    setText("formStatus", tr("status.error_prefix") + (err?.message || String(err)));
+    const rawMessage = String(err?.message || err || "").trim();
+    const normalizedMessage = rawMessage === "empty_workout"
+      ? tr("workout.empty_workout_error")
+      : rawMessage;
+    setText("formStatus", tr("status.error_prefix") + normalizedMessage);
     statusEl?.classList.remove("ok");
     statusEl?.classList.add("warn");
   }

@@ -270,6 +270,7 @@
   "workout.select_program_day_first": "Select a day from the program first.",
   "status.saving_generic": "Saving...",
   "workout.saved": "Workout saved.",
+  "workout.empty_workout_error": "Add at least one exercise before saving the workout.",
   "review.saving_session_result": "Saving session result...",
   "review.session_result_saved": "Session result saved.",
   "review.next_progression_label": "Next progression",
