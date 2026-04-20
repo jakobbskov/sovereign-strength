@@ -6441,6 +6441,18 @@ function wireTodayPlanActions(item){
     showWizardStep("manual");
   });
 
+  document.getElementById("returnToAutoplanBtn")?.addEventListener("click", async () => {
+    const workoutId = String(item?.manual_override_workout_id || "").trim();
+    if (!workoutId) return;
+    if (!window.confirm(tr("today_plan.return_to_autoplan_confirm"))){
+      return;
+    }
+    await apiJsonRequest("DELETE", `/api/workouts/${encodeURIComponent(workoutId)}`);
+    STATE.manualWorkoutActsAsTodayOverride = false;
+    await refreshAll();
+    showWizardStep("plan");
+  });
+
   document.querySelectorAll("[data-apply-recommended-strength-program]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const programId = String(btn.getAttribute("data-apply-recommended-strength-program") || "").trim();
@@ -6557,6 +6569,7 @@ function buildTodayPlanRecoveryCardHtml(recovery){
 function buildTodayPlanHeroActionsHtml({
   showPlannedRestChoiceCard,
   showRestitutionChoice,
+  manualOverrideWorkoutId,
 }){
   return showPlannedRestChoiceCard
     ? `
@@ -6567,8 +6580,9 @@ function buildTodayPlanHeroActionsHtml({
       </div>
     `
     : `
-      <div style="margin-top:12px">
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
         <button type="button" id="startWorkoutBtn">${esc(tr("button.start_workout"))}</button>
+        ${manualOverrideWorkoutId ? `<button type="button" class="secondary" id="returnToAutoplanBtn">${esc(tr("today_plan.return_to_autoplan"))}</button>` : ""}
       </div>
     `;
 }
@@ -6768,6 +6782,7 @@ function renderTodayPlan(item){
       : buildTodayPlanHeroActionsHtml({
           showPlannedRestChoiceCard,
           showRestitutionChoice,
+          manualOverrideWorkoutId: String(item?.manual_override_workout_id || "").trim(),
         });
 
     const heroCard = buildTodayPlanHeroCardHtml({
