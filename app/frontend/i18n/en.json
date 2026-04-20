@@ -702,6 +702,8 @@
   "button.switch_to_recommended_program": "Switch to recommended program",
   "today_plan.recommended_program_title": "Recommended program",
   "today_plan.recommended_strength_program_value": "Recommended strength program: {value}",
+  "today_plan.return_to_autoplan": "Return to autoplan",
+  "today_plan.return_to_autoplan_confirm": "Remove the manual override and return to autoplan for today?",
   "profile.active_program_selected_by_user": "Selected by you",
   "profile.active_program_selected_automatically": "Chosen automatically",
   "profile.active_program_auto_assigned": "Auto-assigned initially",
