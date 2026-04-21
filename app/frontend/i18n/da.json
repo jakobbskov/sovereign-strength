@@ -861,5 +861,13 @@
   "custom_workout.saved": "Workout gemt: {name}",
   "custom_workout.select_first": "Vælg et workout først.",
   "custom_workout.not_found": "Workout blev ikke fundet.",
-  "custom_workout.loaded": "Workout indlæst: {name}"
+  "custom_workout.loaded": "Workout indlæst: {name}",
+  "history.weekly_rhythm_title": "Ugens rytme",
+  "history.weekly_rhythm_meta": "Fra {value}",
+  "history.weekly_rhythm_completed_label": "Gennemførte pas",
+  "history.weekly_rhythm_types_label": "Typer i denne uge",
+  "history.weekly_rhythm_latest_label": "Senest gennemført",
+  "history.weekly_rhythm_next_label": "Næste sandsynlige pas",
+  "history.weekly_rhythm_none_completed": "Ingen gennemførte pas endnu i denne uge",
+  "history.weekly_rhythm_no_completed_types": "Ingen endnu"
 }

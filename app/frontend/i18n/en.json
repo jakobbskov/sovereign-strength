@@ -845,5 +845,13 @@
   "custom_workout.saved": "Workout saved: {name}",
   "custom_workout.select_first": "Choose a workout first.",
   "custom_workout.not_found": "Workout was not found.",
-  "custom_workout.loaded": "Workout loaded: {name}"
+  "custom_workout.loaded": "Workout loaded: {name}",
+  "history.weekly_rhythm_title": "Weekly rhythm",
+  "history.weekly_rhythm_meta": "From {value}",
+  "history.weekly_rhythm_completed_label": "Completed sessions",
+  "history.weekly_rhythm_types_label": "Types this week",
+  "history.weekly_rhythm_latest_label": "Latest completed",
+  "history.weekly_rhythm_next_label": "Next likely session",
+  "history.weekly_rhythm_none_completed": "No completed sessions yet this week",
+  "history.weekly_rhythm_no_completed_types": "None yet"
 }
