@@ -6059,8 +6059,26 @@ function setWorkoutCompletionContext(context = {}){
   };
 }
 
+function getWorkoutCompletionStatusText(context = {}){
+  const outcome = String(context?.outcome || "").trim();
+
+  if (outcome === "completed"){
+    return "Workout fuldført. Klar til review.";
+  }
+
+  if (outcome === "removed_last_entry"){
+    return "Workout sluttede, da sidste øvelse blev fjernet. Klar til review.";
+  }
+
+  return "";
+}
+
 function finishActiveWorkoutAndOpenReview(item, completionContext = {}){
   setWorkoutCompletionContext(completionContext);
+  const completionStatusText = getWorkoutCompletionStatusText(completionContext);
+  if (completionStatusText){
+    setText("sessionResultStatus", completionStatusText);
+  }
   STATE.workoutInProgress = false;
   STATE.currentWorkoutEntryIndex = 0;
   STATE.currentWorkoutSetIndex = 0;
@@ -6170,7 +6188,12 @@ function removeCurrentWorkoutEntry(item){
   entries.splice(idx, 1);
 
   if (!entries.length){
-    setWorkoutCompletionContext({ outcome: "removed_last_entry", source: "remove_current_workout_entry" });
+    const completionContext = { outcome: "removed_last_entry", source: "remove_current_workout_entry" };
+    setWorkoutCompletionContext(completionContext);
+    const completionStatusText = getWorkoutCompletionStatusText(completionContext);
+    if (completionStatusText){
+      setText("sessionResultStatus", completionStatusText);
+    }
     STATE.workoutInProgress = false;
     STATE.currentWorkoutEntryIndex = 0;
     renderTodayPlan(item);
