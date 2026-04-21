@@ -4379,21 +4379,22 @@ function renderReviewSummary(item){
   }
 
   const sessionType = formatSessionType(item.session_type || "");
-  const summaryBits = [];
-  if (item.time_budget_min) summaryBits.push(`${esc(item.time_budget_min)} min`);
-  if (item.readiness_score != null) summaryBits.push(`${esc(tr("overview.readiness"))}: ${esc(String(item.readiness_score))}`);
-  summaryBits.push(`${esc(String(item.entries.length))} ${esc(item.entries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
+  const metaBits = [];
+  if (sessionType) metaBits.push(sessionType);
+  if (item.time_budget_min) metaBits.push(`${esc(item.time_budget_min)} min`);
+  if (item.readiness_score != null) metaBits.push(`${esc(tr("overview.readiness"))}: ${esc(String(item.readiness_score))}`);
+  metaBits.push(`${esc(String(item.entries.length))} ${esc(item.entries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
 
   root.innerHTML = `
-    <div class="card" style="padding:14px 14px 12px 14px; margin-bottom:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08)">
-      <div style="font-weight:700; margin-bottom:8px">${esc(tr("review.session_review"))}</div>
-      <div class="small" style="margin-bottom:8px; line-height:1.5">
-        ${esc(sessionType)}${summaryBits.length ? ` · ${summaryBits.join(" · ")}` : ""}
+    <div class="review-summary-card">
+      <div class="review-summary-title">${esc(tr("review.finish_title"))}</div>
+      <div class="review-summary-lead">${esc(tr("review.finish_lead"))}</div>
+      <div class="review-summary-meta">
+        <div class="review-summary-pill small">${esc(tr("review.summary_closure_label"))}</div>
+        ${metaBits.map(bit => `<div class="review-summary-pill small">${esc(bit)}</div>`).join("")}
       </div>
-      <div class="small" style="margin-bottom:10px; line-height:1.5; opacity:0.86">
-        ${esc(tr("review.closure_intro"))}
-      </div>
-      <div class="small" style="line-height:1.6">
+      <div class="small review-summary-outcome">${esc(tr("review.summary_session_label"))}</div>
+      <div class="small review-summary-list">
         ${item.entries.map(entry => {
           const bits = [];
           if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
@@ -4478,26 +4479,28 @@ function renderSessionResultSummary(summary, fallbackResults = null){
     const paceText = paceSecPerKm > 0 ? formatPaceFromSeconds(paceSecPerKm) : "-";
 
     root.innerHTML = `
-      <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
-      <div class="small" style="margin-bottom:8px">
-        ${esc(postWorkoutMessage || tr("after_training.session_completed_title"))}
+      <div class="review-summary-card">
+        <div class="review-summary-title">✔ ${esc(tr("after_training.session_completed_title"))}</div>
+        <div class="small review-summary-lead">
+          ${esc(postWorkoutMessage || tr("after_training.session_completed_title"))}
+        </div>
+        <div class="small review-summary-outcome">
+          ${esc(sessionType)}${cardioKind ? ` · ${esc(formatCardioKindLabel(cardioKind))}` : ""}${fatigueLine}
+        </div>
+        <div class="small review-summary-outcome">
+          ${esc(tr("cardio.review.distance_label"))}: ${esc(distanceText)} km<br>
+          ${esc(tr("cardio.review.duration_label"))}: ${esc(durationText)}<br>
+          ${esc(tr("cardio.review.actual_pace_label"))}: ${esc(paceText)}
+        </div>
+        <div class="small review-summary-outcome">
+          ${esc(tr("review.saved_next_label"))}: ${esc(nextStepHint || tr("common.no_recommendation"))}
+        </div>
+        ${explanationBits.length ? `<div class="small review-summary-outcome">${esc(explanationBits.join(" · "))}</div>` : ""}
+        <div class="small review-summary-outcome">
+          ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
+        </div>
+        ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
       </div>
-      <div class="small" style="margin-bottom:8px">
-        ${esc(sessionType)}${cardioKind ? ` · ${esc(formatCardioKindLabel(cardioKind))}` : ""}${fatigueLine}
-      </div>
-      <div class="small" style="margin-bottom:8px">
-        ${esc(tr("cardio.review.distance_label"))}: ${esc(distanceText)} km<br>
-        ${esc(tr("cardio.review.duration_label"))}: ${esc(durationText)}<br>
-        ${esc(tr("cardio.review.actual_pace_label"))}: ${esc(paceText)}
-      </div>
-      <div class="small" style="margin-bottom:8px">
-        ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
-      </div>
-      ${explanationBits.length ? `<div class="small" style="margin-bottom:8px">${esc(explanationBits.join(" · "))}</div>` : ""}
-      <div class="small">
-        ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
-      </div>
-      ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
       ${buildFeedbackFooterHtml()}
     `;
     wireFeedbackFooterActions();
@@ -4568,22 +4571,24 @@ function renderSessionResultSummary(summary, fallbackResults = null){
       ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`;
 
   root.innerHTML = `
-    <div style="font-weight:700; margin-bottom:10px; color:#4ade80">✔ ${esc(tr("after_training.session_completed_title"))}</div>
-    <div class="small" style="margin-bottom:8px">
-      ${esc(postWorkoutMessage || tr("after_training.session_completed_title"))}
+    <div class="review-summary-card">
+      <div class="review-summary-title">✔ ${esc(tr("after_training.session_completed_title"))}</div>
+      <div class="small review-summary-lead">
+        ${esc(postWorkoutMessage || tr("after_training.session_completed_title"))}
+      </div>
+      <div class="small review-summary-outcome">
+        ${esc(sessionType)}${fatigueLine}
+      </div>
+      <div class="small review-summary-outcome">
+        ${performanceBlock}
+      </div>
+      <div class="small review-summary-outcome">
+        ${esc(tr("review.saved_next_label"))}: ${esc(nextStepHint || tr("common.no_recommendation"))}
+      </div>
+      ${visibleExplanationBits.length ? `<div class="small review-summary-outcome">${esc(visibleExplanationBits.join(" · "))}</div>` : ""}
+      ${visibleProgressFlags.length ? `<div class="small review-summary-outcome">${esc(visibleProgressFlags.map(formatProgressFlag).join(", "))}</div>` : ""}
+      ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
     </div>
-    <div class="small" style="margin-bottom:8px">
-      ${esc(sessionType)}${fatigueLine}
-    </div>
-    <div class="small" style="margin-bottom:8px">
-      ${performanceBlock}
-    </div>
-    <div class="small" style="margin-bottom:8px">
-      ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
-    </div>
-    ${visibleExplanationBits.length ? `<div class="small" style="margin-bottom:8px">${esc(visibleExplanationBits.join(" · "))}</div>` : ""}
-    ${visibleProgressFlags.length ? `<div class="small">${esc(visibleProgressFlags.map(formatProgressFlag).join(", "))}</div>` : ""}
-    ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
     ${buildFeedbackFooterHtml()}
   `;
   wireFeedbackFooterActions();
