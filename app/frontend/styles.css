@@ -536,3 +536,38 @@ button{
   margin-bottom:8px;
   line-height:1.5;
 }
+
+.card-stack-gap{
+  margin-top:var(--space-3);
+}
+
+.card-stack-gap-lg{
+  margin-top:var(--space-4);
+}
+
+.card-section-gap{
+  margin-top:6px;
+}
+
+.card-section-gap-md{
+  margin-top:8px;
+}
+
+.card-action-row{
+  margin-top:10px;
+}
+
+.button-link{
+  display:inline-block;
+  width:auto;
+  padding:10px 12px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-sm);
+  background:#242424;
+  color:var(--text-primary);
+  text-decoration:none;
+}
+
+.card-muted-block{
+  margin-top:10px;
+}

@@ -1344,20 +1344,20 @@ function renderSessionHistory(items){
           <strong>${esc(dateLabel)} · ${esc(typeLabel || tr("common.unknown_lower"))}</strong>
           <span class="small">${tr("history.fatigue_label", { value: formatFatigueText(fatigue) })}</span>
         </div>
-        <div class="small" style="margin-top:6px">
+        <div class="small card-section-gap">
           ${isCardio
             ? esc(cardioMeta || tr("history.cardio_none"))
             : `${tr("history.session_totals", { sets: esc(String(totalSets)), reps: esc(String(totalReps)), tut_part: totalTUT ? ` · TUT: ${esc(String(totalTUT))} ${tr("unit.seconds")}` : "", volume: esc(String(estimatedVolume)) })}`}
         </div>
-        <div class="small" style="margin-top:6px">
+        <div class="small card-section-gap">
           ${tr("review.next_progression_label")}: ${esc(nextStepHint || tr("common.no_recommendation"))}
         </div>
-        <div class="small" style="margin-top:6px">
+        <div class="small card-section-gap">
           ${progressFlags.length ? esc(progressFlags.map(formatProgressFlag).join(", ")) : tr("history.no_progress_flags")}
         </div>
-        ${notes ? `<div class="small" style="margin-top:8px">${esc(notes)}</div>` : ""}
-        <div class="btn-row" style="margin-top:10px">
-          <a href="/?edit_session=${encodeURIComponent(String(item?.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">${esc(tr("button.open_edit"))}</a>
+        ${notes ? `<div class="small card-section-gap-md">${esc(notes)}</div>` : ""}
+        <div class="btn-row card-action-row">
+          <a href="/?edit_session=${encodeURIComponent(String(item?.id || ""))}" class="button-link">${esc(tr("button.open_edit"))}</a>
         </div>
       </li>
     `;
@@ -1429,7 +1429,7 @@ function ensureWeeklyRhythmMount(){
   const card = document.createElement("div");
   card.className = "card";
   card.id = "weeklyRhythmCard";
-  card.style.marginBottom = "16px";
+  card.classList.add("card-stack-gap");
   card.innerHTML = `
     <div class="row">
       <h2>${esc(tr("history.weekly_rhythm_title"))}</h2>
@@ -1469,9 +1469,9 @@ function renderWeeklyRhythmCard(sessionResults, planItem){
 
   body.innerHTML = `
     <div class="small"><strong>${esc(tr("history.weekly_rhythm_completed_label"))}:</strong> ${esc(String(summary.completedCount))}</div>
-    <div class="small" style="margin-top:6px"><strong>${esc(tr("history.weekly_rhythm_types_label"))}:</strong> ${esc(completedTypesLine)}</div>
-    <div class="small" style="margin-top:6px"><strong>${esc(tr("history.weekly_rhythm_latest_label"))}:</strong> ${esc(latestLine)}</div>
-    <div class="small" style="margin-top:6px"><strong>${esc(tr("history.weekly_rhythm_next_label"))}:</strong> ${esc(nextLine)}</div>
+    <div class="small card-section-gap"><strong>${esc(tr("history.weekly_rhythm_types_label"))}:</strong> ${esc(completedTypesLine)}</div>
+    <div class="small card-section-gap"><strong>${esc(tr("history.weekly_rhythm_latest_label"))}:</strong> ${esc(latestLine)}</div>
+    <div class="small card-section-gap"><strong>${esc(tr("history.weekly_rhythm_next_label"))}:</strong> ${esc(nextLine)}</div>
   `;
 
   if (meta){
@@ -1494,7 +1494,7 @@ function ensureLoadMetricsMount(){
   const card = document.createElement("div");
   card.className = "card";
   card.id = "loadMetricsCard";
-  card.style.marginTop = "16px";
+  card.classList.add("card-stack-gap");
   card.innerHTML = `
     <div class="row">
       <h2>${esc(tr("load.title"))}</h2>
@@ -1534,8 +1534,8 @@ function renderLoadMetrics(loadMetrics, recoveryState){
 
     root.innerHTML = `
       <div class="small"><strong>${tr("common.status_label")}:</strong> ${esc(loadStatus)}</div>
-      ${rs.strain_flag ? `<div class="small" style="margin-top:6px"><strong>${tr("recovery.strain_flag_label")}:</strong> ${tr("common.active")}</div>` : `<div class="small" style="margin-top:6px"><strong>${tr("recovery.strain_flag_label")}:</strong> ${tr("common.inactive")}</div>`}
-      ${Array.isArray(rs.explanation) && rs.explanation.length ? `<div class="small" style="margin-top:6px">${esc(rs.explanation.join(" · "))}</div>` : ""}
+      ${rs.strain_flag ? `<div class="small card-section-gap"><strong>${tr("recovery.strain_flag_label")}:</strong> ${tr("common.active")}</div>` : `<div class="small card-section-gap"><strong>${tr("recovery.strain_flag_label")}:</strong> ${tr("common.inactive")}</div>`}
+      ${Array.isArray(rs.explanation) && rs.explanation.length ? `<div class="small card-section-gap">${esc(rs.explanation.join(" · "))}</div>` : ""}
     `;
     if (meta) meta.textContent = tr("recovery.fallback_label");
     return;
@@ -1560,7 +1560,7 @@ function renderLoadMetrics(loadMetrics, recoveryState){
     <div class="small"><strong>${tr("load.days_28_label")}:</strong> ${esc(String(chronic))}</div>
     <div class="small"><strong>${tr("load.ratio_label")}:</strong> ${esc(String(ratio))}</div>
     <div class="small"><strong>${tr("common.status_label")}:</strong> ${esc(status)}</div>
-    ${dailyRows ? `<div style="margin-top:10px">${dailyRows}</div>` : ""}
+    ${dailyRows ? `<div class="card-muted-block">${dailyRows}</div>` : ""}
   `;
   if (meta) meta.textContent = "";
 }
@@ -1842,8 +1842,8 @@ function renderRecovery(items){
       <div class="pill">${esc(formatOverviewReadinessLabel(item.readiness_score))}</div>
       ${item.suggestion ? `<div class="small" style="margin-top:8px">${esc(item.suggestion)}</div>` : ""}
       ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
-      <div class="btn-row" style="margin-top:10px">
-        <a class="edit-recovery-btn" data-recovery-id="${esc(item.id || "")}" href="/?edit_checkin=${encodeURIComponent(String(item.id || ""))}" style="display:inline-block;padding:10px 12px;border:1px solid #2c2c2c;border-radius:10px;background:#242424;color:#f3f3f3;text-decoration:none">${esc(tr("button.open_edit"))}</a>
+      <div class="btn-row card-action-row">
+        <a class="edit-recovery-btn button-link" data-recovery-id="${esc(item.id || "")}" href="/?edit_checkin=${encodeURIComponent(String(item.id || ""))}">${esc(tr("button.open_edit"))}</a>
       </div>
     </li>
   `).join("");
