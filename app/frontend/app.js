@@ -8245,6 +8245,48 @@ function isGuidedWorkoutPlayerStep(stepId){
   return stepId === "plan" && STATE.workoutInProgress === true;
 }
 
+function applyGuidedWorkoutPlayerShell(isActive){
+  const todayPlanSection = document.getElementById("todayPlanSection");
+  if (todayPlanSection){
+    todayPlanSection.classList.toggle("workout-mode-active", isActive);
+
+    if (isActive){
+      todayPlanSection.style.maxWidth = "none";
+      todayPlanSection.style.width = "100%";
+      todayPlanSection.style.background = "#050505";
+      todayPlanSection.style.border = "1px solid rgba(255,255,255,0.06)";
+      todayPlanSection.style.borderRadius = "24px";
+      todayPlanSection.style.padding = "12px";
+      todayPlanSection.style.boxShadow = "0 18px 48px rgba(0,0,0,0.35)";
+    } else {
+      todayPlanSection.style.maxWidth = "";
+      todayPlanSection.style.width = "";
+      todayPlanSection.style.background = "";
+      todayPlanSection.style.border = "";
+      todayPlanSection.style.borderRadius = "";
+      todayPlanSection.style.padding = "";
+      todayPlanSection.style.boxShadow = "";
+    }
+  }
+
+  document.body.classList.toggle("workout-mode-active", isActive);
+
+  [
+    "overviewStatusCard",
+    "systemStatusCard",
+    "authBar",
+    "appHeaderBar",
+    "appTagline",
+    "wizardNav",
+    "utilityNav",
+  ].forEach(id => {
+    const node = document.getElementById(id);
+    if (node){
+      node.classList.toggle("wizard-step-hidden", isActive);
+    }
+  });
+}
+
 function showWizardStep(stepId){
   CURRENT_STEP = stepId;
   const groups = getWizardSections();
@@ -8269,63 +8311,9 @@ function showWizardStep(stepId){
 
   if (todayPlanSection){
     todayPlanSection.classList.toggle("wizard-step-hidden", !(stepId === "plan" || stepId === "review"));
-    todayPlanSection.classList.toggle("workout-mode-active", isWorkoutPlanStep);
-
-    if (isWorkoutPlanStep){
-      todayPlanSection.style.maxWidth = "none";
-      todayPlanSection.style.width = "100%";
-      todayPlanSection.style.background = "#050505";
-      todayPlanSection.style.border = "1px solid rgba(255,255,255,0.06)";
-      todayPlanSection.style.borderRadius = "24px";
-      todayPlanSection.style.padding = "12px";
-      todayPlanSection.style.boxShadow = "0 18px 48px rgba(0,0,0,0.35)";
-    } else {
-      todayPlanSection.style.maxWidth = "";
-      todayPlanSection.style.width = "";
-      todayPlanSection.style.background = "";
-      todayPlanSection.style.border = "";
-      todayPlanSection.style.borderRadius = "";
-      todayPlanSection.style.padding = "";
-      todayPlanSection.style.boxShadow = "";
-    }
   }
 
-  document.body.classList.toggle("workout-mode-active", isWorkoutPlanStep);
-
-  const overviewStatusCard = document.getElementById("overviewStatusCard");
-  if (overviewStatusCard){
-    overviewStatusCard.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
-
-  const systemStatusCard = document.getElementById("systemStatusCard");
-  if (systemStatusCard){
-    systemStatusCard.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
-
-  const authBar = document.getElementById("authBar");
-  if (authBar){
-    authBar.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
-
-  const appHeaderBar = document.getElementById("appHeaderBar");
-  if (appHeaderBar){
-    appHeaderBar.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
-
-  const appTagline = document.getElementById("appTagline");
-  if (appTagline){
-    appTagline.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
-
-  const wizardNav = document.getElementById("wizardNav");
-  if (wizardNav){
-    wizardNav.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
-
-  const utilityNav = document.getElementById("utilityNav");
-  if (utilityNav){
-    utilityNav.classList.toggle("wizard-step-hidden", isWorkoutPlanStep);
-  }
+  applyGuidedWorkoutPlayerShell(isWorkoutPlanStep);
 
   if (todayPlanList){
     todayPlanList.classList.toggle("wizard-step-hidden", stepId === "review");
