@@ -6048,11 +6048,22 @@ function clearWorkoutRestTimer(){
   window.clearTimeout(window.__ssWorkoutRestTick || 0);
 }
 
+function clearWorkoutRuntimeArtifacts(item){
+  clearWorkoutRestTimer();
+  clearTimedHoldTick();
+
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  for (const entry of entries){
+    if (!entry || typeof entry !== "object") continue;
+    clearTimedHoldTimer(entry);
+  }
+}
+
 function finishActiveWorkoutAndOpenReview(item){
   STATE.workoutInProgress = false;
   STATE.currentWorkoutEntryIndex = 0;
   STATE.currentWorkoutSetIndex = 0;
-  clearWorkoutRestTimer();
+  clearWorkoutRuntimeArtifacts(item);
   renderReviewSummary(item);
   renderSessionReview(item);
   showWizardStep("review");
@@ -6500,16 +6511,9 @@ async function applyRecommendedStrengthProgram(programId){
 
 function resetWorkoutRuntimeState(item){
   STATE.workoutRuntimeNonce = Number(STATE.workoutRuntimeNonce || 0) + 1;
-  clearWorkoutRestTimer();
-  clearTimedHoldTick();
   STATE.currentWorkoutEntryIndex = 0;
   STATE.currentWorkoutSetIndex = 0;
-
-  const entries = Array.isArray(item?.entries) ? item.entries : [];
-  for (const entry of entries){
-    if (!entry || typeof entry !== "object") continue;
-    clearTimedHoldTimer(entry);
-  }
+  clearWorkoutRuntimeArtifacts(item);
 }
 
 function wireTodayPlanActions(item){
