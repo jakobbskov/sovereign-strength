@@ -6427,21 +6427,29 @@ function renderActiveWorkoutCard(item){
       ? tr("button.next_set")
       : (isLast ? tr("button.finish_workout") : tr("button.next_exercise"));
 
-
-      const activeShellBackground = "#101722";
+    const playerLabels = getGuidedWorkoutPlayerLabels({
+      idx,
+      total,
+      exerciseName: formatExerciseName(entry.exercise_id),
+      actionText: formatPlanActionText(entry),
+      setProgressLabel: !isCardioEntry
+        ? tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) })
+        : "",
+    });
+  const activeShellBackground = "#101722";
       const activeShellBorder = "1px solid rgba(86, 145, 255, 0.28)";
       const actionColor = "#bcd3ff";
     root.innerHTML = `
         <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:flex-start; border-radius:20px; background:${activeShellBackground}; border:${activeShellBorder}; box-shadow:0 18px 48px rgba(0,0,0,0.28)">
           <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">
-          ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
+          ${esc(playerLabels.progressLabel)}
         </div>
-        ${!isCardioEntry ? `<div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) }))}</div>` : ""}
+        ${!isCardioEntry ? `<div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(playerLabels.setProgressLabel)}</div>` : ""}
         <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">
-          ${esc(formatExerciseName(entry.exercise_id))}
+          ${esc(playerLabels.exerciseName)}
         </div>
           <div style="font-weight:700; font-size:1.05rem; margin-bottom:12px; color:${actionColor}">
-          ${esc(formatPlanActionText(entry))}
+          ${esc(playerLabels.actionText)}
         </div>
           <div class="small" style="line-height:1.5; margin-bottom:14px; opacity:0.8">
           ${entry.sets ? tr("exercise.sets_count", { count: esc(entry.sets) }) : ""}
