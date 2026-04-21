@@ -6247,6 +6247,15 @@ function saveActiveWorkoutEntryProgress(item){
   };
 }
 
+function getGuidedWorkoutPlayerLabels({ idx, total, exerciseName, actionText, setProgressLabel }){
+  return {
+    progressLabel: tr("workout.active_progress", { current: String(idx + 1), total: String(total) }),
+    exerciseName: exerciseName || "",
+    actionText: actionText || "",
+    setProgressLabel: setProgressLabel || "",
+  };
+}
+
 function renderWorkoutRestState(item, active){
   const root = document.getElementById("todayPlanList");
   if (!root) return;
@@ -6286,6 +6295,13 @@ function renderWorkoutRestState(item, active){
     ? formatPlanActionText(nextEntry)
     : formatPlanActionText(entry);
 
+  const playerLabels = getGuidedWorkoutPlayerLabels({
+    idx,
+    total,
+    exerciseName,
+    actionText,
+    setProgressLabel,
+  });
 
     const shellBackground = restDone ? "#0f1f14" : "#1c1710";
     const shellBorder = restDone ? "1px solid rgba(87, 214, 116, 0.32)" : "1px solid rgba(224, 170, 73, 0.26)";
@@ -6295,15 +6311,15 @@ function renderWorkoutRestState(item, active){
   root.innerHTML = `
       <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:center; border-radius:20px; background:${shellBackground}; border:${shellBorder}; box-shadow:0 18px 48px rgba(0,0,0,0.28)">
         <div style="font-size:0.95rem; opacity:${progressOpacity}; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">
-        ${esc(tr("workout.active_progress", { current: String(idx + 1), total: String(total) }))}
+        ${esc(playerLabels.progressLabel)}
       </div>
       ${nextExerciseLabel}
-      <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(setProgressLabel)}</div>
-      <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(exerciseName)}</div>
+      <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(playerLabels.setProgressLabel)}</div>
+      <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(playerLabels.exerciseName)}</div>
         <div style="font-weight:700; font-size:1.05rem; margin-bottom:12px; color:${statusColor}">${esc(statusLabel)}</div>
         <div style="font-size:3.2rem; line-height:1; font-weight:800; color:${timerColor}; margin:8px 0 18px 0">${esc(String(remainingSec))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
       <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">
-        ${esc(actionText)}
+        ${esc(playerLabels.actionText)}
       </div>
       <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
         <button type="button" id="resumeWorkoutRestBtn" style="padding:16px 18px; font-size:1.05rem; font-weight:700; width:100%">${esc(primaryActionLabel)}</button>
