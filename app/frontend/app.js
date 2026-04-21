@@ -8241,6 +8241,10 @@ function updatePlanHeadingForStep(stepId){
 }
 
 
+function isGuidedWorkoutPlayerStep(stepId){
+  return stepId === "plan" && STATE.workoutInProgress === true;
+}
+
 function showWizardStep(stepId){
   CURRENT_STEP = stepId;
   const groups = getWizardSections();
@@ -8261,7 +8265,7 @@ function showWizardStep(stepId){
   const todayPlanSummary = document.getElementById("todayPlanSummary");
   const reviewSummary = document.getElementById("reviewPlanSummary");
 
-  const isWorkoutPlanStep = stepId === "plan" && STATE.workoutInProgress;
+  const isWorkoutPlanStep = isGuidedWorkoutPlayerStep(stepId);
 
   if (todayPlanSection){
     todayPlanSection.classList.toggle("wizard-step-hidden", !(stepId === "plan" || stepId === "review"));
@@ -8335,11 +8339,11 @@ function showWizardStep(stepId){
   }
 
   if (todayPlanTiming){
-    todayPlanTiming.classList.toggle("wizard-step-hidden", stepId === "review" || (stepId === "plan" && STATE.workoutInProgress));
+    todayPlanTiming.classList.toggle("wizard-step-hidden", stepId === "review" || isGuidedWorkoutPlayerStep(stepId));
   }
 
   if (todayPlanSummary){
-    todayPlanSummary.classList.toggle("wizard-step-hidden", stepId === "review" || (stepId === "plan" && STATE.workoutInProgress));
+    todayPlanSummary.classList.toggle("wizard-step-hidden", stepId === "review" || isGuidedWorkoutPlayerStep(stepId));
   }
 
   if (reviewSummary){
