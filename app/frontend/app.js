@@ -4466,6 +4466,7 @@ function renderReviewSummary(item){
   }
 
   const sessionType = formatSessionType(item.session_type || "");
+  const completionSummaryText = getWorkoutCompletionSummaryText(STATE.workoutCompletionContext || {});
   const metaBits = [];
   if (sessionType) metaBits.push(sessionType);
   if (item.time_budget_min) metaBits.push(`${esc(item.time_budget_min)} min`);
@@ -4480,6 +4481,7 @@ function renderReviewSummary(item){
         <div class="review-summary-pill small">${esc(tr("review.summary_closure_label"))}</div>
         ${metaBits.map(bit => `<div class="review-summary-pill small">${esc(bit)}</div>`).join("")}
       </div>
+      ${completionSummaryText ? `<div class="small review-summary-outcome">${esc(completionSummaryText)}</div>` : ""}
       <div class="small review-summary-outcome">${esc(tr("review.summary_session_label"))}</div>
       <div class="small review-summary-list">
         ${item.entries.map(entry => {
@@ -6068,6 +6070,21 @@ function getWorkoutCompletionStatusText(context = {}){
 
   if (outcome === "removed_last_entry"){
     return "Workout sluttede, da sidste øvelse blev fjernet. Klar til review.";
+  }
+
+  return "";
+}
+
+
+function getWorkoutCompletionSummaryText(context = {}){
+  const outcome = String(context?.outcome || "").trim();
+
+  if (outcome === "completed"){
+    return "Session blev fuldført i workout playeren.";
+  }
+
+  if (outcome === "removed_last_entry"){
+    return "Session sluttede, efter den sidste resterende øvelse blev fjernet.";
   }
 
   return "";
