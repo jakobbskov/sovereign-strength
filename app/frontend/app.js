@@ -6015,8 +6015,6 @@ function completeTimedHoldSet(item){
   if (!isTimedHoldWorkoutEntry(entry)) return false;
 
   const idx = active.index;
-  const total = active.total;
-  const isLast = idx >= total - 1;
   const hasMoreSetsRemaining = hasMoreWorkoutSets(entry);
   const currentSetIndex = getCurrentWorkoutSetIndex(entry);
 
@@ -6031,29 +6029,7 @@ function completeTimedHoldSet(item){
   clearTimedHoldTick();
   saveActiveWorkoutEntryProgress(item);
 
-  if (hasMoreSetsRemaining){
-    STATE.currentWorkoutSetIndex = currentSetIndex + 1;
-    startWorkoutRestTimer(undefined, {
-      targetKind: "next_set",
-      nextEntryIndex: idx,
-    });
-    renderTodayPlan(item);
-    return true;
-  }
-
-  STATE.currentWorkoutSetIndex = 0;
-
-  if (isLast){
-    finishActiveWorkoutAndOpenReview(item);
-    return true;
-  }
-
-  STATE.currentWorkoutEntryIndex = idx + 1;
-  startWorkoutRestTimer(undefined, {
-    targetKind: "next_exercise",
-    nextEntryIndex: idx + 1,
-  });
-  renderTodayPlan(item);
+  advanceActiveWorkoutAfterCompletedSet(item, idx, currentSetIndex, hasMoreSetsRemaining);
   return true;
 }
 
