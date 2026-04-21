@@ -6058,6 +6058,34 @@ function finishActiveWorkoutAndOpenReview(item){
   showWizardStep("review");
 }
 
+function advanceActiveWorkoutAfterCompletedSet(item, idx, currentSetIndex, hasMoreSetsRemaining){
+  if (hasMoreSetsRemaining){
+    STATE.currentWorkoutSetIndex = currentSetIndex + 1;
+    startWorkoutRestTimer(undefined, {
+      targetKind: "next_set",
+      nextEntryIndex: idx,
+    });
+    renderTodayPlan(item);
+    return;
+  }
+
+  STATE.currentWorkoutSetIndex = 0;
+
+  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  const isLast = idx >= entries.length - 1;
+  if (isLast){
+    finishActiveWorkoutAndOpenReview(item);
+    return;
+  }
+
+  STATE.currentWorkoutEntryIndex = idx + 1;
+  startWorkoutRestTimer(undefined, {
+    targetKind: "next_exercise",
+    nextEntryIndex: idx + 1,
+  });
+  renderTodayPlan(item);
+}
+
 function startWorkoutRestTimer(durationSec, options = {}){
   const seconds = Math.max(5, Number(durationSec || STATE.workoutRestTimerDurationSec || 90));
   STATE.workoutRestTimerDurationSec = seconds;
@@ -6418,29 +6446,7 @@ function renderActiveWorkoutCard(item){
           clearTimedHoldTick();
           saveActiveWorkoutEntryProgress(item);
 
-          if (hasMoreSetsRemaining){
-            STATE.currentWorkoutSetIndex = currentSetIndex + 1;
-            startWorkoutRestTimer(undefined, {
-              targetKind: "next_set",
-              nextEntryIndex: idx,
-            });
-            renderTodayPlan(item);
-            return;
-          }
-
-          STATE.currentWorkoutSetIndex = 0;
-
-          if (isLast){
-            finishActiveWorkoutAndOpenReview(item);
-            return;
-          }
-
-          STATE.currentWorkoutEntryIndex = idx + 1;
-          startWorkoutRestTimer(undefined, {
-            targetKind: "next_exercise",
-            nextEntryIndex: idx + 1,
-          });
-          renderTodayPlan(item);
+          advanceActiveWorkoutAfterCompletedSet(item, idx, currentSetIndex, hasMoreSetsRemaining);
         }
       });
 
@@ -6453,29 +6459,7 @@ function renderActiveWorkoutCard(item){
 
         saveActiveWorkoutEntryProgress(item);
 
-        if (hasMoreSetsRemaining && !isCardioEntry){
-          STATE.currentWorkoutSetIndex = currentSetIndex + 1;
-          startWorkoutRestTimer(undefined, {
-            targetKind: "next_set",
-            nextEntryIndex: idx,
-          });
-          renderTodayPlan(item);
-          return;
-        }
-
-        STATE.currentWorkoutSetIndex = 0;
-
-        if (isLast){
-          finishActiveWorkoutAndOpenReview(item);
-          return;
-        }
-
-        STATE.currentWorkoutEntryIndex = idx + 1;
-        startWorkoutRestTimer(undefined, {
-          targetKind: "next_exercise",
-          nextEntryIndex: idx + 1,
-        });
-        renderTodayPlan(item);
+        advanceActiveWorkoutAfterCompletedSet(item, idx, currentSetIndex, hasMoreSetsRemaining && !isCardioEntry);
       });
 }
 
