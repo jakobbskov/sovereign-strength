@@ -5948,6 +5948,24 @@ function startTimedHoldTimer(entry){
   return targetSec;
 }
 
+function getTimedHoldRuntimeState(entry){
+  const prepEndsAt = Number(entry?._active_hold_prep_ends_at || 0);
+  const timerEndsAt = Number(entry?._active_hold_timer_ends_at || 0);
+  const prepRemainingSec = getTimedHoldPrepRemainingSeconds(entry);
+  const remainingSec = getTimedHoldRemainingSeconds(entry);
+
+  return {
+    hasPrep: prepEndsAt > 0,
+    hasActiveTimer: timerEndsAt > 0,
+    prepRemainingSec,
+    remainingSec,
+    isPrepRunning: prepRemainingSec > 0,
+    isActiveRunning: timerEndsAt > 0 && remainingSec > 0,
+    isReadyToStartActive: prepEndsAt > 0 && remainingSec <= 0,
+    isReadyToComplete: timerEndsAt > 0 && remainingSec <= 0,
+  };
+}
+
 function ensureTimedHoldTick(item){
   window.clearTimeout(window.__ssWorkoutActiveHoldTick || 0);
   const runtimeNonce = Number(STATE.workoutRuntimeNonce || 0);
@@ -5955,8 +5973,8 @@ function ensureTimedHoldTick(item){
   const entry = active?.entry;
   if (!entry || !isTimedHoldWorkoutEntry(entry)) return;
 
-  const prepRemaining = getTimedHoldPrepRemainingSeconds(entry);
-  if (prepRemaining > 0){
+  const holdState = getTimedHoldRuntimeState(entry);
+  if (holdState.isPrepRunning){
     window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
       if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
       renderTodayPlan(item);
@@ -5964,7 +5982,7 @@ function ensureTimedHoldTick(item){
     return;
   }
 
-  if (Number(entry?._active_hold_prep_ends_at || 0) > 0 && getTimedHoldRemainingSeconds(entry) <= 0){
+  if (holdState.isReadyToStartActive){
     clearTimedHoldPrep(entry);
     startTimedHoldTimer(entry);
     window.__ssWorkoutActiveHoldTick = window.setTimeout(() => {
@@ -5974,8 +5992,7 @@ function ensureTimedHoldTick(item){
     return;
   }
 
-  const hasActiveHoldTimer = Number(entry?._active_hold_timer_ends_at || 0) > 0;
-  if (hasActiveHoldTimer && getTimedHoldRemainingSeconds(entry) <= 0){
+  if (holdState.isReadyToComplete){
     completeTimedHoldSet(item);
     return;
   }
