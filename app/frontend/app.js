@@ -4106,6 +4106,7 @@ function buildReviewSetFields(entry, idx, setIdx){
 function buildWorkoutSetFields(entry, idx, setIdx){
   const meta = getReviewExerciseMeta(entry?.exercise_id);
   const inputKind = String(meta?.input_kind || "");
+  const workoutRepChoices = getWorkoutRepChoicesForEntry(entry);
   const currentLoad = String(entry?.target_load || "").trim();
   const existingResult = entry?._existing_result && typeof entry._existing_result === "object" ? entry._existing_result : {};
   const existingSets = Array.isArray(existingResult.sets) ? existingResult.sets : [];
@@ -4162,8 +4163,8 @@ function buildWorkoutSetFields(entry, idx, setIdx){
         <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
         <label style="margin-bottom:0">
           Reps
-          ${Array.isArray(meta?.workout_rep_choices) && meta.workout_rep_choices.length
-            ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, meta.workout_rep_choices, existingReps)
+          ${workoutRepChoices.length
+            ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, workoutRepChoices, existingReps)
             : buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
         </label>
         <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
@@ -4176,8 +4177,8 @@ function buildWorkoutSetFields(entry, idx, setIdx){
       <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
       <label style="margin-bottom:10px">
         Reps
-        ${Array.isArray(meta?.workout_rep_choices) && meta.workout_rep_choices.length
-          ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, meta.workout_rep_choices, existingReps)
+        ${workoutRepChoices.length
+          ? buildWorkoutRepChoiceButtons(`review_set_reps_${idx}_${setIdx}`, workoutRepChoices, existingReps)
           : buildReviewValueSelect(`review_set_reps_${idx}_${setIdx}`, getReviewRepOptions(meta), existingReps, tr("after_training.select_reps"))}
       </label>
       <label style="margin-bottom:0">
@@ -5044,6 +5045,26 @@ function getEntrySetBounds(entry){
     max: options[options.length - 1] || currentSets,
     options: options.length ? options : [currentSets]
   };
+}
+
+function getWorkoutRepChoicesForEntry(entry){
+  const target = String(entry?.target_reps || "").trim();
+  const nums = [...target.matchAll(/\d+/g)]
+    .map(m => Number(m[0]))
+    .filter(Number.isFinite)
+    .map(n => Math.max(0, Math.trunc(n)));
+
+  if (nums.length){
+    const max = Math.max(...nums);
+    return Array.from({ length: max + 1 }, (_, i) => String(i));
+  }
+
+  const repBounds = getEntryRepBounds(entry);
+  if (repBounds.kind === "reps" && Array.isArray(repBounds.options) && repBounds.options.length){
+    return repBounds.options.map(String);
+  }
+
+  return [];
 }
 
 function getEntryRepBounds(entry){
