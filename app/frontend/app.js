@@ -972,39 +972,11 @@ function renderWorkouts(items){
         </div>
         ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
         ${entriesHtml}
-        <div class="btn-row" style="margin-top:10px">
-          <button type="button" class="danger" data-delete-workout-id="${esc(String(item.id || ""))}">Slet workout</button>
-        </div>
       </li>
     `;
   }).join("");
 
   setText("listMeta", tr("common.items_count", { count: sorted.length }));
-
-  root.querySelectorAll("[data-delete-workout-id]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const workoutId = String(btn.getAttribute("data-delete-workout-id") || "").trim();
-      if (!workoutId) return;
-      if (!window.confirm("Er du sikker på at du vil slette denne workout? Dette kan påvirke historik, progression og anbefalinger.")){
-        return;
-      }
-
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = "Sletter...";
-
-      try{
-        await apiJsonRequest("DELETE", `/api/workouts/${encodeURIComponent(workoutId)}`);
-        await refreshAll();
-      }catch(err){
-        console.error(err);
-        window.alert(err?.message || "Kunne ikke slette workout.");
-      }finally{
-        btn.disabled = false;
-        btn.textContent = originalText;
-      }
-    });
-  });
 }
 
 function formatCardioKindLabel(value){
@@ -1394,6 +1366,120 @@ function renderSessionHistory(items){
   setText("sessionResultsMeta", tr("common.items_count", { count: sorted.length }));
 }
 
+
+
+
+function getStartOfIsoWeek(dateStr){
+  const raw = String(dateStr || "").trim();
+  if (!raw) return "";
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return "";
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const d = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  if (Number.isNaN(d.getTime())) return "";
+  const weekday = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() - (weekday - 1));
+  return d.toISOString().slice(0, 10);
+}
+
+function buildWeeklyRhythmSummary(sessionResults, planItem){
+  const items = Array.isArray(sessionResults) ? sessionResults : [];
+  const baseDate = String(planItem?.date || planItem?.recommended_for || "").trim();
+  const todayIso = /^\d{4}-\d{2}-\d{2}$/.test(baseDate) ? baseDate : new Date().toISOString().slice(0, 10);
+  const weekStart = getStartOfIsoWeek(todayIso);
+  const thisWeek = items
+    .filter(item => {
+      const itemDate = String(item?.date || "").slice(0, 10);
+      return itemDate && itemDate >= weekStart && itemDate <= todayIso;
+    })
+    .sort((a, b) => String(b?.created_at || b?.date || "").localeCompare(String(a?.created_at || a?.date || "")));
+
+  const completedCount = thisWeek.length;
+  const latest = thisWeek[0] || null;
+
+  const completedTypes = [...new Set(
+    thisWeek
+      .map(item => formatSessionType(item?.session_type || ""))
+      .filter(Boolean)
+  )];
+
+  const nextInfo = getNextPlannedSessionInfo(planItem);
+  return {
+    weekStart,
+    completedCount,
+    latest,
+    completedTypes,
+    nextTraining: nextInfo?.nextTraining || null
+  };
+}
+
+function ensureWeeklyRhythmMount(){
+  let root = document.getElementById("weeklyRhythmCard");
+  if (root) return root;
+
+  const workoutsList = document.getElementById("workoutsList");
+  const workoutsCard = workoutsList?.closest(".card");
+  const historyTop = document.getElementById("historyTopSection");
+  const historyBottom = document.getElementById("historyBottomSection");
+  const parent = workoutsCard?.parentNode || historyTop?.parentNode || historyBottom?.parentNode;
+  if (!parent) return null;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.id = "weeklyRhythmCard";
+  card.style.marginBottom = "16px";
+  card.innerHTML = `
+    <div class="row">
+      <h2>${esc(tr("history.weekly_rhythm_title"))}</h2>
+      <div class="small" id="weeklyRhythmMeta"></div>
+    </div>
+    <div id="weeklyRhythmBody" class="small"></div>
+  `;
+
+  if (workoutsCard && workoutsCard.parentNode){
+    workoutsCard.parentNode.insertBefore(card, workoutsCard);
+  } else if (historyTop && historyTop.parentNode){
+    historyTop.parentNode.insertBefore(card, historyTop);
+  } else {
+    parent.appendChild(card);
+  }
+
+  return card;
+}
+
+function renderWeeklyRhythmCard(sessionResults, planItem){
+  const card = ensureWeeklyRhythmMount();
+  const body = document.getElementById("weeklyRhythmBody");
+  const meta = document.getElementById("weeklyRhythmMeta");
+  if (!card || !body) return;
+
+  const summary = buildWeeklyRhythmSummary(sessionResults, planItem);
+  const latest = summary.latest;
+  const completedTypesLine = summary.completedTypes.length
+    ? summary.completedTypes.join(" · ")
+    : tr("history.weekly_rhythm_no_completed_types");
+  const latestLine = latest
+    ? `${String(latest.date || "")} · ${formatSessionType(latest.session_type || "")}`
+    : tr("history.weekly_rhythm_none_completed");
+  const nextLine = summary.nextTraining
+    ? `${summary.nextTraining.kindLabel || ""} · ${summary.nextTraining.dateLabel || summary.nextTraining.date || ""}`
+    : tr("common.no_recommendation");
+
+  body.innerHTML = `
+    <div class="small"><strong>${esc(tr("history.weekly_rhythm_completed_label"))}:</strong> ${esc(String(summary.completedCount))}</div>
+    <div class="small" style="margin-top:6px"><strong>${esc(tr("history.weekly_rhythm_types_label"))}:</strong> ${esc(completedTypesLine)}</div>
+    <div class="small" style="margin-top:6px"><strong>${esc(tr("history.weekly_rhythm_latest_label"))}:</strong> ${esc(latestLine)}</div>
+    <div class="small" style="margin-top:6px"><strong>${esc(tr("history.weekly_rhythm_next_label"))}:</strong> ${esc(nextLine)}</div>
+  `;
+
+  if (meta){
+    meta.textContent = summary.weekStart
+      ? tr("history.weekly_rhythm_meta", { value: formatIsoDateForUi(summary.weekStart) })
+      : "";
+  }
+}
 
 
 function ensureLoadMetricsMount(){
@@ -7129,7 +7215,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   setText("programsCount", STATE.programs.length);
   setText("recoveryCount", Array.isArray(recoveryFile) ? recoveryFile.length : 0);
 
-  renderWorkouts(STATE.workouts);
+  renderWorkouts(STATE.sessionResults);
   renderLoadMetrics(sessionResultsApi && sessionResultsApi.load_metrics ? sessionResultsApi.load_metrics : null, todayPlanApi && todayPlanApi.item ? todayPlanApi.item.recovery_state : null);
   renderSessionHistory(STATE.sessionResults);
   renderExerciseLibrary();
@@ -7137,7 +7223,8 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   renderReadiness(latestRecoveryApi.item || null);
   renderForecastHero(todayPlanApi.item || null, latestRecoveryApi.item || null);
   renderWeekPlanPreview(todayPlanApi.item || null);
-    renderOverviewStatus(todayPlanApi.item || null, latestRecoveryApi.item || null, workoutsApi.items || []);
+  renderWeeklyRhythmCard(sessionResultsApi.items || [], todayPlanApi.item || null);
+  renderOverviewStatus(todayPlanApi.item || null, latestRecoveryApi.item || null, workoutsApi.items || []);
   renderProfileEquipmentCard();
     renderTodayPlan(todayPlanApi.item || null);
   renderPrograms(STATE.programs, STATE.exercises);
