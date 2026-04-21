@@ -6256,6 +6256,20 @@ function getGuidedWorkoutPlayerLabels({ idx, total, exerciseName, actionText, se
   };
 }
 
+function getGuidedWorkoutPlayerPrimaryActionLabel({ mode, restDone = false, isNextExerciseRest = false, hasMoreSetsRemaining = false, isLast = false }){
+  if (mode === "rest"){
+    if (!restDone) return tr("button.skip_rest");
+    return tr(isNextExerciseRest ? "button.start_next_exercise" : "button.start_next_set");
+  }
+
+  if (mode === "active"){
+    if (hasMoreSetsRemaining) return tr("button.next_set");
+    return tr(isLast ? "button.finish_workout" : "button.next_exercise");
+  }
+
+  return "";
+}
+
 function renderWorkoutRestState(item, active){
   const root = document.getElementById("todayPlanList");
   if (!root) return;
@@ -6275,9 +6289,11 @@ function renderWorkoutRestState(item, active){
     ? tr(isNextExerciseRest ? "workout.rest.ready_next_exercise" : "workout.rest.ready_next_set")
     : tr("workout.rest.resting");
 
-  const primaryActionLabel = !restDone
-    ? tr("button.skip_rest")
-    : tr(isNextExerciseRest ? "button.start_next_exercise" : "button.start_next_set");
+  const primaryActionLabel = getGuidedWorkoutPlayerPrimaryActionLabel({
+    mode: "rest",
+    restDone,
+    isNextExerciseRest,
+  });
 
   const nextExerciseLabel = isNextExerciseRest && nextEntry
     ? `<div class="small" style="margin-bottom:8px">${esc(tr("workout.rest.next_exercise_label"))}</div>`
@@ -6423,9 +6439,11 @@ function renderActiveWorkoutCard(item){
     `;
   }
 
-    const nextActionLabel = hasMoreSetsRemaining
-      ? tr("button.next_set")
-      : (isLast ? tr("button.finish_workout") : tr("button.next_exercise"));
+    const nextActionLabel = getGuidedWorkoutPlayerPrimaryActionLabel({
+      mode: "active",
+      hasMoreSetsRemaining,
+      isLast,
+    });
 
     const playerLabels = getGuidedWorkoutPlayerLabels({
       idx,
