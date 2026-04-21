@@ -6132,6 +6132,28 @@ function getActiveWorkoutEntry(item){
   };
 }
 
+function getActiveWorkoutProgressState(item){
+  const active = getActiveWorkoutEntry(item);
+  if (!active || !active.entry) return null;
+
+  const entry = active.entry;
+  const idx = active.index;
+  const total = active.total;
+  const plannedSetCount = getWorkoutPlannedSetCount(entry);
+  const currentSetIndex = getCurrentWorkoutSetIndex(entry);
+
+  return {
+    active,
+    entry,
+    idx,
+    total,
+    isLast: idx >= total - 1,
+    plannedSetCount,
+    currentSetIndex,
+    hasMoreSetsRemaining: currentSetIndex < (plannedSetCount - 1),
+  };
+}
+
 function removeCurrentWorkoutEntry(item){
   const entries = Array.isArray(item?.entries) ? item.entries : [];
   if (!entries.length) return;
@@ -6314,8 +6336,8 @@ function renderActiveWorkoutCard(item){
   const root = document.getElementById("todayPlanList");
   if (!root) return;
 
-  const active = getActiveWorkoutEntry(item);
-  if (!active || !active.entry){
+  const progress = getActiveWorkoutProgressState(item);
+  if (!progress || !progress.entry){
     STATE.workoutInProgress = false;
     STATE.currentWorkoutEntryIndex = 0;
     showWizardStep("review");
@@ -6323,18 +6345,12 @@ function renderActiveWorkoutCard(item){
   }
 
   if (isWorkoutRestState()){
-    renderWorkoutRestState(item, active);
+    renderWorkoutRestState(item, progress.active);
     return;
   }
 
-  const entry = active.entry;
-  const idx = active.index;
-  const total = active.total;
+  const { active, entry, idx, total, isLast, plannedSetCount, currentSetIndex, hasMoreSetsRemaining } = progress;
   const extras = formatPlanProgressionExtra(entry);
-  const isLast = idx >= total - 1;
-  const plannedSetCount = getWorkoutPlannedSetCount(entry);
-  const currentSetIndex = getCurrentWorkoutSetIndex(entry);
-  const hasMoreSetsRemaining = hasMoreWorkoutSets(entry);
   const meta = getReviewExerciseMeta(entry.exercise_id);
   const inputKind = String(meta?.input_kind || "");
   const isTime = inputKind === "time" || inputKind === "cardio_time";
