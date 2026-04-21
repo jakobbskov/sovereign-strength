@@ -6006,12 +6006,7 @@ function completeTimedHoldSet(item){
   STATE.currentWorkoutSetIndex = 0;
 
   if (isLast){
-    STATE.workoutInProgress = false;
-    STATE.currentWorkoutEntryIndex = 0;
-    clearWorkoutRestTimer();
-    renderReviewSummary(item);
-    renderSessionReview(item);
-    showWizardStep("review");
+    finishActiveWorkoutAndOpenReview(item);
     return true;
   }
 
@@ -6030,6 +6025,16 @@ function clearWorkoutRestTimer(){
   STATE.workoutRestTargetKind = "";
   STATE.workoutRestNextEntryIndex = -1;
   window.clearTimeout(window.__ssWorkoutRestTick || 0);
+}
+
+function finishActiveWorkoutAndOpenReview(item){
+  STATE.workoutInProgress = false;
+  STATE.currentWorkoutEntryIndex = 0;
+  STATE.currentWorkoutSetIndex = 0;
+  clearWorkoutRestTimer();
+  renderReviewSummary(item);
+  renderSessionReview(item);
+  showWizardStep("review");
 }
 
 function startWorkoutRestTimer(durationSec, options = {}){
@@ -6112,6 +6117,7 @@ function saveActiveWorkoutEntryProgress(item){
   const entry = active.entry;
   const idx = active.index;
   const setCount = Math.max(1, Number(entry.sets || 1));
+
   const currentSetIndex = getCurrentWorkoutSetIndex(entry);
   const existing = entry._existing_result && typeof entry._existing_result === "object"
     ? entry._existing_result
@@ -6404,12 +6410,7 @@ function renderActiveWorkoutCard(item){
           STATE.currentWorkoutSetIndex = 0;
 
           if (isLast){
-            STATE.workoutInProgress = false;
-            STATE.currentWorkoutEntryIndex = 0;
-            clearWorkoutRestTimer();
-            renderReviewSummary(item);
-            renderSessionReview(item);
-            showWizardStep("review");
+            finishActiveWorkoutAndOpenReview(item);
             return;
           }
 
@@ -6444,12 +6445,7 @@ function renderActiveWorkoutCard(item){
         STATE.currentWorkoutSetIndex = 0;
 
         if (isLast){
-          STATE.workoutInProgress = false;
-          STATE.currentWorkoutEntryIndex = 0;
-          clearWorkoutRestTimer();
-          renderReviewSummary(item);
-          renderSessionReview(item);
-          showWizardStep("review");
+          finishActiveWorkoutAndOpenReview(item);
           return;
         }
 
