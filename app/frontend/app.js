@@ -6270,6 +6270,19 @@ function getGuidedWorkoutPlayerPrimaryActionLabel({ mode, restDone = false, isNe
   return "";
 }
 
+
+function getGuidedWorkoutPlayerPhaseLabel({ mode, restDone = false }){
+  if (mode === "rest"){
+    return restDone ? tr("common.ready") : tr("workout.rest.resting");
+  }
+
+  if (mode === "active"){
+    return tr("button.start_workout");
+  }
+
+  return "";
+}
+
 function renderWorkoutRestState(item, active){
   const root = document.getElementById("todayPlanList");
   if (!root) return;
@@ -6288,6 +6301,10 @@ function renderWorkoutRestState(item, active){
   const statusLabel = restDone
     ? tr(isNextExerciseRest ? "workout.rest.ready_next_exercise" : "workout.rest.ready_next_set")
     : tr("workout.rest.resting");
+  const phaseLabel = getGuidedWorkoutPlayerPhaseLabel({
+    mode: "rest",
+    restDone,
+  });
 
   const primaryActionLabel = getGuidedWorkoutPlayerPrimaryActionLabel({
     mode: "rest",
@@ -6326,9 +6343,7 @@ function renderWorkoutRestState(item, active){
     const progressOpacity = restDone ? "0.86" : "0.8";
   root.innerHTML = `
       <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:center; border-radius:20px; background:${shellBackground}; border:${shellBorder}; box-shadow:0 18px 48px rgba(0,0,0,0.28)">
-        <div style="font-size:0.95rem; opacity:${progressOpacity}; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">
-        ${esc(playerLabels.progressLabel)}
-      </div>
+        <div style="font-size:0.82rem; opacity:${progressOpacity}; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(phaseLabel)}</div>\n        <div style="font-size:0.95rem; opacity:${progressOpacity}; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">\n        ${esc(playerLabels.progressLabel)}\n      </div>
       ${nextExerciseLabel}
       <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(playerLabels.setProgressLabel)}</div>
       <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(playerLabels.exerciseName)}</div>
@@ -6454,11 +6469,15 @@ function renderActiveWorkoutCard(item){
         ? tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) })
         : "",
     });
+  const phaseLabel = getGuidedWorkoutPlayerPhaseLabel({
+    mode: "active",
+  });
   const activeShellBackground = "#101722";
       const activeShellBorder = "1px solid rgba(86, 145, 255, 0.28)";
       const actionColor = "#bcd3ff";
     root.innerHTML = `
         <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:flex-start; border-radius:20px; background:${activeShellBackground}; border:${activeShellBorder}; box-shadow:0 18px 48px rgba(0,0,0,0.28)">
+          <div style="font-size:0.82rem; opacity:0.82; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(phaseLabel)}</div>
           <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">
           ${esc(playerLabels.progressLabel)}
         </div>
