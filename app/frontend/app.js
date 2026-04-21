@@ -6052,7 +6052,15 @@ function clearWorkoutRuntimeArtifacts(item){
   }
 }
 
-function finishActiveWorkoutAndOpenReview(item){
+function setWorkoutCompletionContext(context = {}){
+  STATE.workoutCompletionContext = {
+    outcome: String(context?.outcome || "").trim(),
+    source: String(context?.source || "").trim(),
+  };
+}
+
+function finishActiveWorkoutAndOpenReview(item, completionContext = {}){
+  setWorkoutCompletionContext(completionContext);
   STATE.workoutInProgress = false;
   STATE.currentWorkoutEntryIndex = 0;
   STATE.currentWorkoutSetIndex = 0;
@@ -6078,7 +6086,7 @@ function advanceActiveWorkoutAfterCompletedSet(item, idx, currentSetIndex, hasMo
   const entries = Array.isArray(item?.entries) ? item.entries : [];
   const isLast = idx >= entries.length - 1;
   if (isLast){
-    finishActiveWorkoutAndOpenReview(item);
+    finishActiveWorkoutAndOpenReview(item, { outcome: "completed", source: "advance_after_completed_set" });
     return;
   }
 
@@ -6162,6 +6170,7 @@ function removeCurrentWorkoutEntry(item){
   entries.splice(idx, 1);
 
   if (!entries.length){
+    setWorkoutCompletionContext({ outcome: "removed_last_entry", source: "remove_current_workout_entry" });
     STATE.workoutInProgress = false;
     STATE.currentWorkoutEntryIndex = 0;
     renderTodayPlan(item);
