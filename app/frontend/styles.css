@@ -489,3 +489,50 @@ button{
 #reviewPlanSummary{
   line-height:1.45;
 }
+
+.review-summary-card{
+  padding:14px 14px 12px;
+  margin-bottom:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--radius-lg);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+}
+
+.review-summary-title{
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.review-summary-lead{
+  margin-bottom:10px;
+  line-height:1.5;
+  opacity:0.88;
+}
+
+.review-summary-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.review-summary-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03);
+  font-size:0.92rem;
+  line-height:1.2;
+}
+
+.review-summary-list{
+  line-height:1.6;
+}
+
+.review-summary-outcome{
+  margin-bottom:8px;
+  line-height:1.5;
+}
