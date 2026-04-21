@@ -8287,6 +8287,37 @@ function applyGuidedWorkoutPlayerShell(isActive){
   });
 }
 
+
+function applyGuidedWorkoutPlayerContentVisibility(stepId){
+  const isWorkoutPlanStep = isGuidedWorkoutPlayerStep(stepId);
+  const todayPlanList = document.getElementById("todayPlanList");
+  const todayPlanTiming = document.getElementById("todayPlanTiming");
+  const todayPlanSummary = document.getElementById("todayPlanSummary");
+  const reviewSummary = document.getElementById("reviewPlanSummary");
+  const sessionResultForm = document.getElementById("sessionResultForm");
+  const reviewWrap = sessionResultForm ? sessionResultForm.closest(".card") : null;
+
+  if (todayPlanList){
+    todayPlanList.classList.toggle("wizard-step-hidden", stepId === "review");
+  }
+
+  if (todayPlanTiming){
+    todayPlanTiming.classList.toggle("wizard-step-hidden", stepId === "review" || isWorkoutPlanStep);
+  }
+
+  if (todayPlanSummary){
+    todayPlanSummary.classList.toggle("wizard-step-hidden", stepId === "review" || isWorkoutPlanStep);
+  }
+
+  if (reviewSummary){
+    reviewSummary.classList.toggle("wizard-step-hidden", stepId !== "review");
+  }
+
+  if (reviewWrap){
+    reviewWrap.classList.toggle("wizard-step-hidden", stepId !== "review");
+  }
+}
+
 function showWizardStep(stepId){
   CURRENT_STEP = stepId;
   const groups = getWizardSections();
@@ -8299,14 +8330,7 @@ function showWizardStep(stepId){
     });
   });
 
-  const sessionResultForm = document.getElementById("sessionResultForm");
-  const reviewWrap = sessionResultForm ? sessionResultForm.closest(".card") : null;
   const todayPlanSection = document.getElementById("todayPlanSection");
-  const todayPlanList = document.getElementById("todayPlanList");
-  const todayPlanTiming = document.getElementById("todayPlanTiming");
-  const todayPlanSummary = document.getElementById("todayPlanSummary");
-  const reviewSummary = document.getElementById("reviewPlanSummary");
-
   const isWorkoutPlanStep = isGuidedWorkoutPlayerStep(stepId);
 
   if (todayPlanSection){
@@ -8314,10 +8338,7 @@ function showWizardStep(stepId){
   }
 
   applyGuidedWorkoutPlayerShell(isWorkoutPlanStep);
-
-  if (todayPlanList){
-    todayPlanList.classList.toggle("wizard-step-hidden", stepId === "review");
-  }
+  applyGuidedWorkoutPlayerContentVisibility(stepId);
 
   if (stepId === "plan"){
     renderTodayPlan(STATE.currentTodayPlan || null);
@@ -8326,21 +8347,6 @@ function showWizardStep(stepId){
     renderSessionReview(STATE.currentTodayPlan || null);
   }
 
-  if (todayPlanTiming){
-    todayPlanTiming.classList.toggle("wizard-step-hidden", stepId === "review" || isGuidedWorkoutPlayerStep(stepId));
-  }
-
-  if (todayPlanSummary){
-    todayPlanSummary.classList.toggle("wizard-step-hidden", stepId === "review" || isGuidedWorkoutPlayerStep(stepId));
-  }
-
-  if (reviewSummary){
-    reviewSummary.classList.toggle("wizard-step-hidden", stepId !== "review");
-  }
-
-  if (reviewWrap){
-    reviewWrap.classList.toggle("wizard-step-hidden", stepId !== "review");
-  }
 
   updatePlanHeadingForStep(stepId);
   updateReviewHeadingForStep(stepId);
