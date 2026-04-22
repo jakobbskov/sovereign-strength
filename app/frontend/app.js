@@ -6050,6 +6050,8 @@ function completeTimedHoldSet(item){
   const active = getActiveWorkoutEntry(item);
   if (!active || !active.entry) return false;
 
+  STATE.workoutTimedTransitionState = "hold_completed";
+
   const entry = active.entry;
   if (!isTimedHoldWorkoutEntry(entry)) return false;
 
@@ -6412,6 +6414,9 @@ function renderWorkoutRestState(item, active){
   const nextAfterRestLabel = isNextExerciseRest
     ? tr("workout.rest.after_rest_next_exercise")
     : tr("workout.rest.after_rest_next_set");
+  const timedTransitionLabel = STATE.workoutTimedTransitionState === "hold_completed"
+    ? tr("workout.timed_transition_label")
+    : "";
 
   const setProgressLabel = isNextExerciseRest && nextEntry
     ? tr("workout.set_progress", { current: "1", total: String(getWorkoutPlannedSetCount(nextEntry)) })
@@ -6443,6 +6448,7 @@ function renderWorkoutRestState(item, active){
         <div style="font-size:0.82rem; opacity:${progressOpacity}; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(phaseLabel)}</div>\n        <div style="font-size:0.95rem; opacity:${progressOpacity}; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">\n        ${esc(playerLabels.progressLabel)}\n      </div>
       ${nextExerciseLabel}
       <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(playerLabels.setProgressLabel)}</div>
+      ${timedTransitionLabel ? `<div class="small" style="margin-bottom:8px; opacity:0.86">${esc(timedTransitionLabel)}</div>` : ""}
       <div class="small" style="margin-bottom:8px; opacity:0.8">${esc(nextAfterRestLabel)}</div>
       <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(playerLabels.exerciseName)}</div>
         <div style="font-weight:700; font-size:1.05rem; margin-bottom:12px; color:${statusColor}">${esc(statusLabel)}</div>
@@ -6458,6 +6464,7 @@ function renderWorkoutRestState(item, active){
 
   document.getElementById("resumeWorkoutRestBtn")?.addEventListener("click", () => {
     clearWorkoutRestTimer();
+    STATE.workoutTimedTransitionState = "";
     if (isNextExerciseRest && nextEntryIndex >= 0){
       STATE.currentWorkoutEntryIndex = nextEntryIndex;
       STATE.currentWorkoutSetIndex = 0;
@@ -6470,6 +6477,10 @@ function renderWorkoutRestState(item, active){
     STATE.workoutRestTimerEndsAt = Number(STATE.workoutRestTimerEndsAt || 0) + (30 * 1000);
     renderTodayPlan(item);
   });
+
+  if (restDone && STATE.workoutTimedTransitionState === "hold_completed"){
+    STATE.workoutTimedTransitionState = "";
+  }
 
   if (STATE.workoutRestTimerActive){
     const runtimeNonce = Number(STATE.workoutRuntimeNonce || 0);
