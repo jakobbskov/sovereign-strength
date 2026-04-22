@@ -6494,6 +6494,40 @@ function renderWorkoutRestState(item, active){
   }
 }
 
+function renderIntervalProtocolPlaceholder(item, progress){
+  const root = document.getElementById("todayPlanList");
+  if (!root || !progress || !progress.entry) return;
+
+  const entry = progress.entry;
+  const protocol = entry?.protocol && typeof entry.protocol === "object" ? entry.protocol : {};
+  const rounds = Number(protocol.rounds || 0);
+  const workSec = Number(protocol.work_sec || 0);
+  const restSec = Number(protocol.rest_sec || 0);
+  const exerciseName = formatExerciseName(entry.exercise_id || "");
+  const protocolSummary = [
+    rounds > 0 ? tr("workout.protocol_rounds_label", { value: String(rounds) }) : "",
+    workSec > 0 ? tr("workout.protocol_work_label", { value: String(workSec) }) : "",
+    restSec > 0 ? tr("workout.protocol_rest_label", { value: String(restSec) }) : "",
+  ].filter(Boolean).join(" · ");
+
+  root.innerHTML = `
+    <li style="padding:20px 16px 28px 16px; min-height:62vh; display:flex; flex-direction:column; justify-content:center; border-radius:20px; background:#101722; border:1px solid rgba(86, 145, 255, 0.28); box-shadow:0 18px 48px rgba(0,0,0,0.28)">
+      <div style="font-size:0.82rem; opacity:0.82; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.protocol_mode_label"))}</div>
+      <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">${esc(tr("workout.protocol_placeholder_title"))}</div>
+      <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(exerciseName)}</div>
+      ${protocolSummary ? `<div class="small" style="margin-bottom:14px; line-height:1.45; opacity:0.8">${esc(protocolSummary)}</div>` : ""}
+      <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">${esc(tr("workout.protocol_placeholder_copy"))}</div>
+      <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
+        <button type="button" id="startProtocolPlaceholderBtn" class="secondary" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.start_workout"))}</button>
+      </div>
+    </li>
+  `;
+
+  document.getElementById("startProtocolPlaceholderBtn")?.addEventListener("click", () => {
+    setText("sessionResultStatus", tr("workout.protocol_placeholder_status"));
+  });
+}
+
 function renderActiveWorkoutCard(item){
   const root = document.getElementById("todayPlanList");
   if (!root) return;
@@ -6512,6 +6546,10 @@ function renderActiveWorkoutCard(item){
   }
 
   const { active, entry, idx, total, isLast, plannedSetCount, currentSetIndex, hasMoreSetsRemaining } = progress;
+  if (String(entry?.protocol_mode || "").trim() === "interval"){
+    renderIntervalProtocolPlaceholder(item, progress);
+    return;
+  }
   const extras = formatPlanProgressionExtra(entry);
   const meta = getReviewExerciseMeta(entry.exercise_id);
   const inputKind = String(meta?.input_kind || "");
