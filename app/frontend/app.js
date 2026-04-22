@@ -5614,6 +5614,9 @@ function openExerciseViewer(exerciseId, options = {}){
     titleEl.textContent = name;
 
     const metaParts = [];
+    if (isWorkoutMode){
+      metaParts.push(tr("exercise.viewer_short_guide"));
+    }
     if (images.length){
       metaParts.push(`${images.length} billede${images.length === 1 ? "" : "r"}`);
     }
