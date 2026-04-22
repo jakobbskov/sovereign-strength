@@ -381,6 +381,7 @@
   "button.add_extra_rest": "Add 30 sec rest",
   "workout.rest.after_rest_next_set": "After rest: next set",
   "workout.rest.after_rest_next_exercise": "After rest: next exercise",
+  "workout.timed_mode_label": "Timed exercise",
   "button.make_easier": "Make easier",
   "button.make_harder": "Make harder",
   "button.remove_exercise": "Remove exercise",
