@@ -391,6 +391,8 @@
   "workout.protocol_rounds_label": "Rounds: {value}",
   "workout.protocol_work_label": "Work: {value} sec",
   "workout.protocol_rest_label": "Rest: {value} sec",
+  "workout.protocol_round_progress_label": "Round {current}/{total}",
+  "workout.protocol_next_phase_work": "Next phase: work",
   "button.make_easier": "Make easier",
   "button.make_harder": "Make harder",
   "button.remove_exercise": "Remove exercise",

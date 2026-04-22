@@ -6500,12 +6500,13 @@ function renderIntervalProtocolPlaceholder(item, progress){
 
   const entry = progress.entry;
   const protocol = entry?.protocol && typeof entry.protocol === "object" ? entry.protocol : {};
-  const rounds = Number(protocol.rounds || 0);
+  const rounds = Math.max(1, Number(protocol.rounds || 1));
   const workSec = Number(protocol.work_sec || 0);
   const restSec = Number(protocol.rest_sec || 0);
+  const prepSec = 5;
   const exerciseName = formatExerciseName(entry.exercise_id || "");
   const protocolSummary = [
-    rounds > 0 ? tr("workout.protocol_rounds_label", { value: String(rounds) }) : "",
+    tr("workout.protocol_round_progress_label", { current: "1", total: String(rounds) }),
     workSec > 0 ? tr("workout.protocol_work_label", { value: String(workSec) }) : "",
     restSec > 0 ? tr("workout.protocol_rest_label", { value: String(restSec) }) : "",
   ].filter(Boolean).join(" · ");
@@ -6515,8 +6516,10 @@ function renderIntervalProtocolPlaceholder(item, progress){
       <div style="font-size:0.82rem; opacity:0.82; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.protocol_mode_label"))}</div>
       <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">${esc(tr("workout.protocol_placeholder_title"))}</div>
       <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(exerciseName)}</div>
-      ${protocolSummary ? `<div class="small" style="margin-bottom:14px; line-height:1.45; opacity:0.8">${esc(protocolSummary)}</div>` : ""}
-      <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">${esc(tr("workout.protocol_placeholder_copy"))}</div>
+      ${protocolSummary ? `<div class="small" style="margin-bottom:12px; line-height:1.45; opacity:0.8">${esc(protocolSummary)}</div>` : ""}
+      <div class="small" style="margin-bottom:8px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.hold_get_ready"))}</div>
+      <div style="font-size:3.2rem; line-height:1; font-weight:800; color:#ffd88a; margin:8px 0 14px 0">${esc(String(prepSec))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
+      <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">${esc(tr("workout.protocol_next_phase_work"))}</div>
       <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
         <button type="button" id="startProtocolPlaceholderBtn" class="secondary" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.start_workout"))}</button>
       </div>
