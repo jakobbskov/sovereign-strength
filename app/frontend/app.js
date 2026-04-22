@@ -6068,8 +6068,8 @@ function getWorkoutCompletionStatusText(context = {}){
     return "Workout fuldført. Klar til review.";
   }
 
-  if (outcome === "removed_last_entry"){
-    return "Workout sluttede, da sidste øvelse blev fjernet. Klar til review.";
+  if (outcome === "partial"){
+    return "Workout blev afsluttet delvist. Klar til review.";
   }
 
   return "";
@@ -6083,8 +6083,8 @@ function getWorkoutCompletionSummaryText(context = {}){
     return "Session blev fuldført i workout playeren.";
   }
 
-  if (outcome === "removed_last_entry"){
-    return "Session sluttede, efter den sidste resterende øvelse blev fjernet.";
+  if (outcome === "partial"){
+    return "Session blev afsluttet delvist i workout playeren.";
   }
 
   return "";
@@ -6205,7 +6205,7 @@ function removeCurrentWorkoutEntry(item){
   entries.splice(idx, 1);
 
   if (!entries.length){
-    const completionContext = { outcome: "removed_last_entry", source: "remove_current_workout_entry" };
+    const completionContext = { outcome: "partial", source: "remove_current_workout_entry" };
     setWorkoutCompletionContext(completionContext);
     const completionStatusText = getWorkoutCompletionStatusText(completionContext);
     if (completionStatusText){
