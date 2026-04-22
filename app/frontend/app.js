@@ -6622,6 +6622,8 @@ function renderIntervalProtocolPlaceholder(item, progress){
   const workSec = protocolState.workSec;
   const restSec = protocolState.restSec;
   const exerciseName = formatExerciseName(entry.exercise_id || "");
+  const protocolVariant = String(entry?.protocol_variant || "").trim().toLowerCase();
+  const protocolVariantLabel = protocolVariant === "on_off" ? tr("workout.protocol_variant_on_off") : "";
   const currentPhaseLabel = protocolState.isWorkRunning
     ? tr("workout.protocol_phase_work")
     : (protocolState.isRestRunning ? tr("workout.protocol_phase_rest") : tr("workout.hold_get_ready"));
@@ -6640,6 +6642,7 @@ function renderIntervalProtocolPlaceholder(item, progress){
       <div style="font-size:0.82rem; opacity:0.82; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.protocol_mode_label"))}</div>
       <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">${esc(tr("workout.protocol_placeholder_title"))}</div>
       <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(exerciseName)}</div>
+      ${protocolVariantLabel ? `<div class="small" style="margin-bottom:10px; opacity:0.74">${esc(protocolVariantLabel)}</div>` : ""}
       ${protocolSummary ? `<div class="small" style="margin-bottom:12px; line-height:1.45; opacity:0.8">${esc(protocolSummary)}</div>` : ""}
       <div class="small" style="margin-bottom:8px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(currentPhaseLabel)}</div>
       <div style="font-size:3.2rem; line-height:1; font-weight:800; color:${timerColor.replace(";", "")}; margin:8px 0 14px 0">${esc(String(displaySeconds))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
