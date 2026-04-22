@@ -378,6 +378,7 @@
   "button.start_workout": "Start workout",
   "button.next_exercise": "Next exercise",
   "button.finish_workout": "Finish workout",
+  "button.add_extra_rest": "Add 30 sec rest",
   "button.make_easier": "Make easier",
   "button.make_harder": "Make harder",
   "button.remove_exercise": "Remove exercise",

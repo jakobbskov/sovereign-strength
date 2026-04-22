@@ -6432,7 +6432,7 @@ function renderWorkoutRestState(item, active){
         ${esc(playerLabels.actionText)}
       </div>
       <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" id="resumeWorkoutRestBtn" style="padding:16px 18px; font-size:1.05rem; font-weight:700; width:100%">${esc(primaryActionLabel)}</button>
+        <button type="button" id="resumeWorkoutRestBtn" style="padding:16px 18px; font-size:1.05rem; font-weight:700; width:100%">${esc(primaryActionLabel)}</button>\n        ${!restDone ? `<button type="button" id="addWorkoutRestBtn" class="secondary" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.add_extra_rest"))}</button>` : ""}
       </div>
     </li>
   `;
@@ -6443,6 +6443,12 @@ function renderWorkoutRestState(item, active){
       STATE.currentWorkoutEntryIndex = nextEntryIndex;
       STATE.currentWorkoutSetIndex = 0;
     }
+    renderTodayPlan(item);
+  });
+
+  document.getElementById("addWorkoutRestBtn")?.addEventListener("click", () => {
+    if (restDone) return;
+    STATE.workoutRestTimerEndsAt = Number(STATE.workoutRestTimerEndsAt || 0) + (30 * 1000);
     renderTodayPlan(item);
   });
 
