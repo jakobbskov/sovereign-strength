@@ -408,6 +408,8 @@
   "workout.protocol_next_phase_work": "Næste fase: arbejde",
   "workout.protocol_next_phase_rest": "Næste fase: hvile",
   "workout.protocol_phase_work": "Arbejde",
+  "workout.protocol_phase_rest": "Hvile",
+  "workout.protocol_complete_status": "Intervalprotokol gennemført.",
   "button.make_easier": "Gør lettere",
   "button.make_harder": "Gør hårdere",
   "button.remove_exercise": "Fjern øvelse",
