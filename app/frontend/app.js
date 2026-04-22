@@ -6084,6 +6084,10 @@ function getWorkoutCompletionStatusText(context = {}){
     return "Workout blev afsluttet delvist. Klar til review.";
   }
 
+  if (outcome === "ended_early"){
+    return "Workout blev afsluttet før tid. Klar til review.";
+  }
+
   return "";
 }
 
@@ -6097,6 +6101,10 @@ function getWorkoutCompletionSummaryText(context = {}){
 
   if (outcome === "partial"){
     return "Session blev afsluttet delvist i workout playeren.";
+  }
+
+  if (outcome === "ended_early"){
+    return "Session blev afsluttet før tid i workout playeren.";
   }
 
   return "";
@@ -6559,6 +6567,7 @@ function renderActiveWorkoutCard(item){
         <div style="margin-bottom:18px">${loggingHtml}</div>
         <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
           <button type="button" id="nextWorkoutEntryBtn" style="padding:18px 18px; font-size:1.1rem; font-weight:800; width:100%">${esc(nextActionLabel)}</button>
+          <button type="button" id="finishWorkoutEarlyBtn" class="secondary" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.finish_workout"))}</button>
           <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.view_exercise"))}</button>
         </div>
       </li>
@@ -6602,6 +6611,15 @@ function renderActiveWorkoutCard(item){
         saveActiveWorkoutEntryProgress(item);
 
         advanceActiveWorkoutAfterCompletedSet(item, idx, currentSetIndex, hasMoreSetsRemaining && !isCardioEntry);
+      });
+
+      document.getElementById("finishWorkoutEarlyBtn")?.addEventListener("click", () => {
+        if (isTimedHoldWorkoutEntry(entry) && (getTimedHoldRemainingSeconds(entry) > 0 || getTimedHoldPrepRemainingSeconds(entry) > 0)){
+          return;
+        }
+
+        saveActiveWorkoutEntryProgress(item);
+        finishActiveWorkoutAndOpenReview(item, { outcome: "ended_early", source: "finish_workout_early_button" });
       });
 }
 
