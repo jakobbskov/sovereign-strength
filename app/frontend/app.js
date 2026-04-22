@@ -5626,7 +5626,8 @@ function openExerciseViewer(exerciseId, options = {}){
 
     metaEl.textContent = metaParts.join(" · ");
 
-    const notesHtml = notes ? `
+    const shouldShowNotes = Boolean(notes) && (!isWorkoutMode || !visibleFormCues.length);
+    const notesHtml = shouldShowNotes ? `
       <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
         <div style="font-weight:700;margin-bottom:8px">${esc(tr("exercise.viewer_short_guide"))}</div>
         <div class="small" style="line-height:1.5">${esc(notes)}</div>
