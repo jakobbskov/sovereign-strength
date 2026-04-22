@@ -4136,10 +4136,11 @@ function buildWorkoutSetFields(entry, idx, setIdx){
       ? "background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.22);"
       : "background:rgba(255,255,255,0.03);";
 
+    const timedModeHeader = `${tr("workout.timed_mode_label")} · ${tr("exercise.set_label", { number: setIdx + 1 })}`;
+
     return `
       <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; ${cardTone}">
-        <div class="small" style="margin-bottom:6px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.timed_mode_label"))}</div>
-        <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+        <div class="small" style="margin-bottom:8px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(timedModeHeader)}</div>
         ${prepLeadHtml}
         ${activeLeadHtml}
         <div class="small" style="margin-bottom:8px; opacity:0.78">${esc(statusLabel)}</div>
