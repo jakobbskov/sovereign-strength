@@ -6394,6 +6394,9 @@ function renderWorkoutRestState(item, active){
   const nextExerciseLabel = isNextExerciseRest && nextEntry
     ? `<div class="small" style="margin-bottom:8px">${esc(tr("workout.rest.next_exercise_label"))}</div>`
     : "";
+  const nextAfterRestLabel = isNextExerciseRest
+    ? tr("workout.rest.after_rest_next_exercise")
+    : tr("workout.rest.after_rest_next_set");
 
   const setProgressLabel = isNextExerciseRest && nextEntry
     ? tr("workout.set_progress", { current: "1", total: String(getWorkoutPlannedSetCount(nextEntry)) })
@@ -6425,6 +6428,7 @@ function renderWorkoutRestState(item, active){
         <div style="font-size:0.82rem; opacity:${progressOpacity}; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em">${esc(phaseLabel)}</div>\n        <div style="font-size:0.95rem; opacity:${progressOpacity}; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">\n        ${esc(playerLabels.progressLabel)}\n      </div>
       ${nextExerciseLabel}
       <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px">${esc(playerLabels.setProgressLabel)}</div>
+      <div class="small" style="margin-bottom:8px; opacity:0.8">${esc(nextAfterRestLabel)}</div>
       <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(playerLabels.exerciseName)}</div>
         <div style="font-weight:700; font-size:1.05rem; margin-bottom:12px; color:${statusColor}">${esc(statusLabel)}</div>
         <div style="font-size:3.2rem; line-height:1; font-weight:800; color:${timerColor}; margin:8px 0 18px 0">${esc(String(remainingSec))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
