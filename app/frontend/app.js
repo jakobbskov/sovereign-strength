@@ -7994,6 +7994,7 @@ session_type:
 
       return {
         exercise_id: entry.exercise_id || "",
+        substituted_from: entry.substituted_from || "",
         completed: String(form.session_completed.value) === "true",
         target_reps: entry.target_reps || "",
         achieved_reps: nonEmptySets[0]?.reps || String(existingResult.achieved_reps || "").trim(),
