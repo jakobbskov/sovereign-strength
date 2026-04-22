@@ -4138,6 +4138,7 @@ function buildWorkoutSetFields(entry, idx, setIdx){
 
     return `
       <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; ${cardTone}">
+        <div class="small" style="margin-bottom:6px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.timed_mode_label"))}</div>
         <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
         ${prepLeadHtml}
         ${activeLeadHtml}

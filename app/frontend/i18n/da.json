@@ -394,6 +394,7 @@
   "button.add_extra_rest": "Tilføj 30 sek hvile",
   "workout.rest.after_rest_next_set": "Efter hvile: næste sæt",
   "workout.rest.after_rest_next_exercise": "Efter hvile: næste øvelse",
+  "workout.timed_mode_label": "Tidsøvelse",
   "button.make_easier": "Gør lettere",
   "button.make_harder": "Gør hårdere",
   "button.remove_exercise": "Fjern øvelse",
