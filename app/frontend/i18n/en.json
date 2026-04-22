@@ -397,6 +397,7 @@
   "workout.protocol_phase_work": "Work",
   "workout.protocol_phase_rest": "Rest",
   "workout.protocol_complete_status": "Interval protocol completed.",
+  "workout.protocol_variant_on_off": "On/off intervals",
   "button.make_easier": "Make easier",
   "button.make_harder": "Make harder",
   "button.remove_exercise": "Remove exercise",

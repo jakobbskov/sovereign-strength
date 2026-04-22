@@ -410,6 +410,7 @@
   "workout.protocol_phase_work": "Arbejde",
   "workout.protocol_phase_rest": "Hvile",
   "workout.protocol_complete_status": "Intervalprotokol gennemført.",
+  "workout.protocol_variant_on_off": "On/off-intervaller",
   "button.make_easier": "Gør lettere",
   "button.make_harder": "Gør hårdere",
   "button.remove_exercise": "Fjern øvelse",
