@@ -4124,16 +4124,23 @@ function buildWorkoutSetFields(entry, idx, setIdx){
     const displaySeconds = isPrepTimer ? prepRemainingSec : (isActiveTimer ? remainingSec : (existingSeconds || targetSec || 0));
     const statusLabel = isPrepTimer
       ? tr("workout.hold_get_ready")
-      : (isActiveTimer ? tr("input_kind.time") : tr("input_kind.time"));
+      : (isActiveTimer ? tr("button.start_set") : tr("input_kind.time"));
     const prepLeadHtml = isPrepTimer
       ? `<div class="small" style="margin-bottom:6px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.hold_get_ready"))}</div>`
       : "";
-    const timerTone = isPrepTimer ? "color:#f3c96b;" : "color:#bcd3ff;";
+    const activeLeadHtml = isActiveTimer
+      ? `<div class="small" style="margin-bottom:6px; opacity:0.86; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("button.start_set"))}</div>`
+      : "";
+    const timerTone = isPrepTimer ? "color:#f3c96b;" : (isActiveTimer ? "color:#8ff0a4;" : "color:#bcd3ff;");
+    const cardTone = isActiveTimer
+      ? "background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.22);"
+      : "background:rgba(255,255,255,0.03);";
 
     return `
-      <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
+      <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; ${cardTone}">
         <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
         ${prepLeadHtml}
+        ${activeLeadHtml}
         <div class="small" style="margin-bottom:8px; opacity:0.78">${esc(statusLabel)}</div>
         <input type="hidden" name="review_set_reps_${idx}_${setIdx}" value="${esc(String(existingSeconds || targetSec || ""))}">
         <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0; ${timerTone}">${esc(String(displaySeconds))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
