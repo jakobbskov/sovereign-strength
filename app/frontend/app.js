@@ -4125,13 +4125,18 @@ function buildWorkoutSetFields(entry, idx, setIdx){
     const statusLabel = isPrepTimer
       ? tr("workout.hold_get_ready")
       : (isActiveTimer ? tr("input_kind.time") : tr("input_kind.time"));
+    const prepLeadHtml = isPrepTimer
+      ? `<div class="small" style="margin-bottom:6px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.hold_get_ready"))}</div>`
+      : "";
+    const timerTone = isPrepTimer ? "color:#f3c96b;" : "color:#bcd3ff;";
 
     return `
       <div class="card" style="margin-top:8px; padding:10px 12px; border-radius:18px; background:rgba(255,255,255,0.03)">
         <div class="small" style="margin-bottom:8px; opacity:0.82">${tr("exercise.set_label", { number: setIdx + 1 })}</div>
+        ${prepLeadHtml}
         <div class="small" style="margin-bottom:8px; opacity:0.78">${esc(statusLabel)}</div>
         <input type="hidden" name="review_set_reps_${idx}_${setIdx}" value="${esc(String(existingSeconds || targetSec || ""))}">
-        <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0">${esc(String(displaySeconds))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
+        <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0; ${timerTone}">${esc(String(displaySeconds))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
         <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
         <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
           ${(!isPrepTimer && !isActiveTimer) ? `<button type="button" class="secondary" data-start-hold-timer="${esc(String(idx))}" style="width:100%; padding:12px 14px; font-weight:700">${esc(tr("button.start_set"))}</button>` : ""}
