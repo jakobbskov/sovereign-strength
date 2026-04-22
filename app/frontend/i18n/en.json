@@ -383,6 +383,7 @@
   "workout.rest.after_rest_next_exercise": "After rest: next exercise",
   "workout.timed_mode_label": "Timed exercise",
   "workout.timed_target_label": "Target: {seconds} sec",
+  "workout.timed_transition_label": "Hold complete · rest before next step",
   "button.make_easier": "Make easier",
   "button.make_harder": "Make harder",
   "button.remove_exercise": "Remove exercise",
