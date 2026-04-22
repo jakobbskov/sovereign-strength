@@ -4144,6 +4144,7 @@ function buildWorkoutSetFields(entry, idx, setIdx){
         ${prepLeadHtml}
         ${activeLeadHtml}
         <div class="small" style="margin-bottom:8px; opacity:0.78">${esc(statusLabel)}</div>
+        <div class="small" style="margin-bottom:6px; opacity:0.72">${esc(tr("workout.timed_target_label", { seconds: String(targetSec || displaySeconds || 0) }))}</div>
         <input type="hidden" name="review_set_reps_${idx}_${setIdx}" value="${esc(String(existingSeconds || targetSec || ""))}">
         <div style="font-size:2.2rem; font-weight:800; line-height:1; margin:8px 0 12px 0; ${timerTone}">${esc(String(displaySeconds))}<span style="font-size:1rem; font-weight:700; opacity:0.78"> s</span></div>
         <div class="small" style="margin-top:6px; opacity:0.72">${tr("exercise.load_bodyweight")}</div>
