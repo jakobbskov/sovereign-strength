@@ -4647,6 +4647,17 @@ function renderSessionResultSummary(summary, fallbackResults = null){
       })
     : progressFlags;
 
+  const resultListHtml = summaryResults.length
+    ? `<div class="small review-summary-list">${summaryResults.map(result => {
+        const exerciseName = formatExerciseName(result?.exercise_id || "");
+        const substitutedFrom = String(result?.substituted_from || "").trim();
+        const substitutionBit = substitutedFrom
+          ? ` · ${tr("exercise.substituted_from")}: ${formatExerciseName(substitutedFrom)}`
+          : "";
+        return `${esc(exerciseName)}${esc(substitutionBit)}`;
+      }).join("<br>")}</div>`
+    : "";
+
   const performanceBlock = shouldUseTimedSummary
     ? `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
       ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
@@ -4674,6 +4685,7 @@ function renderSessionResultSummary(summary, fallbackResults = null){
       <div class="small review-summary-outcome">
         ${esc(tr("review.saved_next_label"))}: ${esc(nextStepHint || tr("common.no_recommendation"))}
       </div>
+      ${resultListHtml}
       ${visibleExplanationBits.length ? `<div class="small review-summary-outcome">${esc(visibleExplanationBits.join(" · "))}</div>` : ""}
       ${visibleProgressFlags.length ? `<div class="small review-summary-outcome">${esc(visibleProgressFlags.map(formatProgressFlag).join(", "))}</div>` : ""}
       ${buildNextPlannedSessionHtml(STATE.currentTodayPlan || null)}
