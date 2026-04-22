@@ -205,6 +205,7 @@
             "sets": 1,
             "reps": "6 x 1 min roligt/hurtigt",
             "protocol_mode": "interval",
+            "protocol_variant": "on_off",
             "protocol": {
               "rounds": 6,
               "work_sec": 60,
@@ -254,6 +255,7 @@
             "sets": 1,
             "reps": "6 x 2 min kontrolleret hurtigt / 1 min roligt",
             "protocol_mode": "interval",
+            "protocol_variant": "on_off",
             "protocol": {
               "rounds": 6,
               "work_sec": 120,
