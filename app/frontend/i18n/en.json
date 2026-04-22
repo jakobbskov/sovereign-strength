@@ -853,5 +853,6 @@
   "history.weekly_rhythm_latest_label": "Latest completed",
   "history.weekly_rhythm_next_label": "Next likely session",
   "history.weekly_rhythm_none_completed": "No completed sessions yet this week",
-  "history.weekly_rhythm_no_completed_types": "None yet"
+  "history.weekly_rhythm_no_completed_types": "None yet",
+  "review.next_likely_session_label": "Most likely next session"
 }

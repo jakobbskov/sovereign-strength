@@ -869,5 +869,6 @@
   "history.weekly_rhythm_latest_label": "Senest gennemført",
   "history.weekly_rhythm_next_label": "Næste sandsynlige pas",
   "history.weekly_rhythm_none_completed": "Ingen gennemførte pas endnu i denne uge",
-  "history.weekly_rhythm_no_completed_types": "Ingen endnu"
+  "history.weekly_rhythm_no_completed_types": "Ingen endnu",
+  "review.next_likely_session_label": "Mest sandsynligt næste træning"
 }
