@@ -6494,17 +6494,98 @@ function renderWorkoutRestState(item, active){
   }
 }
 
+function getIntervalProtocolRuntimeState(entry){
+  const protocol = entry?.protocol && typeof entry.protocol === "object" ? entry.protocol : {};
+  const prepEndsAt = Number(entry?._protocol_prep_ends_at || 0);
+  const workEndsAt = Number(entry?._protocol_work_ends_at || 0);
+  const prepRemainingSec = prepEndsAt ? Math.max(0, Math.ceil((prepEndsAt - Date.now()) / 1000)) : 0;
+  const workRemainingSec = workEndsAt ? Math.max(0, Math.ceil((workEndsAt - Date.now()) / 1000)) : 0;
+
+  return {
+    rounds: Math.max(1, Number(protocol.rounds || 1)),
+    workSec: Math.max(0, Number(protocol.work_sec || 0)),
+    restSec: Math.max(0, Number(protocol.rest_sec || 0)),
+    prepRemainingSec,
+    workRemainingSec,
+    isPrepRunning: prepRemainingSec > 0,
+    isWorkRunning: workRemainingSec > 0,
+    isReadyToStartWork: prepEndsAt > 0 && prepRemainingSec <= 0 && workEndsAt <= 0,
+    isReadyToCompleteWork: workEndsAt > 0 && workRemainingSec <= 0,
+  };
+}
+
+function startIntervalProtocolPrep(entry, durationSec = 5){
+  if (!entry || typeof entry !== "object") return 0;
+  const prepSec = Math.max(1, Number(durationSec || 5));
+  delete entry._protocol_work_ends_at;
+  entry._protocol_prep_ends_at = Date.now() + (prepSec * 1000);
+  return prepSec;
+}
+
+function startIntervalProtocolWork(entry){
+  if (!entry || typeof entry !== "object") return 0;
+  const protocol = entry?.protocol && typeof entry.protocol === "object" ? entry.protocol : {};
+  const workSec = Math.max(1, Number(protocol.work_sec || 1));
+  delete entry._protocol_prep_ends_at;
+  entry._protocol_work_ends_at = Date.now() + (workSec * 1000);
+  return workSec;
+}
+
+function clearIntervalProtocolRuntime(entry){
+  if (!entry || typeof entry !== "object") return;
+  delete entry._protocol_prep_ends_at;
+  delete entry._protocol_work_ends_at;
+}
+
+function ensureIntervalProtocolTick(item){
+  window.clearTimeout(window.__ssWorkoutProtocolTick || 0);
+  const runtimeNonce = Number(STATE.workoutRuntimeNonce || 0);
+  const active = getActiveWorkoutEntry(item);
+  const entry = active?.entry;
+  if (!entry || String(entry?.protocol_mode || "").trim() !== "interval") return;
+
+  const protocolState = getIntervalProtocolRuntimeState(entry);
+  if (protocolState.isPrepRunning || protocolState.isWorkRunning){
+    window.__ssWorkoutProtocolTick = window.setTimeout(() => {
+      if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
+      renderTodayPlan(item);
+    }, 1000);
+    return;
+  }
+
+  if (protocolState.isReadyToStartWork){
+    startIntervalProtocolWork(entry);
+    window.__ssWorkoutProtocolTick = window.setTimeout(() => {
+      if (Number(STATE.workoutRuntimeNonce || 0) !== runtimeNonce) return;
+      renderTodayPlan(item);
+    }, 50);
+    return;
+  }
+
+  if (protocolState.isReadyToCompleteWork){
+    clearIntervalProtocolRuntime(entry);
+    setText("sessionResultStatus", tr("workout.protocol_placeholder_status"));
+    renderTodayPlan(item);
+  }
+}
+
 function renderIntervalProtocolPlaceholder(item, progress){
   const root = document.getElementById("todayPlanList");
   if (!root || !progress || !progress.entry) return;
 
   const entry = progress.entry;
-  const protocol = entry?.protocol && typeof entry.protocol === "object" ? entry.protocol : {};
-  const rounds = Math.max(1, Number(protocol.rounds || 1));
-  const workSec = Number(protocol.work_sec || 0);
-  const restSec = Number(protocol.rest_sec || 0);
-  const prepSec = 5;
+  const protocolState = getIntervalProtocolRuntimeState(entry);
+  const rounds = protocolState.rounds;
+  const workSec = protocolState.workSec;
+  const restSec = protocolState.restSec;
   const exerciseName = formatExerciseName(entry.exercise_id || "");
+  const currentPhaseLabel = protocolState.isWorkRunning
+    ? tr("workout.protocol_phase_work")
+    : tr("workout.hold_get_ready");
+  const displaySeconds = protocolState.isWorkRunning
+    ? protocolState.workRemainingSec
+    : (protocolState.isPrepRunning ? protocolState.prepRemainingSec : 5);
+  const timerColor = protocolState.isWorkRunning ? "#8ff0a4" : "#ffd88a";
   const protocolSummary = [
     tr("workout.protocol_round_progress_label", { current: "1", total: String(rounds) }),
     workSec > 0 ? tr("workout.protocol_work_label", { value: String(workSec) }) : "",
@@ -6517,18 +6598,21 @@ function renderIntervalProtocolPlaceholder(item, progress){
       <div style="font-size:0.95rem; opacity:0.82; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em">${esc(tr("workout.protocol_placeholder_title"))}</div>
       <div style="font-weight:800; font-size:2rem; line-height:1.1; margin-bottom:12px">${esc(exerciseName)}</div>
       ${protocolSummary ? `<div class="small" style="margin-bottom:12px; line-height:1.45; opacity:0.8">${esc(protocolSummary)}</div>` : ""}
-      <div class="small" style="margin-bottom:8px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(tr("workout.hold_get_ready"))}</div>
-      <div style="font-size:3.2rem; line-height:1; font-weight:800; color:#ffd88a; margin:8px 0 14px 0">${esc(String(prepSec))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
-      <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">${esc(tr("workout.protocol_next_phase_work"))}</div>
+      <div class="small" style="margin-bottom:8px; opacity:0.82; text-transform:uppercase; letter-spacing:0.08em">${esc(currentPhaseLabel)}</div>
+      <div style="font-size:3.2rem; line-height:1; font-weight:800; color:${timerColor}; margin:8px 0 14px 0">${esc(String(displaySeconds))}<span style="font-size:1.2rem; font-weight:700; opacity:0.78"> s</span></div>
+      <div class="small" style="line-height:1.5; margin-bottom:18px; opacity:0.78">${esc(protocolState.isWorkRunning ? tr("workout.protocol_next_phase_rest") : tr("workout.protocol_next_phase_work"))}</div>
       <div style="margin-top:auto; display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" id="startProtocolPlaceholderBtn" class="secondary" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.start_workout"))}</button>
+        ${(!protocolState.isPrepRunning && !protocolState.isWorkRunning) ? `<button type="button" id="startProtocolPlaceholderBtn" class="secondary" style="width:100%; padding:14px 16px; font-size:0.98rem">${esc(tr("button.start_workout"))}</button>` : ""}
       </div>
     </li>
   `;
 
   document.getElementById("startProtocolPlaceholderBtn")?.addEventListener("click", () => {
-    setText("sessionResultStatus", tr("workout.protocol_placeholder_status"));
+    startIntervalProtocolPrep(entry, 5);
+    renderTodayPlan(item);
   });
+
+  ensureIntervalProtocolTick(item);
 }
 
 function renderActiveWorkoutCard(item){
