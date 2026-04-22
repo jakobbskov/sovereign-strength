@@ -9243,6 +9243,12 @@ function buildNextPlannedSessionHtml(planItem){
 
   const tomorrow = info.tomorrow;
   const nextTraining = info.nextTraining;
+  const nextDateText = String(nextTraining.dateLabel || nextTraining.date || "").trim();
+  const nextLikelyLine = [
+    tr("review.next_likely_session_label"),
+    nextTraining.kindLabel || "",
+    nextDateText,
+  ].filter(Boolean).join(" · ");
 
   const tomorrowLine = tomorrow && tomorrow.kind === "rest"
     ? `<div class="small" style="margin-bottom:6px">${esc(tr("review.tomorrow_rest_label"))} · ${esc(tomorrow.dateLabel || "")}</div>`
@@ -9252,8 +9258,7 @@ function buildNextPlannedSessionHtml(planItem){
     <div class="small" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08)">
       <div style="font-weight:700; margin-bottom:6px">${esc(tr("review.saved_next_label"))}</div>
       ${tomorrowLine}
-      <div><strong>${esc(tr("review.next_likely_session_label"))}:</strong> ${esc(nextTraining.kindLabel || "")}</div>
-      <div class="small" style="margin-top:4px">${esc(nextTraining.dateLabel || nextTraining.date || "")}</div>
+      <div style="font-weight:600">${esc(nextLikelyLine)}</div>
       ${nextTraining.note ? `<div class="small" style="margin-top:4px">${esc(nextTraining.note)}</div>` : ""}
     </div>
   `;
