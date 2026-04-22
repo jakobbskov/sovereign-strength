@@ -5589,7 +5589,7 @@ function getExerciseViewerCopy(meta){
   return { name, notes, formCues };
 }
 
-function openExerciseViewer(exerciseId){
+function openExerciseViewer(exerciseId, options = {}){
   try {
     const modal = document.getElementById("exerciseViewerModal");
     const titleEl = document.getElementById("exerciseViewerTitle");
@@ -5602,11 +5602,14 @@ function openExerciseViewer(exerciseId){
 
     const meta = getExerciseMeta(exerciseId) || {};
     const viewerCopy = getExerciseViewerCopy(meta);
+    const isWorkoutMode = options?.mode === "workout";
     const name = viewerCopy.name || exerciseId || tr("exercise.viewer_title");
-    const images = getExerciseImages(exerciseId);
+    const allImages = getExerciseImages(exerciseId);
+    const images = isWorkoutMode ? allImages.slice(0, 1) : allImages;
     const notes = viewerCopy.notes;
     const category = String(meta.category || "").trim();
     const formCues = Array.isArray(viewerCopy.formCues) ? viewerCopy.formCues.filter(Boolean).map(x => String(x).trim()).filter(Boolean) : [];
+    const visibleFormCues = isWorkoutMode ? formCues.slice(0, 2) : formCues;
 
     titleEl.textContent = name;
 
@@ -5627,11 +5630,11 @@ function openExerciseViewer(exerciseId){
       </div>
     ` : "";
 
-    const cuesHtml = formCues.length ? `
+    const cuesHtml = visibleFormCues.length ? `
       <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
         <div style="font-weight:700;margin-bottom:8px">${esc(tr("exercise.viewer_technique_focus"))}</div>
         <ul style="margin:0;padding-left:18px">
-          ${formCues.map(cue => `<li style="margin-bottom:6px">${esc(cue)}</li>`).join("")}
+          ${visibleFormCues.map(cue => `<li style="margin-bottom:6px">${esc(cue)}</li>`).join("")}
         </ul>
       </div>
     ` : "";
@@ -5670,7 +5673,10 @@ document.addEventListener("click", function(ev){
   const openBtn = ev.target.closest("[data-exercise-viewer]");
   if (openBtn){
     ev.preventDefault();
-    openExerciseViewer(openBtn.getAttribute("data-exercise-viewer"));
+    const isWorkoutMode = Boolean(STATE.workoutInProgress);
+    openExerciseViewer(openBtn.getAttribute("data-exercise-viewer"), {
+      mode: isWorkoutMode ? "workout" : "default",
+    });
     return;
   }
 
