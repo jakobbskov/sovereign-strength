@@ -9252,7 +9252,7 @@ function buildNextPlannedSessionHtml(planItem){
     <div class="small" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08)">
       <div style="font-weight:700; margin-bottom:6px">${esc(tr("review.saved_next_label"))}</div>
       ${tomorrowLine}
-      <div><strong>${esc(tr("review.next_planned_session_label"))}:</strong> ${esc(nextTraining.kindLabel || "")}</div>
+      <div><strong>${esc(tr("review.next_likely_session_label"))}:</strong> ${esc(nextTraining.kindLabel || "")}</div>
       <div class="small" style="margin-top:4px">${esc(nextTraining.dateLabel || nextTraining.date || "")}</div>
       ${nextTraining.note ? `<div class="small" style="margin-top:4px">${esc(nextTraining.note)}</div>` : ""}
     </div>
