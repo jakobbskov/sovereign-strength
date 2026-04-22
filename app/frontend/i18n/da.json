@@ -404,6 +404,8 @@
   "workout.protocol_rounds_label": "Runder: {value}",
   "workout.protocol_work_label": "Arbejde: {value} sek",
   "workout.protocol_rest_label": "Hvile: {value} sek",
+  "workout.protocol_round_progress_label": "Runde {current}/{total}",
+  "workout.protocol_next_phase_work": "Næste fase: arbejde",
   "button.make_easier": "Gør lettere",
   "button.make_harder": "Gør hårdere",
   "button.remove_exercise": "Fjern øvelse",
