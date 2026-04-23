@@ -113,6 +113,7 @@
   "review.session_review": "Training review",
   "session_type.mobility": "Mobility",
   "session_type.run": "Run",
+  "session.blocks_count": "{count} blocks",
   "session_type.strength": "Strength",
   "settings.strength_weights": "Strength with weights",
   "today_plan.title": "Today's plan",

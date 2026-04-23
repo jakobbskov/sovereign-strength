@@ -126,6 +126,7 @@
   "review.session_review": "Review af træning",
   "session_type.mobility": "Mobilitet",
   "session_type.run": "Løb",
+  "session.blocks_count": "{count} blokke",
   "session_type.strength": "Styrke",
   "settings.strength_weights": "Styrke med vægte",
   "today_plan.title": "Dagens plan",
