@@ -4901,6 +4901,21 @@ def build_next_guidance(today_plan_item, completed_today=False):
 
 
 
+def flatten_session_block_entries(session_blocks):
+    if not isinstance(session_blocks, list):
+        return []
+    flattened = []
+    for block in session_blocks:
+        if not isinstance(block, dict):
+            continue
+        block_entries = block.get("entries", [])
+        if not isinstance(block_entries, list):
+            continue
+        for entry in block_entries:
+            if isinstance(entry, dict):
+                flattened.append(entry)
+    return flattened
+
 def validate_today_plan_item(item):
     if not isinstance(item, dict):
         return {
@@ -4914,9 +4929,14 @@ def validate_today_plan_item(item):
 
     session_type = str(item.get("session_type", "")).strip().lower()
     plan_variant = str(item.get("plan_variant", "")).strip().lower()
+    session_blocks = item.get("session_blocks", [])
+    if not isinstance(session_blocks, list):
+        session_blocks = []
     entries = item.get("entries", [])
     if not isinstance(entries, list):
         entries = []
+    if not entries and session_blocks:
+        entries = flatten_session_block_entries(session_blocks)
 
     has_entries = bool(entries)
     has_exercise_entries = any(
@@ -4939,7 +4959,11 @@ def validate_today_plan_item(item):
         invalid_reason = "unknown session_type"
 
     if not invalid:
-        return item
+        fixed_item = dict(item)
+        fixed_item["entries"] = entries
+        if session_blocks:
+            fixed_item["session_blocks"] = session_blocks
+        return fixed_item
 
     logger.warning(
         "today_plan_consistency_fallback session_type=%s reason=%s",
