@@ -1881,7 +1881,7 @@ function buildForecastLeadText(planItem){
   }
 
   const sessionType = String(planItem.session_type || "").trim().toLowerCase();
-  const entries = Array.isArray(planItem.entries) ? planItem.entries : [];
+  const entries = getSessionEntries(planItem);
   const firstEntry = entries.length ? entries[0] : null;
   const firstExercise = String(firstEntry?.exercise_id || "").trim().toLowerCase();
   const targetReps = String(firstEntry?.target_reps || "").trim();
@@ -4317,7 +4317,8 @@ function toggleCardioReviewFields(item){
     return;
   }
 
-  const firstEntry = Array.isArray(item?.entries) && item.entries.length ? item.entries[0] : null;
+  const sessionEntries = getSessionEntries(item);
+  const firstEntry = sessionEntries.length ? sessionEntries[0] : null;
   const exId = String(firstEntry?.exercise_id || "").trim().toLowerCase();
 
   if (cardioKindEl && !cardioKindEl.value){
@@ -4394,7 +4395,8 @@ function renderSessionReview(item){
     return;
   }
 
-  if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
+  const sessionEntries = getSessionEntries(item);
+  if (!item || sessionEntries.length === 0){
     root.innerHTML = `<li><div class="small">${esc(tr("after_training.no_exercises_to_review"))}</div></li>`;
     toggleCardioReviewFields(null);
     return;
@@ -4402,7 +4404,7 @@ function renderSessionReview(item){
 
   toggleCardioReviewFields(item);
 
-  root.innerHTML = item.entries.map((entry, idx) => {
+  root.innerHTML = sessionEntries.map((entry, idx) => {
     const setCount = Math.max(1, Number(entry.sets || 1));
     const meta = getReviewExerciseMeta(entry.exercise_id);
     const inputKind = String(meta?.input_kind || "");
@@ -4475,7 +4477,8 @@ function renderReviewSummary(item){
   const root = document.getElementById("reviewPlanSummary");
   if (!root) return;
 
-  if (!item || !Array.isArray(item.entries) || item.entries.length === 0){
+  const sessionEntries = getSessionEntries(item);
+  if (!item || sessionEntries.length === 0){
     root.innerHTML = `<div class="small">${esc(tr("after_training.no_plan_to_review"))}</div>`;
     return;
   }
@@ -4486,7 +4489,7 @@ function renderReviewSummary(item){
   if (sessionType) metaBits.push(sessionType);
   if (item.time_budget_min) metaBits.push(`${esc(item.time_budget_min)} min`);
   if (item.readiness_score != null) metaBits.push(`${esc(tr("overview.readiness"))}: ${esc(String(item.readiness_score))}`);
-  metaBits.push(`${esc(String(item.entries.length))} ${esc(item.entries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
+  metaBits.push(`${esc(String(sessionEntries.length))} ${esc(sessionEntries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
 
   root.innerHTML = `
     <div class="review-summary-card">
@@ -4499,7 +4502,7 @@ function renderReviewSummary(item){
       ${completionSummaryText ? `<div class="small review-summary-outcome">${esc(completionSummaryText)}</div>` : ""}
       <div class="small review-summary-outcome">${esc(tr("review.summary_session_label"))}</div>
       <div class="small review-summary-list">
-        ${item.entries.map(entry => {
+        ${sessionEntries.map(entry => {
           const bits = [];
           if (entry.sets) bits.push(tr("exercise.sets_count", { count: esc(entry.sets) }));
           if (entry.target_reps) bits.push(tr("exercise.target_label", { value: formatTarget(entry.target_reps) }));
@@ -5352,7 +5355,7 @@ async function applyVariantSwap(entry, direction){
 }
 
 function removePlanEntryByIndex(item, idx){
-  const entries = Array.isArray(item?.entries) ? item.entries : [];
+  const entries = getSessionEntries(item);
   if (idx < 0 || idx >= entries.length) return;
   entries.splice(idx, 1);
   renderTodayPlan(item);
@@ -5718,6 +5721,22 @@ function bindExerciseViewer(){
 }
 
 
+
+function getSessionEntries(item){
+  if (!item || typeof item !== "object") return [];
+  if (Array.isArray(item.entries)) return item.entries;
+
+  const blocks = Array.isArray(item.session_blocks) ? item.session_blocks : [];
+  const flattened = [];
+  for (const block of blocks){
+    if (!block || typeof block !== "object") continue;
+    const blockEntries = Array.isArray(block.entries) ? block.entries : [];
+    for (const entry of blockEntries){
+      if (entry && typeof entry === "object") flattened.push(entry);
+    }
+  }
+  return flattened;
+}
 
 function formatTrainingDays(days){
   if (!Array.isArray(days) || !days.length) return "";
