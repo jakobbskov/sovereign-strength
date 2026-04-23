@@ -1,8 +1,8 @@
 # SovereignStrength
 
-SovereignStrength is a local-first, deterministic training system for strength work and simple cardio-aware planning.
+SovereignStrength is a calm, explainable training product for strength, running, and recovery.
 
-It is designed to help a single user plan training, log sessions, and receive explainable feedback without relying on external platforms, cloud AI, or opaque recommendation systems.
+It helps a single user plan training, log sessions, and receive adaptive guidance based on status and available time, without manipulative product loops or default dependence on Google-, Meta-, or similar platform logins.
 
 ## Why it exists
 
