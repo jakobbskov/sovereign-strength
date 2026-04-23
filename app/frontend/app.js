@@ -1386,6 +1386,9 @@ function getStartOfIsoWeek(dateStr){
 
 function buildWeeklyRhythmSummary(sessionResults, planItem){
   const items = Array.isArray(sessionResults) ? sessionResults : [];
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  const weeklyTargetSessions = Math.max(1, Number(preferences.weekly_target_sessions || 3) || 3);
   const baseDate = String(planItem?.date || planItem?.recommended_for || "").trim();
   const todayIso = /^\d{4}-\d{2}-\d{2}$/.test(baseDate) ? baseDate : new Date().toISOString().slice(0, 10);
   const weekStart = getStartOfIsoWeek(todayIso);
@@ -1409,6 +1412,7 @@ function buildWeeklyRhythmSummary(sessionResults, planItem){
   return {
     weekStart,
     completedCount,
+    weeklyTargetSessions,
     latest,
     completedTypes,
     nextTraining: nextInfo?.nextTraining || null
@@ -1449,6 +1453,19 @@ function ensureWeeklyRhythmMount(){
   return card;
 }
 
+function renderWeeklyRhythmSegments(completedCount, weeklyTargetSessions){
+  const target = Math.max(1, Number(weeklyTargetSessions || 0) || 1);
+  const completed = Math.max(0, Number(completedCount || 0) || 0);
+  const filled = Math.min(completed, target);
+
+  return `<div aria-hidden="true" style="display:flex; gap:6px; margin:8px 0 4px 0;">${
+    Array.from({ length: target }, (_, idx) => {
+      const isFilled = idx < filled;
+      return `<span style="flex:1 1 0; min-width:0; height:14px; border-radius:999px; border:1px solid ${isFilled ? 'rgba(59,130,246,0.95)' : 'rgba(148,163,184,0.45)'}; background:${isFilled ? 'linear-gradient(90deg, rgba(59,130,246,0.95), rgba(37,99,235,0.95))' : 'rgba(148,163,184,0.12)'};"></span>`;
+    }).join("")
+  }</div>`;
+}
+
 function renderWeeklyRhythmCard(sessionResults, planItem){
   const card = ensureWeeklyRhythmMount();
   const body = document.getElementById("weeklyRhythmBody");
@@ -1466,9 +1483,11 @@ function renderWeeklyRhythmCard(sessionResults, planItem){
   const nextLine = summary.nextTraining
     ? `${summary.nextTraining.kindLabel || ""} · ${summary.nextTraining.dateLabel || summary.nextTraining.date || ""}`
     : tr("common.no_recommendation");
+  const rhythmSummaryLine = `${String(summary.completedCount)} / ${String(summary.weeklyTargetSessions)}`;
 
   body.innerHTML = `
-    <div class="small"><strong>${esc(tr("history.weekly_rhythm_completed_label"))}:</strong> ${esc(String(summary.completedCount))}</div>
+    <div class="small"><strong>${esc(tr("history.weekly_rhythm_completed_label"))}:</strong> ${esc(rhythmSummaryLine)}</div>
+    ${renderWeeklyRhythmSegments(summary.completedCount, summary.weeklyTargetSessions)}
     <div class="small card-section-gap"><strong>${esc(tr("history.weekly_rhythm_types_label"))}:</strong> ${esc(completedTypesLine)}</div>
     <div class="small card-section-gap"><strong>${esc(tr("history.weekly_rhythm_latest_label"))}:</strong> ${esc(latestLine)}</div>
     <div class="small card-section-gap"><strong>${esc(tr("history.weekly_rhythm_next_label"))}:</strong> ${esc(nextLine)}</div>
@@ -1480,7 +1499,6 @@ function renderWeeklyRhythmCard(sessionResults, planItem){
       : "";
   }
 }
-
 
 function ensureLoadMetricsMount(){
   let root = document.getElementById("loadMetricsCard");
