@@ -3813,6 +3813,8 @@ function formatSavedSummaryMessage(value){
     "dagens session er gemt.": tr("review.saved_summary.session_saved"),
     "today's recovery has been logged.": tr("review.saved_summary.recovery_logged"),
     "dagens restitution er registreret.": tr("review.saved_summary.recovery_logged"),
+    "today's cardio session has been saved.": tr("review.saved_summary.cardio_saved"),
+    "dagens cardiopas er gemt.": tr("review.saved_summary.cardio_saved"),
     "great work today.": tr("review.saved_summary.great_work"),
     "godt arbejde i dag.": tr("review.saved_summary.great_work")
   };
@@ -3828,7 +3830,29 @@ function formatSavedSummaryNextStep(value){
     "hold this level next time.": tr("review.saved_summary.hold_next_time"),
     "hold dette niveau næste gang.": tr("review.saved_summary.hold_next_time"),
     "keep progression conservative next session.": tr("review.saved_summary.keep_progression_conservative"),
-    "hold progressionen konservativ næste session.": tr("review.saved_summary.keep_progression_conservative")
+    "hold progressionen konservativ næste session.": tr("review.saved_summary.keep_progression_conservative"),
+    "keep the next recovery session easy and unforced.": tr("review.saved_summary.cardio_recovery_keep_easy"),
+    "take the next run easier so recovery work stays restorative.": tr("review.saved_summary.cardio_recovery_take_easier"),
+    "repeat a similar controlled effort next time.": tr("review.saved_summary.cardio_base_repeat_controlled"),
+    "keep the next base run slightly easier so it stays aerobic.": tr("review.saved_summary.cardio_base_easier"),
+    "take the next base session easier and keep the pace under control.": tr("review.saved_summary.cardio_base_take_easier"),
+    "the next tempo session can be a little more committed if recovery is good.": tr("review.saved_summary.cardio_tempo_more_committed"),
+    "recover well, then keep the next tempo session controlled but purposeful.": tr("review.saved_summary.cardio_tempo_controlled"),
+    "take the next quality run slightly easier so tempo work stays repeatable.": tr("review.saved_summary.cardio_tempo_easier"),
+    "recover before the next hard run and keep easy days easy.": tr("review.saved_summary.cardio_intervals_recover"),
+    "make the next interval session more clearly structured or slightly harder if appropriate.": tr("review.saved_summary.cardio_intervals_clearer"),
+    "log duration, distance, and effort next time for a more useful running review.": tr("review.saved_summary.cardio_log_more_data"),
+    "log the cardio type and effort more clearly next time.": tr("review.saved_summary.cardio_log_intent"),
+    "recovery run matched the intended easy effort.": tr("review.saved_summary.cardio_recovery_matched"),
+    "recovery run was harder than intended.": tr("review.saved_summary.cardio_recovery_too_hard"),
+    "base run broadly matched the intended steady effort.": tr("review.saved_summary.cardio_base_matched"),
+    "base run drifted a bit harder than intended.": tr("review.saved_summary.cardio_base_slightly_hard"),
+    "base run was too hard for its intended purpose.": tr("review.saved_summary.cardio_base_too_hard"),
+    "tempo run broadly matched the intended sustained hard effort.": tr("review.saved_summary.cardio_tempo_matched"),
+    "tempo run looked easier than intended.": tr("review.saved_summary.cardio_tempo_too_easy"),
+    "tempo run was harder than intended.": tr("review.saved_summary.cardio_tempo_too_hard"),
+    "interval session broadly matched the intended hard structured effort.": tr("review.saved_summary.cardio_intervals_matched"),
+    "interval session looked easier than intended.": tr("review.saved_summary.cardio_intervals_too_easy")
   };
   return map[x] || value;
 }
@@ -3837,8 +3861,10 @@ function formatSavedSummaryExplanationBit(value){
   const normalizedRecovery = formatRecoveryExplanationBit(value);
   if (normalizedRecovery !== value) return normalizedRecovery;
 
-  const x = String(value || "").trim().toLowerCase();
+  const raw = String(value || "").trim();
+  const x = raw.toLowerCase();
   if (!x) return "";
+
   const map = {
     "light overall load recorded.": tr("review.saved_summary.light_load_recorded"),
     "lav samlet belastning registreret.": tr("review.saved_summary.light_load_recorded"),
@@ -3853,9 +3879,36 @@ function formatSavedSummaryExplanationBit(value){
     "keep progression conservative next session.": tr("review.saved_summary.keep_progression_conservative"),
     "hold progressionen konservativ næste session.": tr("review.saved_summary.keep_progression_conservative"),
     "failure markers: 1": tr("review.saved_summary.failure_markers_count", { count: 1 }),
-    "plank failure": tr("review.saved_summary.plank_failure")
+    "plank failure": tr("review.saved_summary.plank_failure"),
+    "recovery run matched the intended easy effort.": tr("review.saved_summary.cardio_recovery_matched"),
+    "recovery run was harder than intended.": tr("review.saved_summary.cardio_recovery_too_hard"),
+    "base run broadly matched the intended steady effort.": tr("review.saved_summary.cardio_base_matched"),
+    "base run drifted a bit harder than intended.": tr("review.saved_summary.cardio_base_slightly_hard"),
+    "base run was too hard for its intended purpose.": tr("review.saved_summary.cardio_base_too_hard"),
+    "tempo run broadly matched the intended sustained hard effort.": tr("review.saved_summary.cardio_tempo_matched"),
+    "tempo run looked easier than intended.": tr("review.saved_summary.cardio_tempo_too_easy"),
+    "tempo run was harder than intended.": tr("review.saved_summary.cardio_tempo_too_hard"),
+    "interval session broadly matched the intended hard structured effort.": tr("review.saved_summary.cardio_intervals_matched"),
+    "interval session looked easier than intended.": tr("review.saved_summary.cardio_intervals_too_easy"),
+    "cardio session saved, but there was not enough data to assess the run.": tr("review.saved_summary.cardio_not_enough_data"),
+    "not enough cardio data was available for a running-specific review.": tr("review.saved_summary.cardio_not_enough_data_detail"),
+    "effort stayed low enough for recovery work.": tr("review.saved_summary.cardio_recovery_detail_easy"),
+    "rpe 3 fits a controlled base run.": tr("review.saved_summary.cardio_base_detail_rpe_fit", { value: "3" }),
+    "rpe 4 fits a controlled base run.": tr("review.saved_summary.cardio_base_detail_rpe_fit", { value: "4" }),
+    "rpe 5 fits a controlled base run.": tr("review.saved_summary.cardio_base_detail_rpe_fit", { value: "5" }),
+    "rpe 6 fits a controlled base run.": tr("review.saved_summary.cardio_base_detail_rpe_fit", { value: "6" }),
+    "the effort looks a little high for base work.": tr("review.saved_summary.cardio_base_detail_high"),
+    "the effort looks closer to base than tempo work.": tr("review.saved_summary.cardio_tempo_detail_easy"),
+    "the effort does not clearly stand out from an easier steady run.": tr("review.saved_summary.cardio_intervals_detail_easy")
   };
-  return map[x] || value;
+
+  if (map[x]) return map[x];
+  if (x.startsWith("distance logged: ")) return tr("review.saved_summary.cardio_distance_logged_prefix", { value: raw.slice(17) });
+  if (x.startsWith("duration logged: ")) return tr("review.saved_summary.cardio_duration_logged_prefix", { value: raw.slice(17) });
+  if (x.startsWith("average pace: ")) return tr("review.saved_summary.cardio_average_pace_prefix", { value: raw.slice(14) });
+  if (x.startsWith("rpe ") && x.endsWith(" was recorded.")) return tr("review.saved_summary.cardio_rpe_recorded", { value: raw.slice(4, -14) });
+
+  return value;
 }
 
 function formatTimingState(value){
@@ -4397,7 +4450,9 @@ function renderSessionReview(item){
   if (!root) return;
 
   if (completedTodayItem){
-    const storedSummary = buildSessionResultSummaryFromStoredItem(completedTodayItem);
+    const storedSummary = completedTodayItem.summary && typeof completedTodayItem.summary === "object"
+      ? completedTodayItem.summary
+      : buildSessionResultSummaryFromStoredItem(completedTodayItem);
     root.innerHTML = `<li><div class="small">${esc("Dagens session er allerede gemt. Brug historik, hvis du vil redigere den.")}</div></li>`;
     toggleCardioReviewFields(null);
     setText("sessionResultStatus", "");
