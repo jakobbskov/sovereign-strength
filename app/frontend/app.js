@@ -4485,10 +4485,12 @@ function renderReviewSummary(item){
 
   const sessionType = formatSessionType(item.session_type || "");
   const completionSummaryText = getWorkoutCompletionSummaryText(STATE.workoutCompletionContext || {});
+  const sessionBlocks = getSessionBlocks(item);
   const metaBits = [];
   if (sessionType) metaBits.push(sessionType);
   if (item.time_budget_min) metaBits.push(`${esc(item.time_budget_min)} min`);
   if (item.readiness_score != null) metaBits.push(`${esc(tr("overview.readiness"))}: ${esc(String(item.readiness_score))}`);
+  if (sessionBlocks.length > 1) metaBits.push(tr("session.blocks_count", { count: String(sessionBlocks.length) }));
   metaBits.push(`${esc(String(sessionEntries.length))} ${esc(sessionEntries.length === 1 ? tr("common.exercise_singular") : tr("common.exercise_plural"))}`);
 
   root.innerHTML = `
@@ -5721,6 +5723,22 @@ function bindExerciseViewer(){
 }
 
 
+
+function getSessionBlocks(item){
+  if (!item || typeof item !== "object") return [];
+  if (Array.isArray(item.session_blocks) && item.session_blocks.length){
+    return item.session_blocks.filter(block => block && typeof block === "object");
+  }
+
+  const entries = getSessionEntries(item);
+  if (!entries.length) return [];
+  return [{
+    id: "main",
+    label: "",
+    kind: "default",
+    entries,
+  }];
+}
 
 function getSessionEntries(item){
   if (!item || typeof item !== "object") return [];
@@ -7249,6 +7267,10 @@ function renderTodayPlan(item){
       "todayPlanSummary",
       compactSummaryLead
     );
+  const sessionBlocks = getSessionBlocks(item);
+  if (sessionBlocks.length > 1){
+    setText("todayPlanMeta", tr("session.blocks_count", { count: String(sessionBlocks.length) }));
+  }
 
     if (STATE.workoutInProgress){
       setText("todayPlanTiming", "");
@@ -7259,7 +7281,8 @@ function renderTodayPlan(item){
       return;
     }
 
-    const hasEntries = Array.isArray(item?.entries) && item.entries.length > 0;
+  const sessionEntries = getSessionEntries(item);
+  const hasEntries = sessionEntries.length > 0;
     const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
     const missingTrainingTypes = String(item?.plan_variant || "").trim() === "missing_training_types";
     const showPlannedRestChoiceCard = isPlannedRestDay && !missingTrainingTypes;
