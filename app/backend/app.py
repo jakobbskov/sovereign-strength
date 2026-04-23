@@ -3875,15 +3875,8 @@ def auth_whoami():
 
 
 def build_manual_override_today_plan_response(latest_checkin, checkin_date, readiness_score, manual_override):
-    override_entries = []
-    raw_entries = manual_override.get("entries", [])
-    if not isinstance(raw_entries, list):
-        raw_entries = []
-
-    for e in raw_entries:
-        if not isinstance(e, dict):
-            continue
-        override_entries.append({
+    def map_manual_override_entry(e):
+        return {
             "exercise_id": str(e.get("exercise_id", "")).strip(),
             "sets": e.get("sets", ""),
             "target_reps": str(e.get("reps", "")).strip(),
@@ -3896,9 +3889,46 @@ def build_manual_override_today_plan_response(latest_checkin, checkin_date, read
             "secondary_constraints": [],
             "next_target_reps": None,
             "substituted_from": None
-        })
+        }
+
+    override_entries = []
+    raw_entries = manual_override.get("entries", [])
+    if not isinstance(raw_entries, list):
+        raw_entries = []
+
+    for e in raw_entries:
+        if not isinstance(e, dict):
+            continue
+        override_entries.append(map_manual_override_entry(e))
 
 
+
+
+    session_blocks = []
+    raw_blocks = manual_override.get("session_blocks", [])
+    if isinstance(raw_blocks, list):
+        for idx, block in enumerate(raw_blocks):
+            if not isinstance(block, dict):
+                continue
+            raw_block_entries = block.get("entries", [])
+            if not isinstance(raw_block_entries, list):
+                raw_block_entries = []
+            mapped_entries = []
+            for entry in raw_block_entries:
+                if not isinstance(entry, dict):
+                    continue
+                mapped_entries.append(map_manual_override_entry(entry))
+            if not mapped_entries:
+                continue
+            session_blocks.append({
+                "id": str(block.get("id", "")).strip() or f"block_{idx + 1}",
+                "label": str(block.get("label", "")).strip(),
+                "kind": str(block.get("kind", "")).strip() or "default",
+                "entries": mapped_entries,
+            })
+
+    if session_blocks:
+        override_entries = flatten_session_block_entries(session_blocks)
 
     return jsonify({
         "ok": True,
@@ -3925,6 +3955,7 @@ def build_manual_override_today_plan_response(latest_checkin, checkin_date, read
             "families_selected": [],
             "training_day_context": {},
             "entries": override_entries,
+            "session_blocks": session_blocks,
             "source": "manual_override",
             "manual_override_workout_id": manual_override.get("id")
         }
