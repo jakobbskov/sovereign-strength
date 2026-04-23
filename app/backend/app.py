@@ -6002,7 +6002,233 @@ def _estimate_effective_load_for_result(result_item, exercise_meta, bodyweight_k
 
     return 0.0
 
+
+def _build_cardio_session_summary(session_item):
+    if not isinstance(session_item, dict):
+        session_item = {}
+
+    session_type_value = str(session_item.get("session_type", "") or "").strip().lower()
+    cardio_kind_raw = str(session_item.get("cardio_kind", "") or "").strip().lower()
+    cardio_kind = cardio_kind_raw or "base"
+
+    try:
+        distance_km = float(session_item.get("distance_km", 0) or 0)
+    except Exception:
+        distance_km = 0.0
+
+    try:
+        duration_total_sec = int(float(session_item.get("duration_total_sec", 0) or 0))
+    except Exception:
+        duration_total_sec = 0
+
+    try:
+        pace_sec_per_km = float(session_item.get("pace_sec_per_km", 0) or 0)
+    except Exception:
+        pace_sec_per_km = 0.0
+
+    avg_rpe_raw = session_item.get("avg_rpe", None)
+    try:
+        avg_rpe = float(avg_rpe_raw) if avg_rpe_raw not in (None, "", "null") else None
+    except Exception:
+        avg_rpe = None
+
+    kind_aliases = {
+        "restitution": "recovery",
+        "recovery": "recovery",
+        "easy": "recovery",
+        "base": "base",
+        "tempo": "tempo",
+        "threshold": "tempo",
+        "interval": "intervals",
+        "intervals": "intervals",
+        "test": "intervals",
+        "benchmark": "intervals",
+    }
+    normalized_kind = kind_aliases.get(cardio_kind, cardio_kind or "base")
+
+    has_basic_data = duration_total_sec > 0 or distance_km > 0
+    matched_intent = None
+    fatigue = "moderate"
+    assessment = ""
+    next_step_hint = ""
+    explanation_bits = []
+
+    if not has_basic_data:
+        fatigue = "unknown"
+        assessment = "Cardio session saved, but there was not enough data to assess the run."
+        next_step_hint = "Log duration, distance, and effort next time for a more useful running review."
+        explanation_bits.append("Not enough cardio data was available for a running-specific review.")
+    else:
+        if normalized_kind == "recovery":
+            if avg_rpe is None:
+                matched_intent = "unclear"
+                fatigue = "moderate"
+                assessment = "Recovery run logged, but effort was not clear enough to confirm that it stayed easy."
+                next_step_hint = "Keep the next recovery run clearly easy and log RPE if possible."
+                explanation_bits.append("Recovery sessions should stay very easy.")
+            elif avg_rpe <= 4:
+                matched_intent = "matched"
+                fatigue = "light"
+                assessment = "Recovery run matched the intended easy effort."
+                next_step_hint = "Keep the next recovery session easy and unforced."
+                explanation_bits.append("Effort stayed low enough for recovery work.")
+            else:
+                matched_intent = "too_hard"
+                fatigue = "moderate" if avg_rpe <= 6 else "high"
+                assessment = "Recovery run was harder than intended."
+                next_step_hint = "Take the next run easier so recovery work stays restorative."
+                explanation_bits.append(f"RPE {int(round(avg_rpe))} was too high for a recovery session.")
+
+        elif normalized_kind == "base":
+            if avg_rpe is None:
+                matched_intent = "unclear"
+                fatigue = "moderate"
+                assessment = "Base run logged, but effort was not clear enough to confirm that it stayed controlled."
+                next_step_hint = "Keep the next base run conversational and log RPE if possible."
+                explanation_bits.append("Base runs should feel controlled and sustainable.")
+            elif avg_rpe <= 6:
+                matched_intent = "matched"
+                fatigue = "light" if avg_rpe <= 4 else "moderate"
+                assessment = "Base run broadly matched the intended steady effort."
+                next_step_hint = "Repeat a similar controlled effort next time."
+                explanation_bits.append(f"RPE {int(round(avg_rpe))} fits a controlled base run.")
+            elif avg_rpe == 7:
+                matched_intent = "slightly_hard"
+                fatigue = "moderate"
+                assessment = "Base run drifted a bit harder than intended."
+                next_step_hint = "Keep the next base run slightly easier so it stays aerobic."
+                explanation_bits.append("The effort looks a little high for base work.")
+            else:
+                matched_intent = "too_hard"
+                fatigue = "high"
+                assessment = "Base run was too hard for its intended purpose."
+                next_step_hint = "Take the next base session easier and keep the pace under control."
+                explanation_bits.append(f"RPE {int(round(avg_rpe))} suggests the run pushed beyond base intensity.")
+
+        elif normalized_kind == "tempo":
+            if avg_rpe is None:
+                matched_intent = "unclear"
+                fatigue = "moderate"
+                assessment = "Tempo run logged, but effort was not clear enough to confirm the intended intensity."
+                next_step_hint = "Keep the next tempo run clearly stronger than base and log RPE if possible."
+                explanation_bits.append("Tempo sessions should feel meaningfully harder than base work.")
+            elif 6 <= avg_rpe <= 8:
+                matched_intent = "matched"
+                fatigue = "moderate" if avg_rpe <= 7 else "high"
+                assessment = "Tempo run broadly matched the intended sustained hard effort."
+                next_step_hint = "Recover well, then keep the next tempo session controlled but purposeful."
+                explanation_bits.append(f"RPE {int(round(avg_rpe))} fits a tempo-style effort.")
+            elif avg_rpe < 6:
+                matched_intent = "too_easy"
+                fatigue = "light"
+                assessment = "Tempo run looked easier than intended."
+                next_step_hint = "The next tempo session can be a little more committed if recovery is good."
+                explanation_bits.append("The effort looks closer to base than tempo work.")
+            else:
+                matched_intent = "too_hard"
+                fatigue = "high"
+                assessment = "Tempo run was harder than intended."
+                next_step_hint = "Take the next quality run slightly easier so tempo work stays repeatable."
+                explanation_bits.append(f"RPE {int(round(avg_rpe))} looks high for a controlled tempo session.")
+
+        elif normalized_kind == "intervals":
+            if avg_rpe is None:
+                matched_intent = "unclear"
+                fatigue = "moderate"
+                assessment = "Interval session logged, but effort was not clear enough to confirm the intended quality."
+                next_step_hint = "Keep the next interval session clearly structured and log RPE if possible."
+                explanation_bits.append("Interval sessions should feel distinctly harder than steady easy running.")
+            elif avg_rpe >= 7:
+                matched_intent = "matched"
+                fatigue = "high" if avg_rpe >= 8 else "moderate"
+                assessment = "Interval session broadly matched the intended hard structured effort."
+                next_step_hint = "Recover before the next hard run and keep easy days easy."
+                explanation_bits.append(f"RPE {int(round(avg_rpe))} fits a quality interval session.")
+            else:
+                matched_intent = "too_easy"
+                fatigue = "light" if avg_rpe <= 4 else "moderate"
+                assessment = "Interval session looked easier than intended."
+                next_step_hint = "Make the next interval session more clearly structured or slightly harder if appropriate."
+                explanation_bits.append("The effort does not clearly stand out from an easier steady run.")
+        else:
+            if avg_rpe is None:
+                matched_intent = "unclear"
+                fatigue = "moderate"
+                assessment = "Cardio session saved, but the intended run type was not clear enough for a more specific review."
+                next_step_hint = "Log the cardio type and effort more clearly next time."
+                explanation_bits.append("Running review works best when session intent is explicit.")
+            elif avg_rpe <= 4:
+                matched_intent = "matched"
+                fatigue = "light"
+                assessment = "Cardio session looks easy overall."
+                next_step_hint = "Keep the next easy run controlled."
+                explanation_bits.append("Low effort was recorded.")
+            elif avg_rpe <= 7:
+                matched_intent = "matched"
+                fatigue = "moderate"
+                assessment = "Cardio session looks moderate overall."
+                next_step_hint = "Keep the next session aligned with your intended run type."
+                explanation_bits.append("Moderate effort was recorded.")
+            else:
+                matched_intent = "matched"
+                fatigue = "high"
+                assessment = "Cardio session looks hard overall."
+                next_step_hint = "Recover well before the next harder run."
+                explanation_bits.append("High effort was recorded.")
+
+    if distance_km > 0:
+        explanation_bits.append(f"Distance logged: {round(distance_km, 2)} km.")
+    if duration_total_sec > 0:
+        explanation_bits.append(f"Duration logged: {duration_total_sec // 60}:{str(duration_total_sec % 60).zfill(2)}.")
+    if pace_sec_per_km > 0:
+        pace_min = int(pace_sec_per_km // 60)
+        pace_sec = int(round(pace_sec_per_km % 60))
+        if pace_sec == 60:
+            pace_min += 1
+            pace_sec = 0
+        explanation_bits.append(f"Average pace: {pace_min}:{str(pace_sec).zfill(2)}/km.")
+    if avg_rpe is not None:
+        explanation_bits.append(f"RPE {int(round(avg_rpe))} was recorded.")
+
+    if assessment:
+        explanation_bits.insert(0, assessment)
+
+    return {
+        "completion_state": "completed_session",
+        "session_type": session_item.get("session_type", ""),
+        "cardio_kind": session_item.get("cardio_kind", ""),
+        "distance_km": session_item.get("distance_km", None),
+        "duration_total_sec": session_item.get("duration_total_sec", None),
+        "pace_sec_per_km": session_item.get("pace_sec_per_km", None),
+        "completed_exercises": 0,
+        "total_exercises": 0,
+        "total_sets": 0,
+        "total_reps": 0,
+        "total_time_under_tension_sec": 0,
+        "estimated_volume": 0.0,
+        "hit_failure_count": 0,
+        "fatigue": fatigue,
+        "progress_flags": [],
+        "next_step_hint": next_step_hint,
+        "recovery_recommendation": {
+            "level": fatigue,
+            "text": next_step_hint,
+        },
+        "progression_summary": assessment or next_step_hint,
+        "post_workout_message": "Today's cardio session has been saved.",
+        "explanation_bits": explanation_bits,
+        "cardio_review": {
+            "intent": normalized_kind,
+            "matched_intent": matched_intent,
+            "assessment": assessment,
+        },
+    }
+
 def build_session_summary(session_item):
+    session_type_value = str((session_item or {}).get("session_type", "") or "").strip().lower()
+    if session_type_value in ("løb", "run", "cardio"):
+        return _build_cardio_session_summary(session_item)
+
     results = session_item.get("results", []) if isinstance(session_item, dict) else []
     if not isinstance(results, list):
         results = []
