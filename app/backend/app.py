@@ -3288,15 +3288,28 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             "reason": "missing_program_template"
         }
 
-    latest_day = normalize_program_day_label(latest_strength.get("program_day_label", "") if latest_strength else "")
-    next_day_key = "day_a"
-    if latest_day == "day_a":
-        next_day_key = "day_b"
-    elif latest_day == "day_b":
-        next_day_key = "day_a"
+    current_program_id = str(program.get("id", "")).strip()
+    latest_program_id = str(latest_strength.get("program_id", "") if latest_strength else "").strip()
+    latest_day = ""
+    if latest_program_id and current_program_id and latest_program_id == current_program_id:
+        latest_day = normalize_program_day_label(latest_strength.get("program_day_label", "") if latest_strength else "")
+
+    program_days = [
+        day for day in program.get("days", [])
+        if isinstance(day, dict) and str(day.get("label", "")).strip()
+    ]
+    normalized_program_days = [
+        normalize_program_day_label(day.get("label"))
+        for day in program_days
+    ]
+
+    next_day_key = normalized_program_days[0] if normalized_program_days else "day_a"
+    if latest_day and latest_day in normalized_program_days:
+        latest_idx = normalized_program_days.index(latest_day)
+        next_day_key = normalized_program_days[(latest_idx + 1) % len(normalized_program_days)]
 
     selected_day = None
-    for day in program.get("days", []):
+    for day in program_days:
         if normalize_program_day_label(day.get("label")) == next_day_key:
             selected_day = day
             break
