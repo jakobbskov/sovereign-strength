@@ -2126,8 +2126,10 @@ function renderForecastHero(planItem, latestCheckin){
   }
 
   const reasonParts = [bits.join(" · "), formatPlanReason(planItem.reason || "")].filter(Boolean);
+  const localProtectionExplanation = String(planItem?.local_protection_explanation || "").trim();
     const forecastReasonText = [
       reasonParts.join(" · "),
+      localProtectionExplanation ? `${tr("today_plan.local_protection_label")}: ${localProtectionExplanation}` : "",
       nextGuidanceMessage
     ].filter(Boolean).join("\n");
 
@@ -7181,6 +7183,7 @@ function buildTodayPlanHeroCardHtml({
   variantLabel,
   timeBudgetMin,
   planContextBits,
+  localProtectionExplanation,
 }){
   const metaBits = [
     !isPlannedRestDay ? (variantLabel || "") : "",
@@ -7189,6 +7192,7 @@ function buildTodayPlanHeroCardHtml({
 
   const recoveryBit = planContextBits[0] || "";
   const secondaryBits = planContextBits.slice(1);
+  const localProtectionText = String(localProtectionExplanation || "").trim();
 
   return `
     <li>
@@ -7201,6 +7205,7 @@ function buildTodayPlanHeroCardHtml({
       ${heroLead ? `<div class="small today-plan-hero-lead">${esc(heroLead)}</div>` : ""}
       ${recoveryBit ? `<div class="small today-plan-hero-context">${esc(recoveryBit)}</div>` : ""}
       ${secondaryBits.map(bit => `<div class="small today-plan-hero-context">${esc(bit)}</div>`).join("")}
+      ${localProtectionText ? `<div class="small today-plan-hero-context" style="margin-top:10px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08)"><strong>${esc(tr("today_plan.local_protection_label"))}:</strong> ${esc(localProtectionText)}</div>` : ""}
       ${heroActions}
     </li>
   `;
@@ -7388,6 +7393,7 @@ function renderTodayPlan(item){
       variantLabel,
       timeBudgetMin: item.time_budget_min,
       planContextBits,
+      localProtectionExplanation: item?.local_protection_explanation || "",
     });
 
     const recoveryCard = "";

@@ -471,6 +471,7 @@
   "today_plan.no_plan_yet_after_checkin": "Ingen plan endnu. Første plan bliver genereret efter dit check-in.",
   "today_plan.no_plan_yet_help": "Du har ingen plan endnu. Lav et check-in, så opretter systemet dit første datapunkt og dagens træning.",
   "today_plan.no_plan_yet_short": "Ingen plan endnu.",
+  "today_plan.local_protection_label": "Lokal beskyttelse",
   "today_plan.recovery_label": "Recovery: {value}",
   "today_plan.rest_day_title": "Planlagt hviledag",
   "today_plan.rest_day_planned_today": "Planlagt hviledag i dag.",

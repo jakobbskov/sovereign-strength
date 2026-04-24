@@ -2656,6 +2656,7 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
         "duration_min": int(duration),
         "reason": reason[:6],
         "metrics": metrics,
+        "protected_regions": protect_regions,
     }
 
 
@@ -2710,12 +2711,20 @@ def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recover
         }
     }
 
+    metrics = picked.get("metrics", {}) if isinstance(picked.get("metrics", {}), dict) else {}
+    protected_regions = picked.get("protected_regions", [])
+    if not isinstance(protected_regions, list):
+        protected_regions = []
+    protected_regions = [str(x).strip() for x in protected_regions if str(x).strip()]
+
     return {
         "session_type": "løb",
         "template_mode": "autoplan_cardio_v0_1",
         "cardio_kind": kind,
         "reason": picked.get("reason", []),
         "entries": [entry],
+        "local_protection_override": bool(protected_regions),
+        "protected_regions": protected_regions,
     }
 
 
@@ -4460,6 +4469,8 @@ def build_today_plan_training_decision(
                     "template_mode": cardio_plan.get("template_mode"),
                     "families_selected": [],
                     "selected_endurance_program_id": selected_endurance_program_id,
+                    "local_protection_override": bool(cardio_plan.get("local_protection_override")),
+                    "protected_regions": cardio_plan.get("protected_regions", []),
                 }
 
             if not plan_entries:
@@ -4537,7 +4548,9 @@ def build_today_plan_training_decision(
             reason = "styrke fravalgt · cardio vælges"
             autoplan_meta = {
                 "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
-                "families_selected": []
+                "families_selected": [],
+                "local_protection_override": bool(cardio_plan.get("local_protection_override")) if isinstance(cardio_plan, dict) else False,
+                "protected_regions": cardio_plan.get("protected_regions", []) if isinstance(cardio_plan, dict) else [],
             }
         else:
             session_type = "restitution"
@@ -4569,7 +4582,9 @@ def build_today_plan_training_decision(
             reason = "styrke fravalgt · cardio vælges"
             autoplan_meta = {
                 "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
-                "families_selected": []
+                "families_selected": [],
+                "local_protection_override": bool(cardio_plan.get("local_protection_override")) if isinstance(cardio_plan, dict) else False,
+                "protected_regions": cardio_plan.get("protected_regions", []) if isinstance(cardio_plan, dict) else [],
             }
         else:
             session_type = "restitution"
