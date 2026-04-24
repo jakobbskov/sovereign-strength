@@ -4257,6 +4257,55 @@ def build_today_plan_priority_decision(
     return None
 
 
+
+def shape_strength_ctx_for_local_protection(strength_ctx, user_id, readiness_score, fatigue_score, time_budget_min, user_settings=None):
+    ctx = dict(strength_ctx) if isinstance(strength_ctx, dict) else {}
+    protect_regions = get_local_protect_regions(user_id, regions=("knee", "ankle_calf", "low_back"))
+    if not protect_regions:
+        return ctx
+
+    starter_capacity_profile = get_starter_capacity_profile(user_settings)
+    readiness_val = int(readiness_score or 0)
+    fatigue_val = int(fatigue_score or 0)
+    protected = set(protect_regions)
+
+    current_variant = str(ctx.get("plan_variant", "default") or "default").strip()
+    current_reason = str(ctx.get("reason", "") or "").strip()
+
+    if current_variant == "local_protection_restitution":
+        return ctx
+
+    if len(protected) >= 2:
+        return {
+            "ok": True,
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
+            "plan_variant": "local_protection_restitution",
+            "reason": f"lokal beskyttelse i {', '.join(sorted(protected))} former dagen til restitution",
+        }
+
+    if protected.intersection({"knee", "ankle_calf"}) and (readiness_val <= 4 or fatigue_val >= 2):
+        return {
+            "ok": True,
+            "template_id": "restitution_easy",
+            "plan_entries": build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile),
+            "plan_variant": "local_protection_restitution",
+            "reason": f"lokal beskyttelse i {', '.join(sorted(protected))} gør restitution mere sammenhængende end et reduceret pas",
+        }
+
+    if "low_back" in protected:
+        if current_variant not in ("light_strength", "local_light_strength", "local_protection_restitution"):
+            ctx["plan_variant"] = "local_light_strength"
+            if current_reason:
+                ctx["reason"] = f"{current_reason} · lokal beskyttelse i low_back nedjusterede passet til lettere styrke"
+            else:
+                ctx["reason"] = "lokal beskyttelse i low_back nedjusterede passet til lettere styrke"
+        elif current_reason and "low_back" not in current_reason:
+            ctx["reason"] = f"{current_reason} · lokal beskyttelse i low_back er aktiv"
+
+    return ctx
+
+
 def build_today_plan_training_decision(
     auth_user,
     checkin_date,
@@ -4298,6 +4347,14 @@ def build_today_plan_training_decision(
         user_settings=user_settings,
         user_id=auth_user.get("user_id"),
         selected_program_id=selected_strength_program_id,
+    )
+    strength_ctx = shape_strength_ctx_for_local_protection(
+        strength_ctx=strength_ctx,
+        user_id=auth_user.get("user_id"),
+        readiness_score=readiness_score,
+        fatigue_score=fatigue_score,
+        time_budget_min=time_budget_min,
+        user_settings=user_settings,
     )
 
     training_day_prefs = get_training_day_preferences(user_settings)
