@@ -3694,11 +3694,22 @@ def compute_progression_for_exercise(exercise_id, user_id=None):
 
     if local_protection_regions and progression_decision in blocked_progression_decisions:
         reason = str(result.get("progression_reason", "") or "").strip()
+        fallback_load = result.get("last_load", result.get("next_load"))
         local_reason = f"local protection blocks progression in: {', '.join(sorted(set(local_protection_regions)))}"
         result["progression_decision"] = "hold"
         result["progression_reason"] = f"{reason} · {local_reason}" if reason else local_reason
+        result["next_load"] = fallback_load
+        result["recommended_next_load"] = None
+        result["actual_possible_next_load"] = None
+        result["next_target_reps"] = None
         result["local_protection_blocked_progression"] = True
         result["local_protection_regions"] = sorted(set(local_protection_regions))
+        secondary_constraints = result.get("secondary_constraints", [])
+        if not isinstance(secondary_constraints, list):
+            secondary_constraints = []
+        if "local_protection_block" not in secondary_constraints:
+            secondary_constraints = list(secondary_constraints) + ["local_protection_block"]
+        result["secondary_constraints"] = secondary_constraints
     else:
         result["local_protection_blocked_progression"] = False
         result["local_protection_regions"] = sorted(set(local_protection_regions))
