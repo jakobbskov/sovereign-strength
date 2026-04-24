@@ -910,5 +910,17 @@
   "history.weekly_rhythm_next_label": "Next likely session",
   "history.weekly_rhythm_none_completed": "No completed sessions yet this week",
   "history.weekly_rhythm_no_completed_types": "None yet",
-  "review.next_likely_session_label": "Most likely next session"
+  "review.next_likely_session_label": "Most likely next session",
+  "profile.local_protection_holds_title": "Local protection",
+  "profile.local_protection_holds_help": "Keep a region in caution or protect state if it should still be protected across multiple planning days.",
+  "local_protection.hold.none": "No manual hold",
+  "local_protection.hold.caution": "Caution",
+  "local_protection.hold.protect": "Protect",
+  "local_protection.region.ankle_calf": "Ankle/calf",
+  "local_protection.region.knee": "Knee",
+  "local_protection.region.hip": "Hip",
+  "local_protection.region.low_back": "Low back",
+  "local_protection.region.shoulder": "Shoulder",
+  "local_protection.region.elbow": "Elbow",
+  "local_protection.region.wrist": "Wrist"
 }
