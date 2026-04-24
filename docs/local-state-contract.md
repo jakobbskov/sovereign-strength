@@ -374,21 +374,58 @@ Current protected planning regions are primarily:
 - `low_back`
 
 Examples of current effects:
-
 - early cardio can be overridden into restitution
 - higher-fatigue days can be pushed toward restitution
+- cardio recommendations can be downgraded to more conservative output when protected regions are relevant
 - today-plan output can expose `local_protection_explanation`
 
+### Substitution and session shaping
+
+Local protection is not limited to top-level planning overrides.
+
+Inside strength planning, the current layer can also:
+
+- substitute exercises when safer candidates preserve enough of the session intent
+- downgrade or reshape a strength session when local protection removes part of the planned content
+- escalate to `local_protection_restitution` when too much of the session would otherwise be lost
+
+This means local protection can currently resolve in three different ways depending on the case:
+
+- preserve the session with substitution
+- preserve the day with a lighter or reshaped session
+- abandon the original content and move to restitution
+
+### Current cardio interaction
+
+Cardio is influenced by local protection at the planning layer, not inside the strength progression engine.
+
+Current live behavior includes examples such as:
+
+- `knee` / `ankle_calf` protection can downgrade harder cardio toward restitution
+- `low_back` protection can downgrade harder cardio toward easier base output
+- cardio-path local protection can flow through to visible explanation output via `local_protection_explanation`
+
 ### Progression blocker
+
 Local protection now also influences progression.
 
 Current conservative rule:
-
 - if an exercise maps to one or more local regions currently in `protect`
 - and progression would otherwise increase load / reps / time / variation
 - progression is blocked to `hold`
 
-This blocker is deterministic and visible in progression output.
+Current blocked fallback behavior is intentionally clean:
+- `progression_decision` becomes `hold`
+- `next_load` falls back to `last_load`
+- `recommended_next_load` is cleared
+- `actual_possible_next_load` is cleared
+- `next_target_reps` is cleared
+- `secondary_constraints` includes `local_protection_block`
+
+This blocker is deterministic and visible in progression output through fields such as:
+- `local_protection_blocked_progression`
+- `local_protection_regions`
+- `secondary_constraints`
 
 ## Current boundaries
 
@@ -402,6 +439,19 @@ The current local protection layer does **not** try to:
 - create a hidden probabilistic risk model
 
 It is a deterministic load-management layer only.
+
+## Deterministic scenario coverage
+
+Representative local-protection behavior is covered through deterministic scenario tests.
+
+Current scenario coverage includes cases such as:
+- knee protection downgrading cardio and exposing explanation output
+- low-back protection blocking progression to a clean `hold`
+- shoulder protection escalating to restitution when session content cannot be preserved
+- cleared protection allowing normal progression to resume
+
+The purpose of this coverage is not breadth for its own sake.
+The purpose is to keep the local protection layer inspectable, stable, and hard to silently weaken later.
 
 ## Documentation priority rule
 
