@@ -926,5 +926,17 @@
   "history.weekly_rhythm_next_label": "Næste sandsynlige pas",
   "history.weekly_rhythm_none_completed": "Ingen gennemførte pas endnu i denne uge",
   "history.weekly_rhythm_no_completed_types": "Ingen endnu",
-  "review.next_likely_session_label": "Mest sandsynligt næste træning"
+  "review.next_likely_session_label": "Mest sandsynligt næste træning",
+  "profile.local_protection_holds_title": "Lokal beskyttelse",
+  "profile.local_protection_holds_help": "Hold et område i forsigtig eller beskyttet tilstand, hvis det stadig skal skånes på tværs af flere planlægningsdage.",
+  "local_protection.hold.none": "Ingen manuel hold",
+  "local_protection.hold.caution": "Forsigtig",
+  "local_protection.hold.protect": "Beskyt",
+  "local_protection.region.ankle_calf": "Ankel/læg",
+  "local_protection.region.knee": "Knæ",
+  "local_protection.region.hip": "Hofte",
+  "local_protection.region.low_back": "Lænd",
+  "local_protection.region.shoulder": "Skulder",
+  "local_protection.region.elbow": "Albue",
+  "local_protection.region.wrist": "Håndled"
 }

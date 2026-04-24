@@ -3083,6 +3083,31 @@ function mountEquipmentEditorInline(){
 }
 
 
+const LOCAL_PROTECTION_HOLD_REGIONS = ["ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"];
+
+function readLocalProtectionHoldsFromForm(){
+  const out = {};
+  LOCAL_PROTECTION_HOLD_REGIONS.forEach(region => {
+    const value = String(document.getElementById(`local_hold_${region}`)?.value || "").trim();
+    if (value === "caution" || value === "protect"){
+      out[region] = value;
+    }
+  });
+  return out;
+}
+
+function populateLocalProtectionHolds(settings){
+  const holds = settings && settings.local_protection_holds && typeof settings.local_protection_holds === "object"
+    ? settings.local_protection_holds
+    : {};
+  LOCAL_PROTECTION_HOLD_REGIONS.forEach(region => {
+    const el = document.getElementById(`local_hold_${region}`);
+    if (!el) return;
+    const value = String(holds[region] || "").trim();
+    el.value = value === "caution" || value === "protect" ? value : "";
+  });
+}
+
 function getInitialSetupSettingsSnapshot(){
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
   const profile = settings.profile && typeof settings.profile === "object" ? { ...settings.profile } : {};
@@ -3092,6 +3117,10 @@ function getInitialSetupSettingsSnapshot(){
     : {};
   const equipmentIncrements = settings.equipment_increments && typeof settings.equipment_increments === "object"
     ? { ...settings.equipment_increments }
+    : {};
+
+  const localProtectionHolds = settings.local_protection_holds && typeof settings.local_protection_holds === "object"
+    ? { ...settings.local_protection_holds }
     : {};
 
   return {
@@ -3106,7 +3135,8 @@ function getInitialSetupSettingsSnapshot(){
         : {}
     },
     available_equipment: availableEquipment,
-    equipment_increments: equipmentIncrements
+    equipment_increments: equipmentIncrements,
+    local_protection_holds: localProtectionHolds
   };
 }
 
@@ -3239,6 +3269,7 @@ function populateEquipmentEditor(){
 
   setVal("eq_barbell_increment", increments.barbell ?? 10);
   setVal("eq_dumbbell_increment", increments.dumbbell ?? 5);
+  populateLocalProtectionHolds(settings);
 }
 
 function renderFirstRunSetupEditorState(){
@@ -3427,7 +3458,8 @@ async function handleEquipmentSettingsSubmit(ev){
       barbell: readNum("eq_barbell_increment", 10),
       dumbbell: readNum("eq_dumbbell_increment", 5),
       bodyweight: 0,
-    }
+    },
+    local_protection_holds: readLocalProtectionHoldsFromForm()
   };
 
   try{

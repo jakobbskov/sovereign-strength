@@ -608,6 +608,68 @@
             </label>
             </div>
 
+            <div style="margin:18px 0 6px; font-weight:700" data-i18n="profile.local_protection_holds_title">Lokal beskyttelse</div>
+            <div class="small" style="margin-bottom:10px" data-i18n="profile.local_protection_holds_help">Hold et område i forsigtig eller beskyttet tilstand, hvis det stadig skal skånes på tværs af flere planlægningsdage.</div>
+
+            <div style="display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:16px">
+              <label>
+                <span data-i18n="local_protection.region.ankle_calf">Ankel/læg</span>
+                <select id="local_hold_ankle_calf" name="local_hold_ankle_calf">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="local_protection.region.knee">Knæ</span>
+                <select id="local_hold_knee" name="local_hold_knee">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="local_protection.region.hip">Hofte</span>
+                <select id="local_hold_hip" name="local_hold_hip">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="local_protection.region.low_back">Lænd</span>
+                <select id="local_hold_low_back" name="local_hold_low_back">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="local_protection.region.shoulder">Skulder</span>
+                <select id="local_hold_shoulder" name="local_hold_shoulder">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="local_protection.region.elbow">Albue</span>
+                <select id="local_hold_elbow" name="local_hold_elbow">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="local_protection.region.wrist">Håndled</span>
+                <select id="local_hold_wrist" name="local_hold_wrist">
+                  <option value="" data-i18n="local_protection.hold.none">Ingen manuel hold</option>
+                  <option value="caution" data-i18n="local_protection.hold.caution">Forsigtig</option>
+                  <option value="protect" data-i18n="local_protection.hold.protect">Beskyt</option>
+                </select>
+              </label>
+            </div>
+
             <div class="first-run-setup-section" data-first-run-step="equipment">
               <h4 style="margin:0 0 10px" data-i18n="onboarding.first_run.section.equipment_title">Equipment</h4>
               <p class="small" style="margin:0 0 12px" data-i18n="onboarding.first_run.section.equipment_body">Tell the app what you actually have available, plus the load increments it should use.</p>
