@@ -458,6 +458,7 @@
   "today_plan.no_plan_yet_after_checkin": "No plan yet. The first plan will be generated after your check-in.",
   "today_plan.no_plan_yet_help": "You have no plan yet. Do a check-in to create your first data point and today's training.",
   "today_plan.no_plan_yet_short": "No plan yet.",
+  "today_plan.local_protection_label": "Local protection",
   "today_plan.recovery_label": "Recovery: {value}",
   "today_plan.rest_day_title": "Planned rest day",
   "today_plan.rest_day_planned_today": "Planned rest day today.",
