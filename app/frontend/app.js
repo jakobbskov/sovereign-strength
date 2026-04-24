@@ -7338,19 +7338,118 @@ function deriveTodayPlanDisplayState(item){
   };
 }
 
+function renderEmptyTodayPlan(root){
+  setText("todayPlanMeta", "");
+  setText("todayPlanTiming", tr("today_plan.no_timing_yet"));
+  setText("todayPlanSummary", tr("today_plan.no_plan_yet_after_checkin"));
+  root.innerHTML = `<li><div class="small">${esc(tr("today_plan.no_plan_yet_help"))}</div></li>`;
+  renderReviewSummary(null);
+  renderSessionReview(null);
+}
+
+function renderInProgressTodayPlan(item){
+  setText("todayPlanTiming", "");
+  setText("todayPlanSummary", "");
+  renderActiveWorkoutCard(item);
+  renderReviewSummary(item);
+  renderSessionReview(item);
+}
+
+function wireTodayPlanSetupAction(){
+  document.getElementById("todayPlanOpenSetupBtn")?.addEventListener("click", () => {
+    showWizardStep("overview");
+    requestAnimationFrame(() => {
+      const profileCard = document.getElementById("profileEquipmentCard");
+      if (profileCard && typeof profileCard.scrollIntoView === "function"){
+        profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      setEquipmentEditorOpen(true);
+    });
+  });
+}
+
+function renderStandardTodayPlan(item, root, displayState){
+  const {
+    variantLabel,
+    isPlannedRestDay,
+    trainingAllowedSummary,
+    recoveryDaySummary,
+    planContextBits,
+  } = displayState;
+
+  const isManualOverridePlan = String(item?.plan_variant || "").trim() === "manual_override"
+    || String(item?.source || "").trim() === "manual_override";
+  const compactSummaryLead = isManualOverridePlan
+    ? ""
+    : (trainingAllowedSummary || recoveryDaySummary || "");
+  setText(
+    "todayPlanSummary",
+    compactSummaryLead
+  );
+
+  const sessionBlocks = getSessionBlocks(item);
+  if (sessionBlocks.length > 1){
+    setText("todayPlanMeta", tr("session.blocks_count", { count: String(sessionBlocks.length) }));
+  }
+
+  const sessionEntries = getSessionEntries(item);
+  const hasEntries = sessionEntries.length > 0;
+  const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
+  const missingTrainingTypes = String(item?.plan_variant || "").trim() === "missing_training_types";
+  const showPlannedRestChoiceCard = isPlannedRestDay && !missingTrainingTypes;
+  const showRestitutionChoice = showPlannedRestChoiceCard && hasEntries && isRestitutionPlan;
+
+  const heroTitle = missingTrainingTypes
+    ? tr("today_plan.missing_training_types_title")
+    : showPlannedRestChoiceCard
+      ? tr("today_plan.rest_day_title")
+      : formatSessionType(item.session_type || "unknown");
+  const heroLead = missingTrainingTypes
+    ? tr("today_plan.missing_training_types_lead")
+    : showPlannedRestChoiceCard
+      ? tr("today_plan.rest_day_lead")
+      : "";
+
+  const heroActions = missingTrainingTypes
+    ? `<div class="btn-row" style="margin-top:10px"><button type="button" id="todayPlanOpenSetupBtn">${esc(tr("today_plan.missing_training_types_cta"))}</button></div>`
+    : buildTodayPlanHeroActionsHtml({
+        showPlannedRestChoiceCard,
+        showRestitutionChoice,
+        manualOverrideWorkoutId: String(item?.manual_override_workout_id || "").trim(),
+      });
+
+  const heroCard = buildTodayPlanHeroCardHtml({
+    heroTitle,
+    heroLead,
+    heroActions,
+    isPlannedRestDay,
+    variantLabel,
+    timeBudgetMin: item.time_budget_min,
+    planContextBits,
+    localProtectionExplanation: item?.local_protection_explanation || "",
+  });
+
+  const recoveryCard = "";
+  const recommendationCard = buildTodayPlanProgramRecommendationCardHtml(item);
+  const entryCards = buildTodayPlanEntryCardsHtml(item, isPlannedRestDay);
+
+  root.innerHTML = heroCard + recoveryCard + recommendationCard + entryCards;
+
+  if (missingTrainingTypes){
+    wireTodayPlanSetupAction();
+  }
+
+  wireTodayPlanActions(item);
+}
+
 function renderTodayPlan(item){
   STATE.currentTodayPlan = item || null;
   const root = document.getElementById("todayPlanList");
   if (!root) return;
 
   if (!item){
-    setText("todayPlanMeta", "");
-    setText("todayPlanTiming", tr("today_plan.no_timing_yet"));
-    setText("todayPlanSummary", tr("today_plan.no_plan_yet_after_checkin"));
-    root.innerHTML = `<li><div class="small">${esc(tr("today_plan.no_plan_yet_help"))}</div></li>`;
-      renderReviewSummary(null);
-      renderSessionReview(null);
-      return;
+    renderEmptyTodayPlan(root);
+    return;
   }
 
     setText("todayPlanMeta", "");
@@ -7359,96 +7458,14 @@ function renderTodayPlan(item){
       ""
     );
 
-    const {
-      variantLabel,
-      recovery,
-      isPlannedRestDay,
-      trainingAllowedSummary,
-      recoveryDaySummary,
-      planContextBits,
-    } = deriveTodayPlanDisplayState(item);
-
-    const isManualOverridePlan = String(item?.plan_variant || "").trim() === "manual_override"
-      || String(item?.source || "").trim() === "manual_override";
-    const compactSummaryLead = isManualOverridePlan
-      ? ""
-      : (trainingAllowedSummary || recoveryDaySummary || "");
-    setText(
-      "todayPlanSummary",
-      compactSummaryLead
-    );
-  const sessionBlocks = getSessionBlocks(item);
-  if (sessionBlocks.length > 1){
-    setText("todayPlanMeta", tr("session.blocks_count", { count: String(sessionBlocks.length) }));
-  }
+    const displayState = deriveTodayPlanDisplayState(item);
 
     if (STATE.workoutInProgress){
-      setText("todayPlanTiming", "");
-      setText("todayPlanSummary", "");
-      renderActiveWorkoutCard(item);
-      renderReviewSummary(item);
-      renderSessionReview(item);
+      renderInProgressTodayPlan(item);
       return;
     }
 
-  const sessionEntries = getSessionEntries(item);
-  const hasEntries = sessionEntries.length > 0;
-    const isRestitutionPlan = String(item?.session_type || "").trim().toLowerCase() === "restitution";
-    const missingTrainingTypes = String(item?.plan_variant || "").trim() === "missing_training_types";
-    const showPlannedRestChoiceCard = isPlannedRestDay && !missingTrainingTypes;
-    const showRestitutionChoice = showPlannedRestChoiceCard && hasEntries && isRestitutionPlan;
-
-    const heroTitle = missingTrainingTypes
-      ? tr("today_plan.missing_training_types_title")
-      : showPlannedRestChoiceCard
-        ? tr("today_plan.rest_day_title")
-        : formatSessionType(item.session_type || "unknown");
-    const heroLead = missingTrainingTypes
-      ? tr("today_plan.missing_training_types_lead")
-      : showPlannedRestChoiceCard
-        ? tr("today_plan.rest_day_lead")
-        : "";
-
-    const heroActions = missingTrainingTypes
-      ? `<div class="btn-row" style="margin-top:10px"><button type="button" id="todayPlanOpenSetupBtn">${esc(tr("today_plan.missing_training_types_cta"))}</button></div>`
-      : buildTodayPlanHeroActionsHtml({
-          showPlannedRestChoiceCard,
-          showRestitutionChoice,
-          manualOverrideWorkoutId: String(item?.manual_override_workout_id || "").trim(),
-        });
-
-    const heroCard = buildTodayPlanHeroCardHtml({
-      heroTitle,
-      heroLead,
-      heroActions,
-      isPlannedRestDay,
-      variantLabel,
-      timeBudgetMin: item.time_budget_min,
-      planContextBits,
-      localProtectionExplanation: item?.local_protection_explanation || "",
-    });
-
-    const recoveryCard = "";
-    const recommendationCard = buildTodayPlanProgramRecommendationCardHtml(item);
-
-    const entryCards = buildTodayPlanEntryCardsHtml(item, isPlannedRestDay);
-
-    root.innerHTML = heroCard + recoveryCard + recommendationCard + entryCards;
-
-    if (String(item?.plan_variant || "").trim() === "missing_training_types"){
-      document.getElementById("todayPlanOpenSetupBtn")?.addEventListener("click", () => {
-        showWizardStep("overview");
-        requestAnimationFrame(() => {
-          const profileCard = document.getElementById("profileEquipmentCard");
-          if (profileCard && typeof profileCard.scrollIntoView === "function"){
-            profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-          setEquipmentEditorOpen(true);
-        });
-      });
-    }
-
-    wireTodayPlanActions(item);
+    renderStandardTodayPlan(item, root, displayState);
 
   renderReviewSummary(item);
   renderSessionReview(item);
