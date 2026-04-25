@@ -619,6 +619,83 @@ function refreshProgramDaySelect(){
     ).join("");
 }
 
+
+function auditExerciseCatalogMetadata(exercises, seedExercises){
+  const liveItems = Array.isArray(exercises) ? exercises : [];
+  const seedItems = Array.isArray(seedExercises) ? seedExercises : [];
+  const liveById = new Map(
+    liveItems
+      .filter(item => item && typeof item === "object" && String(item.id || "").trim())
+      .map(item => [String(item.id || "").trim(), item])
+  );
+
+  const affected = [];
+  let missingExerciseCount = 0;
+  let missingCueCount = 0;
+  let missingImageMetadataCount = 0;
+
+  seedItems.forEach(seedItem => {
+    if (!seedItem || typeof seedItem !== "object") return;
+
+    const id = String(seedItem.id || "").trim();
+    if (!id) return;
+
+    const liveItem = liveById.get(id);
+    if (!liveItem){
+      missingExerciseCount += 1;
+      affected.push({ id, missing: ["exercise"] });
+      return;
+    }
+
+    const seedHasFormCues =
+      (Array.isArray(seedItem.form_cues) && seedItem.form_cues.length > 0) ||
+      (Array.isArray(seedItem.form_cues_en) && seedItem.form_cues_en.length > 0);
+    const liveHasFormCues =
+      (Array.isArray(liveItem.form_cues) && liveItem.form_cues.length > 0) ||
+      (Array.isArray(liveItem.form_cues_en) && liveItem.form_cues_en.length > 0);
+
+    const seedHasImageMetadata =
+      Boolean(String(seedItem.image_folder || "").trim()) ||
+      (Array.isArray(seedItem.external_images) && seedItem.external_images.length > 0);
+    const liveHasImageMetadata =
+      Boolean(String(liveItem.image_folder || "").trim()) ||
+      (Array.isArray(liveItem.external_images) && liveItem.external_images.length > 0);
+
+    const missing = [];
+    if (seedHasFormCues && !liveHasFormCues){
+      missing.push("form_cues");
+      missingCueCount += 1;
+    }
+    if (seedHasImageMetadata && !liveHasImageMetadata){
+      missing.push("image_metadata");
+      missingImageMetadataCount += 1;
+    }
+
+    if (missing.length){
+      affected.push({ id, missing });
+    }
+  });
+
+  const affectedIds = affected.map(x => x.id);
+  const staleSuspected = affected.length > 0;
+
+  return {
+    ok: !staleSuspected,
+    stale_suspected: staleSuspected,
+    live_checked_count: liveItems.length,
+    seed_checked_count: seedItems.length,
+    affected_count: affected.length,
+    missing_exercise_count: missingExerciseCount,
+    missing_form_cues_count: missingCueCount,
+    missing_image_metadata_count: missingImageMetadataCount,
+    affected_ids_sample: affectedIds.slice(0, 12),
+    affected_sample: affected.slice(0, 12),
+    recovery_hint: staleSuspected
+      ? "Live data/exercises.json appears older than app/data/seed/exercises.json for viewer metadata. Safe-sync catalog support data from app/data/seed/exercises.json; do not overwrite user-generated runtime data."
+      : ""
+  };
+}
+
 async function getJson(url){
   const res = await fetch(url, {cache:"no-store"});
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
@@ -7799,12 +7876,13 @@ function renderPrograms(programs, exercises){
 
 async function refreshAll(){
   const debug = {};
-  const [workoutsFile, runs, recoveryFile, programs, exercises, userSettingsApi, workoutsApi, customWorkoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
+  const [workoutsFile, runs, recoveryFile, programs, exercises, seedExercises, userSettingsApi, workoutsApi, customWorkoutsApi, recoveryApi, latestRecoveryApi, todayPlanApi, sessionResultsApi] = await Promise.all([
     getJson(FILES.workouts),
     getJson(FILES.runs),
     getJson(FILES.recovery),
     getJsonOrSeed(FILES.programs, FILES.seed_programs),
     getJsonOrSeed(FILES.exercises, FILES.seed_exercises),
+    getJson(FILES.seed_exercises).catch(() => []),
     apiGet("/api/user-settings"),
     apiGet("/api/workouts"),
     apiGet("/api/custom-workouts"),
@@ -7820,11 +7898,16 @@ async function refreshAll(){
     ? userSettingsApi.item
     : {};
   STATE.checkins = Array.isArray(recoveryApi && recoveryApi.items) ? recoveryApi.items : [];
-STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.items : [];
+  STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.items : [];
   STATE.customWorkouts = Array.isArray(customWorkoutsApi && customWorkoutsApi.items) ? customWorkoutsApi.items : [];
   STATE.sessionResults = Array.isArray(sessionResultsApi && sessionResultsApi.items) ? sessionResultsApi.items : [];
   STATE.latestCheckin = latestRecoveryApi.item || null;
   STATE.currentTodayPlan = todayPlanApi.item || null;
+
+  const exerciseCatalogMetadataAudit = auditExerciseCatalogMetadata(STATE.exercises, seedExercises);
+  if (exerciseCatalogMetadataAudit.stale_suspected){
+    console.warn("Exercise catalog metadata may be stale", exerciseCatalogMetadataAudit);
+  }
 
   const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
   const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
@@ -7922,6 +8005,7 @@ STATE.workouts = Array.isArray(workoutsApi && workoutsApi.items) ? workoutsApi.i
   debug.runs = runs;
   debug.programs = programs;
   debug.exercises = exercises;
+    debug.exercise_catalog_metadata = exerciseCatalogMetadataAudit;
   debug.user_settings = userSettingsApi && userSettingsApi.item ? userSettingsApi.item : {};
   debug.daily_ui_state = dailyUiState;
 
