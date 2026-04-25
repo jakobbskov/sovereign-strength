@@ -5317,6 +5317,23 @@ function getAdjacentNumericOption(options, currentValue, direction){
   return null;
 }
 
+function getLoadFirstSetsAfterLoadStep(currentSets, setBounds, direction){
+  const bounds = setBounds && typeof setBounds === "object" ? setBounds : {};
+  const minSets = Math.max(1, Number(bounds.min || 1) || 1);
+  const maxSets = Math.max(minSets, Number(bounds.max || currentSets || minSets) || minSets);
+  const sets = Math.max(minSets, Math.min(maxSets, Number(currentSets || minSets) || minSets));
+
+  if (direction === "harder"){
+    return Math.max(minSets, sets - 1);
+  }
+
+  if (direction === "easier"){
+    return Math.min(maxSets, sets + 1);
+  }
+
+  return sets;
+}
+
 function shiftTargetPatternOneStep(target, entry, direction){
   const parsed = parseTargetPattern(target);
   if (!parsed) return "";
@@ -5535,13 +5552,19 @@ async function adjustPlanEntryAtIndex(item, idx, direction){
     if (nextLoad === currentLoad) return false;
 
     entry.target_load = formatKgLabel(nextLoad);
-    entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
+    if (isLoadFirstProgressionExercise(entry)){
+      entry.sets = getLoadFirstSetsAfterLoadStep(currentSets, setBounds, dir);
+    } else {
+      entry.sets = dir === "harder" ? setBounds.min : setBounds.max;
+    }
 
     if (currentTarget){
       entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
     }
 
-    entry.manual_adjustment_reason = dir === "harder" ? "load_step_up_and_reset" : "load_step_down_and_reset";
+    entry.manual_adjustment_reason = isLoadFirstProgressionExercise(entry)
+      ? (dir === "harder" ? "load_step_up_and_modest_reset" : "load_step_down_and_modest_reset")
+      : (dir === "harder" ? "load_step_up_and_reset" : "load_step_down_and_reset");
     return true;
   };
 
