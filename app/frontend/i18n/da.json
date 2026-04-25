@@ -938,5 +938,6 @@
   "local_protection.region.low_back": "Lænd",
   "local_protection.region.shoulder": "Skulder",
   "local_protection.region.elbow": "Albue",
-  "local_protection.region.wrist": "Håndled"
+  "local_protection.region.wrist": "Håndled",
+  "today_plan.local_adjustment_scope_help": "Justerer kun denne øvelse i dag. Programskift og loaded alternativer håndteres via programanbefalinger."
 }

@@ -922,5 +922,6 @@
   "local_protection.region.low_back": "Low back",
   "local_protection.region.shoulder": "Shoulder",
   "local_protection.region.elbow": "Elbow",
-  "local_protection.region.wrist": "Wrist"
+  "local_protection.region.wrist": "Wrist",
+  "today_plan.local_adjustment_scope_help": "Adjusts only this exercise today. Program switches and loaded alternatives are handled through program recommendations."
 }
