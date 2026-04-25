@@ -954,7 +954,7 @@
     "default_unit": "reps",
     "progression_step": 0,
     "start_weight": 0,
-    "notes": "Harder push variant focusing on triceps.",
+    "notes": "Sværere push-up variant med smal håndplacering og større tricepskrav. Brug den først når almindelige push-ups er stabile.",
     "progression_mode": "reps_only",
     "recommended_step": 0,
     "load_increment": 0,
@@ -982,7 +982,7 @@
     ],
     "name_en": "Diamond push-ups",
     "category_en": "push",
-    "notes_en": "Harder push variation with extra triceps focus.",
+    "notes_en": "Harder push-up variation with a close hand position and greater triceps demand. Use it only when regular push-ups are stable.",
     "local_load_targets": [
       "shoulder",
       "elbow",
@@ -992,6 +992,18 @@
     "external_images": [
       "Push-Ups_-_Close_Triceps_Position/0.jpg",
       "Push-Ups_-_Close_Triceps_Position/1.jpg"
+    ],
+    "form_cues": [
+      "Hold kroppen i én linje",
+      "Placer hænderne tættere sammen under brystet",
+      "Sænk dig roligt uden at skuldrene falder frem",
+      "Stop eller vælg almindelige push-ups, hvis albuer eller håndled føles pressede"
+    ],
+    "form_cues_en": [
+      "Keep the body in one line",
+      "Place the hands closer together under the chest",
+      "Lower under control without letting the shoulders roll forward",
+      "Stop or use regular push-ups if elbows or wrists feel overloaded"
     ]
   },
   {
