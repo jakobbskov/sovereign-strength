@@ -3737,7 +3737,13 @@ function formatExerciseCategory(value){
   return map[x] || x;
 }
 
+function formatUnknownExerciseName(exerciseId){
+  const id = String(exerciseId || "").trim();
+  return id ? `${tr("common.unknown_lower")}: ${id}` : tr("common.unknown_lower");
+}
+
 function formatExerciseName(exerciseId){
+  const id = String(exerciseId || "").trim();
   const mapped = {
     restitution_walk: tr("exercise.recovery_walk"),
     mobility: tr("session_type.mobility"),
@@ -3746,10 +3752,10 @@ function formatExerciseName(exerciseId){
     cardio_session: tr("session_type.cardio"),
     cardio_base: tr("exercise.cardio_base")
   };
-  if (mapped[exerciseId]) return mapped[exerciseId];
+  if (mapped[id]) return mapped[id];
 
-  const exerciseMap = new Map((STATE.exercises || []).map(x => [x.id, x.name]));
-  return exerciseMap.get(exerciseId) || tr("exercise.planned_session");
+  const exerciseMap = new Map((STATE.exercises || []).map(x => [String(x.id || "").trim(), x.name]));
+  return exerciseMap.get(id) || formatUnknownExerciseName(id);
 }
 
 function formatInputKindLabel(value){
@@ -5007,18 +5013,26 @@ function getProgressionLadderForExercise(exerciseId){
   const id = String(exerciseId || "").trim().toLowerCase();
   if (!id) return [];
 
+  const allExercises = Array.isArray(STATE.exercises) ? STATE.exercises : [];
+  const existingIds = new Set(allExercises.map(item => String(item?.id || "").trim().toLowerCase()).filter(Boolean));
+  const cleanLadder = (ladder) => {
+    return (Array.isArray(ladder) ? ladder : [])
+      .map(x => String(x || "").trim())
+      .filter(Boolean)
+      .filter(candidateId => existingIds.has(candidateId.toLowerCase()));
+  };
+
   const ownMeta = getExerciseMeta(id) || {};
-  const ownLadder = Array.isArray(ownMeta.progression_ladder) ? ownMeta.progression_ladder : [];
-  if (ownLadder.map(x => String(x || "").trim().toLowerCase()).includes(id)){
-    return ownLadder.map(x => String(x || "").trim()).filter(Boolean);
+  const ownLadder = cleanLadder(ownMeta.progression_ladder);
+  if (ownLadder.map(x => x.toLowerCase()).includes(id)){
+    return ownLadder;
   }
 
-  const allExercises = Array.isArray(STATE.exercises) ? STATE.exercises : [];
   for (const item of allExercises){
-    const ladder = Array.isArray(item?.progression_ladder) ? item.progression_ladder : [];
-    const normalized = ladder.map(x => String(x || "").trim().toLowerCase()).filter(Boolean);
+    const ladder = cleanLadder(item?.progression_ladder);
+    const normalized = ladder.map(x => x.toLowerCase());
     if (normalized.includes(id)){
-      return ladder.map(x => String(x || "").trim()).filter(Boolean);
+      return ladder;
     }
   }
 
