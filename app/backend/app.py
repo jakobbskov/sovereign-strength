@@ -7274,20 +7274,25 @@ def get_progression_ladder_for_exercise(exercise_id, exercise_map):
     if not exercise_id:
         return []
 
+    def clean_ladder(raw_ladder):
+        cleaned = []
+        seen = set()
+        for value in raw_ladder if isinstance(raw_ladder, list) else []:
+            item_id = str(value or "").strip()
+            if item_id and item_id in exercise_map and item_id not in seen:
+                seen.add(item_id)
+                cleaned.append(item_id)
+        return cleaned
+
     own_meta = exercise_map.get(exercise_id, {}) or {}
-    own_ladder = own_meta.get("progression_ladder", [])
-    if isinstance(own_ladder, list):
-        normalized = [str(x).strip() for x in own_ladder if str(x).strip()]
-        if exercise_id in normalized:
-            return normalized
+    own_ladder = clean_ladder(own_meta.get("progression_ladder", []))
+    if exercise_id in own_ladder:
+        return own_ladder
 
     for _, item in exercise_map.items():
         if not isinstance(item, dict):
             continue
-        ladder = item.get("progression_ladder", [])
-        if not isinstance(ladder, list):
-            continue
-        normalized = [str(x).strip() for x in ladder if str(x).strip()]
+        normalized = clean_ladder(item.get("progression_ladder", []))
         if exercise_id in normalized:
             return normalized
 
