@@ -92,6 +92,35 @@ Practical interpretation:
 These richer strength metadata fields are intentionally additive.
 They should support matching, explainability, and future UI copy without replacing the existing selector fields.
 
+Running and hybrid programs may also include running-specific metadata such as:
+- `run_structure_type`
+- `impact_profile`
+- `hybrid_profile`
+- `race_distance_support`
+- `event_capability`
+- `taper_support`
+- `long_run_support`
+- `primary_goals`
+- `secondary_goals`
+- `recommended_use_cases`
+- `excluded_use_cases`
+
+Practical interpretation:
+- `run_structure_type` describes the weekly/session shape of the running work
+- `impact_profile` describes expected mechanical impact and tissue-load cost
+- `hybrid_profile` describes how running should coexist with strength or mixed training
+- `race_distance_support` lists distance contexts the template can support
+- `event_capability` describes whether the template is generic, base-supporting, or event-oriented
+- `taper_support` describes whether the template can support tapering toward an event
+- `long_run_support` describes whether long-run development is absent, optional, supportive, or central
+- `primary_goals` names the main running or hybrid training intent
+- `secondary_goals` names useful but non-primary outcomes
+- `recommended_use_cases` gives concise machine-readable reasons the template is a good fit
+- `excluded_use_cases` gives concise machine-readable reasons the template should not be recommended
+
+These richer running metadata fields are intentionally additive.
+They should support matching, explainability, race-aware planning, and hybrid coordination without replacing the existing selector fields.
+
 ---
 
 

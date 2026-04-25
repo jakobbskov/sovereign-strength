@@ -274,6 +274,47 @@
     "equipment_profiles": [
       "run_only",
       "hybrid_home"
+    ],
+    "training_style": "run_walk_foundation",
+    "program_family": "starter_run",
+    "progression_model": "duration_first",
+    "fatigue_profile": "low",
+    "complexity": "low",
+    "tags": [
+      "run",
+      "starter",
+      "2x",
+      "low_barrier",
+      "habit"
+    ],
+    "primary_goals": [
+      "habit",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "fat_loss_support",
+      "base_building"
+    ],
+    "run_structure_type": "run_walk",
+    "impact_profile": "low",
+    "hybrid_profile": "hybrid_compatible",
+    "race_distance_support": [
+      "none"
+    ],
+    "event_capability": "none",
+    "taper_support": "none",
+    "long_run_support": "none",
+    "recommended_use_cases": [
+      "beginner_runner",
+      "low_barrier_start",
+      "two_runs_per_week",
+      "habit_building",
+      "hybrid_training"
+    ],
+    "excluded_use_cases": [
+      "race_performance_goal",
+      "long_run_development",
+      "interval_priority"
     ]
   },
   {
@@ -345,6 +386,37 @@
       "3x",
       "aerobic",
       "interval_progression"
+    ],
+    "fatigue_profile": "moderate",
+    "complexity": "moderate",
+    "primary_goals": [
+      "base_running",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "fat_loss_support",
+      "performance_base"
+    ],
+    "run_structure_type": "easy_base_with_quality",
+    "impact_profile": "moderate",
+    "hybrid_profile": "hybrid_compatible",
+    "race_distance_support": [
+      "general_base",
+      "5k_base"
+    ],
+    "event_capability": "base_support",
+    "taper_support": "none",
+    "long_run_support": "optional",
+    "recommended_use_cases": [
+      "beginner_or_novice_runner",
+      "three_runs_per_week",
+      "aerobic_base",
+      "controlled_quality_work"
+    ],
+    "excluded_use_cases": [
+      "return_to_running_after_break",
+      "half_marathon_specific_build",
+      "low_impact_only"
     ]
   },
   {
@@ -669,6 +741,48 @@
           }
         ]
       }
+    ],
+    "training_style": "hybrid_run_strength_foundation",
+    "program_family": "hybrid_run_strength",
+    "progression_model": "hybrid_beginner_balanced",
+    "fatigue_profile": "moderate",
+    "complexity": "moderate",
+    "tags": [
+      "hybrid",
+      "beginner",
+      "run",
+      "strength",
+      "mixed_friendly"
+    ],
+    "primary_goals": [
+      "hybrid_base",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "fat_loss_support",
+      "habit",
+      "strength_support"
+    ],
+    "run_structure_type": "hybrid_support",
+    "impact_profile": "moderate",
+    "hybrid_profile": "balanced_run_strength",
+    "race_distance_support": [
+      "none",
+      "general_base"
+    ],
+    "event_capability": "none",
+    "taper_support": "none",
+    "long_run_support": "none",
+    "recommended_use_cases": [
+      "beginner_user",
+      "mixed_training",
+      "run_and_strength_same_week",
+      "three_sessions_total"
+    ],
+    "excluded_use_cases": [
+      "race_specific_running",
+      "hypertrophy_priority",
+      "high_frequency_running"
     ]
   },
   {
@@ -1387,6 +1501,49 @@
     "equipment_profiles": [
       "run_only",
       "hybrid_home"
+    ],
+    "training_style": "run_walk_reentry",
+    "program_family": "reentry_run",
+    "progression_model": "reentry_conservative",
+    "fatigue_profile": "low",
+    "complexity": "low",
+    "tags": [
+      "run",
+      "reentry",
+      "2x",
+      "low_impact",
+      "recovery_friendly"
+    ],
+    "primary_goals": [
+      "reentry",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "habit",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "run_structure_type": "run_walk",
+    "impact_profile": "reentry_protective",
+    "hybrid_profile": "recovery_preserving",
+    "race_distance_support": [
+      "none"
+    ],
+    "event_capability": "none",
+    "taper_support": "none",
+    "long_run_support": "none",
+    "recommended_use_cases": [
+      "returning_after_break",
+      "low_running_tolerance",
+      "two_runs_per_week",
+      "low_impact_need",
+      "hybrid_training"
+    ],
+    "excluded_use_cases": [
+      "race_performance_goal",
+      "interval_priority",
+      "long_run_development",
+      "aggressive_distance_progression"
     ]
   },
   {
@@ -1440,6 +1597,47 @@
     "equipment_profiles": [
       "run_only",
       "hybrid_home"
+    ],
+    "training_style": "easy_base_foundation",
+    "program_family": "starter_run",
+    "progression_model": "duration_first",
+    "fatigue_profile": "moderate",
+    "complexity": "low",
+    "tags": [
+      "run",
+      "starter",
+      "3x",
+      "habit",
+      "base"
+    ],
+    "primary_goals": [
+      "habit",
+      "base_running"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "fat_loss_support"
+    ],
+    "run_structure_type": "easy_base",
+    "impact_profile": "moderate",
+    "hybrid_profile": "hybrid_compatible",
+    "race_distance_support": [
+      "general_base",
+      "5k_base"
+    ],
+    "event_capability": "base_support",
+    "taper_support": "none",
+    "long_run_support": "none",
+    "recommended_use_cases": [
+      "beginner_runner",
+      "three_runs_per_week",
+      "habit_building",
+      "base_running"
+    ],
+    "excluded_use_cases": [
+      "return_to_running_after_break",
+      "race_performance_goal",
+      "long_run_development"
     ]
   },
   {
@@ -1514,6 +1712,40 @@
       "aerobic",
       "interval_progression",
       "long_run"
+    ],
+    "fatigue_profile": "moderate_to_high",
+    "complexity": "moderate",
+    "primary_goals": [
+      "base_running",
+      "performance_base"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "fat_loss_support"
+    ],
+    "run_structure_type": "base_with_long_run",
+    "impact_profile": "moderate_high",
+    "hybrid_profile": "run_first",
+    "race_distance_support": [
+      "general_base",
+      "5k_base",
+      "10k_base"
+    ],
+    "event_capability": "base_support",
+    "taper_support": "none",
+    "long_run_support": "supportive",
+    "recommended_use_cases": [
+      "novice_runner",
+      "four_runs_per_week",
+      "aerobic_base",
+      "long_run_development",
+      "running_priority"
+    ],
+    "excluded_use_cases": [
+      "return_to_running_after_break",
+      "low_recovery_capacity",
+      "strength_priority_hybrid",
+      "low_impact_only"
     ]
   },
   {
