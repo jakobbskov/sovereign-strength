@@ -30,9 +30,9 @@ def test_today_plan_snapshot_stable():
     }
 
     expected = {
-        "session_type": "restitution",
-        "template_id": "restitution_easy",
-        "plan_variant": "consistency_fallback",
+        "session_type": "styrke",
+        "template_id": "strength_day_a",
+        "plan_variant": "full",
     }
 
     assert snapshot == expected, snapshot
