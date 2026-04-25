@@ -4443,15 +4443,32 @@ function toggleCardioReviewFields(item){
   updateCardioPacePreview();
 }
 
+function markUnsavedWorkoutReviewHandoff(item){
+  if (item && typeof item === "object"){
+    item._unsaved_workout_review_handoff = true;
+  }
+}
+
+function hasUnsavedWorkoutReviewHandoff(item){
+  return Boolean(item && typeof item === "object" && item._unsaved_workout_review_handoff === true);
+}
+
+function clearUnsavedWorkoutReviewHandoff(item){
+  if (item && typeof item === "object"){
+    delete item._unsaved_workout_review_handoff;
+  }
+}
+
 function renderSessionReview(item){
   if (STATE.restDayReviewLocked !== true) {
     STATE.restDayReviewLocked = false;
   }
   const root = document.getElementById("sessionReviewList");
   const form = document.getElementById("sessionResultForm");
-  const completedTodayItem = !STATE.editingSessionResultId ? getCompletedSessionToday(STATE.sessionResults || []) : null;
-  const todayCheckin = !STATE.editingSessionResultId ? getTodayCheckin(STATE.checkins || [], STATE.latestCheckin || null, STATE.currentTodayPlan || null) : null;
-  const acknowledgedRestDayItem = !STATE.editingSessionResultId ? getAcknowledgedRestDayCheckin(todayCheckin, STATE.currentTodayPlan || null) : null;
+  const hasUnsavedReviewHandoff = hasUnsavedWorkoutReviewHandoff(item);
+  const completedTodayItem = !STATE.editingSessionResultId && !hasUnsavedReviewHandoff ? getCompletedSessionToday(STATE.sessionResults || []) : null;
+  const todayCheckin = !STATE.editingSessionResultId && !hasUnsavedReviewHandoff ? getTodayCheckin(STATE.checkins || [], STATE.latestCheckin || null, STATE.currentTodayPlan || null) : null;
+  const acknowledgedRestDayItem = !STATE.editingSessionResultId && !hasUnsavedReviewHandoff ? getAcknowledgedRestDayCheckin(todayCheckin, STATE.currentTodayPlan || null) : null;
   const isClosedDay = Boolean(completedTodayItem || acknowledgedRestDayItem);
 
   if (form){
@@ -6328,6 +6345,7 @@ function finishActiveWorkoutAndOpenReview(item, completionContext = {}){
   STATE.currentWorkoutEntryIndex = 0;
   STATE.currentWorkoutSetIndex = 0;
   clearWorkoutRuntimeArtifacts(item);
+  markUnsavedWorkoutReviewHandoff(item);
   renderReviewSummary(item);
   renderSessionReview(item);
   showWizardStep("review");
@@ -8479,6 +8497,7 @@ session_type:
       setText("sessionResultStatus", "summary_debug_error: " + (err?.message || String(err)));
     }
 
+    clearUnsavedWorkoutReviewHandoff(plan);
     form.reset();
     form.session_completed.value = "true";
     await refreshAll();
