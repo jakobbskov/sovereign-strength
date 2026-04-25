@@ -3137,7 +3137,24 @@ def is_valid_program_id_for_domain(programs, program_id, domain):
         if str(program.get("id", "")).strip() != pid:
             continue
         kind = str(program.get("kind", "")).strip().lower()
-        return kind in allowed_kinds
+        if kind in allowed_kinds:
+            return True
+
+        if dom == "run" and kind in {"mixed", "hybrid"}:
+            program_family = str(program.get("program_family", "")).strip().lower()
+            training_style = str(program.get("training_style", "")).strip().lower()
+            tags = program.get("tags", []) if isinstance(program.get("tags", []), list) else []
+            normalized_tags = {str(tag or "").strip().lower() for tag in tags}
+
+            return bool(
+                program.get("hybrid_enabled") is True or
+                "run" in program_family or
+                "run" in training_style or
+                "run_first" in normalized_tags or
+                "hybrid" in normalized_tags
+            )
+
+        return False
 
     return False
 
@@ -4339,6 +4356,44 @@ def shape_strength_ctx_for_local_protection(strength_ctx, user_id, readiness_sco
     return ctx
 
 
+def select_today_strength_program(programs, user_settings, weekly_target_sessions):
+    settings = user_settings if isinstance(user_settings, dict) else {}
+    preferences = settings.get("preferences", {}) if isinstance(settings.get("preferences", {}), dict) else {}
+    overrides = preferences.get("active_program_overrides", {}) if isinstance(preferences.get("active_program_overrides", {}), dict) else {}
+    auto_assigned = preferences.get("auto_assigned_programs", {}) if isinstance(preferences.get("auto_assigned_programs", {}), dict) else {}
+
+    if str(overrides.get("strength", "")).strip() or str(auto_assigned.get("strength", "")).strip():
+        return select_strength_program(
+            programs=programs,
+            user_settings=settings,
+            weekly_target_sessions=weekly_target_sessions,
+        )
+
+    prefs = get_training_type_preferences(settings)
+    strength_only_home = (
+        not bool(prefs.get("running", False)) and
+        not bool(prefs.get("strength_weights", False)) and
+        bool(prefs.get("bodyweight", False)) and
+        infer_equipment_profile(settings) in ("minimal_home", "dumbbell_home") and
+        int(weekly_target_sessions or 0) >= 3
+    )
+
+    if strength_only_home:
+        baseline = select_strength_program(
+            programs=programs,
+            user_settings=settings,
+            weekly_target_sessions=2,
+        )
+        if baseline and is_valid_program_id_for_domain(programs, baseline, "strength"):
+            return baseline
+
+    return select_strength_program(
+        programs=programs,
+        user_settings=settings,
+        weekly_target_sessions=weekly_target_sessions,
+    )
+
+
 def build_today_plan_training_decision(
     auth_user,
     checkin_date,
@@ -4353,7 +4408,7 @@ def build_today_plan_training_decision(
     latest_strength,
 ):
     weekly_target_sessions = get_weekly_target_sessions(user_settings)
-    selected_strength_program_id = select_strength_program(
+    selected_strength_program_id = select_today_strength_program(
         programs=programs,
         user_settings=user_settings,
         weekly_target_sessions=weekly_target_sessions,

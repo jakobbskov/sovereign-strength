@@ -23,6 +23,12 @@ def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_st
     client = backend_app.app.test_client()
 
     auth_user = {"user_id": "1", "username": "jakob", "role": "admin"}
+    session_results = [
+        {**item, "user_id": item.get("user_id", auth_user["user_id"])}
+        if isinstance(item, dict)
+        else item
+        for item in session_results
+    ]
     month = 4 + (day_index // 28)
     day_of_month = (day_index % 28) + 1
     date_str = f"2026-{month:02d}-{day_of_month:02d}"
@@ -75,6 +81,8 @@ def run_longitudinal_day(*, day_index, readiness_score, fatigue_score, timing_st
          patch.object(backend_app, "list_user_items", return_value=checkins), \
          patch.object(backend_app, "get_storage_last_error", return_value=None), \
          patch.object(backend_app, "list_workouts_for_user", return_value=[]), \
+         patch.object(backend_app, "list_session_results_for_user", return_value=session_results), \
+         patch.object(backend_app, "get_user_settings_for", return_value=user_settings), \
          patch.object(backend_app, "read_json_file", side_effect=fake_read_json_file), \
          patch.object(backend_app, "build_today_plan_context", return_value=today_ctx), \
          patch.object(backend_app, "build_today_plan_fatigue_context", return_value=fatigue_ctx), \

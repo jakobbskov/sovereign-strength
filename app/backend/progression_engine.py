@@ -467,7 +467,7 @@ def summarize_strength_trend(relevant_history, window_size=3):
     )
 
     repeated_success = successful_sessions >= 2
-    blocking_signal_present = latest_blocking_signal or negative_signal_sessions >= 2
+    blocking_signal_present = latest_blocking_signal or negative_signal_sessions >= 1
 
     return {
         "window_size": len(window),
@@ -624,6 +624,13 @@ def decide_progression_from_context(exercise_id, ctx):
     if analysis["source"] == "session_result" and latest_result:
         session_results = ctx.get("session_results", [])
         relevant_history = get_relevant_strength_history(session_results, exercise_id, max_items=6)
+        using_synthetic_single_session_history = False
+        if not relevant_history and latest_result and analysis:
+            relevant_history = [{
+                "result": latest_result,
+                "analysis": analysis,
+            }]
+            using_synthetic_single_session_history = True
         phase_ctx = detect_progression_phase(relevant_history, pause_days=21, min_trend_sessions=3)
         trend_ctx = summarize_strength_trend(relevant_history, window_size=3)
 
@@ -647,7 +654,10 @@ def decide_progression_from_context(exercise_id, ctx):
         if phase in ("calibration", "trend"):
             allow_progression_by_phase = bool(
                 candidate_for_progression and
-                trend_ctx.get("repeated_success", False) and
+                (
+                    trend_ctx.get("repeated_success", False) or
+                    using_synthetic_single_session_history
+                ) and
                 not trend_ctx.get("blocking_signal_present", False)
             )
         elif phase == "recalibration":
@@ -695,7 +705,11 @@ def decide_progression_from_context(exercise_id, ctx):
             next_load = int(first_set_load)
             decision = "hold"
             progression_reason = "rekalibrering efter pause"
-        elif candidate_for_progression and not trend_ctx.get("repeated_success", False):
+        elif (
+            candidate_for_progression and
+            not trend_ctx.get("repeated_success", False) and
+            not using_synthetic_single_session_history
+        ):
             next_load = int(first_set_load)
             decision = "hold"
             progression_reason = "afventer gentagen succes"
