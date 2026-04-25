@@ -83,7 +83,7 @@
     "default_unit": "kg",
     "progression_step": 10,
     "start_weight": 30,
-    "notes": "Horizontal push.",
+    "notes": "Vandret pres med vægtstang. Bruges til loaded presstyrke, når skulder, albue og håndled kan arbejde kontrolleret.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 10,
@@ -126,11 +126,23 @@
     ],
     "name_en": "Bench press",
     "category_en": "push",
-    "notes_en": "Horizontal press.",
+    "notes_en": "Loaded horizontal press with a barbell. Used for pressing strength when shoulder, elbow, and wrist can work under control.",
     "local_load_targets": [
       "shoulder",
       "elbow",
       "wrist"
+    ],
+    "form_cues": [
+      "Hold skulderbladene stabile på bænken",
+      "Sænk stangen kontrolleret mod brystet",
+      "Pres op uden at miste spænding i kroppen",
+      "Stop eller sænk vægten, hvis skulderen føles klemt"
+    ],
+    "form_cues_en": [
+      "Keep the shoulder blades stable on the bench",
+      "Lower the bar under control toward the chest",
+      "Press up without losing full-body tension",
+      "Stop or reduce the load if the shoulder feels pinched"
     ]
   },
   {
@@ -140,7 +152,7 @@
     "default_unit": "kg",
     "progression_step": 10,
     "start_weight": 40,
-    "notes": "Back and posterior chain.",
+    "notes": "Vandret træk med vægtstang. Bruges til rygstyrke, når rygpositionen kan holdes rolig under belastning.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 10,
@@ -183,11 +195,23 @@
     ],
     "name_en": "Bent-over row",
     "category_en": "pull",
-    "notes_en": "Back and posterior chain.",
+    "notes_en": "Loaded horizontal pull with a barbell. Used for back strength when the torso position can stay controlled under load.",
     "local_load_targets": [
       "shoulder",
       "elbow",
       "low_back"
+    ],
+    "form_cues": [
+      "Hold ryggen rolig og brystet let fremme",
+      "Træk stangen mod kroppen uden at hive med lænden",
+      "Sænk stangen kontrolleret tilbage",
+      "Stop eller sænk vægten, hvis overkroppen begynder at gynge"
+    ],
+    "form_cues_en": [
+      "Keep the back steady and the chest slightly proud",
+      "Pull the bar toward the body without yanking through the lower back",
+      "Lower the bar back under control",
+      "Stop or reduce the load if the torso starts to swing"
     ]
   },
   {
@@ -197,7 +221,7 @@
     "default_unit": "kg",
     "progression_step": 10,
     "start_weight": 30,
-    "notes": "Vertical push.",
+    "notes": "Lodret pres med vægtstang. Bruges til loaded skulderpres, når presbevægelsen kan holdes stabil uden at overstrække lænden.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 10,
@@ -235,7 +259,7 @@
     ],
     "name_en": "Overhead press",
     "category_en": "push",
-    "notes_en": "Vertical press.",
+    "notes_en": "Loaded vertical press with a barbell. Used for shoulder pressing when the press can stay stable without overextending the lower back.",
     "local_load_targets": [
       "shoulder",
       "elbow",
@@ -245,6 +269,18 @@
     "external_images": [
       "Barbell_Shoulder_Press/0.jpg",
       "Barbell_Shoulder_Press/1.jpg"
+    ],
+    "form_cues": [
+      "Start med stangen tæt på kroppen",
+      "Pres stangen op i en rolig linje",
+      "Hold ribben og lænd under kontrol",
+      "Stop eller sænk vægten, hvis du må læne dig hårdt bagud"
+    ],
+    "form_cues_en": [
+      "Start with the bar close to the body",
+      "Press the bar up in a controlled line",
+      "Keep the ribs and lower back under control",
+      "Stop or reduce the load if you have to lean hard backward"
     ]
   },
   {
@@ -254,7 +290,7 @@
     "default_unit": "kg",
     "progression_step": 10,
     "start_weight": 60,
-    "notes": "Romanian deadlift.",
+    "notes": "Hoftehængsel med vægtstang. Bruges til bagkæde og hoftestyrke, når bevægelsen kan styres uden at runde lænden.",
     "progression_mode": "double_progression",
     "recommended_step": 2.5,
     "load_increment": 10,
@@ -292,7 +328,7 @@
     ],
     "name_en": "RDL",
     "category_en": "posterior chain",
-    "notes_en": "Romanian deadlift.",
+    "notes_en": "Loaded hip hinge with a barbell. Used for posterior-chain and hip strength when the movement can stay controlled without rounding the lower back.",
     "local_load_targets": [
       "hip",
       "low_back"
@@ -301,6 +337,18 @@
     "external_images": [
       "Barbell_Deadlift/0.jpg",
       "Barbell_Deadlift/1.jpg"
+    ],
+    "form_cues": [
+      "Skub hofterne tilbage før knæene bøjer meget",
+      "Hold stangen tæt på benene",
+      "Sænk kun så langt ryggen kan holdes rolig",
+      "Stop eller sænk vægten, hvis lænden begynder at runde"
+    ],
+    "form_cues_en": [
+      "Push the hips back before the knees bend much",
+      "Keep the bar close to the legs",
+      "Lower only as far as the back can stay steady",
+      "Stop or reduce the load if the lower back starts to round"
     ]
   },
   {
