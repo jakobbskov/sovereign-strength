@@ -92,6 +92,30 @@
       "completes planned sessions consistently for multiple weeks",
       "tolerates current exercises and recovery demands without difficulty",
       "needs more progression headroom than the entry template provides"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "habit",
+      "low_barrier",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "strength_supports_mixed_training",
+    "recommended_use_cases": [
+      "beginner_user",
+      "short_sessions",
+      "home_training",
+      "low_barrier_start",
+      "concurrent_running"
+    ],
+    "excluded_use_cases": [
+      "intermediate_strength_progression",
+      "hypertrophy_priority",
+      "high_frequency_training"
     ]
   },
   {
@@ -180,6 +204,26 @@
       "barbell",
       "base",
       "strength_priority"
+    ],
+    "primary_goals": [
+      "general_strength"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "barbell_base"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "strength_first",
+    "recommended_use_cases": [
+      "novice_or_intermediate_strength_base",
+      "gym_training",
+      "two_day_strength_priority",
+      "stable_recovery"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "running_priority",
+      "minimal_equipment_only"
     ]
   },
   {
@@ -533,6 +577,28 @@
       "completes three weekly sessions consistently for multiple weeks",
       "handles current hinge, squat, push, and pull work with stable recovery",
       "needs a more durable novice home progression path"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "habit",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "balanced_mixed_training",
+    "recommended_use_cases": [
+      "beginner_user",
+      "three_day_home_training",
+      "mixed_training",
+      "consistent_weekly_rhythm"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "intermediate_strength_progression",
+      "very_short_sessions"
     ]
   },
   {
@@ -698,6 +764,28 @@
       "completes planned sessions consistently for multiple weeks",
       "shows stable tolerance for gym-based loading and session structure",
       "is ready for a more durable base gym program"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "gym_foundation",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "strength_supports_mixed_training",
+    "recommended_use_cases": [
+      "beginner_user",
+      "gym_training",
+      "two_day_strength_foundation",
+      "concurrent_running"
+    ],
+    "excluded_use_cases": [
+      "intermediate_strength_progression",
+      "hypertrophy_priority",
+      "minimal_home_only"
     ]
   },
   {
@@ -818,6 +906,28 @@
       "completes three weekly sessions consistently for multiple weeks",
       "shows stable recovery and low friction across the training week",
       "is ready for a more durable base gym program"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "gym_foundation",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "balanced_mixed_training",
+    "recommended_use_cases": [
+      "beginner_user",
+      "gym_training",
+      "three_day_strength_foundation",
+      "stable_weekly_capacity"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "very_low_recovery",
+      "minimal_home_only"
     ]
   },
   {
@@ -919,6 +1029,29 @@
       "completes both weekly sessions consistently for 2 to 3 weeks",
       "reports low friction and stable recovery after sessions",
       "is ready for a more standard beginner or novice loading path"
+    ],
+    "primary_goals": [
+      "reentry",
+      "general_health"
+    ],
+    "secondary_goals": [
+      "habit",
+      "low_fatigue",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "high",
+    "hybrid_profile": "recovery_preserving",
+    "recommended_use_cases": [
+      "returning_after_break",
+      "low_readiness",
+      "low_fatigue_need",
+      "short_sessions",
+      "concurrent_running"
+    ],
+    "excluded_use_cases": [
+      "hypertrophy_priority",
+      "aggressive_strength_progression",
+      "high_frequency_training"
     ]
   },
   {
@@ -1031,6 +1164,26 @@
       "novice",
       "3x",
       "strength_priority"
+    ],
+    "primary_goals": [
+      "general_strength"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "barbell_base"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "strength_first",
+    "recommended_use_cases": [
+      "novice_strength_base",
+      "gym_training",
+      "three_day_strength_priority",
+      "stable_recovery"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "running_priority",
+      "low_recovery_capacity"
     ]
   },
   {
@@ -1169,6 +1322,28 @@
       "4x",
       "upper_lower",
       "hypertrophy_friendly"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "hypertrophy"
+    ],
+    "secondary_goals": [
+      "upper_lower_structure",
+      "strength_hypertrophy"
+    ],
+    "recovery_sensitivity": "high",
+    "hybrid_profile": "strength_first",
+    "recommended_use_cases": [
+      "novice_user",
+      "gym_training",
+      "four_day_upper_lower",
+      "strength_hypertrophy_goal"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "running_priority",
+      "low_recovery_capacity",
+      "very_short_sessions"
     ]
   },
   {
@@ -1485,6 +1660,27 @@
       "novice",
       "base",
       "mixed_friendly"
+    ],
+    "primary_goals": [
+      "general_strength"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "balanced_mixed_training",
+    "recommended_use_cases": [
+      "novice_home_training",
+      "dumbbell_home",
+      "two_day_strength_base",
+      "concurrent_running"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "barbell_strength_priority",
+      "hypertrophy_priority"
     ]
   },
   {
@@ -1594,6 +1790,27 @@
       "novice",
       "3x",
       "mixed_friendly"
+    ],
+    "primary_goals": [
+      "general_strength"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "fat_loss_support",
+      "hybrid_support"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "balanced_mixed_training",
+    "recommended_use_cases": [
+      "novice_home_training",
+      "dumbbell_home",
+      "three_day_strength_base",
+      "stable_weekly_capacity"
+    ],
+    "excluded_use_cases": [
+      "reentry_after_break",
+      "barbell_strength_priority",
+      "low_recovery_capacity"
     ]
   },
   {
@@ -1689,6 +1906,30 @@
       "wants more weekly training volume or broader movement coverage",
       "has enough recovery and schedule capacity for a fuller base template",
       "is no longer using minimal dose as the primary adherence strategy"
+    ],
+    "primary_goals": [
+      "minimal_effective_dose",
+      "general_strength"
+    ],
+    "secondary_goals": [
+      "general_health",
+      "habit",
+      "hybrid_support",
+      "maintenance"
+    ],
+    "recovery_sensitivity": "high",
+    "hybrid_profile": "recovery_preserving",
+    "recommended_use_cases": [
+      "short_sessions",
+      "low_fatigue_need",
+      "adherence_priority",
+      "concurrent_running",
+      "maintenance"
+    ],
+    "excluded_use_cases": [
+      "hypertrophy_priority",
+      "high_volume_training",
+      "aggressive_strength_progression"
     ]
   },
   {
@@ -1802,6 +2043,28 @@
       "intermediate",
       "3x",
       "hypertrophy_friendly"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "hypertrophy"
+    ],
+    "secondary_goals": [
+      "dumbbell_home_progression",
+      "strength_hypertrophy"
+    ],
+    "recovery_sensitivity": "moderate",
+    "hybrid_profile": "strength_first",
+    "recommended_use_cases": [
+      "intermediate_user",
+      "dumbbell_home",
+      "three_day_strength_hypertrophy",
+      "stable_recovery"
+    ],
+    "excluded_use_cases": [
+      "beginner_user",
+      "reentry_after_break",
+      "running_priority",
+      "minimal_equipment_only"
     ]
   },
   {
@@ -1941,6 +2204,28 @@
       "4x",
       "upper_lower",
       "strength_hypertrophy"
+    ],
+    "primary_goals": [
+      "general_strength",
+      "hypertrophy"
+    ],
+    "secondary_goals": [
+      "upper_lower_structure",
+      "strength_hypertrophy"
+    ],
+    "recovery_sensitivity": "high",
+    "hybrid_profile": "strength_first",
+    "recommended_use_cases": [
+      "intermediate_user",
+      "gym_training",
+      "four_day_upper_lower",
+      "strength_hypertrophy_goal"
+    ],
+    "excluded_use_cases": [
+      "beginner_user",
+      "reentry_after_break",
+      "running_priority",
+      "low_recovery_capacity"
     ]
   },
   {
@@ -2080,6 +2365,29 @@
       "4x",
       "upper_lower",
       "hypertrophy"
+    ],
+    "primary_goals": [
+      "hypertrophy"
+    ],
+    "secondary_goals": [
+      "fat_loss_support",
+      "upper_lower_structure"
+    ],
+    "recovery_sensitivity": "high",
+    "hybrid_profile": "strength_first",
+    "recommended_use_cases": [
+      "intermediate_user",
+      "gym_training",
+      "hypertrophy_priority",
+      "four_day_upper_lower",
+      "stable_recovery"
+    ],
+    "excluded_use_cases": [
+      "beginner_user",
+      "reentry_after_break",
+      "running_priority",
+      "low_recovery_capacity",
+      "minimalist_training"
     ]
   }
 ]
