@@ -7155,6 +7155,7 @@ function buildTodayPlanEntryCardsHtml(item, isPlannedRestDay){
           ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
         </div>
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
+        <div class="small" style="margin-top:8px; opacity:0.78">${esc(tr("today_plan.local_adjustment_scope_help"))}</div>
         <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
           <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
           <button type="button" class="secondary" data-plan-entry-easier="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_easier"))}</button>
