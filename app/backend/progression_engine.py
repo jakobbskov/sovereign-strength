@@ -716,6 +716,14 @@ def decide_progression_from_context(exercise_id, ctx):
                     progression_reason = "gentagen succes i kalibrering"
                 else:
                     progression_reason = "gentagen succes i stabil trend"
+
+                if recent_recovery_ctx.get("multi_session_fatigue_pressure") == "high":
+                    next_load = int(first_set_load)
+                    decision = "hold"
+                    progression_reason = (
+                        "gentagen dårlig recovery over seneste check-ins "
+                        "overrulede ellers positivt progressionssignal"
+                    )
         else:
             next_load = int(first_set_load)
             decision = "hold"

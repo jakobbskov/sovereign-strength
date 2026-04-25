@@ -27,7 +27,7 @@ def make_strength_session(date, created_at, exercise_id, reps, load, *, hit_fail
     }
 
 
-def run_strength_progression_scenario(*, session_results, reps=8, load=100.0, fatigue_score=0):
+def run_strength_progression_scenario(*, session_results, reps=8, load=100.0, fatigue_score=0, recent_recovery_ctx=None):
     latest_result, latest_session = backend_app.find_latest_session_result_for_exercise(session_results, "bench_press")
     analysis = backend_app.analyze_session_result_for_progression(latest_result)
 
@@ -49,6 +49,7 @@ def run_strength_progression_scenario(*, session_results, reps=8, load=100.0, fa
         "fatigue_score": fatigue_score,
         "last_load": int(load),
         "last_entry": {"reps": "6-8", "achieved_reps": str(reps)},
+        "recent_recovery_ctx": recent_recovery_ctx or {},
     }
 
     out = backend_app.decide_progression_from_context("bench_press", ctx)
@@ -59,8 +60,8 @@ def run_strength_progression_scenario(*, session_results, reps=8, load=100.0, fa
 def test_calibration_requires_repeated_success():
     session_results = [
         make_strength_session(
-            "2026-03-17",
-            "2026-03-17T06:41:23+00:00",
+            "2026-04-24",
+            "2026-04-24T06:41:23+00:00",
             "bench_press",
             8,
             100,
@@ -78,9 +79,9 @@ def test_calibration_requires_repeated_success():
 
 def test_trend_allows_progression_after_repeated_success():
     session_results = [
-        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 8, 96),
-        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98),
-        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+        make_strength_session("2026-04-18", "2026-04-18T06:00:00+00:00", "bench_press", 8, 96),
+        make_strength_session("2026-04-21", "2026-04-21T06:00:00+00:00", "bench_press", 8, 98),
+        make_strength_session("2026-04-24", "2026-04-24T06:00:00+00:00", "bench_press", 8, 100),
     ]
 
     out = run_strength_progression_scenario(session_results=session_results)
@@ -92,11 +93,42 @@ def test_trend_allows_progression_after_repeated_success():
     assert out["next_load"] == 102, out
 
 
+
+
+def test_high_multi_session_fatigue_pressure_downgrades_increase_to_hold():
+    session_results = [
+        make_strength_session("2026-04-18", "2026-04-18T06:00:00+00:00", "bench_press", 8, 96),
+        make_strength_session("2026-04-21", "2026-04-21T06:00:00+00:00", "bench_press", 8, 98),
+        make_strength_session("2026-04-24", "2026-04-24T06:00:00+00:00", "bench_press", 8, 100),
+    ]
+
+    out = run_strength_progression_scenario(
+        session_results=session_results,
+        recent_recovery_ctx={
+            "multi_session_fatigue_pressure": "high",
+            "multi_session_fatigue_reason": "gentagne lave recovery-scores",
+            "recent_checkin_count": 3,
+            "poor_recovery_count": 2,
+            "latest_readiness_score": 3,
+        },
+    )
+
+    assert out["progression_phase"] == "trend", out
+    assert out["trend_repeated_success"] is True, out
+    assert out["progression_decision"] == "hold", out
+    assert out["next_load"] == 100, out
+    assert out["multi_session_fatigue_pressure"] == "high", out
+    assert out["multi_session_fatigue_reason"] == "gentagne lave recovery-scores", out
+    assert (
+        out["progression_reason"]
+        == "gentagen dårlig recovery over seneste check-ins overrulede ellers positivt progressionssignal"
+    ), out
+
 def test_trend_blocks_progression_when_failure_exists_in_window():
     session_results = [
-        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 8, 96),
-        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98, hit_failure=True),
-        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+        make_strength_session("2026-04-18", "2026-04-18T06:00:00+00:00", "bench_press", 8, 96),
+        make_strength_session("2026-04-21", "2026-04-21T06:00:00+00:00", "bench_press", 8, 98, hit_failure=True),
+        make_strength_session("2026-04-24", "2026-04-24T06:00:00+00:00", "bench_press", 8, 100),
     ]
 
     out = run_strength_progression_scenario(session_results=session_results)
@@ -124,9 +156,9 @@ def test_recalibration_blocks_progression_after_long_pause():
 
 def test_trend_at_minimum_threshold_without_repeated_success_holds():
     session_results = [
-        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 7, 96),
-        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98),
-        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+        make_strength_session("2026-04-18", "2026-04-18T06:00:00+00:00", "bench_press", 7, 96),
+        make_strength_session("2026-04-21", "2026-04-21T06:00:00+00:00", "bench_press", 8, 98),
+        make_strength_session("2026-04-24", "2026-04-24T06:00:00+00:00", "bench_press", 8, 100),
     ]
 
     out = run_strength_progression_scenario(session_results=session_results)
@@ -140,9 +172,9 @@ def test_trend_at_minimum_threshold_without_repeated_success_holds():
 
 def test_trend_blocks_progression_when_load_drop_exists_in_window():
     session_results = [
-        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 8, 96),
-        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98, load_drop=True),
-        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+        make_strength_session("2026-04-18", "2026-04-18T06:00:00+00:00", "bench_press", 8, 96),
+        make_strength_session("2026-04-21", "2026-04-21T06:00:00+00:00", "bench_press", 8, 98, load_drop=True),
+        make_strength_session("2026-04-24", "2026-04-24T06:00:00+00:00", "bench_press", 8, 100),
     ]
 
     out = run_strength_progression_scenario(session_results=session_results)
@@ -156,9 +188,9 @@ def test_trend_blocks_progression_when_load_drop_exists_in_window():
 
 def test_trend_recommends_deload_after_repeated_failures():
     session_results = [
-        make_strength_session("2026-03-10", "2026-03-10T06:00:00+00:00", "bench_press", 8, 96, hit_failure=True),
-        make_strength_session("2026-03-13", "2026-03-13T06:00:00+00:00", "bench_press", 8, 98, hit_failure=True),
-        make_strength_session("2026-03-17", "2026-03-17T06:00:00+00:00", "bench_press", 8, 100),
+        make_strength_session("2026-04-18", "2026-04-18T06:00:00+00:00", "bench_press", 8, 96, hit_failure=True),
+        make_strength_session("2026-04-21", "2026-04-21T06:00:00+00:00", "bench_press", 8, 98, hit_failure=True),
+        make_strength_session("2026-04-24", "2026-04-24T06:00:00+00:00", "bench_press", 8, 100),
     ]
 
     out = run_strength_progression_scenario(session_results=session_results)
