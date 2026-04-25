@@ -4775,10 +4775,13 @@ function renderSessionResultSummary(summary, fallbackResults = null){
       .map(setItem => Number(String(setItem?.reps || "").match(/\d+/)?.[0] || 0))
       .filter(x => x > 0);
   });
-  const totalTimedSeconds = timedSetSeconds.reduce((sum, x) => sum + x, 0);
+  const summaryTotalTimedSeconds = Number(summary.total_time_under_tension_sec || 0);
+  const totalTimedSeconds = summaryTotalTimedSeconds > 0 ? summaryTotalTimedSeconds : timedSetSeconds.reduce((sum, x) => sum + x, 0);
   const timedCandidateCount = timedSummaryCandidates.length;
   const hasTimedOnlyPlan = timedCandidateCount > 0 && timedStrengthResults.length === timedCandidateCount;
-  const shouldUseTimedSummary = timedSetSeconds.length > 0 || hasTimedOnlyPlan;
+  const hasMixedRepAndTimedWork = totalReps > 0 && totalTimedSeconds > 0;
+  const hasTimedOnlyWork = totalTimedSeconds > 0 && totalReps === 0;
+  const shouldUseTimedSummary = hasTimedOnlyWork || hasTimedOnlyPlan;
 
   const normalizedNextStepHint = String(nextStepHint || "").trim().toLowerCase();
 
@@ -4808,17 +4811,30 @@ function renderSessionResultSummary(summary, fallbackResults = null){
       }).join("<br>")}</div>`
     : "";
 
-  const performanceBlock = shouldUseTimedSummary
-    ? `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
+  const timedHoldTimesText = timedSetSeconds.length ? timedSetSeconds.join(" / ") : "-";
+  const timedPerformanceBlock = `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
       ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
-      ${esc(tr("review.summary_hold_times_label"))}: ${esc(timedSetSeconds.length ? timedSetSeconds.join(" / ") : "-")} sek<br>
+      ${esc(tr("review.summary_hold_times_label"))}: ${esc(timedHoldTimesText)} sek<br>
       ${esc(tr("review.summary_total_hold_time_label"))}: ${esc(String(totalTimedSeconds))} sek<br>
-      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`
-    : `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
+      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`;
+
+  const standardPerformanceBlock = `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
       ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
       ${esc(tr("review.summary_reps_label"))}: ${esc(String(totalReps))}<br>
       ${esc(tr("review.summary_volume_label"))}: ${esc(String(estimatedVolume))}<br>
       ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`;
+
+  const mixedPerformanceBlock = `${esc(tr("after_training.completed_exercises_label"))}: ${esc(String(completedExercises))}/${esc(String(totalExercises))}<br>
+      ${esc(tr("review.summary_sets_label"))}: ${esc(String(totalSets))}<br>
+      ${esc(tr("review.summary_reps_label"))}: ${esc(String(totalReps))}<br>
+      ${esc(tr("review.summary_volume_label"))}: ${esc(String(estimatedVolume))}<br>
+      ${esc(tr("review.summary_hold_times_label"))}: ${esc(timedHoldTimesText)} sek<br>
+      ${esc(tr("review.summary_total_hold_time_label"))}: ${esc(String(totalTimedSeconds))} sek<br>
+      ${esc(tr("review.summary_failure_markers_label"))}: ${esc(String(hitFailureCount))}`;
+
+  const performanceBlock = hasMixedRepAndTimedWork
+    ? mixedPerformanceBlock
+    : (shouldUseTimedSummary ? timedPerformanceBlock : standardPerformanceBlock);
 
   root.innerHTML = `
     <div class="review-summary-card">
