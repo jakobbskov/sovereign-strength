@@ -41,6 +41,12 @@ Strength programs may also include compact selector-oriented metadata such as:
 - `program_family`
 - `progression_model`
 - `tags`
+- `primary_goals`
+- `secondary_goals`
+- `recovery_sensitivity`
+- `hybrid_profile`
+- `recommended_use_cases`
+- `excluded_use_cases`
 
 Each `days` entry typically contains:
 
@@ -76,6 +82,15 @@ Practical interpretation:
 - `program_family` groups related templates
 - `progression_model` describes the intended progression pattern at a high level
 - `tags` support lightweight future filtering without making the core schema unreadable
+- `primary_goals` names the main training intent in taxonomy language
+- `secondary_goals` names useful but non-primary outcomes
+- `recovery_sensitivity` describes how conservatively the template should react to poor recovery signals
+- `hybrid_profile` describes how the strength template should coexist with running or mixed training
+- `recommended_use_cases` gives concise machine-readable reasons the template is a good fit
+- `excluded_use_cases` gives concise machine-readable reasons the template should not be recommended
+
+These richer strength metadata fields are intentionally additive.
+They should support matching, explainability, and future UI copy without replacing the existing selector fields.
 
 ---
 
