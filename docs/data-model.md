@@ -121,6 +121,31 @@ Practical interpretation:
 These richer running metadata fields are intentionally additive.
 They should support matching, explainability, race-aware planning, and hybrid coordination without replacing the existing selector fields.
 
+Hybrid-relevant strength, running, and mixed programs may also include explicit cross-domain coordination metadata such as:
+- `hybrid_enabled`
+- `primary_domain`
+- `secondary_domain`
+- `cross_domain_fatigue_sensitivity`
+- `key_session_protection_needs`
+- `lower_body_conflict_sensitivity`
+- `hybrid_progression_model`
+- `supports_cross_domain_schedule_protection`
+- `supports_cross_domain_reduced_day_logic`
+
+Practical interpretation:
+- `hybrid_enabled` marks that the template can participate in cross-domain planning
+- `primary_domain` describes the domain that should receive priority protection
+- `secondary_domain` describes the supporting or coordinated domain
+- `cross_domain_fatigue_sensitivity` describes how strongly fatigue in one domain should affect the other
+- `key_session_protection_needs` lists the session qualities that future scheduling should protect
+- `lower_body_conflict_sensitivity` describes how carefully lower-body strength and running stress should be coordinated
+- `hybrid_progression_model` describes the template-level progression relationship between domains
+- `supports_cross_domain_schedule_protection` marks templates that can support future scheduling protection logic
+- `supports_cross_domain_reduced_day_logic` marks templates that can support future reduced-day logic across domains
+
+These hybrid metadata fields are intentionally additive.
+They should support future recommendation, scheduling, adaptation, and explanation logic without changing current runtime behavior.
+
 ---
 
 

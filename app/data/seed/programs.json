@@ -116,7 +116,19 @@
       "intermediate_strength_progression",
       "hypertrophy_priority",
       "high_frequency_training"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_strength_a",
@@ -224,7 +236,19 @@
       "reentry_after_break",
       "running_priority",
       "minimal_equipment_only"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "starter_run_2x",
@@ -315,7 +339,19 @@
       "race_performance_goal",
       "long_run_development",
       "interval_priority"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "run",
+    "secondary_domain": "strength",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_run_consistency",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "run_primary_strength_compatible",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_run_3x",
@@ -417,7 +453,19 @@
       "return_to_running_after_break",
       "half_marathon_specific_build",
       "low_impact_only"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "run",
+    "secondary_domain": "strength",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_run_consistency",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "run_primary_strength_compatible",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "mobility_basic",
@@ -671,7 +719,20 @@
       "reentry_after_break",
       "intermediate_strength_progression",
       "very_short_sessions"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "balanced",
+    "secondary_domain": "balanced",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_strength_quality",
+      "protect_run_quality",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "balanced_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "hybrid_run_strength_3x_beginner",
@@ -783,7 +844,20 @@
       "race_specific_running",
       "hypertrophy_priority",
       "high_frequency_running"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "balanced",
+    "secondary_domain": "balanced",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_run_quality",
+      "protect_strength_quality",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "balanced_run_strength_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "starter_strength_gym_2x",
@@ -900,7 +974,19 @@
       "intermediate_strength_progression",
       "hypertrophy_priority",
       "minimal_home_only"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "starter_strength_gym_3x",
@@ -1042,7 +1128,20 @@
       "reentry_after_break",
       "very_low_recovery",
       "minimal_home_only"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "balanced",
+    "secondary_domain": "balanced",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_strength_quality",
+      "protect_run_quality",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "balanced_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "reentry_strength_2x",
@@ -1166,7 +1265,20 @@
       "hypertrophy_priority",
       "aggressive_strength_progression",
       "high_frequency_training"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "recovery",
+    "secondary_domain": "strength_run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_recovery",
+      "avoid_lower_body_conflict",
+      "preserve_consistency"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "recovery_first_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_strength_gym_3x",
@@ -1298,7 +1410,19 @@
       "reentry_after_break",
       "running_priority",
       "low_recovery_capacity"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_strength_gym_4x",
@@ -1458,7 +1582,19 @@
       "running_priority",
       "low_recovery_capacity",
       "very_short_sessions"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "reentry_run_2x",
@@ -1544,7 +1680,20 @@
       "interval_priority",
       "long_run_development",
       "aggressive_distance_progression"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "recovery",
+    "secondary_domain": "strength_run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_recovery",
+      "avoid_lower_body_conflict",
+      "preserve_consistency"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "recovery_first_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "starter_run_3x_beginner",
@@ -1638,7 +1787,19 @@
       "return_to_running_after_break",
       "race_performance_goal",
       "long_run_development"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "run",
+    "secondary_domain": "strength",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_run_consistency",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "run_primary_strength_compatible",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_run_4x",
@@ -1746,7 +1907,20 @@
       "low_recovery_capacity",
       "strength_priority_hybrid",
       "low_impact_only"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "run",
+    "secondary_domain": "strength",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_key_runs",
+      "protect_long_run",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "run_primary_strength_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "hybrid_run_strength_2x_beginner",
@@ -1808,7 +1982,20 @@
       "run_first",
       "home",
       "mixed_friendly"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "balanced",
+    "secondary_domain": "balanced",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_run_quality",
+      "protect_strength_quality",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "balanced_hybrid_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_strength_home_2x",
@@ -1913,7 +2100,20 @@
       "reentry_after_break",
       "barbell_strength_priority",
       "hypertrophy_priority"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "balanced",
+    "secondary_domain": "balanced",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_strength_quality",
+      "protect_run_quality",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "balanced_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "base_strength_home_3x",
@@ -2043,7 +2243,20 @@
       "reentry_after_break",
       "barbell_strength_priority",
       "low_recovery_capacity"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "balanced",
+    "secondary_domain": "balanced",
+    "cross_domain_fatigue_sensitivity": "moderate",
+    "key_session_protection_needs": [
+      "protect_strength_quality",
+      "protect_run_quality",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "moderate",
+    "hybrid_progression_model": "balanced_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "minimalist_strength_2x",
@@ -2162,7 +2375,20 @@
       "hypertrophy_priority",
       "high_volume_training",
       "aggressive_strength_progression"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "recovery",
+    "secondary_domain": "strength_run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_recovery",
+      "avoid_lower_body_conflict",
+      "preserve_consistency"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "recovery_first_conservative_progression",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "intermediate_home_3x",
@@ -2297,7 +2523,19 @@
       "reentry_after_break",
       "running_priority",
       "minimal_equipment_only"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "intermediate_upper_lower_4x",
@@ -2458,7 +2696,19 @@
       "reentry_after_break",
       "running_priority",
       "low_recovery_capacity"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   },
   {
     "id": "intermediate_hypertrophy_4x",
@@ -2620,6 +2870,18 @@
       "running_priority",
       "low_recovery_capacity",
       "minimalist_training"
-    ]
+    ],
+    "hybrid_enabled": true,
+    "primary_domain": "strength",
+    "secondary_domain": "run",
+    "cross_domain_fatigue_sensitivity": "high",
+    "key_session_protection_needs": [
+      "protect_strength_progression",
+      "avoid_lower_body_conflict"
+    ],
+    "lower_body_conflict_sensitivity": "high",
+    "hybrid_progression_model": "strength_primary_run_secondary",
+    "supports_cross_domain_schedule_protection": true,
+    "supports_cross_domain_reduced_day_logic": true
   }
 ]
