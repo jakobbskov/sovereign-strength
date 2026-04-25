@@ -146,6 +146,31 @@ Practical interpretation:
 These hybrid metadata fields are intentionally additive.
 They should support future recommendation, scheduling, adaptation, and explanation logic without changing current runtime behavior.
 
+Running, hybrid, and mixed programs may also include explicit event-capability metadata such as:
+- `supports_event_target`
+- `supported_event_types`
+- `event_date_required_for_full_behavior`
+- `supports_phase_shift`
+- `supports_taper`
+- `supports_strength_adjustment_around_event`
+- `supports_hybrid_event_coordination`
+- `event_priority_behavior`
+- `race_specificity_level`
+
+Practical interpretation:
+- `supports_event_target` marks whether the template should react to a user-specified race or event target
+- `supported_event_types` lists supported event distances such as `5k`, `10k`, or `half_marathon`
+- `event_date_required_for_full_behavior` marks whether full behavior depends on a known event date
+- `supports_phase_shift` marks whether the template can support future build/peak/taper phase logic
+- `supports_taper` marks whether taper behavior can be applied safely
+- `supports_strength_adjustment_around_event` marks whether strength work can be adjusted around a running event
+- `supports_hybrid_event_coordination` marks whether cross-domain coordination can react to event proximity
+- `event_priority_behavior` describes how strongly event context should influence selection or adaptation
+- `race_specificity_level` describes whether race-awareness is `none`, `optional`, or `strong`
+
+These event-capability fields are intentionally additive.
+They should allow future race-aware behavior to apply selectively without leaking taper or event logic into general-purpose templates.
+
 ---
 
 

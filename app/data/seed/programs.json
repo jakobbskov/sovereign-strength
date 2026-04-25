@@ -351,7 +351,16 @@
     "lower_body_conflict_sensitivity": "moderate",
     "hybrid_progression_model": "run_primary_strength_compatible",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": false,
+    "supported_event_types": [],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "ignore_event",
+    "race_specificity_level": "none"
   },
   {
     "id": "base_run_3x",
@@ -465,7 +474,18 @@
     "lower_body_conflict_sensitivity": "moderate",
     "hybrid_progression_model": "run_primary_strength_compatible",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": true,
+    "supported_event_types": [
+      "5k"
+    ],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "base_support_optional",
+    "race_specificity_level": "optional"
   },
   {
     "id": "mobility_basic",
@@ -857,7 +877,16 @@
     "lower_body_conflict_sensitivity": "moderate",
     "hybrid_progression_model": "balanced_run_strength_progression",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": false,
+    "supported_event_types": [],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "ignore_event",
+    "race_specificity_level": "none"
   },
   {
     "id": "starter_strength_gym_2x",
@@ -1693,7 +1722,16 @@
     "lower_body_conflict_sensitivity": "high",
     "hybrid_progression_model": "recovery_first_conservative_progression",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": false,
+    "supported_event_types": [],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "ignore_event",
+    "race_specificity_level": "none"
   },
   {
     "id": "starter_run_3x_beginner",
@@ -1799,7 +1837,18 @@
     "lower_body_conflict_sensitivity": "moderate",
     "hybrid_progression_model": "run_primary_strength_compatible",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": true,
+    "supported_event_types": [
+      "5k"
+    ],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "base_support_optional",
+    "race_specificity_level": "optional"
   },
   {
     "id": "base_run_4x",
@@ -1920,7 +1969,19 @@
     "lower_body_conflict_sensitivity": "high",
     "hybrid_progression_model": "run_primary_strength_secondary",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": true,
+    "supported_event_types": [
+      "5k",
+      "10k"
+    ],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "base_support_optional",
+    "race_specificity_level": "optional"
   },
   {
     "id": "hybrid_run_strength_2x_beginner",
@@ -1995,7 +2056,16 @@
     "lower_body_conflict_sensitivity": "moderate",
     "hybrid_progression_model": "balanced_hybrid_progression",
     "supports_cross_domain_schedule_protection": true,
-    "supports_cross_domain_reduced_day_logic": true
+    "supports_cross_domain_reduced_day_logic": true,
+    "supports_event_target": false,
+    "supported_event_types": [],
+    "event_date_required_for_full_behavior": false,
+    "supports_phase_shift": false,
+    "supports_taper": false,
+    "supports_strength_adjustment_around_event": false,
+    "supports_hybrid_event_coordination": false,
+    "event_priority_behavior": "ignore_event",
+    "race_specificity_level": "none"
   },
   {
     "id": "base_strength_home_2x",
