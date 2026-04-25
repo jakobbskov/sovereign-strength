@@ -5461,10 +5461,13 @@ async function applyVariantSwap(entry, direction){
     const resolved = await resolveLocalAdjustmentVariant(entry, direction);
     if (resolved?.changed && resolved?.exercise_id){
       const nextExerciseId = String(resolved.exercise_id || "").trim();
+
       entry.substituted_from = resolved.substituted_from || currentExerciseId;
       entry.exercise_id = nextExerciseId;
       entry.local_regression_reason = resolved.reason || "";
-      entry.manual_adjustment_reason = direction === "harder" ? "variant_step_up_backend" : "variant_step_down_backend";
+      entry.manual_adjustment_reason = direction === "harder"
+        ? "variant_step_up_backend"
+        : "variant_step_down_backend";
 
       const setBounds = getEntrySetBounds(entry);
       entry.sets = direction === "harder" ? setBounds.min : setBounds.max;
@@ -5472,9 +5475,20 @@ async function applyVariantSwap(entry, direction){
       const meta = getExerciseMeta(nextExerciseId) || {};
       const inputKind = String(meta.input_kind || "").trim().toLowerCase();
       if (entry.target_reps){
-        entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
-      } else if (inputKind === "time" || inputKind === "cardio_time" || inputKind === "bodyweight_reps" || inputKind === "load_reps"){
-        entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
+        entry.target_reps = buildBoundaryTargetFromCurrentShape(
+          entry,
+          direction === "harder" ? "min" : "max"
+        );
+      } else if (
+        inputKind === "time" ||
+        inputKind === "cardio_time" ||
+        inputKind === "bodyweight_reps" ||
+        inputKind === "load_reps"
+      ){
+        entry.target_reps = buildBoundaryTargetFromCurrentShape(
+          entry,
+          direction === "harder" ? "min" : "max"
+        );
       }
 
       if (meta.supports_load !== true){
@@ -5491,7 +5505,9 @@ async function applyVariantSwap(entry, direction){
 
   entry.substituted_from = currentExerciseId;
   entry.exercise_id = nextExerciseId;
-  entry.manual_adjustment_reason = direction === "harder" ? "variant_step_up_frontend_fallback" : "variant_step_down_frontend_fallback";
+  entry.manual_adjustment_reason = direction === "harder"
+    ? "variant_step_up_frontend_fallback"
+    : "variant_step_down_frontend_fallback";
 
   const setBounds = getEntrySetBounds(entry);
   entry.sets = direction === "harder" ? setBounds.min : setBounds.max;
@@ -5499,9 +5515,20 @@ async function applyVariantSwap(entry, direction){
   const meta = getExerciseMeta(nextExerciseId) || {};
   const inputKind = String(meta.input_kind || "").trim().toLowerCase();
   if (entry.target_reps){
-    entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
-  } else if (inputKind === "time" || inputKind === "cardio_time" || inputKind === "bodyweight_reps" || inputKind === "load_reps"){
-    entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, direction === "harder" ? "min" : "max");
+    entry.target_reps = buildBoundaryTargetFromCurrentShape(
+      entry,
+      direction === "harder" ? "min" : "max"
+    );
+  } else if (
+    inputKind === "time" ||
+    inputKind === "cardio_time" ||
+    inputKind === "bodyweight_reps" ||
+    inputKind === "load_reps"
+  ){
+    entry.target_reps = buildBoundaryTargetFromCurrentShape(
+      entry,
+      direction === "harder" ? "min" : "max"
+    );
   }
 
   if (meta.supports_load !== true){
@@ -5514,6 +5541,7 @@ async function applyVariantSwap(entry, direction){
 function removePlanEntryByIndex(item, idx){
   const entries = getSessionEntries(item);
   if (idx < 0 || idx >= entries.length) return;
+
   entries.splice(idx, 1);
   renderTodayPlan(item);
 }
@@ -5537,12 +5565,14 @@ async function adjustPlanEntryAtIndex(item, idx, direction){
 
   const setBounds = getEntrySetBounds(entry);
   const currentSets = Math.max(1, Number(entry.sets || setBounds.min || 1) || 1);
-
   const currentTarget = String(entry.target_reps || "").trim();
   const currentLoad = parseKgNumber(entry.target_load);
   const loadBounds = getEntryLoadBounds(entry);
   const loadOptions = Array.isArray(loadBounds.options) ? loadBounds.options : [];
-  const hasLoadChannel = currentLoad != null && (loadOptions.length > 0 || getEntryLoadStep(entry) > 0);
+  const hasLoadChannel = currentLoad != null && (
+    loadOptions.length > 0 ||
+    getEntryLoadStep(entry) > 0
+  );
   const currentTargetAtMin = targetRepsAtBound(currentTarget, entry, "min");
   const currentTargetAtMax = targetRepsAtBound(currentTarget, entry, "max");
 
@@ -5550,18 +5580,28 @@ async function adjustPlanEntryAtIndex(item, idx, direction){
 
   const tryTargetStep = () => {
     if (!currentTarget) return false;
-    const nextTarget = clampTargetRepsString(shiftTargetPatternOneStep(currentTarget, entry, dir), entry);
+
+    const nextTarget = clampTargetRepsString(
+      shiftTargetPatternOneStep(currentTarget, entry, dir),
+      entry
+    );
     if (!nextTarget || nextTarget === currentTarget) return false;
+
     entry.target_reps = nextTarget;
-    entry.manual_adjustment_reason = dir === "harder" ? "target_step_up" : "target_step_down";
+    entry.manual_adjustment_reason = dir === "harder"
+      ? "target_step_up"
+      : "target_step_down";
     return true;
   };
 
   const trySetStep = () => {
     const nextSets = getAdjacentNumericOption(setBounds.options, currentSets, dir);
     if (nextSets == null || nextSets === currentSets) return false;
+
     entry.sets = nextSets;
-    entry.manual_adjustment_reason = dir === "harder" ? "set_step_up" : "set_step_down";
+    entry.manual_adjustment_reason = dir === "harder"
+      ? "set_step_up"
+      : "set_step_down";
     return true;
   };
 
@@ -5576,13 +5616,17 @@ async function adjustPlanEntryAtIndex(item, idx, direction){
     if (nextLoad == null){
       const step = getEntryLoadStep(entry);
       if (!step || currentLoad == null) return false;
-      nextLoad = dir === "harder" ? currentLoad + step : currentLoad - step;
+
+      nextLoad = dir === "harder"
+        ? currentLoad + step
+        : currentLoad - step;
     }
 
     if (nextLoad < loadBounds.min || nextLoad > loadBounds.max) return false;
     if (nextLoad === currentLoad) return false;
 
     entry.target_load = formatKgLabel(nextLoad);
+
     if (isLoadFirstProgressionExercise(entry)){
       entry.sets = getLoadFirstSetsAfterLoadStep(currentSets, setBounds, dir);
     } else {
@@ -5590,24 +5634,40 @@ async function adjustPlanEntryAtIndex(item, idx, direction){
     }
 
     if (currentTarget){
-      entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
+      entry.target_reps = buildBoundaryTargetFromCurrentShape(
+        entry,
+        dir === "harder" ? "min" : "max"
+      );
     }
 
     entry.manual_adjustment_reason = isLoadFirstProgressionExercise(entry)
-      ? (dir === "harder" ? "load_step_up_and_modest_reset" : "load_step_down_and_modest_reset")
-      : (dir === "harder" ? "load_step_up_and_reset" : "load_step_down_and_reset");
+      ? (
+          dir === "harder"
+            ? "load_step_up_and_modest_reset"
+            : "load_step_down_and_modest_reset"
+        )
+      : (
+          dir === "harder"
+            ? "load_step_up_and_reset"
+            : "load_step_down_and_reset"
+        );
     return true;
   };
 
   const tryVolumeCycleSetStep = () => {
     if (!isLoadFirstProgressionExercise(entry)) return false;
+
     const nextSets = getAdjacentNumericOption(setBounds.options, currentSets, dir);
     if (nextSets == null || nextSets === currentSets) return false;
 
     entry.sets = nextSets;
     if (currentTarget){
-      entry.target_reps = buildBoundaryTargetFromCurrentShape(entry, dir === "harder" ? "min" : "max");
+      entry.target_reps = buildBoundaryTargetFromCurrentShape(
+        entry,
+        dir === "harder" ? "min" : "max"
+      );
     }
+
     entry.manual_adjustment_reason = dir === "harder"
       ? "set_step_up_and_reset_target"
       : "set_step_down_and_expand_target";
