@@ -2600,8 +2600,7 @@ function renderProfileEquipmentCard(){
   const incrementLineEl = document.getElementById("profileIncrementLine");
   const accountLineEl = document.getElementById("profileAccountLine");
   const accountHelpLineEl = document.getElementById("profileAccountHelpLine");
-  const accountBtn = document.getElementById("openAccountSettingsBtn");
-  const accountBtn2 = document.getElementById("openAccountSettingsSecondaryBtn");
+  const accountButtons = Array.from(document.querySelectorAll('[data-action="open-account-settings"]'));
   const openEquipmentBtn = document.getElementById("openEquipmentSettingsBtn");
   const cancelEquipmentBtn = document.getElementById("cancelEquipmentSettingsBtn");
   const saveEquipmentBtn = document.getElementById("saveEquipmentSettingsBtn");
@@ -3129,12 +3128,12 @@ function renderProfileEquipmentCard(){
 
   const authHref = `${AUTH_BASE}/account?return_to=${encodeURIComponent(AUTH_RETURN_TO)}&lang=${encodeURIComponent(getCurrentLang())}`;
 
-  [accountBtn, accountBtn2].forEach(btn => {
+  accountButtons.forEach(btn => {
     if (!btn) return;
     if (btn.tagName === "A"){
       btn.setAttribute("href", authHref);
-    } else if (!btn.dataset.bound){
-      btn.dataset.bound = "1";
+    } else if (!btn.dataset.boundAccountSettings){
+      btn.dataset.boundAccountSettings = "1";
       btn.addEventListener("click", () => {
         location.href = authHref;
       });
@@ -3643,14 +3642,6 @@ function bindEquipmentEditor(){
     };
   }
 
-  const openAccountProfileBtn = document.getElementById("openAccountSettingsBtnProfile");
-  if (openAccountProfileBtn && !openAccountProfileBtn.dataset.bound){
-    openAccountProfileBtn.dataset.bound = "1";
-    openAccountProfileBtn.onclick = (ev) => {
-      ev.preventDefault();
-      accountBtn2?.click();
-    };
-  }
 
   if (cancelBtn){
     cancelBtn.onclick = (ev) => {
