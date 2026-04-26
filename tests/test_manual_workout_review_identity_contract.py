@@ -32,3 +32,12 @@ if __name__ == "__main__":
     test_session_review_does_not_close_day_for_unsaved_workout_handoff()
     test_successful_session_save_clears_unsaved_review_handoff()
     print("Manual workout review identity contract tests passed")
+
+
+def test_session_edit_plan_preserves_source_identity():
+    js = APP_JS.read_text()
+
+    assert "function buildSessionPlanFromHistoryItem(item)" in js
+    assert 'source: String(item?.source || "").trim(),' in js
+    assert 'manual_override_workout_id: String(item?.manual_override_workout_id || "").trim(),' in js
+    assert "source: getSessionResultSourceForPlan(plan)," in js
