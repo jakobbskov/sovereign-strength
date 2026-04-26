@@ -8547,6 +8547,19 @@ async function handleRecoverySubmit(ev){
 }
 
 
+function getSessionResultSourceForPlan(plan){
+  const raw = String(plan?.source || "").trim();
+  if (raw === "manual_override") return "manual_override";
+  if (raw === "manual") return "manual";
+  if (raw === "autoplan") return "autoplan";
+
+  const variant = String(plan?.plan_variant || "").trim();
+  if (variant === "manual_override") return "manual_override";
+
+  return "autoplan";
+}
+
+
 async function handleSessionResultSubmit(ev){
   ev.preventDefault();
 
@@ -8576,6 +8589,8 @@ session_type:
 
     timing_state: plan.timing_state || "",
     readiness_score: plan.readiness_score ?? null,
+    source: getSessionResultSourceForPlan(plan),
+    manual_override_workout_id: String(plan.manual_override_workout_id || "").trim(),
     completed: String(form.session_completed.value) === "true",
     notes: form.session_notes.value.trim(),
     cardio_kind: form.cardio_kind?.value?.trim() || "",
