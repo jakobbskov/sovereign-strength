@@ -214,12 +214,9 @@ def analyze_session_result_for_progression(result):
                 continue
             reps_raw = str(x.get("reps", "")).strip()
             load_raw = x.get("load", "")
-            reps_num = None
-            try:
-                reps_num = int(reps_raw) if reps_raw != "" else None
-            except Exception:
-                reps_num = None
+            reps_num = parse_number_from_load(reps_raw)
             load_num = parse_number_from_load(load_raw)
+            
             clean_sets.append({
                 "reps": reps_num,
                 "load": load_num,
@@ -240,6 +237,8 @@ def analyze_session_result_for_progression(result):
                     load_drop_detected = True
                     break
 
+        is_time_based = "sec" in reps_raw.lower()
+
         return {
             "source": "session_result",
             "has_sets": True,
@@ -248,6 +247,7 @@ def analyze_session_result_for_progression(result):
             "min_reps": min_reps,
             "hit_failure": hit_failure,
             "load_drop_detected": load_drop_detected,
+            "total_time_under_tension_sec": min_reps if is_time_based else 0
         }
 
     fallback_load = parse_number_from_load(result.get("load", ""))
