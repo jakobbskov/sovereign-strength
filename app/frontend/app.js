@@ -1284,6 +1284,8 @@ function buildSessionPlanFromHistoryItem(item){
     session_type: item?.session_type || "strength",
     timing_state: item?.timing_state || "",
     readiness_score: item?.readiness_score ?? null,
+    source: String(item?.source || "").trim(),
+    manual_override_workout_id: String(item?.manual_override_workout_id || "").trim(),
     entries: results.map(result => {
       const sets = Array.isArray(result?.sets) ? result.sets : [];
       return {
