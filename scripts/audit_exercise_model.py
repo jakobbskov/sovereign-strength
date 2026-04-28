@@ -38,6 +38,7 @@ OPTIONAL_FIELDS = {
     "rep_options",
     "time_options",
     "load_options",
+    "workout_rep_choices",
     "image_folder",
     "external_images",
     "progression_channels",
@@ -133,6 +134,9 @@ def main() -> None:
 
         if "load_options" in item and not isinstance(item["load_options"], list):
             fail(f"{item_id}: load_options must be a list when present")
+
+        if "workout_rep_choices" in item and not isinstance(item["workout_rep_choices"], list):
+            fail(f"{item_id}: workout_rep_choices must be a list when present")
 
         if "progression_channels" in item and not isinstance(item["progression_channels"], list):
             fail(f"{item_id}: progression_channels must be a list when present")
