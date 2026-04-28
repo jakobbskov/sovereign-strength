@@ -3021,5 +3021,454 @@
       "Pull the elbows down toward the sides instead of yanking with the hands",
       "Use the assistance for control, not to throw the body upward"
     ]
+  },
+  {
+    "id": "3_4_sit_up",
+    "name": "3/4 Sit-Up",
+    "name_en": "3/4 Sit-Up",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core",
+      "hip"
+    ],
+    "movement_pattern": "trunk_flexion",
+    "notes": "Kontrolleret mavebøjning med kortere bevægeudslag end fuld sit-up.",
+    "notes_en": "Controlled trunk flexion with a shorter range than a full sit-up.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "3_4_Sit-Up",
+    "external_images": [
+      "3_4_Sit-Up/0.jpg",
+      "3_4_Sit-Up/1.jpg"
+    ]
+  },
+  {
+    "id": "alternate_heel_touchers",
+    "name": "Alternate Heel Touchers",
+    "name_en": "Alternate Heel Touchers",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core"
+    ],
+    "movement_pattern": "lateral_trunk_flexion",
+    "notes": "Sidebøjning for mave og skrå mavemuskler med lav belastning.",
+    "notes_en": "Low-load side-flexion exercise for the core and obliques.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Alternate_Heel_Touchers",
+    "external_images": [
+      "Alternate_Heel_Touchers/0.jpg",
+      "Alternate_Heel_Touchers/1.jpg"
+    ]
+  },
+  {
+    "id": "bent_knee_hip_raise",
+    "name": "Bent-Knee Hip Raise",
+    "name_en": "Bent-Knee Hip Raise",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core",
+      "hip"
+    ],
+    "movement_pattern": "hip_flexion_core",
+    "notes": "Coreøvelse hvor knæ og hofter løftes kontrolleret mod overkroppen.",
+    "notes_en": "Core exercise where knees and hips are lifted toward the torso with control.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Bent-Knee_Hip_Raise",
+    "external_images": [
+      "Bent-Knee_Hip_Raise/0.jpg",
+      "Bent-Knee_Hip_Raise/1.jpg"
+    ]
+  },
+  {
+    "id": "cross_body_crunch",
+    "name": "Cross-Body Crunch",
+    "name_en": "Cross-Body Crunch",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core"
+    ],
+    "movement_pattern": "rotational_trunk_flexion",
+    "notes": "Rotationspræget crunch med fokus på skrå mavemuskler.",
+    "notes_en": "Rotational crunch emphasizing the obliques.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Cross-Body_Crunch",
+    "external_images": [
+      "Cross-Body_Crunch/0.jpg",
+      "Cross-Body_Crunch/1.jpg"
+    ]
+  },
+  {
+    "id": "flutter_kicks",
+    "name": "Flutter Kicks",
+    "name_en": "Flutter Kicks",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core",
+      "hip"
+    ],
+    "movement_pattern": "anti_extension_core",
+    "notes": "Dynamisk coreøvelse med skiftevis benspark og krav til bækkenkontrol.",
+    "notes_en": "Dynamic core exercise using alternating leg kicks and pelvic control.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Flutter_Kicks",
+    "external_images": [
+      "Flutter_Kicks/0.jpg",
+      "Flutter_Kicks/1.jpg"
+    ]
+  },
+  {
+    "id": "hanging_leg_raise",
+    "name": "Hanging Leg Raise",
+    "name_en": "Hanging Leg Raise",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core",
+      "hip",
+      "shoulder",
+      "elbow"
+    ],
+    "movement_pattern": "hanging_hip_flexion",
+    "notes": "Hængende coreøvelse med højere krav til greb, skuldre og hoftebøjning.",
+    "notes_en": "Hanging core exercise with higher demands on grip, shoulders, and hip flexion.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Hanging_Leg_Raise",
+    "external_images": [
+      "Hanging_Leg_Raise/0.jpg",
+      "Hanging_Leg_Raise/1.jpg"
+    ]
+  },
+  {
+    "id": "leg_lift",
+    "name": "Leg Lift",
+    "name_en": "Leg Lift",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core",
+      "hip"
+    ],
+    "movement_pattern": "supine_hip_flexion",
+    "notes": "Rygliggende benløft med fokus på corekontrol og hoftebøjning.",
+    "notes_en": "Supine leg raise focused on core control and hip flexion.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Leg_Lift",
+    "external_images": [
+      "Leg_Lift/0.jpg",
+      "Leg_Lift/1.jpg"
+    ]
+  },
+  {
+    "id": "natural_glute_ham_raise",
+    "name": "Natural Glute Ham Raise",
+    "name_en": "Natural Glute Ham Raise",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "hamstring",
+      "knee",
+      "hip"
+    ],
+    "movement_pattern": "knee_flexion_posterior_chain",
+    "notes": "Avanceret bagkædeøvelse med høj belastning på baglår og knæbøjning.",
+    "notes_en": "Advanced posterior-chain exercise with high hamstring and knee-flexion demand.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Natural_Glute_Ham_Raise",
+    "external_images": [
+      "Natural_Glute_Ham_Raise/0.jpg",
+      "Natural_Glute_Ham_Raise/1.jpg"
+    ]
+  },
+  {
+    "id": "push_ups_with_feet_elevated",
+    "name": "Push-Ups With Feet Elevated",
+    "name_en": "Push-Ups With Feet Elevated",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "wrist",
+      "core"
+    ],
+    "movement_pattern": "horizontal_push",
+    "notes": "Sværere push-up variant med fødderne hævet og øget krav til skuldre og core.",
+    "notes_en": "Harder push-up variation with elevated feet and increased shoulder and core demand.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Push-Ups_With_Feet_Elevated",
+    "external_images": [
+      "Push-Ups_With_Feet_Elevated/0.jpg",
+      "Push-Ups_With_Feet_Elevated/1.jpg"
+    ]
+  },
+  {
+    "id": "sit_up",
+    "name": "Sit-Up",
+    "name_en": "Sit-Up",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "core",
+      "hip"
+    ],
+    "movement_pattern": "trunk_flexion",
+    "notes": "Klassisk sit-up med større bevægeudslag og hoftebøjerbidrag.",
+    "notes_en": "Classic sit-up with larger range of motion and hip-flexor contribution.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Sit-Up",
+    "external_images": [
+      "Sit-Up/0.jpg",
+      "Sit-Up/1.jpg"
+    ]
+  },
+  {
+    "id": "v_bar_pullup",
+    "name": "V-Bar Pullup",
+    "name_en": "V-Bar Pullup",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "upper_back"
+    ],
+    "movement_pattern": "vertical_pull",
+    "notes": "Vertikal trækøvelse med neutralt greb og høj overkropsbelastning.",
+    "notes_en": "Vertical pulling exercise with neutral grip and high upper-body demand.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "V-Bar_Pullup",
+    "external_images": [
+      "V-Bar_Pullup/0.jpg",
+      "V-Bar_Pullup/1.jpg"
+    ]
+  },
+  {
+    "id": "wide_grip_rear_pull_up",
+    "name": "Wide-Grip Rear Pull-Up",
+    "name_en": "Wide-Grip Rear Pull-Up",
+    "category": "strength",
+    "category_en": "strength",
+    "default_unit": "reps",
+    "difficulty_tier": 1,
+    "equipment_type": "bodyweight",
+    "input_kind": "reps",
+    "load_increment": 0.0,
+    "load_optional": true,
+    "local_load_targets": [
+      "shoulder",
+      "elbow",
+      "upper_back"
+    ],
+    "movement_pattern": "vertical_pull",
+    "notes": "Bred pull-up variant med høj belastning på øvre ryg og skuldre.",
+    "notes_en": "Wide-grip pull-up variation with high upper-back and shoulder demand.",
+    "progression_mode": "reps_only",
+    "progression_step": 0.0,
+    "progression_style": "standard",
+    "recommended_step": 0.0,
+    "set_options": [
+      1,
+      2,
+      3
+    ],
+    "start_weight": 0.0,
+    "supports_bodyweight": true,
+    "supports_load": false,
+    "image_folder": "Wide-Grip_Rear_Pull-Up",
+    "external_images": [
+      "Wide-Grip_Rear_Pull-Up/0.jpg",
+      "Wide-Grip_Rear_Pull-Up/1.jpg"
+    ]
   }
 ]
