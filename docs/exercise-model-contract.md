@@ -97,14 +97,18 @@ These fields are valid but not required for every exercise:
 - `rep_options`
 - `time_options`
 - `load_options`
+- `workout_rep_choices`
 
 These fields are typically tied to input and review behavior.
 
 ### Guidance
 
-- `rep_options` is most relevant for rep-based exercises
+- `rep_options` is most relevant for rep-based exercise ranges and manual plan entry
 - `time_options` is most relevant for time-based exercises
 - `load_options` is most relevant when `supports_load = true`
+- `workout_rep_choices` is optional review/UI metadata for concrete achieved-rep choices during workout review
+
+`workout_rep_choices` must remain optional because not every rep-based exercise needs discrete review buttons, and older records may rely only on `rep_options`.
 
 ---
 
