@@ -5882,6 +5882,19 @@ def _parse_time_under_tension_seconds(value):
         return float(num)
     return 0.0
 
+
+def _parse_result_time_under_tension_seconds(value, *, assume_seconds=False):
+    parsed = _parse_time_under_tension_seconds(value)
+    if parsed > 0:
+        return parsed
+
+    if assume_seconds:
+        num = _parse_numeric_token(str(value or "").strip())
+        if num > 0:
+            return float(num)
+
+    return 0.0
+
 def build_weekly_training_status(user_id, checkin_date, training_day_prefs, weekly_target_sessions):
     status = {
         "week_start": None,
@@ -6406,7 +6419,7 @@ def build_session_summary(session_item):
 
         sets = r.get("sets", [])
         achieved_reps = _safe_int(r.get("achieved_reps", "0"))
-        achieved_tut = _parse_time_under_tension_seconds(r.get("achieved_reps", ""))
+        achieved_tut = _parse_result_time_under_tension_seconds(r.get("achieved_reps", ""), assume_seconds=is_time_based)
         base_load = _safe_float(r.get("load", "0"))
         effective_load = _estimate_effective_load_for_result(r, exercise_meta, bodyweight_kg, base_load)
 
@@ -6417,7 +6430,7 @@ def build_session_summary(session_item):
                     continue
 
                 reps_val = _safe_int(s.get("reps", "0"))
-                tut_val = _parse_time_under_tension_seconds(s.get("reps", ""))
+                tut_val = _parse_result_time_under_tension_seconds(s.get("reps", ""), assume_seconds=is_time_based)
                 load_val = _safe_float(s.get("load", "0"))
                 effective_set_load = _estimate_effective_load_for_result(r, exercise_meta, bodyweight_kg, load_val)
 
