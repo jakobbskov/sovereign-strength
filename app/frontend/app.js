@@ -8215,7 +8215,8 @@ async function handleWorkoutSubmit(ev){
   const form = ev.currentTarget;
   const statusEl = document.getElementById("formStatus");
   const selectedDay = getSelectedProgramDay();
-  const wasManualFlow = CURRENT_STEP === "manual" || STATE.manualWorkoutActsAsTodayOverride === true;
+  const formIsManualWorkout = form.closest("#manualWorkoutSection") !== null;
+  const wasManualFlow = formIsManualWorkout || STATE.manualWorkoutActsAsTodayOverride === true;
 
   const payload = {
     date: form.date.value,

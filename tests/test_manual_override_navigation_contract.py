@@ -7,7 +7,8 @@ APP_JS = ROOT / "app/frontend/app.js"
 def test_manual_workout_submit_preserves_manual_navigation_after_save():
     js = APP_JS.read_text(encoding="utf-8")
 
-    assert 'const wasManualFlow = CURRENT_STEP === "manual" || STATE.manualWorkoutActsAsTodayOverride === true;' in js
+    assert 'const formIsManualWorkout = form.closest("#manualWorkoutSection") !== null;' in js
+    assert "const wasManualFlow = formIsManualWorkout || STATE.manualWorkoutActsAsTodayOverride === true;" in js
     assert 'showWizardStep(wasManualFlow ? "manual" : "plan");' in js
 
 
