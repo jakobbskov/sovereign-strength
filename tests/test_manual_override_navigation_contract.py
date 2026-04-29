@@ -4,11 +4,11 @@ ROOT = Path(__file__).resolve().parents[1]
 APP_JS = ROOT / "app/frontend/app.js"
 
 
-def test_manual_override_submit_preserves_manual_navigation_after_save():
+def test_manual_workout_submit_preserves_manual_navigation_after_save():
     js = APP_JS.read_text(encoding="utf-8")
 
-    assert "const wasManualOverride = STATE.manualWorkoutActsAsTodayOverride === true;" in js
-    assert 'showWizardStep(wasManualOverride ? "manual" : "plan");' in js
+    assert 'const wasManualFlow = CURRENT_STEP === "manual" || STATE.manualWorkoutActsAsTodayOverride === true;' in js
+    assert 'showWizardStep(wasManualFlow ? "manual" : "plan");' in js
 
 
 def test_manual_override_submit_no_longer_uses_checkin_advance_after_save():

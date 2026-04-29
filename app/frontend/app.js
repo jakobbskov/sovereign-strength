@@ -8215,7 +8215,7 @@ async function handleWorkoutSubmit(ev){
   const form = ev.currentTarget;
   const statusEl = document.getElementById("formStatus");
   const selectedDay = getSelectedProgramDay();
-  const wasManualOverride = STATE.manualWorkoutActsAsTodayOverride === true;
+  const wasManualFlow = CURRENT_STEP === "manual" || STATE.manualWorkoutActsAsTodayOverride === true;
 
   const payload = {
     date: form.date.value,
@@ -8244,7 +8244,7 @@ async function handleWorkoutSubmit(ev){
     renderPendingEntries();
     setText("programLoadStatus", tr("workout.no_program_loaded"));
     await refreshAll();
-    showWizardStep(wasManualOverride ? "manual" : "plan");
+    showWizardStep(wasManualFlow ? "manual" : "plan");
   }catch(err){
     const rawMessage = String(err?.message || err || "").trim();
     const normalizedMessage = rawMessage === "empty_workout"
