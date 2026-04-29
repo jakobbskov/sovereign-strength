@@ -509,6 +509,7 @@
   "exercise.cardio_easy": "Easy cardio",
   "exercise.cardio_intervals": "Intervals",
   "exercise.cardio_base": "Easy run",
+  "exercise.cardio_tempo": "Tempo run",
   "exercise.planned_session": "Planned session",
   "decision.autoplan_cardio_initial": "Selected as easy cardio today",
   "decision.generic": "Adjusted for today's plan",
