@@ -8224,7 +8224,7 @@ async function handleWorkoutSubmit(ev){
     notes: form.notes.value.trim(),
     program_id: form.program_id.value.trim(),
     program_day_label: selectedDay?.label || "",
-    is_manual_override: STATE.manualWorkoutActsAsTodayOverride === true,
+    is_manual_override: wasManualFlow,
     entries: [...STATE.pendingEntries]
   };
 
