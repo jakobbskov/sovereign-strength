@@ -3820,7 +3820,8 @@ function formatExerciseName(exerciseId){
     cardio_easy: tr("exercise.cardio_easy"),
     cardio_intervals: tr("exercise.cardio_intervals"),
     cardio_session: tr("session_type.cardio"),
-    cardio_base: tr("exercise.cardio_base")
+    cardio_base: tr("exercise.cardio_base"),
+    cardio_tempo: tr("exercise.cardio_tempo")
   };
   if (mapped[id]) return mapped[id];
 
