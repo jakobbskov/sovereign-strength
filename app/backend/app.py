@@ -1593,15 +1593,28 @@ def find_latest_session_by_type(session_results, session_type):
 
 
 def find_latest_completed_strength_session_result(session_results):
-    for session in reversed(session_results or []):
+    candidates = []
+    for session in session_results or []:
         if not isinstance(session, dict):
             continue
         if str(session.get("session_type", "")).strip() != "styrke":
             continue
         if not bool(session.get("completed", False)):
             continue
-        return session
-    return None
+        candidates.append(session)
+
+    if not candidates:
+        return None
+
+    return sorted(
+        candidates,
+        key=lambda item: (
+            str(item.get("date", "")).strip(),
+            str(item.get("created_at", "")).strip(),
+            str(item.get("id", "")).strip(),
+        ),
+        reverse=True,
+    )[0]
 
 
 def get_starter_capacity_calibration_sessions(session_results, limit=3):
