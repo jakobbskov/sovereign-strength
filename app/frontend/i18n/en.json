@@ -117,6 +117,8 @@
   "session_type.strength": "Strength",
   "settings.strength_weights": "Strength with weights",
   "today_plan.title": "Today's plan",
+  "today_plan.selected_strength_program": "Strength program: {value}",
+  "today_plan.selected_run_program": "Run program: {value}",
   "weekday.fri": "Friday",
   "weekday.mon": "Monday",
   "weekday.sat": "Saturday",

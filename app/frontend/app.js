@@ -3744,6 +3744,15 @@ function getProgramDisplayName(program){
   ).trim();
 }
 
+function getProgramDisplayNameById(programId){
+  const id = String(programId || "").trim();
+  if (!id) return "";
+  const found = Array.isArray(STATE.programs)
+    ? STATE.programs.find(program => String(program?.id || "").trim() === id)
+    : null;
+  return found ? getProgramDisplayName(found) : id;
+}
+
 function getProgramKindDisplayLabel(value){
   const x = String(value || "").trim().toLowerCase();
   if (!x) return "";
@@ -7456,6 +7465,14 @@ function deriveTodayPlanDisplayState(item){
   const todayWeekPlanItem = getTodayWeekPlanItem(item);
   const todayWeekKind = String(todayWeekPlanItem?.kind || "").trim().toLowerCase();
   const actualKind = String(item?.session_type || "").trim().toLowerCase();
+  const selectedStrengthProgramName = getProgramDisplayNameById(item?.selected_strength_program_id);
+  const selectedRunProgramName = getProgramDisplayNameById(item?.selected_endurance_program_id);
+  const selectedPlanProgramSummary =
+    actualKind === "styrke" && selectedStrengthProgramName
+      ? tr("today_plan.selected_strength_program", { value: selectedStrengthProgramName })
+      : (actualKind === "løb" || actualKind === "run" || actualKind === "cardio") && selectedRunProgramName
+        ? tr("today_plan.selected_run_program", { value: selectedRunProgramName })
+        : "";
   const isManualOverridePlan = String(item?.plan_variant || "").trim() === "manual_override"
     || String(item?.source || "").trim() === "manual_override";
   const isPlannedRestDay = todayWeekKind === "rest" && !isManualOverridePlan;
@@ -7521,6 +7538,7 @@ function deriveTodayPlanDisplayState(item){
   const rawReason = String(item?.reason || "").trim();
   const overrideReasonText = rawReason ? formatPlanReason(rawReason) : "";
   const planContextBits = [
+    selectedPlanProgramSummary,
     recoverySummaryText,
     recoveryExplanationText,
     ...(hasHighImpactOverride
