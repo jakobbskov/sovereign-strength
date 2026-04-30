@@ -8574,6 +8574,23 @@ function getSessionResultSourceForPlan(plan){
 }
 
 
+function getProgramDayLabelFromPlanTemplate(templateId){
+  const raw = String(templateId || "").trim().toLowerCase();
+  const match = raw.match(/^strength_day_([a-z0-9]+)$/);
+  return match ? `Day ${match[1].toUpperCase()}` : "";
+}
+
+function getSessionResultProgramIdForPlan(plan){
+  const sessionType = String(plan?.session_type || "").trim().toLowerCase();
+  if (sessionType === "styrke" || sessionType === "strength"){
+    return String(plan?.selected_strength_program_id || "").trim();
+  }
+  if (sessionType === "løb" || sessionType === "run" || sessionType === "cardio"){
+    return String(plan?.selected_endurance_program_id || "").trim();
+  }
+  return "";
+}
+
 async function handleSessionResultSubmit(ev){
   ev.preventDefault();
 
@@ -8593,9 +8610,16 @@ async function handleSessionResultSubmit(ev){
   const cardioDistanceKm = (cardioKmWhole + (cardioKmPartMeters / 1000)).toFixed(1).replace(/\.0$/, "");
   const cardioDurationMin = form.cardio_duration_min?.value?.trim() || "";
   const cardioDurationSec = form.cardio_duration_sec?.value?.trim() || "";
+  const planTemplateId = String(plan.template_id || "").trim();
 
   const payload = {
     date: plan.date || new Date().toISOString().slice(0,10),
+    program_id: getSessionResultProgramIdForPlan(plan),
+    program_day_label: String(plan.program_day_label || "").trim() || getProgramDayLabelFromPlanTemplate(planTemplateId),
+    template_id: planTemplateId,
+    plan_variant: String(plan.plan_variant || "").trim(),
+    selected_strength_program_id: String(plan.selected_strength_program_id || "").trim(),
+    selected_endurance_program_id: String(plan.selected_endurance_program_id || "").trim(),
     
 session_type:
   plan.session_type
