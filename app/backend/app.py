@@ -1592,6 +1592,18 @@ def find_latest_session_by_type(session_results, session_type):
     return None
 
 
+def find_latest_completed_strength_session_result(session_results):
+    for session in reversed(session_results or []):
+        if not isinstance(session, dict):
+            continue
+        if str(session.get("session_type", "")).strip() != "styrke":
+            continue
+        if not bool(session.get("completed", False)):
+            continue
+        return session
+    return None
+
+
 def get_starter_capacity_calibration_sessions(session_results, limit=3):
     completed = []
     for session in session_results or []:
@@ -4080,16 +4092,16 @@ def build_today_plan_timing_state(previous_recommendation, checkin_date):
 
 
 def build_today_plan_fatigue_context(auth_user, latest_checkin, workouts, checkin_date):
-    latest_strength = find_latest_strength_workout(workouts)
+    session_results = list_session_results_for_user(auth_user.get("user_id"))
+    latest_strength_session = find_latest_completed_strength_session_result(session_results)
+    latest_strength = latest_strength_session or find_latest_strength_workout(workouts)
+
     days_since_last_strength = None
     if latest_strength:
         days_since_last_strength = days_between_iso_dates(checkin_date, latest_strength.get("date", ""))
 
-    session_results = list_session_results_for_user(auth_user.get("user_id"))
     recommendations = read_json_file(FILES["recommendations"])
     previous_recommendation = recommendations[-1] if recommendations else None
-
-    latest_strength_session = find_latest_session_by_type(session_results, "styrke")
     latest_strength_failed = session_has_failure(latest_strength_session)
     latest_strength_load_drop_count = count_load_drop_exercises(latest_strength_session)
     latest_strength_completed = None if latest_strength_session is None else bool(latest_strength_session.get("completed", False))
