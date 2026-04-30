@@ -808,6 +808,12 @@ def create_session_result(user_id, payload):
     completed = bool(payload.get("completed", False))
     readiness_score = payload.get("readiness_score", None)
     source = str(payload.get("source", "autoplan")).strip() or "autoplan"
+    program_id = str(payload.get("program_id", "")).strip()
+    program_day_label = str(payload.get("program_day_label", "")).strip()
+    template_id = str(payload.get("template_id", "")).strip()
+    plan_variant = str(payload.get("plan_variant", "")).strip()
+    selected_strength_program_id = str(payload.get("selected_strength_program_id", "")).strip()
+    selected_endurance_program_id = str(payload.get("selected_endurance_program_id", "")).strip()
     results = payload.get("results", [])
 
     if not date:
@@ -954,6 +960,12 @@ def create_session_result(user_id, payload):
         "readiness_score": readiness_score,
         "completed": completed,
         "source": source,
+        "program_id": program_id or None,
+        "program_day_label": program_day_label or None,
+        "template_id": template_id or None,
+        "plan_variant": plan_variant or None,
+        "selected_strength_program_id": selected_strength_program_id or None,
+        "selected_endurance_program_id": selected_endurance_program_id or None,
         "counts_toward_weekly_goal": counts_toward_weekly_goal,
         "notes": notes,
         "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run") else "",
@@ -994,6 +1006,12 @@ def build_session_result_item(user_id, payload, existing_item=None):
     timing_state = str(payload.get("timing_state", "")).strip() or str(existing_item.get("timing_state", "")).strip() or "on_time"
     notes = str(payload.get("notes", "")).strip()
     source = str(payload.get("source", "")).strip() or str(existing_item.get("source", "")).strip() or "manual"
+    program_id = str(payload.get("program_id", "")).strip() or str(existing_item.get("program_id", "")).strip()
+    program_day_label = str(payload.get("program_day_label", "")).strip() or str(existing_item.get("program_day_label", "")).strip()
+    template_id = str(payload.get("template_id", "")).strip() or str(existing_item.get("template_id", "")).strip()
+    plan_variant = str(payload.get("plan_variant", "")).strip() or str(existing_item.get("plan_variant", "")).strip()
+    selected_strength_program_id = str(payload.get("selected_strength_program_id", "")).strip() or str(existing_item.get("selected_strength_program_id", "")).strip()
+    selected_endurance_program_id = str(payload.get("selected_endurance_program_id", "")).strip() or str(existing_item.get("selected_endurance_program_id", "")).strip()
     completed = bool(payload.get("completed", False))
     readiness_score = payload.get("readiness_score", existing_item.get("readiness_score"))
     cardio_kind = str(payload.get("cardio_kind", "")).strip()
@@ -1094,6 +1112,12 @@ def build_session_result_item(user_id, payload, existing_item=None):
         "readiness_score": readiness_score,
         "completed": completed,
         "source": source,
+        "program_id": program_id or None,
+        "program_day_label": program_day_label or None,
+        "template_id": template_id or None,
+        "plan_variant": plan_variant or None,
+        "selected_strength_program_id": selected_strength_program_id or None,
+        "selected_endurance_program_id": selected_endurance_program_id or None,
         "counts_toward_weekly_goal": counts_toward_weekly_goal,
         "notes": notes,
         "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run") else "",
