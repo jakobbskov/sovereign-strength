@@ -130,6 +130,8 @@
   "session_type.strength": "Styrke",
   "settings.strength_weights": "Styrke med vægte",
   "today_plan.title": "Dagens plan",
+  "today_plan.selected_strength_program": "Styrkeprogram: {value}",
+  "today_plan.selected_run_program": "Løbeprogram: {value}",
   "weekday.fri": "Fredag",
   "weekday.mon": "Mandag",
   "weekday.sat": "Lørdag",
