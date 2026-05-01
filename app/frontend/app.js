@@ -1409,7 +1409,7 @@ function renderSessionHistory(items){
     const totalReps = Number(summary.total_reps || 0);
     const totalTUT = Number(summary.total_time_under_tension_sec || 0);
     const estimatedVolume = Number(summary.estimated_volume || 0);
-    const nextStepHint = String(summary.next_step_hint || "").trim();
+    const nextStepHint = formatSavedSummaryNextStep(String(summary.progression_summary || summary.next_step_hint || "").trim());
     const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
     const notes = String(item && item.notes || "").trim();
     const typeLabel = formatSessionType(item && item.session_type || "");
