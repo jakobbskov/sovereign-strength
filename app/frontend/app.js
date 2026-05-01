@@ -7482,7 +7482,8 @@ function deriveTodayPlanDisplayState(item){
     trainingAllowedSummary = tr("plan.weekplan_rest_today");
   } else if (todayWeekKind && todayWeekKind !== actualKind){
     const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
-    trainingAllowedSummary = tr("plan.weekplan_adjusted_today", { value: plannedLabel });
+    const actualLabel = formatSessionType(item?.session_type || "");
+    trainingAllowedSummary = tr("plan.weekplan_adjusted_to_today", { planned: plannedLabel, actual: actualLabel });
   } else if (todayWeekKind){
     const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
     trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
