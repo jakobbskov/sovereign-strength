@@ -111,7 +111,7 @@ Python dependencies are defined authoritatively in `app/backend/requirements.txt
 The top-level `requirements.txt` is only a thin convenience wrapper that references the backend file.
 
 
-`/opt/sovereign-strength-api/app.py`
+`/opt/sovereign-strength-api/app/backend/app.py`
 
 ### Data
 JSON-based local storage in:
