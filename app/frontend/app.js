@@ -2152,7 +2152,7 @@ function renderForecastHero(planItem, latestCheckin){
     }
 
     let nextGuidanceMessage = getNextPlannedSessionOverviewText(planItem || null) || "";
-    if (!nextGuidanceMessage){
+    if (!nextGuidanceMessage && getCurrentLang() === "en"){
       const rawNextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
       const loweredNextGuidance = rawNextGuidanceMessage.toLowerCase();
       if (
@@ -2192,7 +2192,10 @@ function renderForecastHero(planItem, latestCheckin){
   if (planVariantLabel && !plannedRestToday) bits.push(tr("forecast.plan_label", { value: formatPlanMotor(planVariantLabel) }));
   if (planItem.recovery_state && typeof planItem.recovery_state === "object") bits.push(tr("forecast.recovery_label", { value: `${formatRecoveryState(planItem.recovery_state.recovery_state || "")}${planItem.recovery_state.recovery_score != null ? ` (${planItem.recovery_state.recovery_score})` : ""}` }));
 
-  let nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
+  let nextGuidanceMessage = getNextPlannedSessionOverviewText(planItem || null) || "";
+  if (!nextGuidanceMessage && getCurrentLang() === "en"){
+    nextGuidanceMessage = String(planItem?.next_guidance?.message || "").trim();
+  }
   if (plannedRestToday){
     const lowered = nextGuidanceMessage.toLowerCase();
     if (
@@ -7489,7 +7492,10 @@ function deriveTodayPlanDisplayState(item){
     trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
   }
 
-  let nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
+  let nextGuidanceMessage = getNextPlannedSessionOverviewText(item || null) || "";
+  if (!nextGuidanceMessage && getCurrentLang() === "en"){
+    nextGuidanceMessage = String(item?.next_guidance?.message || "").trim();
+  }
   if (isPlannedRestDay && nextGuidanceMessage){
     const lowered = nextGuidanceMessage.toLowerCase();
     if (
