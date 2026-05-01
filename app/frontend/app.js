@@ -3919,6 +3919,46 @@ function formatPlanReason(value){
   return tr("plan.reason.generic_today_choice");
 }
 
+function formatLocalProtectionRegion(region){
+  const key = String(region || "").trim().toLowerCase();
+  if (!key) return "";
+  const label = tr(`local_protection.region.${key}`);
+  return label === `local_protection.region.${key}` ? key : label;
+}
+
+function formatLocalProtectionExplanation(item){
+  if (!item || typeof item !== "object") return "";
+
+  const rawExplanation = String(item.local_protection_explanation || "").trim();
+  const rawReason = String(item.reason || "").trim();
+  const planVariant = String(item.plan_variant || "").trim().toLowerCase();
+
+  const knownRegions = ["ankle_calf", "knee", "hip", "low_back", "shoulder", "elbow", "wrist"];
+  const usedRegions = knownRegions.filter(region =>
+    rawExplanation.includes(region) || rawReason.includes(region)
+  );
+
+  if (rawExplanation){
+    let text = rawExplanation;
+    usedRegions.forEach(region => {
+      text = text.replaceAll(region, formatLocalProtectionRegion(region));
+    });
+    return text;
+  }
+
+  const hasLocalProtectionSignal =
+    planVariant === "local_light_strength" ||
+    planVariant === "local_protection_override" ||
+    planVariant === "local_protection_restitution" ||
+    rawReason.toLowerCase().includes("lokal beskyttelse") ||
+    rawReason.toLowerCase().includes("local protection");
+
+  if (!hasLocalProtectionSignal || !usedRegions.length) return "";
+
+  const regionText = usedRegions.map(formatLocalProtectionRegion).filter(Boolean).join(", ");
+  return regionText ? tr("today_plan.local_protection_adjusted", { regions: regionText }) : "";
+}
+
 function formatFatigueText(value){
   const v = String(value || "").trim().toLowerCase();
   if (!v) return tr("common.unknown_lower");
@@ -7654,7 +7694,7 @@ function renderStandardTodayPlan(item, root, displayState){
     variantLabel,
     timeBudgetMin: item.time_budget_min,
     planContextBits,
-    localProtectionExplanation: item?.local_protection_explanation || "",
+    localProtectionExplanation: formatLocalProtectionExplanation(item),
   });
 
   const recoveryCard = "";
