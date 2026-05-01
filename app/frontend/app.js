@@ -1009,6 +1009,7 @@ function renderWorkouts(items){
     const rawEntries = Array.isArray(item.entries) ? item.entries : [];
     const isCardio = String(item?.session_type || "").trim().toLowerCase() === "løb";
     const cardioMeta = buildCardioHistoryMeta(item);
+    const compactSummary = buildLatestWorkoutSummary(item);
     const totalSets = rawEntries.reduce((sum, entry) => sum + (Number(entry?.sets || 0) || 0), 0);
 
     const entriesHtml = isCardio
@@ -1043,9 +1044,7 @@ function renderWorkouts(items){
           <span class="small">${esc(item.date || "")}</span>
         </div>
         <div class="small">
-          ${isCardio
-            ? esc(cardioMeta || "")
-            : `${totalSets ? tr("exercise.sets_count", { count: esc(String(totalSets)) }) : ""}`}
+          ${esc(compactSummary || (isCardio ? cardioMeta : ""))}
         </div>
         ${item.notes ? `<div style="margin-top:8px">${esc(item.notes)}</div>` : ""}
         ${entriesHtml}
@@ -1092,6 +1091,45 @@ function buildCardioHistoryMeta(item){
   const rpe = item?.avg_rpe != null && item?.avg_rpe !== "" ? `RPE ${item.avg_rpe}` : "";
 
   return [cardioKind, distance, duration, pace, rpe].filter(Boolean).join(" · ");
+}
+
+function buildLatestWorkoutSummary(item){
+  if (!item || typeof item !== "object") return "";
+
+  const summary = item.summary && typeof item.summary === "object" ? item.summary : {};
+  const sessionType = String(item.session_type || summary.session_type || "").trim().toLowerCase();
+
+  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
+    return buildCardioHistoryMeta({
+      ...item,
+      cardio_kind: item.cardio_kind || summary.cardio_kind,
+      distance_km: item.distance_km ?? summary.distance_km,
+      duration_total_sec: item.duration_total_sec ?? summary.duration_total_sec,
+      pace_sec_per_km: item.pace_sec_per_km ?? summary.pace_sec_per_km,
+    });
+  }
+
+  const results = Array.isArray(item.results) ? item.results : [];
+  const completedExercises = Number(summary.completed_exercises || summary.total_exercises || 0) || results.length;
+  const totalSets = Number(summary.total_sets || 0) || results.reduce((acc, result) => {
+    const sets = Array.isArray(result?.sets) ? result.sets : [];
+    return acc + sets.length;
+  }, 0);
+  const totalReps = Number(summary.total_reps || 0) || results.reduce((acc, result) => {
+    const sets = Array.isArray(result?.sets) ? result.sets : [];
+    return acc + sets.reduce((inner, set) => inner + (Number(set?.reps || 0) || 0), 0);
+  }, 0);
+  const totalTUT = Number(summary.total_time_under_tension_sec || 0) || 0;
+  const estimatedVolume = Number(summary.estimated_volume || 0) || 0;
+
+  const bits = [];
+  if (completedExercises) bits.push(tr("history.exercise_count_compact", { count: String(completedExercises) }));
+  if (totalSets) bits.push(tr("exercise.sets_count", { count: String(totalSets) }));
+  if (totalReps) bits.push(tr("exercise.reps_count", { count: String(totalReps) }));
+  if (totalTUT) bits.push(`${Math.round(totalTUT)} ${tr("unit.seconds")}`);
+  if (estimatedVolume) bits.push(tr("exercise.volume_label", { value: String(Math.round(estimatedVolume)) }));
+
+  return bits.join(" · ");
 }
 
 function getUserBodyweightKg(){
