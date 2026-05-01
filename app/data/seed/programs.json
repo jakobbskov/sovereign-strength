@@ -1,11 +1,11 @@
 [
   {
     "id": "starter_strength_2x",
-    "name": "Getting started (2 days/week)",
+    "name": "Kom godt i gang (2 dage/uge)",
     "kind": "strength",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -22,10 +22,11 @@
             "sets": 2,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "hip_hinge_bw",
@@ -47,7 +48,8 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "name_en": "Getting started (2 days/week)",
@@ -132,11 +134,11 @@
   },
   {
     "id": "base_strength_a",
-    "name": "Base (2 days/week)",
+    "name": "Basis (2 dage/uge)",
     "kind": "strength",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -158,10 +160,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -183,7 +186,8 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "name_en": "Base (2 days/week)",
@@ -256,17 +260,18 @@
     "kind": "run",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "20-25 min"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "run_intervals",
@@ -280,7 +285,8 @@
               "rest_sec": 60
             }
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "name_en": "Getting started run (2 days/week)",
@@ -368,17 +374,18 @@
     "kind": "run",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "25-30 min"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "run_intervals",
@@ -392,17 +399,19 @@
               "rest_sec": 60
             }
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "35-45 min roligt"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "name_en": "Base run (3 days/week)",
@@ -493,7 +502,7 @@
     "kind": "mobility",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "mobility",
@@ -510,10 +519,11 @@
             "sets": 2,
             "reps": "6/side"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "mobility",
@@ -530,7 +540,8 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "name_en": "Mobility basics",
@@ -622,7 +633,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -639,10 +650,11 @@
             "sets": 2,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "glute_bridge",
@@ -664,10 +676,11 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -689,7 +702,8 @@
             "sets": 2,
             "reps": "6/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "training_style": "full_body_foundation",
@@ -778,17 +792,18 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "20-30 min"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -810,17 +825,19 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "run_intervals",
             "sets": 1,
             "reps": "6 x 1 min hurtigt / 1 min roligt"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "training_style": "hybrid_run_strength_foundation",
@@ -911,7 +928,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -928,10 +945,11 @@
             "sets": 2,
             "reps": "6-8"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -953,7 +971,8 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "training_style": "full_body_foundation",
@@ -1040,7 +1059,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -1057,10 +1076,11 @@
             "sets": 2,
             "reps": "6-8"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -1082,10 +1102,11 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -1107,7 +1128,8 @@
             "sets": 2,
             "reps": "6/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "training_style": "full_body_foundation",
@@ -1196,7 +1218,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "glute_bridge",
@@ -1218,10 +1240,11 @@
             "sets": 2,
             "reps": "6/side"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "split_squat",
@@ -1243,7 +1266,8 @@
             "sets": 2,
             "reps": "20-30 sec"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "training_style": "reentry_full_body",
@@ -1330,7 +1354,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -1352,10 +1376,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -1377,10 +1402,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -1402,7 +1428,8 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "training_style": "full_body_base",
@@ -1475,7 +1502,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -1497,10 +1524,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "bench_press",
@@ -1522,10 +1550,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -1547,10 +1576,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day C"
       },
       {
-        "label": "Day D",
+        "label": "Dag D",
         "exercises": [
           {
             "exercise_id": "bench_press",
@@ -1572,7 +1602,8 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day D"
       }
     ],
     "training_style": "upper_lower_split",
@@ -1632,24 +1663,26 @@
     "kind": "run",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "15-20 min roligt"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "run_intervals",
             "sets": 1,
             "reps": "4 x 1 min roligt / 1 min gang"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "recommended_levels": [
@@ -1740,34 +1773,37 @@
     "kind": "run",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "20-25 min"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "run_intervals",
             "sets": 1,
             "reps": "6 x 1 min hurtigt / 1 min roligt"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "25-30 min"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "recommended_levels": [
@@ -1857,44 +1893,48 @@
     "kind": "run",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "25-30 min"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "run_intervals",
             "sets": 1,
             "reps": "5 x 3 min kontrolleret hurtigt / 90 sek roligt"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "20-25 min meget roligt"
           }
-        ]
+        ],
+        "label_en": "Day C"
       },
       {
-        "label": "Day D",
+        "label": "Dag D",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "45-55 min roligt"
           }
-        ]
+        ],
+        "label_en": "Day D"
       }
     ],
     "recommended_levels": [
@@ -1990,17 +2030,18 @@
     "kind": "mixed",
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "run_easy",
             "sets": 1,
             "reps": "20-30 min"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2017,7 +2058,8 @@
             "sets": 2,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "recommended_levels": [
@@ -2089,7 +2131,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2111,10 +2153,11 @@
             "sets": 3,
             "reps": "30-40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -2131,7 +2174,8 @@
             "sets": 3,
             "reps": "8/leg"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "training_style": "full_body_base",
@@ -2207,7 +2251,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2229,10 +2273,11 @@
             "sets": 3,
             "reps": "30-40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -2249,10 +2294,11 @@
             "sets": 3,
             "reps": "8/leg"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -2274,7 +2320,8 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "training_style": "full_body_base",
@@ -2355,7 +2402,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2372,10 +2419,11 @@
             "sets": 2,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -2392,7 +2440,8 @@
             "sets": 2,
             "reps": "6/leg"
           }
-        ]
+        ],
+        "label_en": "Day B"
       }
     ],
     "training_style": "minimalist",
@@ -2481,7 +2530,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2503,10 +2552,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "romanian_deadlift",
@@ -2528,10 +2578,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "glute_bridge",
@@ -2553,7 +2604,8 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       }
     ],
     "training_style": "full_body_base",
@@ -2629,7 +2681,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "bench_press",
@@ -2651,10 +2703,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2676,10 +2729,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "bench_press",
@@ -2701,10 +2755,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       },
       {
-        "label": "Day D",
+        "label": "Dag D",
         "exercises": [
           {
             "exercise_id": "step_ups",
@@ -2726,7 +2781,8 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day D"
       }
     ],
     "training_style": "upper_lower_split",
@@ -2802,7 +2858,7 @@
     ],
     "days": [
       {
-        "label": "Day A",
+        "label": "Dag A",
         "exercises": [
           {
             "exercise_id": "bench_press",
@@ -2824,10 +2880,11 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day A"
       },
       {
-        "label": "Day B",
+        "label": "Dag B",
         "exercises": [
           {
             "exercise_id": "squat",
@@ -2849,10 +2906,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day B"
       },
       {
-        "label": "Day C",
+        "label": "Dag C",
         "exercises": [
           {
             "exercise_id": "bench_press",
@@ -2874,10 +2932,11 @@
             "sets": 3,
             "reps": "8/side"
           }
-        ]
+        ],
+        "label_en": "Day C"
       },
       {
-        "label": "Day D",
+        "label": "Dag D",
         "exercises": [
           {
             "exercise_id": "step_ups",
@@ -2899,7 +2958,8 @@
             "sets": 3,
             "reps": "40 sec"
           }
-        ]
+        ],
+        "label_en": "Day D"
       }
     ],
     "training_style": "upper_lower_split",

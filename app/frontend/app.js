@@ -8309,7 +8309,7 @@ async function handleLoadProgramDay(){
   }
 
   statusEl?.classList.remove("warn");
-  setText("programLoadStatus", `${day.label || "Dag"} indlæst med ${STATE.pendingEntries.length} øvelse(r).`);
+  setText("programLoadStatus", `${getProgramDayDisplayLabel(day)} indlæst med ${STATE.pendingEntries.length} øvelse(r).`);
   renderPendingEntries();
 }
 
@@ -9872,7 +9872,7 @@ function buildWeekPlanItems(planItem){
     const meta = getWeekPlanKindMeta(kind);
     return {
       key: day.key,
-      label: day.label,
+      label: getProgramDayDisplayLabel(day),
       kind,
       kindLabel: meta.label,
       note: meta.note,
