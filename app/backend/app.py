@@ -271,6 +271,150 @@ def get_iso_weekday_key(date_str):
     return mapping.get(dt.isoweekday())
 
 
+def choose_week_index_combinations(indices, target_count):
+    values = list(indices or [])
+    try:
+        target = int(target_count or 0)
+    except Exception:
+        target = 0
+
+    out = []
+    n = len(values)
+    if not n or target <= 0 or target > n:
+        return out
+
+    def walk(start_idx, acc):
+        if len(acc) == target:
+            out.append(list(acc))
+            return
+        for idx in range(start_idx, n):
+            acc.append(values[idx])
+            walk(idx + 1, acc)
+            acc.pop()
+
+    walk(0, [])
+    return out
+
+
+def score_training_slot_combo(indices, total_days=7):
+    try:
+        days = max(1, int(total_days or 7))
+    except Exception:
+        days = 7
+
+    sorted_indices = sorted(int(x) for x in (indices or []))
+    if not sorted_indices:
+        return float("-inf")
+    if len(sorted_indices) == 1:
+        return 1000
+
+    gaps = []
+    for idx, current in enumerate(sorted_indices):
+        next_value = sorted_indices[(idx + 1) % len(sorted_indices)]
+        gap = (next_value + days) - current if idx == len(sorted_indices) - 1 else next_value - current
+        gaps.append(gap)
+
+    min_gap = min(gaps)
+    max_gap = max(gaps)
+    adjacent_count = sum(1 for gap in gaps if gap <= 1)
+    tight_count = sum(1 for gap in gaps if gap <= 2)
+    spread_penalty = max_gap - min_gap
+
+    return (min_gap * 100) - (adjacent_count * 1000) - (tight_count * 25) - (spread_penalty * 10)
+
+
+def pick_distributed_week_indices(available_indices, target_count, total_days=7):
+    indices = [
+        int(x)
+        for x in (available_indices or [])
+        if isinstance(x, int) or str(x).strip().isdigit()
+    ]
+
+    try:
+        target = max(0, min(int(target_count or 0), len(indices)))
+    except Exception:
+        target = 0
+
+    if not indices or not target:
+        return []
+    if target >= len(indices):
+        return sorted(indices)
+
+    combos = choose_week_index_combinations(indices, target)
+    if not combos:
+        return []
+
+    best = combos[0]
+    best_score = score_training_slot_combo(best, total_days)
+
+    for combo in combos[1:]:
+        score = score_training_slot_combo(combo, total_days)
+        if score > best_score:
+            best = combo
+            best_score = score
+
+    return sorted(best)
+
+
+def get_week_plan_type_sequence_from_preferences(preferences):
+    prefs = preferences if isinstance(preferences, dict) else {}
+    training_types = prefs.get("training_types", {})
+    if not isinstance(training_types, dict):
+        training_types = {}
+
+    wants_strength = training_types.get("strength_weights") is not False or training_types.get("bodyweight") is not False
+    wants_running = training_types.get("running") is True
+    wants_mobility = training_types.get("mobility") is True
+
+    if wants_strength and wants_running:
+        return ["strength", "running"]
+    if wants_strength:
+        return ["strength"]
+    if wants_running:
+        return ["running"]
+    if wants_mobility:
+        return ["mobility"]
+    return ["recovery"]
+
+
+def infer_week_plan_kind_for_day(preferences, weekday_key, training_days, preferred_sessions):
+    day_order = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    key = str(weekday_key or "").strip().lower()
+    if key not in day_order:
+        return "rest"
+
+    enabled_days = {str(x).strip().lower() for x in (training_days or []) if str(x).strip()}
+    available_indices = [
+        idx
+        for idx, day_key in enumerate(day_order)
+        if day_key in enabled_days
+    ]
+
+    training_slots = set(pick_distributed_week_indices(available_indices, preferred_sessions, len(day_order)))
+    idx = day_order.index(key)
+
+    if idx in training_slots:
+        sequence = get_week_plan_type_sequence_from_preferences(preferences)
+        sorted_slots = sorted(training_slots)
+        seq_idx = sorted_slots.index(idx)
+        return sequence[seq_idx % len(sequence)] if sequence else "recovery"
+
+    prev_was_training = (idx - 1) in training_slots
+    next_is_training = (idx + 1) in training_slots
+    allowed_day = key in enabled_days
+
+    training_types = preferences.get("training_types", {}) if isinstance(preferences, dict) else {}
+    if not isinstance(training_types, dict):
+        training_types = {}
+
+    if prev_was_training and allowed_day:
+        return "mobility" if training_types.get("mobility") is True else "recovery"
+    if next_is_training and allowed_day and training_types.get("mobility") is True:
+        return "mobility"
+
+    return "rest"
+
+
 def get_training_day_context(user_settings, date_str):
     if not isinstance(user_settings, dict):
         user_settings = {}
@@ -299,12 +443,19 @@ def get_training_day_context(user_settings, date_str):
 
     weekday_key = get_iso_weekday_key(date_str)
     is_training_day = bool(weekday_key and weekday_key in training_days)
+    planned_kind = infer_week_plan_kind_for_day(
+        preferences=preferences,
+        weekday_key=weekday_key,
+        training_days=training_days,
+        preferred_sessions=preferred_sessions,
+    )
 
     return {
         "weekday_key": weekday_key,
         "training_days": training_days,
         "preferred_sessions_per_week": preferred_sessions,
         "is_training_day": is_training_day,
+        "planned_kind": planned_kind,
     }
 def get_user_settings_for(user_id):
     return get_storage().get_user_settings_for(user_id)
@@ -4514,6 +4665,8 @@ def build_today_plan_training_decision(
     starter_capacity_profile = get_starter_capacity_profile(user_settings)
 
     autoplan_meta = None
+    planned_kind = str(training_day_ctx.get("planned_kind", "") if isinstance(training_day_ctx, dict) else "").strip().lower()
+    planned_running_day = planned_kind in ("running", "run", "cardio", "løb")
 
     if not has_any_primary_training_type:
         return {
@@ -4619,7 +4772,44 @@ def build_today_plan_training_decision(
             autoplan_meta = None
 
     elif planning_mode == "autoplan":
-        if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+        if planned_running_day and prefs.get("running", True):
+            cardio_plan = build_autoplan_cardio(
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                time_budget_min=time_budget_min,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            )
+            session_type = "løb"
+            template_id = "autoplan_cardio"
+            plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+            plan_variant = "autoplan_cardio"
+            reason = "ugeplanen foreslog løb · cardio-autoplan aktiv"
+            autoplan_meta = {
+                "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
+                "families_selected": [],
+                "selected_endurance_program_id": selected_endurance_program_id,
+                "local_protection_override": bool(cardio_plan.get("local_protection_override")) if isinstance(cardio_plan, dict) else False,
+                "protected_regions": cardio_plan.get("protected_regions", []) if isinstance(cardio_plan, dict) else [],
+            }
+
+            if not plan_entries:
+                if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                    session_type = "styrke"
+                    template_id = strength_ctx.get("template_id")
+                    plan_entries = strength_ctx.get("plan_entries", [])
+                    plan_variant = strength_ctx.get("plan_variant", "default")
+                    reason = "ugeplanen foreslog løb · cardio tom, fallback til styrkeplan"
+                    autoplan_meta = None
+                else:
+                    session_type = "restitution"
+                    template_id = "restitution_easy"
+                    plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
+                    plan_variant = "default"
+                    reason = "ugeplanen foreslog løb · cardio tom og ingen styrkevalg · restitution vælges"
+                    autoplan_meta = None
+
+        elif prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
             autoplan = build_autoplan_strength(
                 user_id=auth_user.get("user_id"),
                 readiness=readiness_score,
@@ -4675,7 +4865,44 @@ def build_today_plan_training_decision(
             reason = "løb og styrke fravalgt · restitution vælges"
             autoplan_meta = None
     else:
-        if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+        if planned_running_day and prefs.get("running", True):
+            cardio_plan = build_autoplan_cardio(
+                user_id=auth_user.get("user_id"),
+                readiness=readiness_score,
+                time_budget_min=time_budget_min,
+                recovery_state=recovery_state,
+                training_day_context=training_day_ctx,
+            )
+            session_type = "løb"
+            template_id = "autoplan_cardio"
+            plan_entries = cardio_plan.get("entries", []) if isinstance(cardio_plan, dict) else []
+            plan_variant = "autoplan_cardio"
+            reason = "ugeplanen foreslog løb · cardio vælges"
+            autoplan_meta = {
+                "template_mode": cardio_plan.get("template_mode") if isinstance(cardio_plan, dict) else None,
+                "families_selected": [],
+                "selected_endurance_program_id": selected_endurance_program_id,
+                "local_protection_override": bool(cardio_plan.get("local_protection_override")) if isinstance(cardio_plan, dict) else False,
+                "protected_regions": cardio_plan.get("protected_regions", []) if isinstance(cardio_plan, dict) else [],
+            }
+
+            if not plan_entries:
+                if prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
+                    session_type = "styrke"
+                    template_id = strength_ctx.get("template_id")
+                    plan_entries = strength_ctx.get("plan_entries", [])
+                    plan_variant = strength_ctx.get("plan_variant", "default")
+                    reason = "ugeplanen foreslog løb · cardio tom, fallback til styrkeplan"
+                    autoplan_meta = None
+                else:
+                    session_type = "restitution"
+                    template_id = "restitution_easy"
+                    plan_entries = build_restitution_plan(time_budget_min, starter_capacity_profile=starter_capacity_profile)
+                    plan_variant = "default"
+                    reason = "ugeplanen foreslog løb · cardio tom og ingen styrkevalg · restitution vælges"
+                    autoplan_meta = None
+
+        elif prefs.get("strength_weights", True) or prefs.get("bodyweight", True):
             session_type = "styrke"
             template_id = strength_ctx.get("template_id")
             plan_entries = strength_ctx.get("plan_entries", [])
@@ -5450,6 +5677,12 @@ def get_today_plan():
             "reason": item.get("reason"),
             "readiness_score": item.get("readiness_score"),
             "fatigue_score": item.get("fatigue_score"),
+            "weekly_status": item.get("weekly_status"),
+            "recovery_state": item.get("recovery_state"),
+            "training_day_context": item.get("training_day_context"),
+            "selected_strength_program_id": item.get("selected_strength_program_id"),
+            "selected_endurance_program_id": item.get("selected_endurance_program_id"),
+            "decision_trace": item.get("decision_trace"),
         }
     )
 
