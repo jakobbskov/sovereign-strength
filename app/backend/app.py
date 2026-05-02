@@ -5258,6 +5258,29 @@ def _session_type_label_en(value):
         return "cardio"
     return x
 
+def is_weekly_goal_complete_from_item(item):
+    obj = item if isinstance(item, dict) else {}
+    weekly_status = obj.get("weekly_status", {})
+    if not isinstance(weekly_status, dict):
+        return False
+    try:
+        completed = int(weekly_status.get("completed_sessions", 0) or 0)
+        target = int(weekly_status.get("weekly_target_sessions", weekly_status.get("target_sessions", 0)) or 0)
+    except Exception:
+        return False
+    return target > 0 and completed >= target
+
+
+def build_weekly_goal_complete_guidance():
+    return {
+        "kind": "weekly_goal_complete",
+        "next_session_type": None,
+        "next_date": None,
+        "source": "weekly_goal_complete",
+        "message": "Ugemålet er nået. Restituer frem til næste planlagte træningsdag.",
+    }
+
+
 def build_next_guidance(today_plan_item, completed_today=False):
     item = today_plan_item if isinstance(today_plan_item, dict) else {}
     if not item:
@@ -5310,6 +5333,9 @@ def build_next_guidance(today_plan_item, completed_today=False):
     next_label = _session_type_label_en(next_session_type)
 
     if completed_today:
+        if is_weekly_goal_complete_from_item(item):
+            return build_weekly_goal_complete_guidance()
+
         if next_date:
             return {
                 "kind": "completed_today",

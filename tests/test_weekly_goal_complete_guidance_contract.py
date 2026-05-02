@@ -42,3 +42,31 @@ def test_after_session_html_uses_weekly_goal_complete_guidance():
     assert "weeklyGoalCompleteText" in html_block
     assert "review.saved_next_label" in html_block
     assert html_block.index("getWeeklyGoalCompleteGuidanceText(planItem)") < html_block.index("getNextPlannedSessionInfo(planItem)")
+
+
+def test_weekly_rhythm_card_uses_goal_complete_guidance_before_next_training():
+    js = APP_JS.read_text(encoding="utf-8")
+
+    render_start = js.index("function renderWeeklyRhythmCard(sessionResults, planItem)")
+    render_block = js[render_start: render_start + 1800]
+
+    assert "weeklyGoalComplete" in render_block
+    assert "summary.completedCount" in render_block
+    assert "summary.weeklyTargetSessions" in render_block
+    assert 'tr("weekplan.weekly_goal_complete_guidance")' in render_block
+    assert render_block.index("weeklyGoalComplete") < render_block.index("summary.nextTraining")
+
+
+def test_backend_completed_today_uses_weekly_goal_complete_guidance():
+    backend = (ROOT / "app" / "backend" / "app.py").read_text(encoding="utf-8")
+
+    assert "def is_weekly_goal_complete_from_item(item):" in backend
+    assert "def build_weekly_goal_complete_guidance():" in backend
+    assert '"kind": "weekly_goal_complete"' in backend
+    assert '"message": "Ugemålet er nået. Restituer frem til næste planlagte træningsdag."' in backend
+
+    completed_start = backend.index("if completed_today:")
+    completed_block = backend[completed_start: completed_start + 500]
+    assert "is_weekly_goal_complete_from_item(item)" in completed_block
+    assert "return build_weekly_goal_complete_guidance()" in completed_block
+    assert completed_block.index("is_weekly_goal_complete_from_item(item)") < completed_block.index("if next_date:")
