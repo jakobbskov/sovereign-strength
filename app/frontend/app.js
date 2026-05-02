@@ -2006,7 +2006,7 @@ function formatSessionType(value){
   if (x === "styrke" || x === "strength") return tr("workout.type.strength");
   if (x === "cardio") return tr("session_type.cardio");
   if (x === "restitution" || x === "recovery" || x === "rest") return tr("session_type.recovery");
-  if (x === "løb" || x === "run") return tr("session_type.run");
+  if (x === "løb" || x === "run" || x === "running") return tr("session_type.run");
   if (x === "mobilitet" || x === "mobility") return tr("session_type.mobility");
   return x || tr("plan.none");
 }
@@ -3871,6 +3871,7 @@ function formatExerciseName(exerciseId){
     restitution_walk: tr("exercise.recovery_walk"),
     mobility: tr("session_type.mobility"),
     cardio_easy: tr("exercise.cardio_easy"),
+    cardio_restitution: tr("exercise.cardio_restitution"),
     cardio_intervals: tr("exercise.cardio_intervals"),
     cardio_session: tr("session_type.cardio"),
     cardio_base: tr("exercise.cardio_base"),
@@ -4210,8 +4211,22 @@ function buildReviewValueSelect(name, options, selectedValue, placeholder){
     `;
 }
 
+function getCardioExerciseMetaFallback(exerciseId){
+  const id = String(exerciseId || "").trim().toLowerCase();
+  if (!id.startsWith("cardio_") && id !== "cardio_session") return null;
+
+  return {
+    id,
+    name: formatExerciseName(id),
+    name_en: formatExerciseName(id),
+    category: "cardio",
+    input_kind: "cardio_time",
+    load_optional: true,
+  };
+}
+
 function getReviewExerciseMeta(exerciseId){
-  return getExerciseMeta(exerciseId) || {};
+  return getExerciseMeta(exerciseId) || getCardioExerciseMetaFallback(exerciseId) || {};
 }
 
 function buildWorkoutRepChoiceButtons(name, choices, selectedValue){
