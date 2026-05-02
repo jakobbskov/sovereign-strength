@@ -929,5 +929,6 @@
   "today_plan.local_adjustment_scope_help": "Adjusts only this exercise today. Program switches and loaded alternatives are handled through program recommendations.",
   "plan.weekplan_adjusted_to_today": "The weekly plan suggested {planned}, but today's plan was adjusted to {actual}.",
   "today_plan.local_protection_adjusted": "Today's plan was adjusted to protect {regions}.",
-  "history.exercise_count_compact": "{count} exercise(s)"
+  "history.exercise_count_compact": "{count} exercise(s)",
+  "weekplan.weekly_goal_complete_guidance": "Weekly goal reached. Recover until your next planned training day."
 }
