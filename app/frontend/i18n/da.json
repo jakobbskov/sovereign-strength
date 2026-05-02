@@ -946,5 +946,6 @@
   "plan.weekplan_adjusted_to_today": "Ugeplanen foreslog {planned}, men dagens plan er justeret til {actual}.",
   "today_plan.local_protection_adjusted": "Dagens plan er justeret for at beskytte {regions}.",
   "history.exercise_count_compact": "{count} øvelse(r)",
-  "weekplan.weekly_goal_complete_guidance": "Ugemålet er nået. Restituer frem til næste planlagte træningsdag."
+  "weekplan.weekly_goal_complete_guidance": "Ugemålet er nået. Restituer frem til næste planlagte træningsdag.",
+  "exercise.cardio_restitution": "Cardio-restitution"
 }
