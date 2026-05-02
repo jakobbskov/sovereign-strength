@@ -5026,6 +5026,10 @@ def normalize_session_type(raw):
     return x or "unknown"
 
 
+def should_preserve_plan_variant(session_type):
+    return normalize_session_type(session_type) in ("strength", "cardio", "restitution")
+
+
 def build_decision_trace(
     readiness_score,
     fatigue_score,
@@ -5657,7 +5661,7 @@ def get_today_plan():
         "local_protection_explanation": local_protection_explanation,
         "days_since_last_strength": days_since_last_strength,
         "decision_trace": decision_trace,
-        "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
+        "plan_variant": plan_variant if should_preserve_plan_variant(session_type) else "default",
         "entries": plan_entries
     }
 
@@ -5953,7 +5957,7 @@ def get_today_plan_debug():
         "training_day_context": training_day_ctx if isinstance(training_day_ctx, dict) else {},
         "reason": reason,
         "days_since_last_strength": fatigue_ctx["days_since_last_strength"],
-        "plan_variant": plan_variant if session_type in ("styrke", "restitution", "cardio") else "default",
+        "plan_variant": plan_variant if should_preserve_plan_variant(session_type) else "default",
         "entries": plan_entries,
     }
 
