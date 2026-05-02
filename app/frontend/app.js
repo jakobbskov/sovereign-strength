@@ -9933,6 +9933,21 @@ function formatIsoDateForUi(dateStr){
   return `${weekdayNames[weekdayIndex]} ${day}. ${monthNames[month - 1]}`;
 }
 
+function isWeeklyGoalComplete(planItem){
+  const weeklyStatus = planItem?.weekly_status && typeof planItem.weekly_status === "object"
+    ? planItem.weekly_status
+    : {};
+  const completed = Number(weeklyStatus.completed_sessions || 0) || 0;
+  const target = Number(weeklyStatus.weekly_target_sessions || weeklyStatus.target_sessions || 0) || 0;
+  return target > 0 && completed >= target;
+}
+
+function getWeeklyGoalCompleteGuidanceText(planItem){
+  return isWeeklyGoalComplete(planItem)
+    ? tr("weekplan.weekly_goal_complete_guidance")
+    : "";
+}
+
 function getNextPlannedSessionInfo(planItem){
   const items = buildWeekPlanItems(planItem);
   if (!Array.isArray(items) || !items.length) return null;
@@ -9981,6 +9996,16 @@ function getNextPlannedSessionInfo(planItem){
 }
 
 function buildNextPlannedSessionHtml(planItem){
+  const weeklyGoalCompleteText = getWeeklyGoalCompleteGuidanceText(planItem);
+  if (weeklyGoalCompleteText){
+    return `
+      <div class="small" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08)">
+        <div style="font-weight:700; margin-bottom:6px">${esc(tr("review.saved_next_label"))}</div>
+        <div style="font-weight:600">${esc(weeklyGoalCompleteText)}</div>
+      </div>
+    `;
+  }
+
   const info = getNextPlannedSessionInfo(planItem);
   if (!info || !info.nextTraining) return "";
 
@@ -10008,6 +10033,9 @@ function buildNextPlannedSessionHtml(planItem){
 }
 
 function getNextPlannedSessionOverviewText(planItem){
+  const weeklyGoalCompleteText = getWeeklyGoalCompleteGuidanceText(planItem);
+  if (weeklyGoalCompleteText) return weeklyGoalCompleteText;
+
   const info = getNextPlannedSessionInfo(planItem);
   if (!info || !info.nextTraining) return "";
 
