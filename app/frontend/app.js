@@ -1597,9 +1597,12 @@ function renderWeeklyRhythmCard(sessionResults, planItem){
   const latestLine = latest
     ? `${String(latest.date || "")} · ${formatSessionType(latest.session_type || "")}`
     : tr("history.weekly_rhythm_none_completed");
-  const nextLine = summary.nextTraining
-    ? `${summary.nextTraining.kindLabel || ""} · ${summary.nextTraining.dateLabel || summary.nextTraining.date || ""}`
-    : tr("common.no_recommendation");
+  const weeklyGoalComplete = Number(summary.completedCount || 0) >= Number(summary.weeklyTargetSessions || 0);
+  const nextLine = weeklyGoalComplete
+    ? tr("weekplan.weekly_goal_complete_guidance")
+    : summary.nextTraining
+      ? `${summary.nextTraining.kindLabel || ""} · ${summary.nextTraining.dateLabel || summary.nextTraining.date || ""}`
+      : tr("common.no_recommendation");
   const rhythmSummaryLine = `${String(summary.completedCount)} / ${String(summary.weeklyTargetSessions)}`;
 
   body.innerHTML = `
