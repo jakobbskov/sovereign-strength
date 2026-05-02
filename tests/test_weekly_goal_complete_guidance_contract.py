@@ -22,15 +22,15 @@ def test_weekly_goal_complete_guidance_i18n_keys_exist():
 def test_frontend_has_weekly_goal_complete_guard_before_next_session_lookup():
     js = APP_JS.read_text(encoding="utf-8")
 
-    assert "function isWeeklyGoalComplete(planItem)" in js
+    assert "function isWeeklyGoalComplete(planItem, sessionResults)" in js
     assert "completed >= target" in js
-    assert "function getWeeklyGoalCompleteGuidanceText(planItem)" in js
+    assert "function getWeeklyGoalCompleteGuidanceText(planItem, sessionResults)" in js
 
     overview_start = js.index("function getNextPlannedSessionOverviewText(planItem)")
     overview_block = js[overview_start: overview_start + 500]
-    assert "getWeeklyGoalCompleteGuidanceText(planItem)" in overview_block
+    assert "getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || [])" in overview_block
     assert "if (weeklyGoalCompleteText) return weeklyGoalCompleteText;" in overview_block
-    assert overview_block.index("getWeeklyGoalCompleteGuidanceText(planItem)") < overview_block.index("getNextPlannedSessionInfo(planItem)")
+    assert overview_block.index("getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || [])") < overview_block.index("getNextPlannedSessionInfo(planItem)")
 
 
 def test_after_session_html_uses_weekly_goal_complete_guidance():
@@ -38,10 +38,10 @@ def test_after_session_html_uses_weekly_goal_complete_guidance():
 
     html_start = js.index("function buildNextPlannedSessionHtml(planItem)")
     html_block = js[html_start: html_start + 900]
-    assert "getWeeklyGoalCompleteGuidanceText(planItem)" in html_block
+    assert "getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || [])" in html_block
     assert "weeklyGoalCompleteText" in html_block
     assert "review.saved_next_label" in html_block
-    assert html_block.index("getWeeklyGoalCompleteGuidanceText(planItem)") < html_block.index("getNextPlannedSessionInfo(planItem)")
+    assert html_block.index("getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || [])") < html_block.index("getNextPlannedSessionInfo(planItem)")
 
 
 def test_weekly_rhythm_card_uses_goal_complete_guidance_before_next_training():
@@ -70,3 +70,19 @@ def test_backend_completed_today_uses_weekly_goal_complete_guidance():
     assert "is_weekly_goal_complete_from_item(item)" in completed_block
     assert "return build_weekly_goal_complete_guidance()" in completed_block
     assert completed_block.index("is_weekly_goal_complete_from_item(item)") < completed_block.index("if next_date:")
+
+
+def test_frontend_weekly_goal_complete_uses_session_results_fallback():
+    js = APP_JS.read_text(encoding="utf-8")
+
+    assert "function countCompletedSessionsThisWeekFromResults(sessionResults, planItem)" in js
+    assert "function getWeeklyTargetSessionsFromSettings()" in js
+    assert "completedFromResults >= targetFromSettings" in js
+
+    overview_start = js.index("function getNextPlannedSessionOverviewText(planItem)")
+    overview_block = js[overview_start: overview_start + 700]
+    assert "getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || [])" in overview_block
+
+    html_start = js.index("function buildNextPlannedSessionHtml(planItem)")
+    html_block = js[html_start: html_start + 900]
+    assert "getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || [])" in html_block

@@ -9936,17 +9936,40 @@ function formatIsoDateForUi(dateStr){
   return `${weekdayNames[weekdayIndex]} ${day}. ${monthNames[month - 1]}`;
 }
 
-function isWeeklyGoalComplete(planItem){
+function getWeeklyTargetSessionsFromSettings(){
+  const settings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+  const preferences = settings.preferences && typeof settings.preferences === "object" ? settings.preferences : {};
+  return Math.max(1, Number(preferences.weekly_target_sessions || 3) || 3);
+}
+
+function countCompletedSessionsThisWeekFromResults(sessionResults, planItem){
+  const items = Array.isArray(sessionResults) ? sessionResults : [];
+  const baseDate = String(planItem?.date || planItem?.recommended_for || "").trim();
+  const todayIso = /^\d{4}-\d{2}-\d{2}$/.test(baseDate) ? baseDate : new Date().toISOString().slice(0, 10);
+  const weekStart = getStartOfIsoWeek(todayIso);
+  if (!weekStart) return 0;
+
+  return items.filter(item => {
+    const itemDate = String(item?.date || "").slice(0, 10);
+    return itemDate && itemDate >= weekStart && itemDate <= todayIso;
+  }).length;
+}
+
+function isWeeklyGoalComplete(planItem, sessionResults){
   const weeklyStatus = planItem?.weekly_status && typeof planItem.weekly_status === "object"
     ? planItem.weekly_status
     : {};
-  const completed = Number(weeklyStatus.completed_sessions || 0) || 0;
-  const target = Number(weeklyStatus.weekly_target_sessions || weeklyStatus.target_sessions || 0) || 0;
-  return target > 0 && completed >= target;
+  const completedFromPlan = Number(weeklyStatus.completed_sessions || 0) || 0;
+  const targetFromPlan = Number(weeklyStatus.weekly_target_sessions || weeklyStatus.target_sessions || 0) || 0;
+  if (targetFromPlan > 0 && completedFromPlan >= targetFromPlan) return true;
+
+  const targetFromSettings = getWeeklyTargetSessionsFromSettings();
+  const completedFromResults = countCompletedSessionsThisWeekFromResults(sessionResults, planItem);
+  return targetFromSettings > 0 && completedFromResults >= targetFromSettings;
 }
 
-function getWeeklyGoalCompleteGuidanceText(planItem){
-  return isWeeklyGoalComplete(planItem)
+function getWeeklyGoalCompleteGuidanceText(planItem, sessionResults){
+  return isWeeklyGoalComplete(planItem, sessionResults)
     ? tr("weekplan.weekly_goal_complete_guidance")
     : "";
 }
@@ -9999,7 +10022,7 @@ function getNextPlannedSessionInfo(planItem){
 }
 
 function buildNextPlannedSessionHtml(planItem){
-  const weeklyGoalCompleteText = getWeeklyGoalCompleteGuidanceText(planItem);
+  const weeklyGoalCompleteText = getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || []);
   if (weeklyGoalCompleteText){
     return `
       <div class="small" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08)">
@@ -10036,7 +10059,7 @@ function buildNextPlannedSessionHtml(planItem){
 }
 
 function getNextPlannedSessionOverviewText(planItem){
-  const weeklyGoalCompleteText = getWeeklyGoalCompleteGuidanceText(planItem);
+  const weeklyGoalCompleteText = getWeeklyGoalCompleteGuidanceText(planItem, STATE.sessionResults || []);
   if (weeklyGoalCompleteText) return weeklyGoalCompleteText;
 
   const info = getNextPlannedSessionInfo(planItem);
