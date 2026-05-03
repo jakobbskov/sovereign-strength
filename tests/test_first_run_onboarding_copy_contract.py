@@ -62,3 +62,17 @@ def test_profile_editor_html_does_not_render_literal_newline_artifact():
     assert "\\n" not in editor_block
     assert '<form id="equipmentSettingsForm"' in editor_block
 
+def test_local_protection_is_hidden_during_first_run_setup():
+    html = (ROOT / "app" / "frontend" / "index.html").read_text(encoding="utf-8")
+    js = APP_JS.read_text(encoding="utf-8")
+
+    assert 'id="localProtectionHoldsSection"' in html
+    assert 'profile.local_protection_holds_title' in html
+
+    local_protection_idx = html.index('id="localProtectionHoldsSection"')
+    equipment_step_idx = html.index('data-first-run-step="equipment"')
+    assert local_protection_idx < equipment_step_idx
+
+    assert 'const localProtectionSection = document.getElementById("localProtectionHoldsSection");' in js
+    assert 'localProtectionSection.style.display = firstRunActive ? "none" : "";' in js
+

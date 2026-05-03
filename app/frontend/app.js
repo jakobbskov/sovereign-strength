@@ -3396,6 +3396,7 @@ function renderFirstRunSetupEditorState(){
   const resetExercisesBtn = document.getElementById("resetExercisesCatalogFromSeedBtn");
   const resetCatalogBtn = document.getElementById("resetCatalogFromSeedBtn");
   const finishText = document.getElementById("firstRunSetupFinishText");
+  const localProtectionSection = document.getElementById("localProtectionHoldsSection");
   const sections = Array.from(document.querySelectorAll(".first-run-setup-section[data-first-run-step]"));
 
   const firstRunActive = isFirstRunSetupFlowActive();
@@ -3420,6 +3421,10 @@ function renderFirstRunSetupEditorState(){
       intro.style.display = "none";
       intro.textContent = "";
     }
+  }
+
+  if (localProtectionSection){
+    localProtectionSection.style.display = firstRunActive ? "none" : "";
   }
 
   if (nav){
