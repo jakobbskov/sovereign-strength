@@ -2747,7 +2747,7 @@ def build_local_protection_explanation(user_id, autoplan_meta, session_type):
     return explanation
 
 
-def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None):
+def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None, selected_endurance_program_id=None):
     user_id = str(user_id or "").strip()
     metrics = compute_cardio_load_metrics(user_id)
 
@@ -2774,6 +2774,7 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
     recent_base_count = int(metrics.get("recent_base_count", 0) or 0)
     load_status = str(metrics.get("load_status", "balanced")).strip().lower()
     protect_regions = get_local_protect_regions(user_id, regions=("knee", "ankle_calf", "low_back"))
+    endurance_program_id = str(selected_endurance_program_id or "").strip()
 
     kind = "base"
     duration = 30
@@ -2854,6 +2855,22 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
             reason.append("gentaget base-cardio for nylig")
             reason.append("variation prioriteret inden for sikre guardrails")
 
+    # Preserve basic running-template identity before local protection applies.
+    # This is deliberately v1.0-small: protect starter/re-entry and hybrid-support
+    # programs from drifting into generic hard running.
+    if endurance_program_id in ("starter_run_2x", "reentry_run_2x") and kind in ("interval", "tempo"):
+        kind = "base"
+        duration = min(max(20, time_val), 30)
+        reason.append("running template identity preserved: starter/re-entry run stays easy")
+    elif endurance_program_id.startswith("hybrid_run_strength_") and kind in ("interval", "tempo"):
+        kind = "base"
+        duration = min(max(20, time_val), 30)
+        reason.append("running template identity preserved: hybrid-support run stays low-dose")
+    elif endurance_program_id.startswith("base_run_") and kind == "interval":
+        kind = "tempo" if readiness_val >= 5 and load_status in ("underloaded", "balanced") else "base"
+        duration = min(max(20, time_val), 35)
+        reason.append("running template identity preserved: base-run program avoids interval drift")
+
     if protect_regions:
         knee_or_calf = any(x in protect_regions for x in ("knee", "ankle_calf"))
         low_back_protect = "low_back" in protect_regions
@@ -2875,16 +2892,18 @@ def choose_cardio_session(user_id, readiness=None, time_budget_min=None, recover
         "reason": reason[:6],
         "metrics": metrics,
         "protected_regions": protect_regions,
+        "selected_endurance_program_id": endurance_program_id or None,
     }
 
 
-def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None):
+def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recovery_state=None, training_day_context=None, selected_endurance_program_id=None):
     picked = choose_cardio_session(
         user_id=user_id,
         readiness=readiness,
         time_budget_min=time_budget_min,
         recovery_state=recovery_state,
         training_day_context=training_day_context,
+        selected_endurance_program_id=selected_endurance_program_id,
     )
 
     kind = str(picked.get("cardio_kind", "base")).strip().lower()
@@ -2940,6 +2959,7 @@ def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recover
         "template_mode": "autoplan_cardio_v0_1",
         "cardio_kind": kind,
         "reason": picked.get("reason", []),
+        "selected_endurance_program_id": picked.get("selected_endurance_program_id"),
         "entries": [entry],
         "local_protection_override": bool(protected_regions),
         "protected_regions": protected_regions,
@@ -2947,13 +2967,14 @@ def build_autoplan_cardio(user_id, readiness=None, time_budget_min=None, recover
 
 
 
-def build_cardio_plan(time_budget_min, user_id=None, readiness=None, recovery_state=None, training_day_context=None):
+def build_cardio_plan(time_budget_min, user_id=None, readiness=None, recovery_state=None, training_day_context=None, selected_endurance_program_id=None):
     cardio_plan = build_autoplan_cardio(
         user_id=user_id,
         readiness=readiness,
         time_budget_min=time_budget_min,
         recovery_state=recovery_state,
         training_day_context=training_day_context,
+        selected_endurance_program_id=selected_endurance_program_id,
     )
     if isinstance(cardio_plan, dict):
         entries = cardio_plan.get("entries", [])
@@ -4742,6 +4763,7 @@ def build_today_plan_training_decision(
                 time_budget_min=time_budget_min,
                 recovery_state=recovery_state,
                 training_day_context=training_day_ctx,
+                selected_endurance_program_id=selected_endurance_program_id,
             )
 
             session_type = "løb"
@@ -4797,6 +4819,7 @@ def build_today_plan_training_decision(
                 time_budget_min=time_budget_min,
                 recovery_state=recovery_state,
                 training_day_context=training_day_ctx,
+                selected_endurance_program_id=selected_endurance_program_id,
             )
             session_type = "løb"
             template_id = "autoplan_cardio"
@@ -4863,6 +4886,7 @@ def build_today_plan_training_decision(
                 time_budget_min=time_budget_min,
                 recovery_state=recovery_state,
                 training_day_context=training_day_ctx,
+                selected_endurance_program_id=selected_endurance_program_id,
             )
             session_type = "løb"
             template_id = "autoplan_cardio"
@@ -4890,6 +4914,7 @@ def build_today_plan_training_decision(
                 time_budget_min=time_budget_min,
                 recovery_state=recovery_state,
                 training_day_context=training_day_ctx,
+                selected_endurance_program_id=selected_endurance_program_id,
             )
             session_type = "løb"
             template_id = "autoplan_cardio"
@@ -4934,6 +4959,7 @@ def build_today_plan_training_decision(
                 time_budget_min=time_budget_min,
                 recovery_state=recovery_state,
                 training_day_context=training_day_ctx,
+                selected_endurance_program_id=selected_endurance_program_id,
             )
             session_type = "løb"
             template_id = "autoplan_cardio"
