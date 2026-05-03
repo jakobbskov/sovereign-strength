@@ -2133,12 +2133,8 @@ function renderForecastHero(planItem, latestCheckin){
       if (isFirstRun){
         btn.textContent = tr("onboarding.first_run.open_setup");
         btn.onclick = () => {
-          showWizardStep("overview");
+          showWizardStep("profile");
           requestAnimationFrame(() => {
-            const profileCard = document.getElementById("profileEquipmentCard");
-            if (profileCard && typeof profileCard.scrollIntoView === "function"){
-              profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
             setEquipmentEditorOpen(true);
           });
         };
@@ -2566,12 +2562,8 @@ function renderFirstRunOnboardingCard({ planItem, latestCheckin, sessionResults 
       ev.preventDefault();
       const mappedStep = nextRecommendedKey === "profile" ? "basic_profile" : nextRecommendedKey;
       setFirstRunSetupCurrentStep(mappedStep);
-      showWizardStep("overview");
+      showWizardStep("profile");
       requestAnimationFrame(() => {
-        const profileCard = document.getElementById("profileEquipmentCard");
-        if (profileCard && typeof profileCard.scrollIntoView === "function"){
-          profileCard.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
         setEquipmentEditorOpen(true);
       });
     };
