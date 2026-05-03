@@ -1020,7 +1020,7 @@ def create_session_result(user_id, payload):
 
     if not clean_results:
         # cardio-sessioner kan være gyldige uden sets
-        if session_type in ("løb", "cardio", "run"):
+        if session_type in ("løb", "cardio", "run", "running"):
             clean_results.append({
                 "exercise_id": "cardio_session",
                 "completed": True,
@@ -1087,7 +1087,7 @@ def create_session_result(user_id, payload):
     if completed:
         if session_type_normalized in ("styrke", "strength"):
             counts_toward_weekly_goal = has_meaningful_results
-        elif session_type_normalized in ("løb", "run", "cardio"):
+        elif session_type_normalized in ("løb", "run", "running", "cardio"):
             dist_ok = False
             dur_ok = False
             try:
@@ -1119,11 +1119,11 @@ def create_session_result(user_id, payload):
         "selected_endurance_program_id": selected_endurance_program_id or None,
         "counts_toward_weekly_goal": counts_toward_weekly_goal,
         "notes": notes,
-        "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run") else "",
-        "avg_rpe": avg_rpe if session_type in ("løb", "cardio", "run") else None,
-        "distance_km": distance_km if session_type in ("løb", "cardio", "run") else None,
-        "duration_total_sec": duration_total_sec if session_type in ("løb", "cardio", "run") else None,
-        "pace_sec_per_km": pace_sec_per_km if session_type in ("løb", "cardio", "run") else None,
+        "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run", "running") else "",
+        "avg_rpe": avg_rpe if session_type in ("løb", "cardio", "run", "running") else None,
+        "distance_km": distance_km if session_type in ("løb", "cardio", "run", "running") else None,
+        "duration_total_sec": duration_total_sec if session_type in ("løb", "cardio", "run", "running") else None,
+        "pace_sec_per_km": pace_sec_per_km if session_type in ("løb", "cardio", "run", "running") else None,
         "results": clean_results,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -1239,7 +1239,7 @@ def build_session_result_item(user_id, payload, existing_item=None):
     if completed:
         if session_type_normalized in ("styrke", "strength"):
             counts_toward_weekly_goal = has_meaningful_results
-        elif session_type_normalized in ("løb", "run", "cardio"):
+        elif session_type_normalized in ("løb", "run", "running", "cardio"):
             dist_ok = False
             dur_ok = False
             try:
@@ -1271,11 +1271,11 @@ def build_session_result_item(user_id, payload, existing_item=None):
         "selected_endurance_program_id": selected_endurance_program_id or None,
         "counts_toward_weekly_goal": counts_toward_weekly_goal,
         "notes": notes,
-        "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run") else "",
-        "avg_rpe": avg_rpe if session_type in ("løb", "cardio", "run") else None,
-        "distance_km": distance_km if session_type in ("løb", "cardio", "run") else None,
-        "duration_total_sec": duration_total_sec if session_type in ("løb", "cardio", "run") else None,
-        "pace_sec_per_km": pace_sec_per_km if session_type in ("løb", "cardio", "run") else None,
+        "cardio_kind": cardio_kind if session_type in ("løb", "cardio", "run", "running") else "",
+        "avg_rpe": avg_rpe if session_type in ("løb", "cardio", "run", "running") else None,
+        "distance_km": distance_km if session_type in ("løb", "cardio", "run", "running") else None,
+        "duration_total_sec": duration_total_sec if session_type in ("løb", "cardio", "run", "running") else None,
+        "pace_sec_per_km": pace_sec_per_km if session_type in ("løb", "cardio", "run", "running") else None,
         "results": clean_results,
         "created_at": existing_item.get("created_at") or datetime.now(timezone.utc).isoformat()
     }
