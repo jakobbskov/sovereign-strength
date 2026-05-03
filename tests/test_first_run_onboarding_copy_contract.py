@@ -52,3 +52,13 @@ def test_first_run_setup_ctas_open_profile_setup_not_overview_scroll_detour():
     assert 'showWizardStep("profile");' in onboarding_block
     assert 'showWizardStep("overview");' not in onboarding_block
     assert "scrollIntoView" not in onboarding_block
+
+def test_profile_editor_html_does_not_render_literal_newline_artifact():
+    html = (ROOT / "app" / "frontend" / "index.html").read_text(encoding="utf-8")
+
+    editor_start = html.index('id="profileEquipmentEditorSection"')
+    editor_block = html[editor_start:editor_start + 300]
+
+    assert "\\n" not in editor_block
+    assert '<form id="equipmentSettingsForm"' in editor_block
+
