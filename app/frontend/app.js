@@ -191,7 +191,7 @@ function buildSessionResultSummaryFromStoredItem(item){
   const progressFlags = Array.isArray(item.progress_flags) ? item.progress_flags : [];
   const fatigue = String(item.fatigue || "").trim();
 
-  if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run"){
+  if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run" || sessionTypeKey === "running"){
     const distanceKm = Number(item.distance_km || 0);
     const durationTotalSec = Number(item.duration_total_sec || 0);
     const paceSecPerKm = distanceKm > 0 && durationTotalSec > 0
@@ -4886,7 +4886,7 @@ function renderSessionResultSummary(summary, fallbackResults = null){
     : [];
   const progressFlags = Array.isArray(summary.progress_flags) ? summary.progress_flags : [];
 
-  if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run"){
+  if (sessionTypeKey === "løb" || sessionTypeKey === "cardio" || sessionTypeKey === "run" || sessionTypeKey === "running"){
     const cardioKind = String(summary.cardio_kind || "").trim();
     const distanceKm = Number(summary.distance_km || 0);
     const durationTotalSec = Number(summary.duration_total_sec || 0);
