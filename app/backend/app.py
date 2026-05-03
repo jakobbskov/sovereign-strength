@@ -1169,6 +1169,8 @@ def build_session_result_item(user_id, payload, existing_item=None):
     avg_rpe = payload.get("avg_rpe")
     distance_km = payload.get("distance_km")
     duration_total_sec = payload.get("duration_total_sec")
+    duration_min = payload.get("duration_min", None)
+    duration_sec = payload.get("duration_sec", None)
     pace_sec_per_km = payload.get("pace_sec_per_km")
     results = payload.get("results", [])
 
@@ -1200,12 +1202,28 @@ def build_session_result_item(user_id, payload, existing_item=None):
             return None, {"ok": False, "error": "ugyldig distance_km", "field": "distance_km"}, 400
 
     if duration_total_sec in (None, ""):
-        duration_total_sec = None
+        duration_min = _parse_optional_int(duration_min, 0)
+        duration_sec = _parse_optional_int(duration_sec, 0)
+        if duration_min < 0:
+            duration_min = 0
+        if duration_sec < 0:
+            duration_sec = 0
+        if duration_sec > 59:
+            duration_sec = 59
+        duration_total_sec = (duration_min * 60) + duration_sec
+        if duration_total_sec <= 0:
+            duration_total_sec = None
     else:
         try:
             duration_total_sec = int(float(duration_total_sec))
         except Exception:
             return None, {"ok": False, "error": "ugyldig duration_total_sec", "field": "duration_total_sec"}, 400
+
+    if pace_sec_per_km in (None, "") and distance_km and duration_total_sec:
+        try:
+            pace_sec_per_km = round(float(duration_total_sec) / float(distance_km), 2)
+        except Exception:
+            pace_sec_per_km = None
 
     if pace_sec_per_km in (None, ""):
         pace_sec_per_km = None
