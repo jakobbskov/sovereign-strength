@@ -931,5 +931,6 @@
   "today_plan.local_protection_adjusted": "Today's plan was adjusted to protect {regions}.",
   "history.exercise_count_compact": "{count} exercise(s)",
   "weekplan.weekly_goal_complete_guidance": "Weekly goal reached. Recover until your next planned training day.",
-  "exercise.cardio_restitution": "Cardio recovery"
+  "exercise.cardio_restitution": "Cardio recovery",
+  "after_training.cardio_note_label": "Cardio session note"
 }
