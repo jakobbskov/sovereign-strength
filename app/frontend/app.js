@@ -1007,7 +1007,7 @@ function renderWorkouts(items){
 
   root.innerHTML = sorted.map(item => {
     const rawEntries = Array.isArray(item.entries) ? item.entries : [];
-    const isCardio = String(item?.session_type || "").trim().toLowerCase() === "løb";
+    const isCardio = ["løb", "cardio", "run", "running"].includes(String(item?.session_type || "").trim().toLowerCase());
     const cardioMeta = buildCardioHistoryMeta(item);
     const compactSummary = buildLatestWorkoutSummary(item);
     const totalSets = rawEntries.reduce((sum, entry) => sum + (Number(entry?.sets || 0) || 0), 0);
@@ -1099,7 +1099,7 @@ function buildLatestWorkoutSummary(item){
   const summary = item.summary && typeof item.summary === "object" ? item.summary : {};
   const sessionType = String(item.session_type || summary.session_type || "").trim().toLowerCase();
 
-  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
+  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run" || sessionType === "running"){
     return buildCardioHistoryMeta({
       ...item,
       cardio_kind: item.cardio_kind || summary.cardio_kind,
@@ -1452,7 +1452,7 @@ function renderSessionHistory(items){
     const notes = String(item && item.notes || "").trim();
     const typeLabel = formatSessionType(item && item.session_type || "");
     const dateLabel = String(item && item.date || "");
-    const isCardio = String(item?.session_type || "").trim().toLowerCase() === "løb";
+    const isCardio = ["løb", "cardio", "run", "running"].includes(String(item?.session_type || "").trim().toLowerCase());
     const cardioMeta = buildCardioHistoryMeta(item);
 
     return `
@@ -2024,7 +2024,7 @@ function buildForecastLeadText(planItem){
   const firstExercise = String(firstEntry?.exercise_id || "").trim().toLowerCase();
   const targetReps = String(firstEntry?.target_reps || "").trim();
 
-  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
+  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run" || sessionType === "running"){
     if (firstExercise.includes("restitution")){
       return targetReps
         ? tr("forecast.recovery_with_target", { value: targetReps })
@@ -2084,7 +2084,7 @@ function getForecastTypeLabel(planItem){
   const firstEntry = entries.length ? entries[0] : null;
   const firstExercise = String(firstEntry?.exercise_id || "").trim().toLowerCase();
 
-  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run"){
+  if (sessionType === "løb" || sessionType === "cardio" || sessionType === "run" || sessionType === "running"){
     if (firstExercise.includes("restitution")) return tr("session_type.recovery");
     if (firstExercise.includes("interval")) return tr("forecast.type.intervals");
     if (firstExercise.includes("tempo")) return tr("forecast.type.tempo");
