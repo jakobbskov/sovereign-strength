@@ -88,8 +88,14 @@ def parse_top_rep(rep_range):
 
 
 def parse_seconds_value(value):
-    txt = str(value or "").strip().lower().replace("sek", "").replace("sec", "").strip()
-    if not txt:
+    txt = str(value or "").strip().lower()
+    has_time_suffix = False
+    for suffix in ("seconds", "second", "sekunder", "sekund", "secs", "sec", "sek", "s"):
+        if txt.endswith(suffix):
+            txt = txt[: -len(suffix)].strip()
+            has_time_suffix = True
+            break
+    if not has_time_suffix or not txt:
         return None
     try:
         return int(float(txt.replace(",", ".")))
@@ -209,16 +215,21 @@ def analyze_session_result_for_progression(result):
 
     if isinstance(raw_sets, list) and raw_sets:
         clean_sets = []
+        total_time_under_tension_sec = 0
         for x in raw_sets:
             if not isinstance(x, dict):
                 continue
             reps_raw = str(x.get("reps", "")).strip()
             load_raw = x.get("load", "")
-            reps_num = None
-            try:
-                reps_num = int(reps_raw) if reps_raw != "" else None
-            except Exception:
-                reps_num = None
+            seconds_num = parse_seconds_value(reps_raw)
+            reps_num = seconds_num
+            if reps_num is None:
+                try:
+                    reps_num = int(reps_raw) if reps_raw != "" else None
+                except Exception:
+                    reps_num = None
+            if seconds_num is not None:
+                total_time_under_tension_sec += seconds_num
             load_num = parse_number_from_load(load_raw)
             clean_sets.append({
                 "reps": reps_num,
@@ -248,6 +259,7 @@ def analyze_session_result_for_progression(result):
             "min_reps": min_reps,
             "hit_failure": hit_failure,
             "load_drop_detected": load_drop_detected,
+            "total_time_under_tension_sec": total_time_under_tension_sec,
         }
 
     fallback_load = parse_number_from_load(result.get("load", ""))
