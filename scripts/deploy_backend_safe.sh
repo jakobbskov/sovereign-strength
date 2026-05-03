@@ -1,34 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SRC_FILE="app/backend/app.py"
-TARGET_FILE="/opt/sovereign-strength-api/app/backend/app.py"
+SRC_DIR="app/backend"
+TARGET_DIR="/opt/sovereign-strength-api/app/backend"
 SERVICE_NAME="sovereign-strength-api.service"
 BACKUP_TS="$(date +%Y%m%d-%H%M%S)"
-BACKUP_FILE="${TARGET_FILE}.bak.${BACKUP_TS}"
+BACKEND_MODULES=(
+  "app.py"
+  "progression_engine.py"
+  "storage.py"
+  "db.py"
+)
 
 echo "Safe backend deploy"
-echo "Source: ${SRC_FILE}"
-echo "Target: ${TARGET_FILE}"
+echo "Source dir: ${SRC_DIR}"
+echo "Target dir: ${TARGET_DIR}"
 echo "Service: ${SERVICE_NAME}"
 echo
 
-if [[ ! -f "${SRC_FILE}" ]]; then
-  echo "ERROR: Source backend file not found: ${SRC_FILE}" >&2
-  exit 1
-fi
+echo "Verifying source and target files..."
+for module in "${BACKEND_MODULES[@]}"; do
+  if [[ ! -f "${SRC_DIR}/${module}" ]]; then
+    echo "ERROR: Source backend file not found: ${SRC_DIR}/${module}" >&2
+    exit 1
+  fi
 
-if [[ ! -f "${TARGET_FILE}" ]]; then
-  echo "ERROR: Target backend file not found: ${TARGET_FILE}" >&2
-  exit 1
-fi
+  if [[ ! -f "${TARGET_DIR}/${module}" ]]; then
+    echo "ERROR: Target backend file not found: ${TARGET_DIR}/${module}" >&2
+    exit 1
+  fi
+done
 
+echo
 echo "Validating Python syntax..."
-python3 -m py_compile "${SRC_FILE}"
+for module in "${BACKEND_MODULES[@]}"; do
+  python3 -m py_compile "${SRC_DIR}/${module}"
+done
 
 echo
 echo "Verifying active systemd backend path..."
-if ! systemctl cat "${SERVICE_NAME}" --no-pager -l | grep -q "WorkingDirectory=/opt/sovereign-strength-api/app/backend"; then
+if ! systemctl cat "${SERVICE_NAME}" --no-pager -l | grep -q "WorkingDirectory=${TARGET_DIR}"; then
   echo "ERROR: Service WorkingDirectory does not match expected active backend path." >&2
   systemctl cat "${SERVICE_NAME}" --no-pager -l >&2
   exit 1
@@ -41,15 +52,51 @@ if ! systemctl cat "${SERVICE_NAME}" --no-pager -l | grep -q "app:app"; then
 fi
 
 echo
-echo "Creating backup..."
-echo "-> ${BACKUP_FILE}"
-sudo cp "${TARGET_FILE}" "${BACKUP_FILE}"
+echo "Creating backups..."
+for module in "${BACKEND_MODULES[@]}"; do
+  backup_file="${TARGET_DIR}/${module}.bak.${BACKUP_TS}"
+  echo "-> ${backup_file}"
+  sudo cp "${TARGET_DIR}/${module}" "${backup_file}"
+done
 
 echo
-echo "Deploying backend..."
-sudo cp "${SRC_FILE}" "${TARGET_FILE}"
-sudo chown jakob:jakob "${TARGET_FILE}"
-sudo chmod 644 "${TARGET_FILE}"
+echo "Deploying backend modules..."
+for module in "${BACKEND_MODULES[@]}"; do
+  sudo cp "${SRC_DIR}/${module}" "${TARGET_DIR}/${module}"
+  sudo chown jakob:jakob "${TARGET_DIR}/${module}"
+  sudo chmod 644 "${TARGET_DIR}/${module}"
+done
+
+echo
+echo "Post-copy verification..."
+if ! grep -q "def get_today_plan" "${TARGET_DIR}/app.py"; then
+  echo "ERROR: Deployed app.py does not look like the expected Flask app." >&2
+  exit 1
+fi
+
+for module in "${BACKEND_MODULES[@]}"; do
+  python3 -m py_compile "${TARGET_DIR}/${module}"
+done
+
+echo
+echo "Verifying runtime import map..."
+(
+  cd "${TARGET_DIR}"
+  python3 - <<'PY'
+import app
+import progression_engine
+import storage
+import db
+from pathlib import Path
+
+expected_root = Path("/opt/sovereign-strength-api/app/backend").resolve()
+for mod in (app, progression_engine, storage, db):
+    path = Path(mod.__file__).resolve()
+    print(f"{mod.__name__}: {path}")
+    if expected_root not in path.parents and path.parent != expected_root:
+        raise SystemExit(f"ERROR: {mod.__name__} imported from unexpected path: {path}")
+PY
+)
 
 echo
 echo "Restarting service..."
@@ -60,14 +107,5 @@ echo "Checking service status..."
 sudo systemctl status "${SERVICE_NAME}" --no-pager -l
 
 echo
-echo "Post-deploy verification..."
-if ! grep -q "def get_today_plan" "${TARGET_FILE}"; then
-  echo "ERROR: Deployed backend file does not look like the expected Flask app." >&2
-  exit 1
-fi
-
-python3 -m py_compile "${TARGET_FILE}"
-
-echo
 echo "Backend deploy completed safely."
-echo "Backup: ${BACKUP_FILE}"
+echo "Backup timestamp: ${BACKUP_TS}"
