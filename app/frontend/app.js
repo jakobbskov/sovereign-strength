@@ -4581,7 +4581,7 @@ function toggleCardioReviewFields(item){
   if (!wrap) return;
 
   const sessionType = String(item?.session_type || "").trim().toLowerCase();
-  const isCardio = sessionType === "løb" || sessionType === "cardio" || sessionType === "run";
+  const isCardio = sessionType === "løb" || sessionType === "cardio" || sessionType === "run" || sessionType === "running";
 
   wrap.style.display = isCardio ? "block" : "none";
 
@@ -8688,7 +8688,7 @@ function getSessionResultProgramIdForPlan(plan){
   if (sessionType === "styrke" || sessionType === "strength"){
     return String(plan?.selected_strength_program_id || "").trim();
   }
-  if (sessionType === "løb" || sessionType === "run" || sessionType === "cardio"){
+  if (sessionType === "løb" || sessionType === "run" || sessionType === "running" || sessionType === "cardio"){
     return String(plan?.selected_endurance_program_id || "").trim();
   }
   return "";
