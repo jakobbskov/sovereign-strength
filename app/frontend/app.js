@@ -4733,7 +4733,7 @@ function renderSessionReview(item){
             ${tr("common.type_label")}: ${tr("session_type.run")}
           </div>
           <label>
-            ${esc(tr("after_training.session_note_label"))}
+            ${esc(tr("after_training.cardio_note_label"))}
             <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("after_training.short_note_placeholder_cardio"))}">
           </label>
         </li>
@@ -7150,7 +7150,7 @@ function renderActiveWorkoutCard(item){
   if (isCardioEntry){
     loggingHtml = `
       <label style="display:block; margin-top:12px">
-        ${esc(tr("after_training.session_note_label"))}
+        ${esc(tr("after_training.cardio_note_label"))}
         <input type="text" name="review_notes_${idx}" value="${esc(String(entry?._existing_result?.notes || ""))}" placeholder="${esc(tr("after_training.short_note_placeholder_cardio"))}">
       </label>
     `;
@@ -8715,6 +8715,13 @@ async function handleSessionResultSubmit(ev){
   const cardioDurationSec = form.cardio_duration_sec?.value?.trim() || "";
   const planTemplateId = String(plan.template_id || "").trim();
 
+  const reviewEntryNotes = Array.isArray(plan.entries)
+    ? plan.entries
+        .map((entry, idx) => form[`review_notes_${idx}`]?.value?.trim() || "")
+        .filter(Boolean)
+    : [];
+  const sessionNotes = form.session_notes.value.trim() || (reviewEntryNotes.length === 1 ? reviewEntryNotes[0] : "");
+
   const payload = {
     date: plan.date || new Date().toISOString().slice(0,10),
     program_id: getSessionResultProgramIdForPlan(plan),
@@ -8733,7 +8740,7 @@ session_type:
     source: getSessionResultSourceForPlan(plan),
     manual_override_workout_id: String(plan.manual_override_workout_id || "").trim(),
     completed: String(form.session_completed.value) === "true",
-    notes: form.session_notes.value.trim(),
+    notes: sessionNotes,
     cardio_kind: form.cardio_kind?.value?.trim() || "",
     avg_rpe: form.avg_rpe?.value?.trim() || "",
     distance_km: cardioDistanceKm === "0" ? "" : cardioDistanceKm,
