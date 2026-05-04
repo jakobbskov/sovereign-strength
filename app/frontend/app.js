@@ -4147,13 +4147,30 @@ function formatTarget(value){
     "30 min roligt løb i snakketempo": tr("cardio.target.base_30_talk"),
     "30 min easy run at conversational pace": tr("cardio.target.base_30_talk"),
     "20 min rolig gang eller meget let jog": tr("cardio.target.easy_walk_or_jog_20"),
-    "20 min easy walk or very light jog": tr("cardio.target.easy_walk_or_jog_20")
+    "20 min easy walk or very light jog": tr("cardio.target.easy_walk_or_jog_20"),
+    "10 min warm-up + 2 x 8 min controlled hard tempo + 2 min easy between + 5 min cool-down": tr("cardio.target.tempo_2x8"),
+    "10 min opvarmning + 2 x 8 min kontrolleret hårdt tempo + 2 min roligt imellem + 5 min nedkøling": tr("cardio.target.tempo_2x8")
   };
   if (mappedTargets[v]) return mappedTargets[v];
 
   const easyRunMatch = v.match(/^(\d+)\s*min\s*roligt løb i snakketempo$/i);
   if (easyRunMatch){
     return tr("cardio.target.base_talk_variable", { minutes: easyRunMatch[1] });
+  }
+
+  const easyRunEnglishMatch = v.match(/^(\d+)\s*min\s*easy run at conversational pace$/i);
+  if (easyRunEnglishMatch){
+    return tr("cardio.target.base_talk_variable", { minutes: easyRunEnglishMatch[1] });
+  }
+
+  const intervalRunEnglishMatch = v.match(/^10\s*min\s*warm-up\s*\+\s*(\d+)x\(1\s*min\s*fast\s*\/\s*1\s*min\s*easy\)\s*\+\s*5\s*min\s*cool-down$/i);
+  if (intervalRunEnglishMatch){
+    return tr("cardio.target.intervals_1min_blocks", { blocks: intervalRunEnglishMatch[1] });
+  }
+
+  const intervalRunDanishMatch = v.match(/^10\s*min\s*opvarmning\s*\+\s*(\d+)x\(1\s*min\s*hurtigt\s*\/\s*1\s*min\s*roligt\)\s*\+\s*5\s*min\s*nedkøling$/i);
+  if (intervalRunDanishMatch){
+    return tr("cardio.target.intervals_1min_blocks", { blocks: intervalRunDanishMatch[1] });
   }
 
   const easyWalkMatch = v.match(/^(\d+)\s*min\s*rolig gang eller meget let jog$/i);

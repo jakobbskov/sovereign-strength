@@ -340,6 +340,8 @@
   "review.rpe_help_long": "RPE = hvor hårdt passet føltes fra 1 til 10. 1-3 meget let, 4-5 roligt, 6-7 hårdt, 8-9 meget hårdt, 10 maks.",
   "cardio.target.base_30_talk": "30 min roligt løb i snakketempo",
   "cardio.target.easy_walk_or_jog_20": "20 min rolig gang eller meget let jog",
+  "cardio.target.tempo_2x8": "10 min opvarmning + 2 x 8 min kontrolleret hårdt tempo + 2 min roligt imellem + 5 min nedkøling",
+  "cardio.target.intervals_1min_blocks": "10 min opvarmning + {blocks} x (1 min hurtigt / 1 min roligt) + 5 min nedkøling",
   "recovery.explanation.good_sleep": "god søvn",
   "recovery.explanation.good_energy": "god energi",
   "recovery.explanation.low_soreness": "lav ømhed",

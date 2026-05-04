@@ -327,6 +327,8 @@
   "review.rpe_help_long": "RPE = how hard the session felt from 1 to 10. 1-3 very easy, 4-5 easy, 6-7 hard, 8-9 very hard, 10 max.",
   "cardio.target.base_30_talk": "30 min easy run at conversational pace",
   "cardio.target.easy_walk_or_jog_20": "20 min easy walk or very light jog",
+  "cardio.target.tempo_2x8": "10 min warm-up + 2 x 8 min controlled hard tempo + 2 min easy between + 5 min cool-down",
+  "cardio.target.intervals_1min_blocks": "10 min warm-up + {blocks} x (1 min fast / 1 min easy) + 5 min cool-down",
   "recovery.explanation.good_sleep": "good sleep",
   "recovery.explanation.good_energy": "good energy",
   "recovery.explanation.low_soreness": "low soreness",
