@@ -7427,6 +7427,9 @@ function buildTodayPlanEntryCardsHtml(item, isPlannedRestDay){
   return item.entries.map((entry, index) => {
     const extras = formatPlanProgressionExtra(entry);
     const tone = getPlanEntryTone(entry);
+    const localAdjustmentHelp = entry.equipment_constraint
+      ? tr("today_plan.equipment_load_step_help")
+      : tr("today_plan.local_adjustment_scope_help");
     return `
       <li style="padding:12px; border-radius:14px; ${tone.style}">
         <div class="row">
@@ -7439,14 +7442,13 @@ function buildTodayPlanEntryCardsHtml(item, isPlannedRestDay){
           ${entry.target_reps ? `${!(String(entry.exercise_id || "").trim().toLowerCase().startsWith("cardio_") || String(entry.exercise_id || "").trim().toLowerCase() === "cardio_session") && entry.sets ? " · " : ""}${tr("exercise.target_label", { value: formatTarget(entry.target_reps) })}` : ""}
         </div>
         ${extras.map(x => `<div class="small" style="margin-top:6px">${esc(x)}</div>`).join("")}
-        <div class="small" style="margin-top:8px; opacity:0.78">${esc(tr("today_plan.local_adjustment_scope_help"))}</div>
+        <div class="small" style="margin-top:8px; opacity:0.78">${esc(localAdjustmentHelp)}</div>
         <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
           <button type="button" class="secondary" data-exercise-viewer="${esc(entry.exercise_id || "")}" style="width:auto;padding:8px 12px">${esc(tr("button.view_exercise"))}</button>
           <button type="button" class="secondary" data-plan-entry-easier="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_easier"))}</button>
           <button type="button" class="secondary" data-plan-entry-harder="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.make_harder"))}</button>
           <button type="button" class="secondary" data-plan-entry-remove="${esc(String(index))}" style="width:auto;padding:8px 12px">${esc(tr("button.remove_exercise"))}</button>
         </div>
-        ${entry.equipment_constraint ? `<div class="small" style="margin-top:6px">${esc(tr("today_plan.equipment_constraint_note"))}</div>` : ""}
       </li>
     `;
   }).join("");
@@ -7579,7 +7581,11 @@ function deriveTodayPlanDisplayState(item){
   } else if (todayWeekKind && todayWeekKind !== actualKind){
     const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
     const actualLabel = formatSessionType(item?.session_type || "");
-    trainingAllowedSummary = tr("plan.weekplan_adjusted_to_today", { planned: plannedLabel, actual: actualLabel });
+    if (plannedLabel && actualLabel && plannedLabel !== actualLabel){
+      trainingAllowedSummary = tr("plan.weekplan_adjusted_to_today", { planned: plannedLabel, actual: actualLabel });
+    } else {
+      trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel || actualLabel });
+    }
   } else if (todayWeekKind){
     const plannedLabel = formatSessionType(todayWeekPlanItem?.kind || todayWeekPlanItem?.kindLabel || "");
     trainingAllowedSummary = tr("plan.weekplan_planned_label", { value: plannedLabel });
