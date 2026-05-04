@@ -1,0 +1,113 @@
+name: Beta-feedback
+description: Giv feedback på SovereignStrength v1.0 beta.
+title: "[Beta] "
+labels:
+  - v1.0-beta
+  - beta-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tak fordi du tester SovereignStrength.
+
+        Denne beta tester det grundlæggende flow:
+
+        forecast → check-in → plan → træning → review → historik → næste plan
+
+        Skriv gerne konkret:
+        - hvad du prøvede at gøre
+        - hvad du forventede
+        - hvad der faktisk skete
+        - om teksten/anbefalingen gav mening
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Hvor alvorligt er problemet?
+      description: Vælg den kategori der passer bedst.
+      options:
+        - Blokerer brug
+        - Forvirrende, men jeg kunne fortsætte
+        - Forkert data eller historik
+        - Dårlig eller uklar tekst
+        - Forslag eller idé
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flow_area
+    attributes:
+      label: Hvor i appen skete det?
+      description: Vælg det område der passer bedst.
+      options:
+        - Login
+        - Første opsætning / profil
+        - Forecast
+        - Check-in
+        - Dagens plan
+        - Træning
+        - Review
+        - Historik
+        - Programanbefaling
+        - Andet
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_tried
+    attributes:
+      label: Hvad prøvede du at gøre?
+      description: Beskriv handlingen så konkret som muligt.
+      placeholder: "Eksempel: Jeg havde lavet check-in og ville starte dagens styrkepas."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Hvad forventede du?
+      placeholder: "Eksempel: Jeg forventede at få vist et tydeligt styrkepas for i dag."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Hvad skete der faktisk?
+      placeholder: "Eksempel: Appen viste en tekst jeg ikke forstod, eller planen virkede forkert."
+    validations:
+      required: true
+
+  - type: textarea
+    id: understandability
+    attributes:
+      label: Var teksten eller anbefalingen forståelig?
+      description: Skriv hvis noget lød teknisk, uklart, modstridende eller bare mærkeligt.
+      placeholder: "Eksempel: Jeg forstod ikke hvorfor jeg skulle holde vægten stabil."
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot eller skærmoptagelse
+      description: Træk et screenshot ind her, hvis det hjælper.
+      placeholder: "Tilføj screenshot her, hvis relevant."
+    validations:
+      required: false
+
+  - type: input
+    id: device
+    attributes:
+      label: Enhed og browser
+      placeholder: "Eksempel: Android Chrome, iPhone Safari, desktop Firefox"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Andet?
+      description: Tilføj ekstra kontekst, noter eller forslag.
+    validations:
+      required: false
