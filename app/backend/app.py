@@ -1579,6 +1579,17 @@ def get_local_substitute_candidates(exercise_id, local_state=None):
 
 
 
+def is_plan_equipment_available(equipment_type, available_equipment):
+    equipment_key = str(equipment_type or "").strip().lower()
+    if not equipment_key:
+        return True
+    if equipment_key == "bodyweight":
+        return True
+    if not isinstance(available_equipment, dict):
+        return False
+    return bool(available_equipment.get(equipment_key, False))
+
+
 def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment, local_state=None, exercises=None):
     original_meta = exercise_map.get(original_exercise_id, {}) or {}
     original_pattern = str(original_meta.get("movement_pattern", "")).strip()
@@ -1596,7 +1607,7 @@ def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, av
             continue
 
         equipment_type = str(candidate_meta.get("equipment_type", "")).strip()
-        allowed = (not equipment_type) or bool(available_equipment.get(equipment_type, True))
+        allowed = is_plan_equipment_available(equipment_type, available_equipment)
         if not allowed:
             continue
 
@@ -3646,7 +3657,7 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
             filtered_exercises.append(ex)
             continue
 
-        allowed = bool(available_equipment.get(equipment_type, True)) if equipment_type else True
+        allowed = is_plan_equipment_available(equipment_type, available_equipment)
         if allowed and not local_blocked:
             filtered_exercises.append(ex)
             continue
@@ -7754,7 +7765,7 @@ def is_candidate_allowed_for_local_adjustment(candidate_id, exercise_map, availa
         return False, [], []
 
     equipment_type = str(candidate_meta.get("equipment_type", "")).strip()
-    allowed = (not equipment_type) or bool(available_equipment.get(equipment_type, True))
+    allowed = is_plan_equipment_available(equipment_type, available_equipment)
     if not allowed:
         return False, [], []
 
