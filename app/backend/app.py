@@ -1590,6 +1590,19 @@ def is_plan_equipment_available(equipment_type, available_equipment):
     return bool(available_equipment.get(equipment_key, False))
 
 
+def should_hide_visible_load_progression(exercise_meta):
+    meta = exercise_meta if isinstance(exercise_meta, dict) else {}
+    equipment_type = str(meta.get("equipment_type", "")).strip().lower()
+    input_kind = str(meta.get("input_kind", "")).strip().lower()
+    if equipment_type == "bodyweight":
+        return True
+    if input_kind in ("bodyweight_reps", "time"):
+        return True
+    if bool(meta.get("supports_bodyweight", False)) and bool(meta.get("load_optional", False)):
+        return True
+    return False
+
+
 def choose_best_substitute(original_exercise_id, candidate_ids, exercise_map, available_equipment, local_state=None, exercises=None):
     original_meta = exercise_map.get(original_exercise_id, {}) or {}
     original_pattern = str(original_meta.get("movement_pattern", "")).strip()
@@ -3819,18 +3832,22 @@ def build_strength_plan(programs, exercises, latest_strength, time_budget_min, f
                 else f"history anchored to {progression_history_exercise_id}"
             )
 
+        hide_visible_load_progression = should_hide_visible_load_progression(meta)
         result_entry = {
             "exercise_id": exercise_id,
             "sets": sets,
             "target_reps": reps,
-            "target_load": target_load,
+            "target_load": None if hide_visible_load_progression else target_load,
             "progression_decision": progression.get("progression_decision", "hold"),
             "progression_reason": progression_reason,
-            "equipment_constraint": progression.get("equipment_constraint", False),
-            "recommended_next_load": progression.get("recommended_next_load"),
-            "actual_possible_next_load": progression.get("actual_possible_next_load"),
+            "equipment_constraint": False if hide_visible_load_progression else progression.get("equipment_constraint", False),
+            "recommended_next_load": None if hide_visible_load_progression else progression.get("recommended_next_load"),
+            "actual_possible_next_load": None if hide_visible_load_progression else progression.get("actual_possible_next_load"),
             "next_target_reps": progression.get("next_target_reps"),
-            "secondary_constraints": progression.get("secondary_constraints", []),
+            "secondary_constraints": [
+                item for item in (progression.get("secondary_constraints", []) or [])
+                if not hide_visible_load_progression or item != "equipment_constraint"
+            ],
             "substituted_from": substituted_from,
             "progression_history_exercise_id": progression_history_exercise_id,
             "local_regression_reason": ex.get("_local_regression_reason"),
