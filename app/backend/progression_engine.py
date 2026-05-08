@@ -6,15 +6,6 @@ def get_effective_load_increment(exercise, user_settings):
     if not isinstance(user_settings, dict):
         user_settings = {}
 
-    load_increment = exercise.get("load_increment", None)
-    try:
-        if load_increment is not None:
-            load_increment = float(load_increment)
-            if load_increment >= 0:
-                return load_increment
-    except Exception:
-        pass
-
     equipment_type = str(exercise.get("equipment_type", "")).strip()
     increments = user_settings.get("equipment_increments", {})
     if equipment_type and isinstance(increments, dict):
@@ -26,6 +17,15 @@ def get_effective_load_increment(exercise, user_settings):
                     return val
         except Exception:
             pass
+
+    load_increment = exercise.get("load_increment", None)
+    try:
+        if load_increment is not None:
+            load_increment = float(load_increment)
+            if load_increment >= 0:
+                return load_increment
+    except Exception:
+        pass
 
     try:
         step = exercise.get("progression_step", 0)
