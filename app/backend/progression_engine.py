@@ -64,6 +64,19 @@ def compute_next_possible_load(last_load, effective_load_increment):
     return last_load + effective_load_increment
 
 
+
+def normalize_load_value(value):
+    try:
+        n = float(value)
+    except Exception:
+        return value
+
+    rounded = round(n, 2)
+    if float(rounded).is_integer():
+        return int(rounded)
+    return rounded
+
+
 def parse_number_from_load(value):
     x = str(value or "").strip().lower().replace("kg", "").strip()
     if not x:
@@ -698,23 +711,23 @@ def decide_progression_from_context(exercise_id, ctx):
             decision = "use_start_weight"
             progression_reason = "ingen historik, bruger startvægt"
         elif progression_mode == "none":
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "no_progression"
             progression_reason = "ingen progression for denne øvelse"
         elif hit_failure:
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "failure registreret"
         elif load_drop_detected:
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "load-drop mellem sæt"
         elif fatigue_score >= 2:
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "muskeltræthed for høj til progression"
         elif candidate_for_progression and phase == "recalibration":
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "rekalibrering efter pause"
         elif (
@@ -722,21 +735,21 @@ def decide_progression_from_context(exercise_id, ctx):
             not trend_ctx.get("repeated_success", False) and
             not using_synthetic_single_session_history
         ):
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "afventer gentagen succes"
         elif allow_progression_by_phase:
             if equipment_constraint:
-                next_load = int(first_set_load)
+                next_load = normalize_load_value(first_set_load)
                 decision = "hold"
                 progression_reason = "næste mulige spring er for stort"
             elif jump_guard_triggered:
-                next_load = int(first_set_load)
+                next_load = normalize_load_value(first_set_load)
                 decision = "hold"
                 progression_reason = jump_guard_reason or "konservativ progression guard"
                 secondary_constraints = list(secondary_constraints or []) + ["progression_jump_guard"]
             else:
-                next_load = int(actual_possible_next_load)
+                next_load = normalize_load_value(actual_possible_next_load)
                 decision = "increase"
                 if phase == "calibration":
                     progression_reason = "gentagen succes i kalibrering"
@@ -744,14 +757,14 @@ def decide_progression_from_context(exercise_id, ctx):
                     progression_reason = "gentagen succes i stabil trend"
 
                 if recent_recovery_ctx.get("multi_session_fatigue_pressure") == "high":
-                    next_load = int(first_set_load)
+                    next_load = normalize_load_value(first_set_load)
                     decision = "hold"
                     progression_reason = (
                         "gentagen dårlig recovery over seneste check-ins "
                         "overrulede ellers positivt progressionssignal"
                     )
         else:
-            next_load = int(first_set_load)
+            next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "progression holdes"
 
@@ -868,7 +881,7 @@ def decide_progression_from_context(exercise_id, ctx):
             decision = "hold"
             progression_reason = "næste mulige spring er for stort"
         else:
-            next_load = int(actual_possible_next_load)
+            next_load = normalize_load_value(actual_possible_next_load)
             decision = "increase"
             progression_reason = "top af rep-interval ramt"
 
