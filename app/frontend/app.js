@@ -3026,11 +3026,89 @@ function renderProfileEquipmentCard(){
     if (runProgramSelectProfileEl) runProgramSelectProfileEl.value = "";
   }
 
-  if (applyRecommendedStrengthProgramBtn && !applyRecommendedStrengthProgramBtn.dataset.bound){
-    applyRecommendedStrengthProgramBtn.dataset.bound = "1";
-    applyRecommendedStrengthProgramBtn.addEventListener("click", async () => {
-      const recommendedProgramId = String(applyRecommendedStrengthProgramBtn.dataset.recommendedProgramId || "").trim();
-      if (!recommendedProgramId || !strengthProgramSelectEl) return;
+  const saveActiveProgramSelection = async (strengthSelectEl, runSelectEl) => {
+    const currentSettings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
+    const currentPreferences = currentSettings.preferences && typeof currentSettings.preferences === "object"
+      ? currentSettings.preferences
+      : {};
+    const nextOverrides = {};
+    const selectedStrength = String(strengthSelectEl?.value || "").trim();
+    const selectedRun = String(runSelectEl?.value || "").trim();
+
+    if (selectedStrength) nextOverrides.strength = selectedStrength;
+    if (selectedRun) nextOverrides.run = selectedRun;
+
+    const nextPreferences = { ...currentPreferences };
+    if (Object.keys(nextOverrides).length){
+      nextPreferences.active_program_overrides = nextOverrides;
+    } else {
+      delete nextPreferences.active_program_overrides;
+    }
+
+    const currentAcceptedRecommendations = currentPreferences.accepted_program_recommendations
+      && typeof currentPreferences.accepted_program_recommendations === "object"
+        ? currentPreferences.accepted_program_recommendations
+        : {};
+    const nextAcceptedRecommendations = { ...currentAcceptedRecommendations };
+
+    if (
+      PROFILE_ACCEPTED_RECOMMENDATION_PENDING
+      && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.domain === "strength"
+      && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id
+      && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id === selectedStrength
+    ){
+      nextAcceptedRecommendations.strength = selectedStrength;
+    } else {
+      delete nextAcceptedRecommendations.strength;
+    }
+
+    if (
+      PROFILE_ACCEPTED_RECOMMENDATION_PENDING
+      && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.domain === "run"
+      && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id
+      && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id === selectedRun
+    ){
+      nextAcceptedRecommendations.run = selectedRun;
+    } else {
+      delete nextAcceptedRecommendations.run;
+    }
+
+    if (Object.keys(nextAcceptedRecommendations).length){
+      nextPreferences.accepted_program_recommendations = nextAcceptedRecommendations;
+    } else {
+      delete nextPreferences.accepted_program_recommendations;
+    }
+
+    const payload = {
+      ...currentSettings,
+      preferences: nextPreferences
+    };
+
+    const res = await apiPost("/api/user-settings", payload);
+    STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
+    PROFILE_ACCEPTED_RECOMMENDATION_PENDING = null;
+
+    const todayPlanRes = await apiGet("/api/today-plan");
+    STATE.currentTodayPlan = todayPlanRes?.item || null;
+
+    renderProfileEquipmentCard();
+    renderTodayPlan(STATE.currentTodayPlan || null);
+  };
+
+  const bindSaveActiveProgramsButton = (buttonEl, strengthSelectEl, runSelectEl) => {
+    if (!buttonEl || buttonEl.dataset.bound) return;
+    buttonEl.dataset.bound = "1";
+    buttonEl.addEventListener("click", async () => {
+      await saveActiveProgramSelection(strengthSelectEl, runSelectEl);
+    });
+  };
+
+  const bindApplyRecommendedStrengthButton = (buttonEl, strengthSelectEl, saveButtonEl, statusElementId) => {
+    if (!buttonEl || buttonEl.dataset.bound) return;
+    buttonEl.dataset.bound = "1";
+    buttonEl.addEventListener("click", async () => {
+      const recommendedProgramId = String(buttonEl.dataset.recommendedProgramId || "").trim();
+      if (!recommendedProgramId || !strengthSelectEl) return;
 
       const recommendedProgramName = getProgramNameById(recommendedProgramId) || recommendedProgramId;
 
@@ -3048,11 +3126,15 @@ function renderProfileEquipmentCard(){
         PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = null;
       }
 
-      strengthProgramSelectEl.value = recommendedProgramId;
-      saveProfileProgramsBtn?.click();
+      strengthSelectEl.value = recommendedProgramId;
+      if (saveButtonEl){
+        saveButtonEl.click();
+      } else {
+        await saveActiveProgramSelection(strengthSelectEl, null);
+      }
 
       PROFILE_PROGRAM_SWITCH_STATUS_TIMEOUT = setTimeout(() => {
-        const statusEl = document.getElementById("profileProgramActionStatus");
+        const statusEl = document.getElementById(statusElementId);
         if (statusEl){
           statusEl.style.opacity = "0";
         }
@@ -3063,79 +3145,23 @@ function renderProfileEquipmentCard(){
         }, 260);
       }, 2200);
     });
-  }
+  };
 
-  if (saveProfileProgramsBtn && !saveProfileProgramsBtn.dataset.bound){
-    saveProfileProgramsBtn.dataset.bound = "1";
-    saveProfileProgramsBtn.addEventListener("click", async () => {
-      const currentSettings = STATE.userSettings && typeof STATE.userSettings === "object" ? STATE.userSettings : {};
-      const currentPreferences = currentSettings.preferences && typeof currentSettings.preferences === "object"
-        ? currentSettings.preferences
-        : {};
-      const nextOverrides = {};
-      const selectedStrength = String(strengthProgramSelectEl?.value || "").trim();
-      const selectedRun = String(runProgramSelectEl?.value || "").trim();
+  bindApplyRecommendedStrengthButton(
+    applyRecommendedStrengthProgramBtn,
+    strengthProgramSelectEl,
+    saveProfileProgramsBtn,
+    "profileProgramActionStatus"
+  );
+  bindApplyRecommendedStrengthButton(
+    applyRecommendedStrengthProgramBtnProfile,
+    strengthProgramSelectProfileEl,
+    saveProfileProgramsBtnProfile,
+    "profileProgramActionStatusProfile"
+  );
 
-      if (selectedStrength) nextOverrides.strength = selectedStrength;
-      if (selectedRun) nextOverrides.run = selectedRun;
-
-      const nextPreferences = { ...currentPreferences };
-      if (Object.keys(nextOverrides).length){
-        nextPreferences.active_program_overrides = nextOverrides;
-      } else {
-        delete nextPreferences.active_program_overrides;
-      }
-
-      const currentAcceptedRecommendations = currentPreferences.accepted_program_recommendations
-        && typeof currentPreferences.accepted_program_recommendations === "object"
-          ? currentPreferences.accepted_program_recommendations
-          : {};
-      const nextAcceptedRecommendations = { ...currentAcceptedRecommendations };
-
-      if (
-        PROFILE_ACCEPTED_RECOMMENDATION_PENDING
-        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.domain === "strength"
-        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id
-        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id === selectedStrength
-      ){
-        nextAcceptedRecommendations.strength = selectedStrength;
-      } else {
-        delete nextAcceptedRecommendations.strength;
-      }
-
-      if (
-        PROFILE_ACCEPTED_RECOMMENDATION_PENDING
-        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.domain === "run"
-        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id
-        && PROFILE_ACCEPTED_RECOMMENDATION_PENDING.program_id === selectedRun
-      ){
-        nextAcceptedRecommendations.run = selectedRun;
-      } else {
-        delete nextAcceptedRecommendations.run;
-      }
-
-      if (Object.keys(nextAcceptedRecommendations).length){
-        nextPreferences.accepted_program_recommendations = nextAcceptedRecommendations;
-      } else {
-        delete nextPreferences.accepted_program_recommendations;
-      }
-
-      const payload = {
-        ...currentSettings,
-        preferences: nextPreferences
-      };
-
-      const res = await apiPost("/api/user-settings", payload);
-      STATE.userSettings = res?.item && typeof res.item === "object" ? res.item : payload;
-      PROFILE_ACCEPTED_RECOMMENDATION_PENDING = null;
-
-      const todayPlanRes = await apiGet("/api/today-plan");
-      STATE.currentTodayPlan = todayPlanRes?.item || null;
-
-      renderProfileEquipmentCard();
-      renderTodayPlan(STATE.currentTodayPlan || null);
-    });
-  }
+  bindSaveActiveProgramsButton(saveProfileProgramsBtn, strengthProgramSelectEl, runProgramSelectEl);
+  bindSaveActiveProgramsButton(saveProfileProgramsBtnProfile, strengthProgramSelectProfileEl, runProgramSelectProfileEl);
 
     const equipmentText = enabledEquipment.length
     ? tr("profile.available_equipment_value", { value: formatEquipmentList(enabledEquipment) })
