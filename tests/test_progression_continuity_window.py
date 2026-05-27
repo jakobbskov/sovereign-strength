@@ -4,13 +4,14 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1] / "app" / "backend"))
 
 import app as backend_app
+from progression_engine import detect_progression_phase, summarize_strength_trend
 
 
-def make_strength_session(date, created_at, exercise_id="bench_press", reps=8, load=100, *, hit_failure=False):
+def make_strength_session(date, created_at, exercise_id="bench_press", reps=8, load=100, *, hit_failure=False, session_type="strength"):
     return {
         "date": date,
         "created_at": created_at,
-        "session_type": "strength",
+        "session_type": session_type,
         "results": [
             {
                 "exercise_id": exercise_id,
@@ -117,6 +118,29 @@ def test_gap_above_threshold_breaks_continuity():
     )
 
     assert [item["date"] for item in history] == ["2026-03-12"], history
+
+
+def test_danish_styrke_sessions_count_as_strength_history():
+    session_results = [
+        make_strength_session("2026-03-01", "2026-03-01T06:00:00+00:00", load=96, session_type="styrke"),
+        make_strength_session("2026-03-08", "2026-03-08T06:00:00+00:00", load=98, session_type="styrke"),
+        make_strength_session("2026-03-12", "2026-03-12T06:00:00+00:00", load=100, session_type="styrke"),
+    ]
+
+    history = backend_app.get_relevant_strength_history(
+        session_results,
+        "bench_press",
+        max_items=6,
+        recent_days=42,
+        continuity_gap_days=14,
+    )
+    phase_ctx = detect_progression_phase(history, pause_days=999, min_trend_sessions=3)
+    trend_ctx = summarize_strength_trend(history, window_size=3)
+
+    assert len(history) == 3, history
+    assert phase_ctx["phase"] == "trend", phase_ctx
+    assert trend_ctx["repeated_success"] is True, trend_ctx
+    assert trend_ctx["successful_sessions"] == 3, trend_ctx
 
 
 if __name__ == "__main__":

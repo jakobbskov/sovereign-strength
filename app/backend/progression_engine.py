@@ -339,6 +339,13 @@ def days_between_datetimes(newer, older):
         return None
 
 
+def normalize_session_type(value):
+    raw = str(value or "").strip().lower()
+    if raw in ("strength", "styrke"):
+        return "strength"
+    return raw
+
+
 def get_relevant_strength_history(session_results, exercise_id, max_items=6, recent_days=42, continuity_gap_days=14):
     history = []
     exercise_id = str(exercise_id or "").strip()
@@ -352,7 +359,7 @@ def get_relevant_strength_history(session_results, exercise_id, max_items=6, rec
         if not isinstance(session, dict):
             continue
 
-        session_type = str(session.get("session_type", "")).strip().lower()
+        session_type = normalize_session_type(session.get("session_type", ""))
         if session_type != "strength":
             continue
 
