@@ -2384,7 +2384,12 @@ function buildInitialSetupChecklist(userSettings){
 
   const hasHeight = profile.height_cm != null && String(profile.height_cm).trim() !== "";
   const hasBodyweight = profile.bodyweight_kg != null && String(profile.bodyweight_kg).trim() !== "";
-  const hasTrainingType = Object.values(trainingTypes).some(Boolean);
+  const hasPrimaryTrainingType = Boolean(
+    trainingTypes.running ||
+    trainingTypes.strength_weights ||
+    trainingTypes.bodyweight
+  );
+  const hasTrainingType = hasPrimaryTrainingType;
   const hasTrainingDays = Object.values(trainingDays).some(Boolean);
 
   const equipmentKeys = ["barbell", "dumbbell", "bodyweight", "bench", "machine", "cable"];
