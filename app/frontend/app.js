@@ -5086,7 +5086,7 @@ function renderSessionResultSummary(summary, fallbackResults = null){
 }
 
 
-function formatPlanActionText(entry){
+function formatPlanActionText(entry, { activeWorkout = false } = {}){
   const localAdjustment = String(entry?.manual_intensity_adjustment || "").trim();
   const load = String(entry?.target_load || "").trim();
   const nextTarget = String(entry?.next_target_reps || "").trim();
@@ -5117,6 +5117,9 @@ function formatPlanActionText(entry){
     return load ? tr("plan.action.use_load_today", { load }) : tr("plan.action.increase_load_today");
   }
   if (decision === "increase_reps"){
+    if (activeWorkout){
+      return tr("plan.action.follow_plan_today");
+    }
     return nextTarget ? tr("progression.next_target", { value: nextTarget }) : tr("progression.increase_reps_next_time");
   }
   if (decision === "hold"){
@@ -7250,7 +7253,7 @@ function renderActiveWorkoutCard(item){
       idx,
       total,
       exerciseName: formatExerciseName(entry.exercise_id),
-      actionText: formatPlanActionText(entry),
+      actionText: formatPlanActionText(entry, { activeWorkout: true }),
       setProgressLabel: !isCardioEntry
         ? tr("workout.set_progress", { current: String(currentSetIndex + 1), total: String(plannedSetCount) })
         : "",
