@@ -177,3 +177,46 @@ Test live.
 Rollback if needed.
 
 Do not make the code worse than it was yesterday.
+
+## 13. Codex issue execution
+
+When working from a GitHub issue:
+
+- work on exactly one issue at a time
+- read the complete issue before editing
+- inspect the existing implementation before proposing or writing a fix
+- identify existing helpers, tests and contracts related to the requested behavior
+- do not implement adjacent improvements unless they are required to solve the issue
+- preserve existing behavior outside the issue scope
+
+For behavior changes:
+
+- add or update focused regression tests
+- test the reported failure case
+- test the expected normal case
+- include relevant edge cases when they protect existing behavior
+- do not weaken existing assertions merely to make new code pass
+
+Prefer extending an existing focused function.
+
+If new logic would make an already-large function materially harder to understand, extract a small focused helper rather than adding another nested decision branch.
+
+Keep core training logic deterministic and explainable.
+
+Do not introduce external AI or network dependencies into progression, planning or workout decisions unless an issue explicitly requires it.
+
+Before declaring an issue complete:
+
+- run relevant syntax checks
+- run focused tests
+- run the broader relevant test suite when practical
+- run git diff --check
+- review git diff main..HEAD
+- confirm that no unrelated files changed
+
+When opening a pull request:
+
+- reference the GitHub issue
+- describe what changed and why
+- include validation performed
+- do not merge until review and validation are complete
