@@ -1,4 +1,6 @@
 import sys
+from datetime import datetime
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1] / "app" / "backend"))
@@ -52,7 +54,9 @@ def run_strength_progression_scenario(*, session_results, reps=8, load=100.0, fa
         "recent_recovery_ctx": recent_recovery_ctx or {},
     }
 
-    out = backend_app.decide_progression_from_context("bench_press", ctx)
+    with patch("progression_engine.datetime", wraps=datetime) as clock:
+        clock.now.return_value = datetime.fromisoformat("2026-04-25T12:00:00+00:00")
+        out = backend_app.decide_progression_from_context("bench_press", ctx)
     assert out["ok"] is True, out
     return out
 
@@ -141,15 +145,16 @@ def test_trend_blocks_progression_when_failure_exists_in_window():
 
 def test_recalibration_blocks_progression_after_long_pause():
     session_results = [
-        make_strength_session("2026-02-01", "2026-02-01T06:00:00+00:00", "bench_press", 8, 100),
-        make_strength_session("2026-01-28", "2026-01-28T06:00:00+00:00", "bench_press", 8, 98),
         make_strength_session("2026-01-24", "2026-01-24T06:00:00+00:00", "bench_press", 8, 96),
+        make_strength_session("2026-01-28", "2026-01-28T06:00:00+00:00", "bench_press", 8, 98),
+        make_strength_session("2026-02-01", "2026-02-01T06:00:00+00:00", "bench_press", 8, 100),
     ]
 
     out = run_strength_progression_scenario(session_results=session_results)
 
     assert out["progression_phase"] == "recalibration", out
-    assert out["progression_decision"] == "hold", out
+    assert out["progression_decision"] == "recalibrate", out
+    assert out["next_load"] == 100, out
     assert out["progression_reason"] == "rekalibrering efter pause", out
 
 
@@ -200,7 +205,8 @@ def test_trend_recommends_deload_after_repeated_failures():
     assert out["deload_recommended"] is True, out
     assert out["deload_reason"] == "gentagne failures", out
     assert out["deload_scope"] == "exercise", out
-    assert out["progression_decision"] == "hold", out
+    assert out["progression_decision"] == "deload", out
+    assert out["next_load"] == 98, out
 
 
 if __name__ == "__main__":
