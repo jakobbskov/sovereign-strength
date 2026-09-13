@@ -77,6 +77,15 @@ def normalize_load_value(value):
     return rounded
 
 
+def select_lower_load(performed_load, effective_load_increment, lower_load_reference=None):
+    """Anchor reductions to performed work, never to a previous recommendation."""
+    if lower_load_reference is not None and 0 < lower_load_reference < performed_load:
+        return normalize_load_value(lower_load_reference)
+    if effective_load_increment > 0 and performed_load > effective_load_increment:
+        return normalize_load_value(performed_load - effective_load_increment)
+    return normalize_load_value(performed_load)
+
+
 def parse_number_from_load(value):
     x = str(value or "").strip().lower().replace("kg", "").strip()
     if not x:
@@ -221,8 +230,11 @@ def analyze_session_result_for_progression(result):
             "min_reps": None,
             "hit_failure": False,
             "load_drop_detected": False,
+            "lower_load_reference": None,
+            "below_target_range": False,
         }
 
+    target_bottom = parse_top_rep(str(result.get("target_reps", "")).split("-")[0])
     raw_sets = result.get("sets", [])
     hit_failure = bool(result.get("hit_failure", False))
 
@@ -272,6 +284,16 @@ def analyze_session_result_for_progression(result):
             "min_reps": min_reps,
             "hit_failure": hit_failure,
             "load_drop_detected": load_drop_detected,
+            "lower_load_reference": min(
+                (x["load"] for x in clean_sets
+                 if x.get("load") is not None and x["load"] > 0
+                 and x.get("reps") is not None and x["reps"] > 0
+                 and first_set_load is not None and x["load"] < first_set_load),
+                default=None,
+            ),
+            "below_target_range": bool(
+                target_bottom is not None and min_reps is not None and min_reps < target_bottom
+            ),
             "total_time_under_tension_sec": total_time_under_tension_sec,
         }
 
@@ -291,6 +313,10 @@ def analyze_session_result_for_progression(result):
         "min_reps": fallback_reps,
         "hit_failure": hit_failure,
         "load_drop_detected": False,
+        "lower_load_reference": None,
+        "below_target_range": bool(
+            target_bottom is not None and fallback_reps is not None and fallback_reps < target_bottom
+        ),
     }
 
 
@@ -468,7 +494,11 @@ def summarize_strength_trend(relevant_history, window_size=3):
         hit_failure = bool(analysis.get("hit_failure", False))
         load_drop_detected = bool(analysis.get("load_drop_detected", False))
 
+        below_target_range = bool(analysis.get("below_target_range", False))
+
         candidate_for_progression = bool(
+            analysis.get("first_set_load") is not None and
+            not below_target_range and
             target_top is not None and
             first_set_reps is not None and
             first_set_reps >= target_top
@@ -485,17 +515,22 @@ def summarize_strength_trend(relevant_history, window_size=3):
             "successful_session": successful_session,
             "hit_failure": hit_failure,
             "load_drop_detected": load_drop_detected,
+            "below_target_range": below_target_range,
         })
 
     successful_sessions = sum(1 for x in session_summaries if x["successful_session"])
     failure_sessions = sum(1 for x in session_summaries if x["hit_failure"])
     load_drop_sessions = sum(1 for x in session_summaries if x["load_drop_detected"])
-    negative_signal_sessions = failure_sessions + load_drop_sessions
+    negative_signal_sessions = sum(
+        1 for x in session_summaries
+        if x["hit_failure"] or x["load_drop_detected"] or x["below_target_range"]
+    )
 
     latest_summary = session_summaries[0] if session_summaries else {}
     latest_blocking_signal = bool(
         latest_summary.get("hit_failure", False) or
-        latest_summary.get("load_drop_detected", False)
+        latest_summary.get("load_drop_detected", False) or
+        latest_summary.get("below_target_range", False)
     )
 
     repeated_success = successful_sessions >= 2
@@ -540,7 +575,7 @@ def evaluate_deload_need(phase, trend_ctx, fatigue_score):
             "deload_scope": "exercise",
         }
 
-    if (failures + load_drops) >= 2 and fatigue_score >= 2:
+    if trend_ctx.get("negative_signal_sessions", 0) >= 2 and fatigue_score >= 2:
         return {
             "deload_recommended": True,
             "deload_reason": "kombineret træthed og ustabil performance",
@@ -671,12 +706,14 @@ def decide_progression_from_context(exercise_id, ctx):
         first_set_reps = analysis.get("first_set_reps")
         hit_failure = analysis.get("hit_failure", False)
         load_drop_detected = analysis.get("load_drop_detected", False)
+        below_target_range = analysis.get("below_target_range", False)
 
         progression_reason = "progression holdes"
         phase = phase_ctx.get("phase")
 
         candidate_for_progression = bool(
             first_set_load is not None and
+            not below_target_range and
             target_top is not None and
             first_set_reps is not None and
             first_set_reps >= target_top
@@ -713,6 +750,12 @@ def decide_progression_from_context(exercise_id, ctx):
         jump_guard_triggered = bool(jump_guard_ctx.get("guard_triggered"))
         jump_guard_reason = jump_guard_ctx.get("guard_reason")
 
+        deload_ctx = evaluate_deload_need(phase, trend_ctx, fatigue_score)
+        needs_reduction = bool(
+            hit_failure or load_drop_detected or below_target_range or
+            deload_ctx["deload_recommended"]
+        )
+
         if first_set_load is None:
             next_load = start_weight
             decision = "use_start_weight"
@@ -721,22 +764,29 @@ def decide_progression_from_context(exercise_id, ctx):
             next_load = normalize_load_value(first_set_load)
             decision = "no_progression"
             progression_reason = "ingen progression for denne øvelse"
-        elif hit_failure:
-            next_load = normalize_load_value(first_set_load)
+        elif needs_reduction:
+            next_load = select_lower_load(
+                first_set_load, effective_load_increment, analysis.get("lower_load_reference")
+            )
             decision = "hold"
-            progression_reason = "failure registreret"
-        elif load_drop_detected:
+            if next_load < first_set_load:
+                decision = "deload" if deload_ctx["deload_recommended"] else "reduce"
+            if deload_ctx["deload_recommended"]:
+                progression_reason = deload_ctx["deload_reason"]
+            elif load_drop_detected:
+                progression_reason = "load-drop mellem sæt, bruger udført lavere belastning"
+            elif hit_failure:
+                progression_reason = "failure registreret"
+            else:
+                progression_reason = "performance under rep-interval"
+        elif phase == "recalibration":
             next_load = normalize_load_value(first_set_load)
-            decision = "hold"
-            progression_reason = "load-drop mellem sæt"
+            decision = "recalibrate"
+            progression_reason = "rekalibrering efter pause"
         elif fatigue_score >= 2:
             next_load = normalize_load_value(first_set_load)
             decision = "hold"
             progression_reason = "muskeltræthed for høj til progression"
-        elif candidate_for_progression and phase == "recalibration":
-            next_load = normalize_load_value(first_set_load)
-            decision = "hold"
-            progression_reason = "rekalibrering efter pause"
         elif (
             candidate_for_progression and
             not trend_ctx.get("repeated_success", False) and
@@ -775,17 +825,11 @@ def decide_progression_from_context(exercise_id, ctx):
             decision = "hold"
             progression_reason = "progression holdes"
 
-        deload_ctx = evaluate_deload_need(
-            phase,
-            trend_ctx,
-            fatigue_score,
-        )
-
         return {
             "ok": True,
             "exercise": exercise_id,
             "source": "session_result",
-            "last_load": int(first_set_load) if first_set_load is not None else None,
+            "last_load": normalize_load_value(first_set_load) if first_set_load is not None else None,
             "next_load": next_load,
             "step": step,
             "recommended_step": recommended_step,
